@@ -6,14 +6,19 @@ import '../../colors.dart';
 class CustomButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
+  final double width;
 
-  const CustomButton({super.key, required this.label, required this.onPressed});
+  const CustomButton(
+      {super.key,
+      required this.label,
+      required this.onPressed,
+      required this.width});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 50,
-      width: double.infinity,
+      width: width,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondaryColor,
@@ -23,8 +28,12 @@ class CustomButton extends StatelessWidget {
           ),
         ),
         onPressed: onPressed,
-        child: CustomText(
-          text: label,
+        child: Text(
+          label,
+          style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              color: Colors.white),
         ),
       ),
     );

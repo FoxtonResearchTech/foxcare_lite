@@ -10,8 +10,8 @@ class CustomText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-          fontFamily: 'SanFrancisco', fontWeight: FontWeight.bold),
+      style:
+          const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
     );
   }
 }
