@@ -6,14 +6,14 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
-class CounterSales extends StatefulWidget {
-  const CounterSales({super.key});
+class PrescriptionBilling extends StatefulWidget {
+  const PrescriptionBilling({super.key});
 
   @override
-  State<CounterSales> createState() => _CounterSales();
+  State<PrescriptionBilling> createState() => _PrescriptionBilling();
 }
 
-class _CounterSales extends State<CounterSales> {
+class _PrescriptionBilling extends State<PrescriptionBilling> {
   final List<String> headers = [
     'Product Name',
     'Type',
@@ -260,7 +260,9 @@ class _CounterSales extends State<CounterSales> {
               Row(
                 children: [
                   CustomTextField(
-                      hintText: 'Patient name', width: screenWidth * 0.25)
+                      hintText: 'Patient name', width: screenWidth * 0.25),
+                  SizedBox(width: screenHeight * 0.5),
+                  CustomTextField(hintText: 'Place', width: screenWidth * 0.25)
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -273,12 +275,25 @@ class _CounterSales extends State<CounterSales> {
               Row(
                 children: [
                   CustomTextField(
+                      hintText: 'OP Number', width: screenWidth * 0.20),
+                  SizedBox(width: screenHeight * 0.2),
+                  CustomTextField(
+                      hintText: 'Gender', width: screenWidth * 0.20),
+                  SizedBox(width: screenHeight * 0.2),
+                  CustomTextField(
+                      hintText: 'Phone Number', width: screenWidth * 0.20),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.08),
+              Row(
+                children: [
+                  CustomTextField(
                     hintText: 'Doctor Name',
                     width: screenWidth * 0.25,
                   ),
                   SizedBox(width: screenHeight * 0.5),
                   CustomTextField(
-                    hintText: 'Place',
+                    hintText: 'Spectating',
                     width: screenWidth * 0.25,
                   ),
                 ],
@@ -298,7 +313,7 @@ class _CounterSales extends State<CounterSales> {
                     width: 0.5,
                   ),
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -318,7 +333,7 @@ class _CounterSales extends State<CounterSales> {
                     width: 0.5,
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     CustomText(text: '12% TAX : '),

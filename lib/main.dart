@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/billings/bill_search.dart';
 import 'package:foxcare_lite/presentation/billings/counter_sales.dart';
+import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
+import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
+import 'package:foxcare_lite/presentation/billings/prescription_billing.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
@@ -9,7 +13,7 @@ void main() async {
   await windowManager.ensureInitialized();
 
   // Set up window options
-  WindowOptions windowOptions = WindowOptions(
+  WindowOptions windowOptions = const WindowOptions(
     center: true, // Center the window on the screen
     title: "FoxCare",
     titleBarStyle: TitleBarStyle.normal, // Retain the title bar
@@ -49,7 +53,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: CounterSales(),
+      home: BillSearch(),
     );
   }
 }
