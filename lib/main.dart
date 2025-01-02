@@ -4,6 +4,12 @@ import 'package:foxcare_lite/presentation/billings/counter_sales.dart';
 import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/billings/prescription_billing.dart';
+import 'package:foxcare_lite/presentation/reports/party_wise_statement.dart';
+import 'package:foxcare_lite/presentation/reports/product_wise_statement.dart';
+import 'package:foxcare_lite/presentation/tools/add_new_distributor.dart';
+import 'package:foxcare_lite/presentation/tools/distributor_update.dart';
+import 'package:foxcare_lite/presentation/tools/manage_pharmacy_info.dart';
+import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
@@ -50,10 +56,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: BillSearch(),
+      home: PartyWiseStatement(),
     );
   }
 }

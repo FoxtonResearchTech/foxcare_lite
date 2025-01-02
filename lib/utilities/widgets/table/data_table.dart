@@ -44,16 +44,23 @@ class CustomDataTable extends StatelessWidget {
         // Data rows
         ...tableData.map(
           (row) => TableRow(
-            children: headers
-                .map(
-                  (header) => Center(
+            children: headers.map(
+              (header) {
+                final cellData = row[header];
+                if (cellData is Widget) {
+                  // If the cell data is a Widget, display it directly
+                  return Center(child: cellData);
+                } else {
+                  // Otherwise, display it as a Text
+                  return Center(
                     child: Text(
-                      row[header]?.toString() ?? '',
+                      cellData?.toString() ?? '',
                       style: const TextStyle(),
                     ),
-                  ),
-                )
-                .toList(),
+                  );
+                }
+              },
+            ).toList(),
           ),
         ),
       ],

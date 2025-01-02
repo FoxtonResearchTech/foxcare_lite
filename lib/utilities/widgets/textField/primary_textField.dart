@@ -36,11 +36,13 @@ class CustomTextField extends StatelessWidget {
           labelStyle: TextStyle(
             fontFamily: 'Poppins',
           ),
+          floatingLabelStyle:
+              TextStyle(fontFamily: 'Poppins', color: AppColors.secondaryColor),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blue, width: 2.0),
+            borderSide: BorderSide(color: AppColors.textField, width: 2.0),
             borderRadius: BorderRadius.circular(10),
           ),
           enabledBorder: OutlineInputBorder(
