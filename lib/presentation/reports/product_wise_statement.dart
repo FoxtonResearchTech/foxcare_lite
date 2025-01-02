@@ -6,6 +6,8 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
+import '../tools/manage_pharmacy_info.dart';
+
 class ProductWiseStatement extends StatefulWidget {
   const ProductWiseStatement({super.key});
 
@@ -42,24 +44,23 @@ class _ProductWiseStatement extends State<ProductWiseStatement> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar:
-          CustomAppBar(backgroundColor: AppColors.appBar, fieldNames: const [
-        'Stock Statement',
-        'Party wise Statement',
-        'Product wise Statement',
-        'Non-Moving Statement',
-        'Stock Return Statement',
-        'Expiry Return Statement',
-        'Damage/Broken Statement',
-      ], fieldOptions: const [
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-      ]),
+      appBar: CustomAppBar(
+        backgroundColor: AppColors.appBar,
+        fieldNames: const [
+          'Stock Statement',
+          'Party wise Statement',
+          'Product wise Statement',
+          'Non-Moving Statement',
+          'Stock Return Statement',
+          'Expiry Return Statement',
+          'Damage/Broken Statement',
+        ],
+        navigationMap: {
+          'Stock Statement': {
+            'Option 1': (context) => ManagePharmacyInfo(),
+          }
+        },
+      ),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(

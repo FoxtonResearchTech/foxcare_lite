@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
   final List<String> fieldNames;
-  final List<List<String>> fieldOptions;
+  final Map<String, Map<String, WidgetBuilder>> navigationMap;
 
   const CustomAppBar({
     Key? key,
     required this.backgroundColor,
     required this.fieldNames,
-    required this.fieldOptions,
+    required this.navigationMap,
   }) : super(key: key);
 
   @override
@@ -18,18 +18,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: backgroundColor,
-      flexibleSpace: Row(
+    return Container(
+      color: backgroundColor,
+      height: kToolbarHeight, // Consistent height
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(fieldNames.length, (index) {
+        children: fieldNames.map((fieldName) {
+          final options = navigationMap[fieldName]?.keys.toList() ?? [];
           return Expanded(
             child: _OptionField(
-              fieldName: fieldNames[index],
-              options: fieldOptions[index],
+              fieldName: fieldName,
+              options: options,
+              navigationMap: navigationMap[fieldName] ?? {},
             ),
           );
-        }),
+        }).toList(),
       ),
     );
   }
@@ -38,21 +41,30 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 class _OptionField extends StatelessWidget {
   final String fieldName;
   final List<String> options;
+  final Map<String, WidgetBuilder> navigationMap;
 
   const _OptionField({
     Key? key,
     required this.fieldName,
     required this.options,
+    required this.navigationMap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       onSelected: (value) {
-        // Action to perform when an option is selected
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Selected: $value')),
-        );
+        final destinationBuilder = navigationMap[value];
+        if (destinationBuilder != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: destinationBuilder),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No page defined for $value')),
+          );
+        }
       },
       itemBuilder: (BuildContext context) {
         return options

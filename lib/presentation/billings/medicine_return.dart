@@ -6,6 +6,10 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
+import '../tools/manage_pharmacy_info.dart';
+import 'counter_sales.dart';
+import 'ip_billing.dart';
+
 class MedicineReturn extends StatefulWidget {
   const MedicineReturn({super.key});
 
@@ -140,19 +144,15 @@ class _MedicineReturn extends State<MedicineReturn> {
         'Stock Management',
         'Reports',
         'Tools'
-      ], fieldOptions: [
-        ['Option 1', 'Option 2', 'Option 3'],
-        [
-          'Counter sale',
-          'OP Billing',
-          'Bill Cancelling ',
-          'Medcine Return',
-          'IP Billing'
-        ],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-      ]),
+      ], navigationMap: {
+        'Billing': {
+          'Counter Sales': (context) => CounterSales(),
+          'OP Billings': (context) => CounterSales(),
+          'Bill Canceling': (context) => ManagePharmacyInfo(),
+          'Medicine Return': (context) => MedicineReturn(),
+          'IP Billing': (context) => IPBilling(),
+        }
+      }),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(

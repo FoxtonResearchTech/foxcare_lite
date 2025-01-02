@@ -20,22 +20,22 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar:
-          CustomAppBar(backgroundColor: AppColors.appBar, fieldNames: const [
-        'Pharmacy Information',
-        'Manage Pharmacy Information',
-        'Distributor List',
-        'Add / Delete Distributor',
-        'Profile',
-        'Logout',
-      ], fieldOptions: const [
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-        ['Option 1', 'Option 2', 'Option 3'],
-      ]),
+      appBar: CustomAppBar(
+        backgroundColor: AppColors.appBar,
+        fieldNames: const [
+          'Pharmacy Information',
+          'Manage Pharmacy Information',
+          'Distributor List',
+          'Add / Delete Distributor',
+          'Profile',
+          'Logout',
+        ],
+        navigationMap: {
+          'Pharmacy Information': {
+            'Option 1': (context) => ManagePharmacyInfo(),
+          }
+        },
+      ),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
