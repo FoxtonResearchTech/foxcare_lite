@@ -219,7 +219,8 @@ class _PrescriptionBilling extends State<PrescriptionBilling> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: CustomAppBar(backgroundColor: AppColors.appBar, fieldNames: [
+      appBar:
+          CustomAppBar(backgroundColor: AppColors.appBar, fieldNames: const [
         'Home',
         'Billing',
         'Stock Management',
@@ -317,7 +318,7 @@ class _PrescriptionBilling extends State<PrescriptionBilling> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
+                  children: const [
                     CustomText(
                       text: 'Total : ',
                     )
@@ -336,7 +337,7 @@ class _PrescriptionBilling extends State<PrescriptionBilling> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: const [
                     CustomText(text: '12% TAX : '),
                     CustomText(text: '10% GST : '),
                     CustomText(text: 'Total GST : '),
