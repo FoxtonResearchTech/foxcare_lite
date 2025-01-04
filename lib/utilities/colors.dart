@@ -6,4 +6,5 @@ class AppColors {
   static Color appBar = const Color(0xFF5BC0DE);
   static Color button = const Color(0xFF5BC0DE);
   static Color textField = const Color(0xFF5BC0DE);
+  static Color containerColor = const Color(0xFFBBE2ED);
 }

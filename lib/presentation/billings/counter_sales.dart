@@ -6,7 +6,29 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
+import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../login/login.dart';
+import '../reports/broken_or_damaged_statement.dart';
+import '../reports/expiry_return_statement.dart';
+import '../reports/non_moving_stock.dart';
+import '../reports/party_wise_statement.dart';
+import '../reports/pending_payment_report.dart';
+import '../reports/product_wise_statement.dart';
+import '../reports/stock_return_statement.dart';
+import '../stock_management/add_product.dart';
+import '../stock_management/cancel_bill.dart';
+import '../stock_management/damage_return.dart';
+import '../stock_management/delete_product.dart';
+import '../stock_management/expiry_return.dart';
+import '../stock_management/product_list.dart';
+import '../stock_management/purchase.dart';
+import '../stock_management/purchase_order.dart';
+import '../stock_management/stock_return.dart';
+import '../tools/add_new_distributor.dart';
+import '../tools/distributor_list.dart';
 import '../tools/manage_pharmacy_info.dart';
+import '../tools/pharmacy_info.dart';
+import '../tools/profile.dart';
 import 'ip_billing.dart';
 import 'medicine_return.dart';
 
@@ -218,21 +240,7 @@ class _CounterSales extends State<CounterSales> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: CustomAppBar(backgroundColor: AppColors.appBar, fieldNames: [
-        'Home',
-        'Billing',
-        'Stock Management',
-        'Reports',
-        'Tools'
-      ], navigationMap: {
-        'Billing': {
-          'Counter Sales': (context) => CounterSales(),
-          'OP Billings': (context) => CounterSales(),
-          'Bill Canceling': (context) => ManagePharmacyInfo(),
-          'Medicine Return': (context) => MedicineReturn(),
-          'IP Billing': (context) => IPBilling(),
-        }
-      }),
+      appBar: const FoxCareLiteAppBar(),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
@@ -291,7 +299,7 @@ class _CounterSales extends State<CounterSales> {
               Container(
                 padding: EdgeInsets.only(right: screenWidth * 0.08),
                 width: screenWidth,
-                height: screenHeight * 0.025,
+                height: screenHeight * 0.030,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.black,

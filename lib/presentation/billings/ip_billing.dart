@@ -6,6 +6,7 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
+import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../tools/manage_pharmacy_info.dart';
 import 'counter_sales.dart';
 import 'medicine_return.dart';
@@ -218,21 +219,7 @@ class _IPBilling extends State<IPBilling> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: CustomAppBar(backgroundColor: AppColors.appBar, fieldNames: [
-        'Home',
-        'Billing',
-        'Stock Management',
-        'Reports',
-        'Tools'
-      ], navigationMap: {
-        'Billing': {
-          'Counter Sales': (context) => CounterSales(),
-          'OP Billings': (context) => CounterSales(),
-          'Bill Canceling': (context) => ManagePharmacyInfo(),
-          'Medicine Return': (context) => MedicineReturn(),
-          'IP Billing': (context) => IPBilling(),
-        }
-      }),
+      appBar: const FoxCareLiteAppBar(),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
@@ -306,7 +293,7 @@ class _IPBilling extends State<IPBilling> {
               Container(
                 padding: EdgeInsets.only(right: screenWidth * 0.08),
                 width: screenWidth,
-                height: screenHeight * 0.025,
+                height: screenHeight * 0.030,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.black,

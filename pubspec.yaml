@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   window_manager: ^0.4.3
   syncfusion_flutter_datagrid: ^28.1.36
+  win32: ^5.10.0
+  fl_chart: ^0.69.2
 
 dev_dependencies:
   flutter_test:

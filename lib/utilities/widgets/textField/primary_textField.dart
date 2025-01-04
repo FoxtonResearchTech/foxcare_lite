@@ -6,6 +6,9 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final double width;
+  final double verticalSize;
+  final double horizontalSize;
+
   final TextEditingController? controller;
   final Icon? icon;
 
@@ -16,6 +19,8 @@ class CustomTextField extends StatelessWidget {
     this.controller,
     this.icon,
     required this.width,
+    this.verticalSize = 8.0,
+    this.horizontalSize = 12.0,
   });
 
   @override
@@ -28,7 +33,8 @@ class CustomTextField extends StatelessWidget {
         decoration: InputDecoration(
           isDense: true,
           // Reduces the overall height of the TextField
-          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+          contentPadding: EdgeInsets.symmetric(
+              vertical: verticalSize, horizontal: horizontalSize),
           labelText: hintText,
           hintStyle: TextStyle(
             fontFamily: 'Poppins',

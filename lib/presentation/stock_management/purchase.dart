@@ -9,59 +9,29 @@ import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart'
 import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../tools/manage_pharmacy_info.dart';
 
-class DistributorList extends StatefulWidget {
-  const DistributorList({super.key});
+class Purchase extends StatefulWidget {
+  const Purchase({super.key});
 
   @override
-  State<DistributorList> createState() => _DistributorList();
+  State<Purchase> createState() => _Purchase();
 }
 
-class _DistributorList extends State<DistributorList> {
+class _Purchase extends State<Purchase> {
   final List<String> headers = [
-    'SL No',
-    'Name',
-    'Place',
-    'Phone Number',
-    'Representative',
-    'Phone',
+    'Bill NO',
+    'Bill Date',
+    'Distributor Name',
+    'Bill Amount',
+    'Due Date',
     'Action',
   ];
   final List<Map<String, dynamic>> tableData = [
     {
-      'SL No': '',
-      'Name': '',
-      'Place': '',
-      'Phone Number': '',
-      'Representative': '',
-      'Phone': '',
-      'Action': CustomButton(
-        label: 'Edit',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Name': '',
-      'Place': '',
-      'Phone Number': '',
-      'Representative': '',
-      'Phone': '',
-      'Action': CustomButton(
-        label: 'Edit',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Name': '',
-      'Place': '',
-      'Phone Number': '',
-      'Representative': '',
-      'Phone': '',
+      'Bill NO': '',
+      'Bill date': '',
+      'Distributor Name': '',
+      'Bill Amount': '',
+      'Due Date': '',
       'Action': CustomButton(
         label: 'Edit',
         onPressed: () {},
@@ -87,54 +57,51 @@ class _DistributorList extends State<DistributorList> {
           ),
           child: Column(
             children: [
-              const Row(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomText(text: 'Distributor List :'),
+                  const CustomText(text: 'Bill Approve List '),
+                  CustomButton(
+                    label: 'Purchase Entry',
+                    onPressed: () {},
+                    width: screenWidth * 0.12,
+                    height: screenHeight * 0.04,
+                  )
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
                   CustomTextField(
-                    hintText: 'Distributor Name',
+                    hintText: 'Purchase Bill No',
                     width: screenWidth * 0.25,
                   ),
-                  SizedBox(width: screenHeight * 0.1),
+                  SizedBox(width: screenHeight * 0.02),
                   CustomButton(
-                      height: screenHeight * 0.04,
                       label: 'Search',
                       onPressed: () {},
-                      width: screenWidth * 0.08)
+                      width: screenWidth * 0.08),
+                  SizedBox(width: screenHeight * 0.2),
+                  CustomTextField(
+                    hintText: 'Bill No',
+                    width: screenWidth * 0.25,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                      label: 'Search',
+                      onPressed: () {},
+                      width: screenWidth * 0.08),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
               const Row(
-                children: [CustomText(text: 'Total Pending Payment List')],
+                children: [CustomText(text: 'Add Product List')],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
                 tableData: tableData,
                 headers: headers,
               ),
-              Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.005),
-                width: screenWidth,
-                height: screenHeight * 0.030,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 0.5,
-                  ),
-                ),
-                child: const Column(
-                  children: [
-                    CustomText(
-                      text: 'Total : ',
-                    )
-                  ],
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.04),
             ],
           ),
         ),

@@ -5,52 +5,38 @@ import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/billings/prescription_billing.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
+import 'package:foxcare_lite/presentation/reports/broken_or_damaged_statement.dart';
 import 'package:foxcare_lite/presentation/reports/collection_report.dart';
+import 'package:foxcare_lite/presentation/reports/expiry_return_statement.dart';
+import 'package:foxcare_lite/presentation/reports/non_moving_stock.dart';
 import 'package:foxcare_lite/presentation/reports/party_wise_statement.dart';
 import 'package:foxcare_lite/presentation/reports/pending_payment_report.dart';
 import 'package:foxcare_lite/presentation/reports/product_wise_statement.dart';
+import 'package:foxcare_lite/presentation/reports/stock_management.dart';
+import 'package:foxcare_lite/presentation/reports/stock_return_statement.dart';
+import 'package:foxcare_lite/presentation/stock_management/add_product.dart';
+import 'package:foxcare_lite/presentation/stock_management/cancel_bill.dart';
+import 'package:foxcare_lite/presentation/stock_management/damage_return.dart';
+import 'package:foxcare_lite/presentation/stock_management/delete_product.dart';
+import 'package:foxcare_lite/presentation/stock_management/expiry_return.dart';
+import 'package:foxcare_lite/presentation/stock_management/product_list.dart';
+import 'package:foxcare_lite/presentation/stock_management/purchase.dart';
+import 'package:foxcare_lite/presentation/stock_management/purchase_entry.dart';
+import 'package:foxcare_lite/presentation/stock_management/purchase_order.dart';
+import 'package:foxcare_lite/presentation/stock_management/stock_return.dart';
 import 'package:foxcare_lite/presentation/tools/add_new_distributor.dart';
 import 'package:foxcare_lite/presentation/tools/distributor_list.dart';
 import 'package:foxcare_lite/presentation/tools/distributor_update.dart';
 import 'package:foxcare_lite/presentation/tools/manage_pharmacy_info.dart';
+import 'package:foxcare_lite/presentation/tools/pharmacist_list.dart';
 import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
+import 'package:foxcare_lite/presentation/tools/profile.dart';
 import 'package:window_manager/window_manager.dart';
+
+import 'presentation/dashboard/pharmecy_dashboard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the window manager
-  await windowManager.ensureInitialized();
-
-  // Set up window options
-  WindowOptions windowOptions = const WindowOptions(
-    center: true, // Center the window on the screen
-    title: "FoxCare",
-    titleBarStyle: TitleBarStyle.normal, // Retain the title bar
-  );
-
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-// Get the screen bounds
-    final Rect screenBounds = await windowManager.getBounds();
-
-    // Adjust bounds to avoid overlapping the taskbar
-    const double taskbarHeight =
-        40; // Approximate taskbar height (can vary per OS)
-    final Rect usableBounds = Rect.fromLTWH(
-      screenBounds.left,
-      screenBounds.top,
-      screenBounds.width,
-      screenBounds.height - taskbarHeight,
-    );
-    // Set the window bounds
-    await windowManager.setBounds(usableBounds);
-    await windowManager.maximize();
-    await windowManager.setResizable(false); // Disable resizing
-    await windowManager.setMaximizable(false); // Disable maximize button
-    await windowManager.show();
-    await windowManager.focus();
-  });
-
   runApp(MyApp());
 }
 
@@ -59,10 +45,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: LoginScreen(),
+      home: BillSearch(),
     );
   }
 }

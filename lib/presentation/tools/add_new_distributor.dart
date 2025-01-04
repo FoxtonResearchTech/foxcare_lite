@@ -7,6 +7,8 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
+import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+
 class AddNewDistributor extends StatefulWidget {
   const AddNewDistributor({super.key});
 
@@ -21,22 +23,7 @@ class _AddNewDistributor extends State<AddNewDistributor> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: CustomAppBar(
-        backgroundColor: AppColors.appBar,
-        fieldNames: const [
-          'Pharmacy Information',
-          'Manage Pharmacy Information',
-          'Distributor List',
-          'Add / Delete Distributor',
-          'Profile',
-          'Logout',
-        ],
-        navigationMap: {
-          'Pharmacy Information': {
-            'Option 1': (context) => ManagePharmacyInfo(),
-          }
-        },
-      ),
+      appBar: const FoxCareLiteAppBar(),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
@@ -221,6 +208,24 @@ class _AddNewDistributor extends State<AddNewDistributor> {
                   SizedBox(width: screenHeight * 0.2),
                   CustomTextField(
                     hintText: 'Branch Name',
+                    width: screenWidth * 0.25,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomTextField(
+                    hintText: 'Representative Number',
+                    width: screenWidth * 0.25,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomTextField(
+                    hintText: 'Phone No',
                     width: screenWidth * 0.25,
                   ),
                 ],

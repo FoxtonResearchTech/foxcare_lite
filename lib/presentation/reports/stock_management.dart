@@ -9,57 +9,34 @@ import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart'
 import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../tools/manage_pharmacy_info.dart';
 
-class CollectionReport extends StatefulWidget {
-  const CollectionReport({super.key});
+class StockManagement extends StatefulWidget {
+  const StockManagement({super.key});
 
   @override
-  State<CollectionReport> createState() => _CollectionReport();
+  State<StockManagement> createState() => _StockManagement();
 }
 
-class _CollectionReport extends State<CollectionReport> {
+class _StockManagement extends State<StockManagement> {
   final List<String> headers = [
     'SL No',
-    'Bill Number',
-    'Bill Date',
-    'Total Amount',
-    'Bill Details',
+    'Product Name ',
+    'Opening Stock',
+    'Return',
+    'Sales',
+    'Closing',
+    'Sales value',
+    'Closing Value'
   ];
   final List<Map<String, dynamic>> tableData = [
     {
       'SL No': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
+      'Product Name ': '',
+      'Opening Stock': '',
+      'Return': '',
+      'Sales': '',
+      'Closing': '',
+      'Sales value': '',
+      'Closing Value': '',
     },
   ];
   @override
@@ -81,19 +58,20 @@ class _CollectionReport extends State<CollectionReport> {
             children: [
               const Row(
                 children: [
-                  CustomText(text: 'Collection Report :'),
+                  CustomText(text: 'Stock Statement :'),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
               Row(
                 children: [
                   CustomTextField(
-                    hintText: 'From',
+                    hintText: 'From Date',
                     width: screenWidth * 0.25,
+                    icon: Icon(Icons.arrow_drop_down_outlined),
                   ),
                   SizedBox(width: screenHeight * 0.2),
                   CustomTextField(
-                    hintText: 'To',
+                    hintText: 'To Date',
                     width: screenWidth * 0.25,
                   ),
                   SizedBox(width: screenHeight * 0.1),
@@ -105,7 +83,7 @@ class _CollectionReport extends State<CollectionReport> {
               ),
               SizedBox(height: screenHeight * 0.08),
               const Row(
-                children: [CustomText(text: 'Total Collection Report List ')],
+                children: [CustomText(text: 'Available Stock List')],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
@@ -113,7 +91,7 @@ class _CollectionReport extends State<CollectionReport> {
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.005),
+                padding: EdgeInsets.only(left: screenWidth * 0.32),
                 width: screenWidth,
                 height: screenHeight * 0.025,
                 decoration: BoxDecoration(
@@ -129,16 +107,6 @@ class _CollectionReport extends State<CollectionReport> {
                     )
                   ],
                 ),
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomButton(
-                      label: 'Print',
-                      onPressed: () {},
-                      width: screenWidth * 0.08)
-                ],
               ),
             ],
           ),

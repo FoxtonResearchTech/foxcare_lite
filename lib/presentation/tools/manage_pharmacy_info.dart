@@ -6,6 +6,8 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
+import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+
 class ManagePharmacyInfo extends StatefulWidget {
   const ManagePharmacyInfo({super.key});
 
@@ -20,22 +22,7 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: CustomAppBar(
-        backgroundColor: AppColors.appBar,
-        fieldNames: const [
-          'Pharmacy Information',
-          'Manage Pharmacy Information',
-          'Distributor List',
-          'Add / Delete Distributor',
-          'Profile',
-          'Logout',
-        ],
-        navigationMap: {
-          'Pharmacy Information': {
-            'Option 1': (context) => ManagePharmacyInfo(),
-          }
-        },
-      ),
+      appBar: const FoxCareLiteAppBar(),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(

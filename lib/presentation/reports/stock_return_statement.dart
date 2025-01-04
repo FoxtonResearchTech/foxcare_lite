@@ -9,52 +9,28 @@ import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart'
 import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../tools/manage_pharmacy_info.dart';
 
-class CollectionReport extends StatefulWidget {
-  const CollectionReport({super.key});
+class StockReturnStatement extends StatefulWidget {
+  const StockReturnStatement({super.key});
 
   @override
-  State<CollectionReport> createState() => _CollectionReport();
+  State<StockReturnStatement> createState() => _StockReturnStatement();
 }
 
-class _CollectionReport extends State<CollectionReport> {
+class _StockReturnStatement extends State<StockReturnStatement> {
   final List<String> headers = [
-    'SL No',
-    'Bill Number',
-    'Bill Date',
-    'Total Amount',
-    'Bill Details',
+    'Bill NO',
+    'Bill date',
+    'Distributor Name',
+    'Return value',
+    'Bill details',
   ];
   final List<Map<String, dynamic>> tableData = [
     {
-      'SL No': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
+      'Bill NO': '',
+      'Bill date': '',
+      'Distributor Name': '',
+      'Return value': '',
+      'Bill details': CustomButton(
         label: 'Open',
         onPressed: () {},
         width: 100,
@@ -81,19 +57,20 @@ class _CollectionReport extends State<CollectionReport> {
             children: [
               const Row(
                 children: [
-                  CustomText(text: 'Collection Report :'),
+                  CustomText(text: 'Stock Return Statement :'),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
               Row(
                 children: [
                   CustomTextField(
-                    hintText: 'From',
+                    hintText: 'From Date',
                     width: screenWidth * 0.25,
+                    icon: Icon(Icons.arrow_drop_down_outlined),
                   ),
                   SizedBox(width: screenHeight * 0.2),
                   CustomTextField(
-                    hintText: 'To',
+                    hintText: 'To Date',
                     width: screenWidth * 0.25,
                   ),
                   SizedBox(width: screenHeight * 0.1),
@@ -105,7 +82,7 @@ class _CollectionReport extends State<CollectionReport> {
               ),
               SizedBox(height: screenHeight * 0.08),
               const Row(
-                children: [CustomText(text: 'Total Collection Report List ')],
+                children: [CustomText(text: 'Available Stock Return List')],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
@@ -113,9 +90,8 @@ class _CollectionReport extends State<CollectionReport> {
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.005),
                 width: screenWidth,
-                height: screenHeight * 0.025,
+                height: screenHeight * 0.030,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.black,
@@ -130,16 +106,16 @@ class _CollectionReport extends State<CollectionReport> {
                   ],
                 ),
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.05),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CustomButton(
                       label: 'Print',
                       onPressed: () {},
-                      width: screenWidth * 0.08)
+                      width: screenWidth * 0.1)
                 ],
-              ),
+              )
             ],
           ),
         ),
