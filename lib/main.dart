@@ -16,6 +16,8 @@ import 'package:foxcare_lite/presentation/tools/manage_pharmacy_info.dart';
 import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'presentation/dashboard/pharmecy_dashboard.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -62,7 +64,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: LoginScreen(),
+      home: SalesChartScreen(),
     );
   }
 }
