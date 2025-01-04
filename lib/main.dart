@@ -4,6 +4,7 @@ import 'package:foxcare_lite/presentation/billings/counter_sales.dart';
 import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/billings/prescription_billing.dart';
+import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/reports/collection_report.dart';
 import 'package:foxcare_lite/presentation/reports/party_wise_statement.dart';
 import 'package:foxcare_lite/presentation/reports/pending_payment_report.dart';
@@ -58,10 +59,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: DistributorList(),
+      home: LoginScreen(),
     );
   }
 }
