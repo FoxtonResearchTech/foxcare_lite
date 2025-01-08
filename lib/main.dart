@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: BillSearch(),
+      home: SalesChartScreen(),
     );
   }
 }
