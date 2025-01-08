@@ -5,7 +5,7 @@ import '../../colors.dart';
 class CustomTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
-  final double width;
+  final double? width;
   final double verticalSize;
   final double horizontalSize;
 

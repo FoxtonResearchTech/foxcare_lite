@@ -5,6 +5,8 @@ import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/billings/prescription_billing.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
+import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
+import 'package:foxcare_lite/presentation/pages/ip_admission.dart';
 import 'package:foxcare_lite/presentation/reports/broken_or_damaged_statement.dart';
 import 'package:foxcare_lite/presentation/reports/collection_report.dart';
 import 'package:foxcare_lite/presentation/reports/expiry_return_statement.dart';
@@ -45,10 +47,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: SalesChartScreen(),
+      home: RxPrescription(),
     );
   }
 }

@@ -39,6 +39,11 @@ dependencies:
   syncfusion_flutter_datagrid: ^28.1.36
   win32: ^5.10.0
   fl_chart: ^0.69.2
+  iconsax: ^0.0.8
+  pdf: ^3.11.1
+  lottie: ^3.3.0
+  path_provider: ^2.1.5
+  custom_check_box: ^0.0.4
 
 dev_dependencies:
   flutter_test:
