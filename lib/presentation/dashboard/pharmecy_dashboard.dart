@@ -2,43 +2,92 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class SalesChartScreen extends StatelessWidget {
-  const SalesChartScreen({Key? key}) : super(key: key); // Added 'key' parameter
+  const SalesChartScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Sales Data Line Chart'),
+        title: const Text('Sales Data Line Chart'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SalesLineChart(), // No changes needed here
-      ),
+      body:Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SalesLineChart(),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const ScrollPhysics(),
+              scrollDirection: Axis.vertical,
+              child: Column(
+                children: [
+                  GradientBox(
+                    gradientColors: [Colors.blue, Colors.lightBlueAccent, Colors.cyan],
+                    text: 'Hello!',
+                  ),
+                  SizedBox(height: 20),
+                  GradientBox(
+                    gradientColors: [Colors.red, Colors.orange, Colors.yellow],
+                    text: 'Amazing!',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      )
+
     );
   }
 }
 
 class SalesLineChart extends StatelessWidget {
-  const SalesLineChart({Key? key}) : super(key: key); // Added 'key' parameter
+  const SalesLineChart({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final List<String> months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+
+    final List<double> sales2024 = [
+      1500, 2000, 1800, 2200, 3000, 3500, 3200, 2900, 3300, 4000, 4500, 5000
+    ];
+
+    final List<double> sales2025 = [
+      1600, 2100, 1900, 2400, 3100, 3600, 3300, 3000, 3400, 4100, 4600, 5100
+    ];
+
     return Container(
-      width: MediaQuery.of(context).size.width * 0.7, // 70% of screen width
+      width: MediaQuery.of(context).size.width * 0.7,
       child: LineChart(
         LineChartData(
           backgroundColor: Colors.white,
           gridData: FlGridData(
             show: true,
             drawHorizontalLine: true,
-            horizontalInterval: 1,
+            horizontalInterval: 1000,
             verticalInterval: 1,
             getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.white,
+              color: Colors.grey.shade300,
               strokeWidth: 0.5,
             ),
             getDrawingVerticalLine: (value) => FlLine(
-              color: Colors.grey.shade700,
+              color: Colors.grey.shade300,
               strokeWidth: 0.5,
             ),
           ),
@@ -47,55 +96,43 @@ class SalesLineChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  return Text(
-                    '\$${value.toInt()}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  );
-                },
+                getTitlesWidget: (value, meta) => Text(
+                  '\$${value.toInt()}',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 60,
+                reservedSize: 40,
                 getTitlesWidget: (value, meta) {
-                  List<String> months = [
-                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                  ];
+                  if (value.toInt() < 1 || value.toInt() > months.length) {
+                    return const SizedBox.shrink();
+                  }
 
-                  List<double> sales2024 = [
-                    1500, 2000, 1800, 2200, 3000, 3500, 3200, 2900, 3300, 4000, 4500, 5000
-                  ];
-
-                  List<double> sales2025 = [
-                    1600, 2100, 1900, 2400, 3100, 3600, 3300, 3000, 3400, 4100, 4600, 5100
-                  ];
-
-                  int monthIndex = value.toInt() - 1;
-                  double sales = sales2024[monthIndex] + sales2025[monthIndex];
+                  final int index = value.toInt() - 1;
+                  final double sales = sales2024[index] + sales2025[index];
 
                   return Column(
                     children: [
                       Text(
-                        months[value.toInt() - 1],
-                        style: TextStyle(
-                          color: Colors.white,
+                        months[index],
+                        style: const TextStyle(
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         '₹${sales.toInt()}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        style: const TextStyle(
+                          color: Colors.black,
                           fontSize: 10,
                         ),
                       ),
@@ -107,7 +144,7 @@ class SalesLineChart extends StatelessWidget {
           ),
           borderData: FlBorderData(
             show: true,
-            border: Border.all(color: Colors.white, width: 1),
+            border: Border.all(color: Colors.grey.shade300, width: 1),
           ),
           minX: 1,
           maxX: 12,
@@ -115,73 +152,83 @@ class SalesLineChart extends StatelessWidget {
           maxY: 6000,
           lineBarsData: [
             LineChartBarData(
-              spots: [
-                FlSpot(1, 1500),
-                FlSpot(2, 2000),
-                FlSpot(3, 1800),
-                FlSpot(4, 2200),
-                FlSpot(5, 3000),
-                FlSpot(6, 3500),
-                FlSpot(7, 3200),
-                FlSpot(8, 2900),
-                FlSpot(9, 3300),
-                FlSpot(10, 4000),
-                FlSpot(11, 4500),
-                FlSpot(12, 5000),
-              ],
+              spots: sales2024
+                  .asMap()
+                  .entries
+                  .map((e) => FlSpot(e.key + 1.0, e.value))
+                  .toList(),
               isCurved: true,
               color: Colors.green,
               barWidth: 4,
               isStrokeCapRound: true,
               belowBarData: BarAreaData(
                 show: true,
-                color: Colors.blue.withOpacity(0.3),
+                color: Colors.green.withOpacity(0.3),
               ),
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (spot, lineBarData, index, rodData) {
-                  return FlDotCirclePainter(
-                    color: Colors.blue,
-                    radius: 6,
-                  );
-                },
-              ),
+              dotData: FlDotData(show: false),
             ),
             LineChartBarData(
-              spots: [
-                FlSpot(1, 1600),
-                FlSpot(2, 2100),
-                FlSpot(3, 1900),
-                FlSpot(4, 2400),
-                FlSpot(5, 3100),
-                FlSpot(6, 3600),
-                FlSpot(7, 3300),
-                FlSpot(8, 3000),
-                FlSpot(9, 3400),
-                FlSpot(10, 4100),
-                FlSpot(11, 4600),
-                FlSpot(12, 5100),
-              ],
+              spots: sales2025
+                  .asMap()
+                  .entries
+                  .map((e) => FlSpot(e.key + 1.0, e.value))
+                  .toList(),
               isCurved: true,
               color: Colors.red,
               barWidth: 4,
               isStrokeCapRound: true,
               belowBarData: BarAreaData(
                 show: true,
-                color: Color(0xff3B315E).withOpacity(0.10),
+                color: Colors.red.withOpacity(0.1),
               ),
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (spot, lineBarData, index, rodData) {
-                  return FlDotCirclePainter(
-                    color: Colors.red,
-                    radius: 6,
-                  );
-                },
-              ),
+              dotData: FlDotData(show: false),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
 
+
+class GradientBox extends StatelessWidget {
+  final List<Color> gradientColors;
+  final String text;
+
+  const GradientBox({
+    Key? key,
+    required this.gradientColors,
+    required this.text,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 150,
+      height: 150,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(5, 5),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
