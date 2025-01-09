@@ -218,6 +218,7 @@ class SalesLineChart extends StatelessWidget {
             show: true,
             drawHorizontalLine: true,
             horizontalInterval: 1000,
+
             verticalInterval: 1,
             getDrawingHorizontalLine: (value) => FlLine(
               color: Colors.grey.shade300,
