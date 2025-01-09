@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1096335735322",
+    "project_id": "foxcarelite-a948c",
+    "storage_bucket": "foxcarelite-a948c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1096335735322:android:d69ddc82022fc079d6efa3",
+        "android_client_info": {
+          "package_name": "com.example.foxcare_lite"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnvVNLDBfmq4i8vW_hE41fWgMKXeOytXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

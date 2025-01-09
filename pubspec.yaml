@@ -39,6 +39,7 @@ dependencies:
   syncfusion_flutter_datagrid: ^28.1.36
   win32: ^5.10.0
   fl_chart: ^0.69.2
+  firebase_core: ^3.10.0
 
 dev_dependencies:
   flutter_test:
