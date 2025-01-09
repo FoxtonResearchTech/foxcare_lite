@@ -18,14 +18,16 @@ class CustomDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Container(
-      height: 40, // Adjust the height as needed
-      width: 100, // Adjust the width as needed
-      padding:
-          const EdgeInsets.symmetric(horizontal: 6), // Add some padding inside
+      height: screenHeight * 0.05,
+      width: screenWidth * 0.25,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.lightBlue, width: 2), // Blue border
-        borderRadius: BorderRadius.circular(12), // Rounded corners
+        border: Border.all(color: Colors.lightBlue, width: 2),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration.collapsed(
