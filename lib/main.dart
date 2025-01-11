@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/pages/customerService/admin_chat_panel.dart';
+import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'package:foxcare_lite/presentation/signup/role_selection_page.dart';
 import 'firebase_options.dart';
@@ -22,10 +24,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: EmployeeRegistration(),
+      home: PatientRegistration(),
     );
   }
 }

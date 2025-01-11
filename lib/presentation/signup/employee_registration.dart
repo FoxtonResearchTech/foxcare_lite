@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/login/login.dart';
+import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 
 import '../../utilities/colors.dart';
@@ -93,20 +95,23 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
       // Firestore reference
       final firestore = FirebaseFirestore.instance;
 
-      // Add employee details to position subcollection
       if (positionSelectedValue != null) {
-        // Create a document in the subcollection with the user's UID
+        // Use the user ID as the document ID
+        String docId = userCredential.user!.uid;
+
         await firestore
             .collection('employees')
             .doc(positionSelectedValue)
-            .collection('details') // Subcollection name
-            .doc(userCredential.user?.uid) // Use UID as document ID
+            .collection('details')
+            .doc(docId) // Use the Firebase user ID as the document ID
             .set({
+              'docId': docId, // Store the document ID
               'empCode': empCodeController.text,
               'firstName': firstNameController.text,
               'lastName': lastNameController.text,
               'relationName': relationNameController.text,
               'relationType': relationSelectedValue,
+              'position': positionSelectedValue,
               'email': emailController.text,
               'password': passwordController.text,
               'phone1': phone1Controller.text,
@@ -533,6 +538,10 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                         label: 'Create',
                         onPressed: () {
                           registerEmployee();
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => PatientRegistration()));
                         },
                         width: screenWidth * 0.08,
                         height: screenHeight * 0.05,
