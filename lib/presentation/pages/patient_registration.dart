@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/reception/op_ticket_generate.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
@@ -17,8 +19,8 @@ class PatientRegistration extends StatefulWidget {
 
 class _PatientRegistrationState extends State<PatientRegistration> {
   int selectedIndex = 0;
-  String selectedSex = 'Male'; // Default value for Sex
-  String selectedBloodGroup = 'A+'; // Default value for Blood Group
+  String? selectedSex; // Default value for Sex
+  String? selectedBloodGroup; // Default value for Blood Group
   final TextEditingController firstname = TextEditingController();
   final TextEditingController lastname = TextEditingController();
   final TextEditingController middlename = TextEditingController();
@@ -45,6 +47,92 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
   String uid = '';
 
+  Future<void> savePatientDetails() async {
+    final patientID = generateNumericUid();
+
+    // Validate input
+    if (firstname.text.isEmpty ||
+        lastname.text.isEmpty ||
+        selectedSex == null ||
+        selectedBloodGroup == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill all required fields")),
+      );
+      return;
+    }
+
+    // Create patient data object
+    Map<String, dynamic> patientData = {
+      'patientID': patientID,
+      'firstName': firstname.text,
+      'middleName': middlename.text,
+      'lastName': lastname.text,
+      'sex': selectedSex,
+      'age': age.text,
+      'dob': dob.text,
+      'address1': address1.text,
+      'address2': address2.text,
+      'landmark': landmark.text,
+      'city': city.text,
+      'state': state.text,
+      'pincode': pincode.text,
+      'phone1': phone1.text,
+      'phone2': phone2.text,
+      'bloodGroup': selectedBloodGroup,
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(patientID)
+          .set(patientData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Patient registered successfully")),
+      );
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PdfPage(
+            firstName: firstname.text,
+            lastName: lastname.text,
+            opNumber: patientID,
+            address:
+                '${address1.text}, ${address2.text}, ${city.text}, ${state.text}, ${pincode.text}',
+            phone: phone1.text,
+            age: age.text,
+            sex: selectedSex.toString(),
+          ),
+        ),
+      );
+      clearForm();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to register patient: $e")),
+      );
+    }
+  }
+
+  void clearForm() {
+    firstname.clear();
+    lastname.clear();
+    middlename.clear();
+    age.clear();
+    dob.clear();
+    address1.clear();
+    address2.clear();
+    landmark.clear();
+    city.clear();
+    state.clear();
+    pincode.clear();
+    phone1.clear();
+    phone2.clear();
+    setState(() {
+      selectedSex = null;
+      selectedBloodGroup = null;
+    });
+  }
+
   @override
   void initState() {
     // Call the method to generate the UID and assign it to 'uid'
@@ -60,7 +148,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text(
+              title: const Text(
                 'Reception Dashboard',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
@@ -83,7 +171,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(28.0),
+              padding: const EdgeInsets.all(28.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth > 600) {
@@ -105,7 +193,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
+        const DrawerHeader(
           decoration: BoxDecoration(
             color: Colors.blue,
           ),
@@ -123,7 +211,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             MaterialPageRoute(builder: (context) => PatientRegistration()),
           );
         }, Iconsax.mask),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -132,7 +220,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             MaterialPageRoute(builder: (context) => OpTicketPage()),
           );
         }, Iconsax.receipt),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -141,30 +229,30 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             MaterialPageRoute(builder: (context) => IpAdmissionPage()),
           );
         }, Iconsax.add_circle),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(3, 'OP Counters', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => OpCounters()),
+            MaterialPageRoute(builder: (context) => const OpCounters()),
           );
         }, Iconsax.square),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdmissionStatus()),
+            MaterialPageRoute(builder: (context) => const AdmissionStatus()),
           );
         }, Iconsax.status),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(5, 'Doctor Visit Schedule', () {}, Iconsax.hospital),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -206,8 +294,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 0),
-        Row(
+        const SizedBox(height: 0),
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Patient Information :',
@@ -217,7 +305,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                     fontWeight: FontWeight.bold)),
           ],
         ),
-        SizedBox(height: 60),
+        const SizedBox(height: 60),
         Row(
           children: [
             Expanded(
@@ -226,14 +314,14 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               controller: firstname,
               width: null,
             )),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
                 child: CustomTextField(
               hintText: 'Middle Name',
               controller: middlename,
               width: null,
             )),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
                 child: CustomTextField(
               hintText: 'Last Name',
@@ -242,10 +330,10 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             )),
           ],
         ),
-        SizedBox(height: 40),
+        const SizedBox(height: 40),
         Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 40,
               child: Text(
                 'SEX :',
@@ -266,8 +354,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                 },
               ),
             ),
-            SizedBox(width: 20),
-            SizedBox(
+            const SizedBox(width: 20),
+            const SizedBox(
               width: 40,
               child: Text(
                 'AGE :',
@@ -283,8 +371,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                 width: null,
               ),
             ),
-            SizedBox(width: 20),
-            SizedBox(
+            const SizedBox(width: 20),
+            const SizedBox(
               width: 40,
               child: Text(
                 'DOB :',
@@ -301,19 +389,19 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             )),
           ],
         ),
-        SizedBox(height: 40),
+        const SizedBox(height: 40),
         CustomTextField(
           hintText: 'Address Line 1',
           controller: address1,
           width: null,
         ),
-        SizedBox(height: 30),
+        const SizedBox(height: 30),
         CustomTextField(
           hintText: 'Address Line 2',
           controller: address2,
           width: null,
         ),
-        SizedBox(height: 40),
+        const SizedBox(height: 40),
         Row(
           children: [
             Expanded(
@@ -322,14 +410,14 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               controller: landmark,
               width: null,
             )),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
                 child: CustomTextField(
               hintText: "City",
               controller: city,
               width: null,
             )),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
                 child: CustomTextField(
               hintText: "State",
@@ -338,7 +426,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             )),
           ],
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
@@ -347,14 +435,14 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               controller: pincode,
               width: null,
             )),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
                 child: CustomTextField(
               hintText: 'Phone Number 1',
               controller: phone1,
               width: null,
             )),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
                 child: CustomTextField(
               hintText: 'Phone Number 2',
@@ -363,10 +451,10 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             )),
           ],
         ),
-        SizedBox(height: 40),
+        const SizedBox(height: 40),
         Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 100,
               child: Text(
                 'BLOOD GROUP :',
@@ -386,13 +474,15 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                 }),
           ],
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Center(
           child: SizedBox(
               width: 400,
               child: CustomButton(
                 label: 'Register',
-                onPressed: () {},
+                onPressed: () {
+                  savePatientDetails();
+                },
                 width: null,
               )),
         )
@@ -405,7 +495,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
@@ -425,25 +515,25 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
           ],
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         CustomTextField(
           hintText: 'First Name',
           controller: firstname,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Middle Name',
           controller: middlename,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Last Name',
           controller: lastname,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomDropdown(
             label: 'Sex',
             items: ['Male', 'Female', 'Other'],
@@ -453,67 +543,67 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                 selectedSex = value!;
               });
             }),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Age',
           controller: age,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'DOB (YYYY-MM-DD)',
           controller: dob,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Address Line 1',
           controller: address1,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Address Line 2',
           controller: address2,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Land Mark',
           controller: landmark,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'City',
           controller: city,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'State',
           controller: state,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Pincode',
           controller: pincode,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Mobile 1',
           controller: phone1,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomTextField(
           hintText: 'Mobile 2',
           controller: phone2,
           width: null,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         CustomDropdown(
             label: 'Blood Group',
             items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
@@ -523,7 +613,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                 selectedBloodGroup = value!;
               });
             }),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Center(
           child: SizedBox(
               width: 250,
@@ -543,10 +633,10 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(
+        labelStyle: const TextStyle(
           fontFamily: 'SanFrancisco',
         ),
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
       ),
       value: selectedItem,
       items: items.map<DropdownMenuItem<String>>((String value) {
