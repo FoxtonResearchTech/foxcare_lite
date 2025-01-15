@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utilities/widgets/buttons/primary_button.dart';
+import '../../utilities/widgets/text/primary_text.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
 import 'ip_admission.dart';
@@ -17,9 +19,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   TimeOfDay now = TimeOfDay.now();
   final date = DateTime.timestamp();
   int selectedIndex = 1;
-  String selectedSex = 'Male'; // Default value for Sex
-  String selectedBloodGroup =
-      'A+'; // Default value for Blood Group\  final TextEditingController firstname = TextEditingController();
+  final TextEditingController firstname = TextEditingController();
   final TextEditingController lastname = TextEditingController();
   final TextEditingController searchOpNumber = TextEditingController();
   final TextEditingController searchPhoneNumber = TextEditingController();
@@ -28,6 +28,90 @@ class _OpTicketPageState extends State<OpTicketPage> {
   List<Map<String, String>> searchResults =
       []; // Dynamically manage search results
   Map<String, String>? selectedPatient;
+
+  int tokenNumber = 0;
+  String lastSavedDate = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeToken();
+  }
+
+  /// Load the token and check the date
+  Future<void> _initializeToken() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Retrieve saved token and date
+    final savedDate = prefs.getString('lastSavedDate') ?? '';
+    final savedToken = prefs.getInt('tokenNumber') ?? 0;
+
+    if (savedDate == _currentDateString()) {
+      // Same day, load saved token
+      setState(() {
+        tokenNumber = savedToken;
+        lastSavedDate = savedDate;
+      });
+    } else {
+      // Different day, reset the token
+      await _resetToken();
+    }
+  }
+
+  /// Generate a new token and save to Firestore
+  Future<void> _generateToken(String selectedPatientId) async {
+    setState(() {
+      tokenNumber++;
+    });
+
+    // Save to SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('tokenNumber', tokenNumber);
+    await prefs.setString('lastSavedDate', _currentDateString());
+
+    // Save token to Firestore under the selected patient's subcollection
+    try {
+      final firestore = FirebaseFirestore.instance;
+
+      await firestore
+          .collection('patients')
+          .doc(selectedPatientId) // Use the selected patient's ID
+          .collection('tokens')
+          .doc('currentToken') // Use a static ID or generate unique ones
+          .set({
+        'tokenNumber': tokenNumber,
+        'date': _currentDateString(),
+      });
+
+      showMessage('Token saved: $tokenNumber');
+    } catch (e) {
+      showMessage('Failed to save token: $e');
+    }
+  }
+
+  /// Reset the token to 0
+  Future<void> _resetToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('tokenNumber', 0);
+    await prefs.setString('lastSavedDate', _currentDateString());
+
+    setState(() {
+      tokenNumber = 0;
+      lastSavedDate = _currentDateString();
+    });
+  }
+
+  /// Get the current date as a string
+  String _currentDateString() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month}-${now.day}';
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   Future<List<Map<String, String>>> searchPatients(
       String opNumber, String phoneNumber) async {
@@ -474,9 +558,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
               SizedBox(
                 width: 200,
-                child: buildTextField(
-                  'OP Number',
-                  initialValue: selectedPatient?['opNumber'],
+                child: CustomText(
+                  text: "${selectedPatient?['opNumber']}",
                 ),
               ),
               SizedBox(
@@ -493,10 +576,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
               SizedBox(
                 width: 200,
-                child: buildTextField(
-                  'OP Number',
-                  initialValue: selectedPatient?['name'],
-                ),
+                child: CustomText(text: "${selectedPatient?['name']}"),
               ),
             ],
           ),
@@ -515,9 +595,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
               SizedBox(
                 width: 200,
-                child: buildTextField('OP Number',
-                    initialValue: selectedPatient?['age'],
-                    inputType: TextInputType.number),
+                child: CustomText(text: "${selectedPatient?['age']}"),
               ),
               SizedBox(
                 width: 20,
@@ -533,9 +611,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
               SizedBox(
                 width: 200,
-                child: buildTextField('Phone',
-                    initialValue: selectedPatient?['phone'],
-                    inputType: TextInputType.phone),
+                child: CustomText(text: "${selectedPatient?['phone']}"),
               ),
             ],
           ),
@@ -554,8 +630,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
               SizedBox(
                 width: 200,
-                child: buildTextField('Address',
-                    initialValue: selectedPatient?['address']),
+                child: CustomText(text: "${selectedPatient?['address']}"),
               ),
               SizedBox(
                 width: 20,
@@ -571,9 +646,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
               SizedBox(
                 width: 200,
-                child: buildTextField('Phone',
-                    initialValue: selectedPatient?['phone'],
-                    inputType: TextInputType.phone),
+                child: CustomText(text: "${selectedPatient?['lastOpDate']}"),
               ),
             ],
           ),
@@ -724,7 +797,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
               width: 200,
               child: CustomButton(
                 label: 'Generate',
-                onPressed: () {},
+                onPressed: () async {
+                  String? selectedPatientId = selectedPatient?['opNumber'];
+                  print(selectedPatientId);
+                  await _generateToken(selectedPatientId!);
+                },
                 width: null,
               ),
             ),
@@ -739,7 +816,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return TextField(
       decoration: InputDecoration(
         isDense: true,
-        enabled: false,
 
         // Reduces the overall height of the TextField
         contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
