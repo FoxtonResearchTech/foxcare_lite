@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/reception/op_ticket_generate.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
@@ -90,22 +91,50 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Patient registered successfully")),
       );
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PdfPage(
-            firstName: firstname.text,
-            lastName: lastname.text,
-            opNumber: patientID,
-            address:
-                '${address1.text}, ${address2.text}, ${city.text}, ${state.text}, ${pincode.text}',
-            phone: phone1.text,
-            age: age.text,
-            sex: selectedSex.toString(),
-          ),
-        ),
+
+      // Show a dialog with the entered details
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Patient Details'),
+            content: Container(
+              width: 350,
+              height: 300,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  CustomText(text: 'Patient ID: $patientID'),
+                  CustomText(text: 'First Name: ${firstname.text}'),
+                  CustomText(text: 'Middle Name: ${middlename.text}'),
+                  CustomText(text: 'Last Name: ${lastname.text}'),
+                  CustomText(text: 'Sex: ${selectedSex}'),
+                  CustomText(text: 'Age: ${age.text}'),
+                  CustomText(text: 'DOB: ${dob.text}'),
+                  CustomText(
+                      text: 'Address: ${address1.text}, ${address2.text}'),
+                  CustomText(text: 'Landmark: ${landmark.text}'),
+                  CustomText(text: 'City: ${city.text}'),
+                  CustomText(text: 'State: ${state.text}'),
+                  CustomText(text: 'Pincode: ${pincode.text}'),
+                  CustomText(text: 'Phone 1: ${phone1.text}'),
+                  CustomText(text: 'Phone 2: ${phone2.text}'),
+                  CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  clearForm();
+                },
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
       );
-      clearForm();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to register patient: $e")),

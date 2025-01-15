@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:iconsax/iconsax.dart';
@@ -17,27 +18,66 @@ class _OpTicketPageState extends State<OpTicketPage> {
   final date = DateTime.timestamp();
   int selectedIndex = 1;
   String selectedSex = 'Male'; // Default value for Sex
-  String selectedBloodGroup = 'A+'; // Default value for Blood Group
+  String selectedBloodGroup =
+      'A+'; // Default value for Blood Group\  final TextEditingController firstname = TextEditingController();
+  final TextEditingController lastname = TextEditingController();
+  final TextEditingController searchOpNumber = TextEditingController();
+  final TextEditingController searchPhoneNumber = TextEditingController();
 
   bool isSearchPerformed = false; // To track if search has been performed
+  List<Map<String, String>> searchResults =
+      []; // Dynamically manage search results
   Map<String, String>? selectedPatient;
 
-  final List<Map<String, String>> searchResults = [
-    {
-      'opNumber': '12345',
-      'name': 'John Doe',
-      'age': '30',
-      'phone': '9876543210',
-      'address': '123 Street Name, City'
-    },
-    {
-      'opNumber': '54321',
-      'name': 'Jane Smith',
-      'age': '25',
-      'phone': '9876543220',
-      'address': '456 Another St, City'
-    },
-  ];
+  Future<List<Map<String, String>>> searchPatients(
+      String opNumber, String phoneNumber) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    List<Map<String, String>> patientsList = [];
+    List<QueryDocumentSnapshot> docs = [];
+
+    // Perform query based on opNumber, phoneNumber, or both
+    if (opNumber.isNotEmpty) {
+      final QuerySnapshot snapshot = await firestore
+          .collection('patients')
+          .where('patientID', isEqualTo: opNumber)
+          .get();
+      docs.addAll(snapshot.docs);
+    }
+
+    // Perform query based on phoneNumber for phone1
+    if (phoneNumber.isNotEmpty) {
+      final QuerySnapshot snapshotPhone1 = await firestore
+          .collection('patients')
+          .where('phone1', isEqualTo: phoneNumber)
+          .get();
+      docs.addAll(snapshotPhone1.docs);
+
+      // Perform query based on phoneNumber for phone2
+      final QuerySnapshot snapshotPhone2 = await firestore
+          .collection('patients')
+          .where('phone2', isEqualTo: phoneNumber)
+          .get();
+      docs.addAll(snapshotPhone2.docs);
+    }
+
+    // Eliminate duplicates based on the document ID
+    final uniqueDocs = docs.toSet();
+
+    // Map documents to the desired structure
+    for (var doc in uniqueDocs) {
+      patientsList.add({
+        'opNumber': doc['patientID'] ?? '',
+        'name':
+            ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '')).trim(),
+        'age': doc['age'] ?? '',
+        'phone': doc['phone1'] ?? '',
+        'address': doc['address1'] ?? '',
+      });
+    }
+
+    return patientsList;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +231,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Patient Search:',
+          Text('Patient Search: ',
               style: TextStyle(
                   fontFamily: 'SanFrancisco',
                   fontSize: 24,
@@ -200,11 +240,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text('Enter OP Number : ',
+              Text('Enter OP Number: ',
                   style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
               SizedBox(
                 width: 250,
-                child: CustomTextField(hintText: 'OP Number', width: null,),
+                child: CustomTextField(
+                  hintText: 'OP Number',
+                  controller: searchOpNumber,
+                  width: null,
+                ),
               ),
               SizedBox(width: 20),
             ],
@@ -213,11 +257,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text('Enter Phone Number : ',
+              Text('Enter Phone Number: ',
                   style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
               SizedBox(
                 width: 250,
-                child: CustomTextField(hintText: 'Phone Number', width: null,),
+                child: CustomTextField(
+                  controller: searchPhoneNumber,
+                  hintText: 'Phone Number',
+                  width: null,
+                ),
               ),
               SizedBox(width: 20),
             ],
@@ -230,18 +278,26 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 width: 250,
                 child: CustomButton(
                   label: 'Search',
-                  onPressed: () {
+                  onPressed: () async {
+                    // Fetch patients based on OP number and phone number
+                    final searchResultsFetched = await searchPatients(
+                      searchOpNumber.text,
+                      searchPhoneNumber.text,
+                    );
                     setState(() {
+                      searchResults =
+                          searchResultsFetched; // Update searchResults
                       isSearchPerformed = true; // Show the table after search
                     });
-                  }, width: null,
+                  },
+                  width: null,
                 ),
               ),
             ],
           ),
           SizedBox(height: 40),
           if (isSearchPerformed) ...[
-            Text('Search Results:',
+            Text('Search Results: ',
                 style: TextStyle(
                     fontFamily: 'SanFrancisco',
                     fontSize: 22,
@@ -288,7 +344,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Patient Search:',
+            Text('Patient Search: ',
                 style: TextStyle(
                     fontFamily: 'SanFrancisco',
                     fontSize: 24,
@@ -297,11 +353,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text('Enter OP Number : ',
+                Text('Enter OP Number: ',
                     style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
                 SizedBox(
                   width: 250,
-                  child: CustomTextField(hintText: 'OP Number', width: null,),
+                  child: CustomTextField(
+                    hintText: 'OP Number',
+                    width: null,
+                  ),
                 ),
                 SizedBox(width: 20),
               ],
@@ -310,11 +369,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text('Enter Phone Number : ',
+                Text('Enter Phone Number: ',
                     style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
                 SizedBox(
                   width: 250,
-                  child: CustomTextField(hintText: 'Phone Number', width: null,),
+                  child: CustomTextField(
+                    hintText: 'Phone Number',
+                    width: null,
+                  ),
                 ),
                 SizedBox(width: 20),
               ],
@@ -331,14 +393,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
                       setState(() {
                         isSearchPerformed = true; // Show the table after search
                       });
-                    }, width: null,
+                    },
+                    width: null,
                   ),
                 ),
               ],
             ),
             SizedBox(height: 40),
             if (isSearchPerformed) ...[
-              Text('Search Results:',
+              Text('Search Results: ',
                   style: TextStyle(
                       fontFamily: 'SanFrancisco',
                       fontSize: 22,
@@ -552,8 +615,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               SizedBox(
                   width: 220,
-                  child: CustomTextField(
-                    hintText: 'Enter Token Number', width: null,
+                  child: buildTextField(
+                    'Enter Token Number',
                   )),
             ],
           ),
@@ -571,8 +634,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               SizedBox(
                   width: 220,
-                  child: CustomTextField(
-                    hintText: 'Counter', width: null,
+                  child: buildTextField(
+                    'Counter',
                   )),
               SizedBox(
                 width: 20,
@@ -587,8 +650,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               SizedBox(
                   width: 220,
-                  child: CustomTextField(
-                    hintText: 'Enter Doctor Name', width: null,
+                  child: buildTextField(
+                    'Enter Doctor Name',
                   )),
             ],
           ),
@@ -606,8 +669,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               SizedBox(
                   width: 220,
-                  child: CustomTextField(
-                    hintText: 'Enter Blood Pressure', width: null,
+                  child: buildTextField(
+                    'Enter Blood Pressure',
                   )),
               SizedBox(
                 width: 20,
@@ -622,8 +685,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               SizedBox(
                   width: 220,
-                  child: CustomTextField(
-                    hintText: 'Enter Temperature', width: null,
+                  child: buildTextField(
+                    'Enter Temperature',
                   )),
             ],
           ),
@@ -641,8 +704,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               SizedBox(
                   width: 220,
-                  child: CustomTextField(
-                    hintText: 'Enter Blood Sugar Level', width: null,
+                  child: buildTextField(
+                    'Enter Blood Sugar Level',
                   )),
             ],
           ),
@@ -650,7 +713,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
           SizedBox(
             width: 600,
             child: CustomTextField(
-              hintText: 'Enter Other Comments', width: null,
+              hintText: 'Enter Other Comments',
+              width: null,
             ),
           ),
           SizedBox(height: 20),
@@ -660,7 +724,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
               width: 200,
               child: CustomButton(
                 label: 'Generate',
-                onPressed: () {}, width: null,
+                onPressed: () {},
+                width: null,
               ),
             ),
           ),
@@ -674,6 +739,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return TextField(
       decoration: InputDecoration(
         isDense: true,
+        enabled: false,
+
         // Reduces the overall height of the TextField
         contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
         hintText: label,
