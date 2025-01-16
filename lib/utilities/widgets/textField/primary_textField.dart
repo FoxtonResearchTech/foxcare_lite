@@ -8,6 +8,7 @@ class CustomTextField extends StatelessWidget {
   final double? width;
   final double verticalSize;
   final double horizontalSize;
+  final FocusNode? focusNode;
 
   final TextEditingController? controller;
   final Icon? icon;
@@ -21,6 +22,7 @@ class CustomTextField extends StatelessWidget {
     required this.width,
     this.verticalSize = 8.0,
     this.horizontalSize = 12.0,
+    this.focusNode,
   });
 
   @override

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -15,6 +17,50 @@ class RxPrescription extends StatefulWidget {
 class _RxPrescriptionState extends State<RxPrescription> {
   int selectedIndex = 1;
   String selectedValue = 'Medication';
+  final List<String> _allItems = [
+    'Paracetamol',
+    'Ibuprofen',
+    'Amoxicillin',
+    'Metformin',
+    'Aspirin',
+    'Omeprazole',
+    'Lisinopril',
+    'Atorvastatin',
+    'Albuterol',
+    'Cetirizine',
+  ];
+  List<String> _filteredItems = [];
+  List<String> _selectedItems = [];
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = _allItems;
+  }
+
+  void _filterItems(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredItems = _allItems
+          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  void _addSelectedItem(String item) {
+    if (!_selectedItems.contains(item)) {
+      setState(() {
+        _selectedItems.add(item);
+      });
+    }
+  }
+
+  void _removeSelectedItem(String item) {
+    setState(() {
+      _selectedItems.remove(item);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -457,6 +503,72 @@ class _RxPrescriptionState extends State<RxPrescription> {
           ),
           SizedBox(
             height: 35,
+          ),
+          Container(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 4.0,
+                  children: _selectedItems
+                      .map((item) => Chip(
+                            shadowColor: Colors.white,
+                            backgroundColor: AppColors.secondaryColor,
+                            label: CustomText(
+                              text: item,
+                              color: Colors.white,
+                            ),
+                            deleteIcon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ),
+                            onDeleted: () {
+                              // Remove item from selected items
+                              setState(() {
+                                _selectedItems.remove(item);
+                              });
+                            },
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 20),
+                // Search field
+                TextField(
+                  onChanged: _filterItems,
+                  decoration: InputDecoration(
+                    labelText: 'Search Medication',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    suffixIcon: const Icon(Icons.search),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // ListView inside a SizedBox with fixed height
+                SizedBox(
+                  height: 100, // Adjust height based on your layout
+                  child: ListView.builder(
+                    itemCount: _filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _filteredItems[index];
+                      return ListTile(
+                        title: Text(item),
+                        onTap: () {
+                          // Add item to selected items
+                          if (!_selectedItems.contains(item)) {
+                            setState(() {
+                              _selectedItems.add(item);
+                            });
+                          }
+                          print('Selected: $item');
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
