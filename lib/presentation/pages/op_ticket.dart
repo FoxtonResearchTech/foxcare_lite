@@ -45,6 +45,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     // Retrieve saved token and date
     final savedDate = prefs.getString('lastSavedDate') ?? '';
     final savedToken = prefs.getInt('tokenNumber') ?? 0;
+    print('Retrieved tokenNumber: $savedToken, Date: $savedDate');
 
     if (savedDate == _currentDateString()) {
       // Same day, load saved token
@@ -171,7 +172,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text(
+              title: const Text(
                 'OP Ticket Dashboard',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
@@ -194,7 +195,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth > 600) {
@@ -215,7 +216,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
+        const DrawerHeader(
           decoration: BoxDecoration(
             color: Colors.blue,
           ),
@@ -234,7 +235,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
             MaterialPageRoute(builder: (context) => PatientRegistration()),
           );
         }, Iconsax.mask),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -243,7 +244,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
             MaterialPageRoute(builder: (context) => OpTicketPage()),
           );
         }, Iconsax.receipt),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -252,27 +253,27 @@ class _OpTicketPageState extends State<OpTicketPage> {
             MaterialPageRoute(builder: (context) => IpAdmissionPage()),
           );
         }, Iconsax.add_circle),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(3, 'OP Counters', () {}, Iconsax.square),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdmissionStatus()),
+            MaterialPageRoute(builder: (context) => const AdmissionStatus()),
           );
         }, Iconsax.status),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(5, 'Doctor Visit Schedule', () {}, Iconsax.hospital),
 
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -315,16 +316,16 @@ class _OpTicketPageState extends State<OpTicketPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Patient Search: ',
+          const Text('Patient Search: ',
               style: TextStyle(
                   fontFamily: 'SanFrancisco',
                   fontSize: 24,
                   fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text('Enter OP Number: ',
+              const Text('Enter OP Number: ',
                   style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
               SizedBox(
                 width: 250,
@@ -334,14 +335,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   width: null,
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text('Enter Phone Number: ',
+              const Text('Enter Phone Number: ',
                   style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
               SizedBox(
                 width: 250,
@@ -351,10 +352,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   width: null,
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -379,20 +380,20 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
             ],
           ),
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
           if (isSearchPerformed) ...[
-            Text('Search Results: ',
+            const Text('Search Results: ',
                 style: TextStyle(
                     fontFamily: 'SanFrancisco',
                     fontSize: 22,
                     fontWeight: FontWeight.bold)),
             DataTable(
               columns: [
-                DataColumn(label: Text('OP Number')),
-                DataColumn(label: Text('Name')),
-                DataColumn(label: Text('Age')),
-                DataColumn(label: Text('Phone')),
-                DataColumn(label: Text('Address')),
+                const DataColumn(label: Text('OP Number')),
+                const DataColumn(label: Text('Name')),
+                const DataColumn(label: Text('Age')),
+                const DataColumn(label: Text('Phone')),
+                const DataColumn(label: Text('Address')),
               ],
               rows: searchResults.map((result) {
                 return DataRow(
@@ -412,7 +413,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             if (selectedPatient != null) buildPatientDetailsForm(),
           ],
         ],
@@ -428,13 +429,13 @@ class _OpTicketPageState extends State<OpTicketPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Patient Search: ',
+            const Text('Patient Search: ',
                 style: TextStyle(
                     fontFamily: 'SanFrancisco',
                     fontSize: 24,
                     fontWeight: FontWeight.bold)),
-            SizedBox(height: 20),
-            Row(
+            const SizedBox(height: 20),
+            const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text('Enter OP Number: ',
@@ -449,8 +450,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 SizedBox(width: 20),
               ],
             ),
-            SizedBox(height: 20),
-            Row(
+            const SizedBox(height: 20),
+            const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text('Enter Phone Number: ',
@@ -465,7 +466,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 SizedBox(width: 20),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -483,9 +484,9 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 ),
               ],
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             if (isSearchPerformed) ...[
-              Text('Search Results: ',
+              const Text('Search Results: ',
                   style: TextStyle(
                       fontFamily: 'SanFrancisco',
                       fontSize: 22,
@@ -494,11 +495,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: [
-                    DataColumn(label: Text('OP Number')),
-                    DataColumn(label: Text('Name')),
-                    DataColumn(label: Text('Age')),
-                    DataColumn(label: Text('Phone')),
-                    DataColumn(label: Text('Address')),
+                    const DataColumn(label: Text('OP Number')),
+                    const DataColumn(label: Text('Name')),
+                    const DataColumn(label: Text('Age')),
+                    const DataColumn(label: Text('Phone')),
+                    const DataColumn(label: Text('Address')),
                   ],
                   rows: searchResults.map((result) {
                     return DataRow(
@@ -519,7 +520,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               if (selectedPatient != null) buildPatientDetailsForm(),
             ],
           ],
@@ -534,20 +535,20 @@ class _OpTicketPageState extends State<OpTicketPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'OP Ticket Generation :',
             style: TextStyle(
                 fontFamily: 'SanFrancisco',
                 fontSize: 20,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 100,
                 child: Text(
                   'OP Number : ',
@@ -562,10 +563,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   text: "${selectedPatient?['opNumber']}",
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
-              SizedBox(
+              const SizedBox(
                 width: 80,
                 child: Text(
                   'Name : ',
@@ -580,11 +581,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 100,
                 child: Text(
                   'AGE : ',
@@ -597,10 +598,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 width: 200,
                 child: CustomText(text: "${selectedPatient?['age']}"),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
-              SizedBox(
+              const SizedBox(
                 width: 80,
                 child: Text(
                   'Phone : ',
@@ -615,11 +616,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 100,
                 child: Text(
                   'Address : ',
@@ -632,10 +633,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 width: 200,
                 child: CustomText(text: "${selectedPatient?['address']}"),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
-              SizedBox(
+              const SizedBox(
                 width: 80,
                 child: Text(
                   'Last OP Date : ',
@@ -650,21 +651,21 @@ class _OpTicketPageState extends State<OpTicketPage> {
               ),
             ],
           ),
-          SizedBox(height: 20),
-          Text(
+          const SizedBox(height: 20),
+          const Text(
             'Token Information :',
             style: TextStyle(
                 fontFamily: 'SanFrancisco',
                 fontSize: 20,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                   width: 70,
                   child: Text(
                     'Date : ',
@@ -675,10 +676,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
               SizedBox(
                   width: 220,
                   child: buildTextField('sdfsdf', initialValue: '$date')),
-              SizedBox(
+              const SizedBox(
                 width: 30,
               ),
-              SizedBox(
+              const SizedBox(
                   width: 80,
                   child: Text(
                     'TOKEN : ',
@@ -693,11 +694,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                   width: 80,
                   child: Text(
                     'Counter : ',
@@ -710,10 +711,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   child: buildTextField(
                     'Counter',
                   )),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
-              SizedBox(
+              const SizedBox(
                   width: 80,
                   child: Text(
                     'Doctor : ',
@@ -728,11 +729,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                   width: 80,
                   child: Text(
                     'BP : ',
@@ -745,10 +746,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   child: buildTextField(
                     'Enter Blood Pressure',
                   )),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
-              SizedBox(
+              const SizedBox(
                   width: 80,
                   child: Text(
                     'TEMP : ',
@@ -763,11 +764,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                   width: 90,
                   child: Text(
                     'Blood Sugar : ',
@@ -782,15 +783,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
             ],
           ),
-          SizedBox(height: 20),
-          SizedBox(
+          const SizedBox(height: 20),
+          const SizedBox(
             width: 600,
             child: CustomTextField(
               hintText: 'Enter Other Comments',
               width: null,
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.only(left: 250),
             child: SizedBox(
@@ -818,20 +819,21 @@ class _OpTicketPageState extends State<OpTicketPage> {
         isDense: true,
 
         // Reduces the overall height of the TextField
-        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
         hintText: label,
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           fontFamily: 'SanFrancisco',
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2.0),
+          borderSide: const BorderSide(color: Colors.blue, width: 2.0),
           borderRadius: BorderRadius.circular(15.0),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.lightBlue, width: 1),
+          borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
           borderRadius: BorderRadius.circular(15.0),
         ),
       ),
