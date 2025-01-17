@@ -3,10 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
+import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
-import '../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../utilities/widgets/image/custom_image.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
 
@@ -77,17 +77,8 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
-  String? positionSelectedValue;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  final List<String> roles = [
-    'Pharmacist',
-    'Receptionist',
-    'Doctor',
-    'Lab Assistance',
-    'X-Ray Technician'
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +93,7 @@ class _LoginFormState extends State<LoginForm> {
           text: 'Welcome back!',
         ),
         const CustomText(
-          text: 'Enter your credentials and role to access your account',
+          text: 'Enter your credentials to access your account',
         ),
         SizedBox(height: screenHeight * 0.03),
         CustomTextField(
@@ -118,17 +109,6 @@ class _LoginFormState extends State<LoginForm> {
           width: screenWidth * 0.4,
         ),
         SizedBox(height: screenHeight * 0.03),
-        CustomDropdown(
-          label: 'Position',
-          items: roles,
-          selectedItem: positionSelectedValue,
-          onChanged: (value) {
-            setState(() {
-              positionSelectedValue = value!;
-            });
-          },
-        ),
-        SizedBox(height: screenHeight * 0.03),
         Center(
           child: CustomButton(
             label: "Login",
@@ -141,11 +121,6 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> _login() async {
-    if (positionSelectedValue == null) {
-      showMessage('Please select a role to continue.');
-      return;
-    }
-
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
@@ -155,72 +130,75 @@ class _LoginFormState extends State<LoginForm> {
     }
 
     try {
-      // Authenticate the user
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
+      // Step 1: Authenticate user with FirebaseAuth
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      String userId = userCredential.user!.uid;
-      print(userId);
-
-      // Access the 'details' document inside the position-specific subcollection
-      DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+      // Step 2: Fetch the employee's role from Firestore (fetch the first document in the 'roles' subcollection)
+      QuerySnapshot roleSnapshot = await FirebaseFirestore.instance
           .collection('employees')
-          .doc(positionSelectedValue) // Subcollection name for the position
-          .collection('details') // Subcollection for details
-          .doc(userId) // Match the document ID with the userId
+          .doc(userCredential.user!.uid)
+          .collection('roles')
           .get();
 
-      if (!detailsDoc.exists) {
-        showMessage('User data not found for the selected role.');
+      if (roleSnapshot.docs.isEmpty) {
+        showMessage('Role not found for the user.');
         return;
       }
 
-      // Fetch the position value from the document
-      String? position = detailsDoc.get('position');
+      // Assuming only one role is assigned per user
+      Map<String, dynamic> roleData =
+          roleSnapshot.docs.first.data() as Map<String, dynamic>;
+      String? position = roleData['position'];
 
-      // Validate if the position matches the selected role
-      if (position != positionSelectedValue) {
-        showMessage('Role mismatch. Please select the correct role.');
+      if (position == null || position.isEmpty) {
+        showMessage('Position information is missing.');
         return;
       }
 
-      // Navigate to the appropriate screen based on the role
-      switch (positionSelectedValue) {
+      // Step 3: Navigate based on position
+      switch (position) {
         case 'Pharmacist':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PatientRegistration()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PharmacyInfo()),
+          );
           break;
         case 'Receptionist':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PatientRegistration()));
-          break;
-        case 'Doctor':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => EmployeeRegistration()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PatientRegistration()),
+          );
           break;
         case 'Lab Assistance':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PatientRegistration()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PatientRegistration()),
+          );
           break;
         case 'X-Ray Technician':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PatientRegistration()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PatientRegistration()),
+          );
+          break;
+        case 'Doctor':
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EmployeeRegistration()),
+          );
           break;
         default:
-          showMessage('Invalid role selected.');
+          showMessage('Invalid position information.');
       }
 
-      showMessage('Logged in as $positionSelectedValue');
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        showMessage('No user found for this email.');
-      } else if (e.code == 'wrong-password') {
-        showMessage('Wrong password provided.');
-      } else {
-        showMessage('Login failed: ${e.message}');
-      }
+      showMessage('Logged in as $position');
     } catch (e) {
       showMessage('An error occurred: $e');
+      print('Error: $e');
     }
   }
 

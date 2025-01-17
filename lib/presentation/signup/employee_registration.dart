@@ -92,18 +92,16 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
         password: passwordController.text.trim(),
       );
 
-      // Firestore reference
       final firestore = FirebaseFirestore.instance;
 
       if (positionSelectedValue != null) {
         // Use the user ID as the document ID
         String docId = userCredential.user!.uid;
 
+        // Create the employee document
         await firestore
             .collection('employees')
-            .doc(positionSelectedValue)
-            .collection('details')
-            .doc(docId) // Use the Firebase user ID as the document ID
+            .doc(docId)
             .set({
               'docId': docId, // Store the document ID
               'empCode': empCodeController.text,
@@ -111,7 +109,6 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
               'lastName': lastNameController.text,
               'relationName': relationNameController.text,
               'relationType': relationSelectedValue,
-              'position': positionSelectedValue,
               'email': emailController.text,
               'password': passwordController.text,
               'phone1': phone1Controller.text,
@@ -155,7 +152,20 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
             .then((value) => debugPrint('Employee added successfully'))
             .catchError(
                 (error) => debugPrint('Failed to add employee: $error'));
+
+        // Create a subcollection for roles inside the employee document
+        await firestore
+            .collection('employees')
+            .doc(docId)
+            .collection('roles')
+            .add({
+              'position': positionSelectedValue,
+              'assignedAt': FieldValue.serverTimestamp(),
+            })
+            .then((value) => debugPrint('Role added successfully'))
+            .catchError((error) => debugPrint('Failed to add role: $error'));
       }
+
       showMessage('Employee registered successfully!');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
@@ -541,7 +551,7 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => PatientRegistration()));
+                                  builder: (context) => LoginScreen()));
                         },
                         width: screenWidth * 0.08,
                         height: screenHeight * 0.05,

@@ -41,12 +41,14 @@ dependencies:
   fl_chart: ^0.69.2
   iconsax: ^0.0.8
   pdf: ^3.11.1
+  lottie: ^3.3.0
   path_provider: ^2.1.5
   custom_check_box: ^0.0.4
   firebase_auth: ^5.4.0
   firebase_core: ^3.10.0
   cloud_firestore: ^5.6.1
-  lottie: ^3.2.0
+  printing: ^5.13.4
+  shared_preferences: ^2.3.5
 
 dev_dependencies:
   flutter_test:
@@ -89,7 +91,7 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Poppins
+    - family: SanFrancisco
       fonts:
         - asset: Fonts/Poppins/Poppins-Regular.ttf
   # fonts:
