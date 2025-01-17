@@ -62,7 +62,33 @@ class _OpTicketPageState extends State<OpTicketPage> {
         'tokenNumber': storedTokenValue,
         'date': _currentDateString(),
       });
-
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Token Detail'),
+            content: Container(
+              width: 100,
+              height: 25,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  CustomText(
+                      text: 'Generated Token Number : $storedTokenValue'),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
       showMessage('Token saved: $storedTokenValue');
     } catch (e) {
       showMessage('Failed to save token: $e');
@@ -808,7 +834,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   String? selectedPatientId = selectedPatient?['opNumber'];
                   print(selectedPatientId);
                   await _generateToken(selectedPatientId!);
-                  incrementCounter();
+                  await incrementCounter();
                 },
                 width: null,
               ),
