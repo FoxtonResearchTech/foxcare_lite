@@ -69,13 +69,14 @@ class PatientViewScreen extends StatelessWidget {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   CircleAvatar(
-                                    radius: 20,
+                                    radius: 40,
                                     backgroundColor: AppColors.appBar,
                                     child: Center(
                                       child: Text(
                                         "${data['firstName'][0]}${data['lastName'][0]}",
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
+                                          fontSize: 20,
                                           color: Colors.white,
                                         ),
                                       ),
