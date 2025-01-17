@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:intl/intl.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/text/primary_text.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
@@ -35,28 +35,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
-    _initializeToken();
-  }
-
-  /// Load the token and check the date
-  Future<void> _initializeToken() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Retrieve saved token and date
-    final savedDate = prefs.getString('lastSavedDate') ?? '';
-    final savedToken = prefs.getInt('tokenNumber') ?? 0;
-    print('Retrieved tokenNumber: $savedToken, Date: $savedDate');
-
-    if (savedDate == _currentDateString()) {
-      // Same day, load saved token
-      setState(() {
-        tokenNumber = savedToken;
-        lastSavedDate = savedDate;
-      });
-    } else {
-      // Different day, reset the token
-      await _resetToken();
-    }
   }
 
   /// Generate a new token and save to Firestore
@@ -65,14 +43,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
       tokenNumber++;
     });
 
-    // Save to SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('tokenNumber', tokenNumber);
-    await prefs.setString('lastSavedDate', _currentDateString());
-
-    // Save token to Firestore under the selected patient's subcollection
     try {
       final firestore = FirebaseFirestore.instance;
+
+      DocumentSnapshot documentSnapshot =
+          await firestore.collection('counters').doc('counterDoc').get();
+
+      var storedTokenValue = documentSnapshot['value'] + 1;
+
+      print('Fetched Token Value from counter collection : $storedTokenValue');
 
       await firestore
           .collection('patients')
@@ -80,29 +59,16 @@ class _OpTicketPageState extends State<OpTicketPage> {
           .collection('tokens')
           .doc('currentToken') // Use a static ID or generate unique ones
           .set({
-        'tokenNumber': tokenNumber,
+        'tokenNumber': storedTokenValue,
         'date': _currentDateString(),
       });
 
-      showMessage('Token saved: $tokenNumber');
+      showMessage('Token saved: $storedTokenValue');
     } catch (e) {
       showMessage('Failed to save token: $e');
     }
   }
 
-  /// Reset the token to 0
-  Future<void> _resetToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('tokenNumber', 0);
-    await prefs.setString('lastSavedDate', _currentDateString());
-
-    setState(() {
-      tokenNumber = 0;
-      lastSavedDate = _currentDateString();
-    });
-  }
-
-  /// Get the current date as a string
   String _currentDateString() {
     final now = DateTime.now();
     return '${now.year}-${now.month}-${now.day}';
@@ -162,6 +128,46 @@ class _OpTicketPageState extends State<OpTicketPage> {
     }
 
     return patientsList;
+  }
+
+  final String documentId = "counterDoc"; // Document ID for Firestore
+
+  // Helper: Check if the time matches the test time
+  bool _isTestTime() {
+    final now = DateTime.now();
+    print("Current time: ${now.hour}:${now.minute}");
+    // Replace with your test time
+    return now.hour == 00 && now.minute == 00; // 1:31 PM
+  }
+
+  // Increment function
+  Future<void> incrementCounter() async {
+    final docRef =
+        FirebaseFirestore.instance.collection('counters').doc(documentId);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+
+      if (snapshot.exists) {
+        // Get the current value
+        int currentValue = snapshot.get('value') as int;
+
+        // Check if it's time to reset
+        if (_isTestTime() && currentValue != 1) {
+          print("Resetting the counter...");
+          // Reset the counter at the test time
+          transaction.update(docRef, {'value': 1});
+        } else {
+          print("Incrementing the counter...");
+          // Increment the counter
+          transaction.update(docRef, {'value': currentValue + 1});
+        }
+      } else {
+        // Initialize the counter if it doesn't exist
+        print("Initializing counter...");
+        transaction.set(docRef, {'value': 1});
+      }
+    });
   }
 
   @override
@@ -802,6 +808,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   String? selectedPatientId = selectedPatient?['opNumber'];
                   print(selectedPatientId);
                   await _generateToken(selectedPatientId!);
+                  incrementCounter();
                 },
                 width: null,
               ),
