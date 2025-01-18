@@ -4,6 +4,7 @@ import 'package:foxcare_lite/presentation/billings/counter_sales.dart';
 import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
+import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/presentation/reports/broken_or_damaged_statement.dart';
 import 'package:foxcare_lite/presentation/reports/expiry_return_statement.dart';
 import 'package:foxcare_lite/presentation/reports/non_moving_stock.dart';
@@ -47,7 +48,8 @@ class _DoctorRxList extends State<DoctorRxList> {
     'Age',
     'Place',
     'Primary Info',
-    'Action'
+    'Action',
+    'Abort',
   ];
   List<Map<String, dynamic>> tableData1 = [];
   @override
@@ -92,8 +94,49 @@ class _DoctorRxList extends State<DoctorRxList> {
           'Name': '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'.trim(),
           'Age': data['age'] ?? '',
           'Place': data['state'] ?? '',
+          'Address': data['address1'] ?? '',
+          'PinCode': data['pincode'] ?? '',
           'Primary Info': data['primaryInfo'] ?? '',
-          'Action': data['action'] ?? '',
+          'Action': TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RxPrescription(
+                      patientID: data['patientID'] ?? '',
+                      name:
+                          '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'
+                              .trim(),
+                      age: data['age'] ?? '',
+                      place: data['state'] ?? '',
+                      address: data['address1'] ?? '',
+                      pincode: data['pincode'] ?? '',
+                      primaryInfo: data['primaryInfo'] ?? '',
+                    ),
+                  ),
+                );
+              },
+              child: CustomText(text: 'Open')),
+          'Abort': TextButton(
+              onPressed: () async {
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('patients')
+                      .doc(data['patientID'])
+                      .update({'status': 'aborted'});
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Status updated to aborted')),
+                  );
+                } catch (e) {
+                  print(
+                      'Error updating status for patient ${data['patientID']}: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to update status')),
+                  );
+                }
+              },
+              child: CustomText(text: 'Abort'))
         });
       }
 

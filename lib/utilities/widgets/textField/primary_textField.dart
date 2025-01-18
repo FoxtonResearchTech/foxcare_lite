@@ -7,6 +7,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final double? width;
   final double verticalSize;
+  final bool readOnly;
   final double horizontalSize;
   final FocusNode? focusNode;
 
@@ -19,6 +20,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.controller,
     this.icon,
+    this.readOnly = false,
     required this.width,
     this.verticalSize = 8.0,
     this.horizontalSize = 12.0,
@@ -32,6 +34,7 @@ class CustomTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        readOnly: readOnly,
         decoration: InputDecoration(
           isDense: true,
           // Reduces the overall height of the TextField

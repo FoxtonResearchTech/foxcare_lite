@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
@@ -8,13 +9,41 @@ import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
 class RxPrescription extends StatefulWidget {
-  const RxPrescription({super.key});
+  final String patientID;
+  final String name;
+  final String age;
+  final String place;
+  final String address;
+  final String pincode;
 
+  final String primaryInfo;
+
+  const RxPrescription({
+    Key? key,
+    required this.patientID,
+    required this.name,
+    required this.age,
+    required this.place,
+    required this.primaryInfo,
+    required this.address,
+    required this.pincode,
+  }) : super(key: key);
   @override
   State<RxPrescription> createState() => _RxPrescriptionState();
 }
 
 class _RxPrescriptionState extends State<RxPrescription> {
+  final TextEditingController _temperatureController = TextEditingController();
+  final TextEditingController _bloodPressureController =
+      TextEditingController();
+  final TextEditingController _sugarLevelController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _diagnosisSignsController =
+      TextEditingController();
+  final TextEditingController _symptomsController = TextEditingController();
+  final TextEditingController _patientHistoryController =
+      TextEditingController();
+
   int selectedIndex = 1;
   String selectedValue = 'Medication';
   final List<String> _allItems = [
@@ -39,6 +68,17 @@ class _RxPrescriptionState extends State<RxPrescription> {
     _filteredItems = _allItems;
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    _temperatureController.dispose();
+    _bloodPressureController.dispose();
+    _sugarLevelController.dispose();
+    _notesController.dispose();
+    _diagnosisSignsController.dispose();
+    _symptomsController.dispose();
+  }
+
   void _filterItems(String query) {
     setState(() {
       _searchQuery = query;
@@ -60,6 +100,36 @@ class _RxPrescriptionState extends State<RxPrescription> {
     setState(() {
       _selectedItems.remove(item);
     });
+  }
+
+  Future<void> _savePrescriptionData() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .set({
+        'Medications': _selectedItems,
+        'basicDiagnosis': {
+          'temperature': _temperatureController.text,
+          'bloodPressure': _bloodPressureController.text,
+          'sugarLevel': _sugarLevelController.text,
+        },
+        'investigationTests': {
+          'notes': _notesController.text,
+          'diagnosisSigns': _diagnosisSignsController.text,
+          'symptoms': _symptomsController.text,
+          'patientHistory': _patientHistoryController.text,
+        },
+      }, SetOptions(merge: true));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Details saved successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: $e')),
+      );
+    }
   }
 
   @override
@@ -194,6 +264,8 @@ class _RxPrescriptionState extends State<RxPrescription> {
             children: [
               Expanded(
                   child: CustomTextField(
+                readOnly: true,
+                controller: TextEditingController(text: widget.patientID),
                 hintText: 'OP Number',
                 obscureText: false,
                 width: screenWidth * 0.05,
@@ -202,6 +274,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               Expanded(
                   child: CustomTextField(
                 hintText: 'Date',
+                readOnly: true,
                 obscureText: false,
                 width: screenWidth * 0.05,
               )),
@@ -215,15 +288,19 @@ class _RxPrescriptionState extends State<RxPrescription> {
               Expanded(
                   flex: 2,
                   child: CustomTextField(
+                    controller: TextEditingController(text: widget.name),
                     hintText: 'Full Name',
                     obscureText: false,
+                    readOnly: true,
                     width: screenWidth * 0.05,
                   )),
               SizedBox(width: 10),
               Expanded(
                   child: CustomTextField(
+                controller: TextEditingController(text: widget.age),
                 hintText: 'Age',
                 obscureText: false,
+                readOnly: true,
                 width: screenWidth * 0.05,
               )),
             ],
@@ -236,14 +313,18 @@ class _RxPrescriptionState extends State<RxPrescription> {
               Expanded(
                   flex: 2,
                   child: CustomTextField(
+                    controller: TextEditingController(text: widget.address),
                     hintText: 'Address',
+                    readOnly: true,
                     obscureText: false,
                     width: screenWidth * 0.05,
                   )),
               SizedBox(width: 10),
               Expanded(
                   child: CustomTextField(
+                controller: TextEditingController(text: widget.pincode),
                 hintText: 'Pincode',
+                readOnly: true,
                 obscureText: false,
                 width: screenWidth * 0.05,
               )),
@@ -252,29 +333,11 @@ class _RxPrescriptionState extends State<RxPrescription> {
           SizedBox(height: 26),
 
           // Row 4: Basic Info
-          TextFormField(
-            decoration: InputDecoration(
-              isDense: true,
-              // Reduces the overall height of the TextField
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-              labelText: 'Basic Info',
-              labelStyle: TextStyle(
-                fontFamily: 'SanFrancisco',
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-            ),
-            maxLines: 3, // Allow multiline input for basic info
+          CustomTextField(
+            controller: TextEditingController(),
+            hintText: 'Basic Info',
+            width: screenWidth * 0.8,
+            verticalSize: screenWidth * 0.03,
           ),
           SizedBox(
             height: 35,
@@ -294,29 +357,20 @@ class _RxPrescriptionState extends State<RxPrescription> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Text(
-                'Temperature :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  color: Colors.black,
-                  fontSize: 18,
-                ),
+              CustomTextField(
+                hintText: 'Temperature ',
+                width: screenWidth * 0.085,
+                controller: _temperatureController,
               ),
-              Text(
-                'Blood Pressure :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  color: Colors.black,
-                  fontSize: 18,
-                ),
+              CustomTextField(
+                hintText: 'Blood Pressure ',
+                width: screenWidth * 0.1,
+                controller: _bloodPressureController,
               ),
-              Text(
-                'Sugar Level :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  color: Colors.black,
-                  fontSize: 18,
-                ),
+              CustomTextField(
+                hintText: 'Sugar Level ',
+                width: screenWidth * 0.085,
+                controller: _sugarLevelController,
               ),
             ],
           ),
@@ -324,87 +378,33 @@ class _RxPrescriptionState extends State<RxPrescription> {
             height: 16,
           ),
           // Row 4: Basic Info
-          TextFormField(
-            decoration: InputDecoration(
-              isDense: true,
-              // Reduces the overall height of the TextField
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-              labelText: 'Patient History',
-              labelStyle: TextStyle(
-                fontFamily: 'SanFrancisco',
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-            ),
-            maxLines: 3, // Allow multiline input for basic info
+          CustomTextField(
+            controller: _patientHistoryController,
+            hintText: 'Patient History',
+            width: screenWidth * 0.8,
+            verticalSize: screenWidth * 0.03,
           ),
           SizedBox(
             height: 20,
           ),
 
           // Row 4: Basic Info
-          TextFormField(
-            decoration: InputDecoration(
-              isDense: true,
-              // Reduces the overall height of the TextField
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-              labelText: 'Diagnosis Signs',
-              labelStyle: TextStyle(
-                fontFamily: 'SanFrancisco',
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-            ),
-            maxLines: 3, // Allow multiline input for basic info
+          CustomTextField(
+            controller: _diagnosisSignsController,
+            hintText: 'Diagnosis Sign',
+            width: screenWidth * 0.8,
+            verticalSize: screenWidth * 0.03,
           ),
           SizedBox(
             height: 20,
           ),
 
           // Row 4: Basic Info
-          TextFormField(
-            decoration: InputDecoration(
-              isDense: true,
-              // Reduces the overall height of the TextField
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-              labelText: 'Symptoms',
-              labelStyle: TextStyle(
-                fontFamily: 'SanFrancisco',
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-            ),
-            maxLines: 3, // Allow multiline input for basic info
+          CustomTextField(
+            controller: _symptomsController,
+            hintText: 'Symptoms',
+            width: screenWidth * 0.8,
+            verticalSize: screenWidth * 0.03,
           ),
           SizedBox(
             height: 35,
@@ -419,65 +419,14 @@ class _RxPrescriptionState extends State<RxPrescription> {
             ),
           ),
           SizedBox(
-            height: 35,
-          ),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 200,
-                child: CustomButton(
-                  label: 'Haemoglobin',
-                  onPressed: () {},
-                  width: screenWidth * 0.05,
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomButton(
-                  label: 'Creatin',
-                  onPressed: () {},
-                  width: screenWidth * 0.05,
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomButton(
-                  label: 'Urea',
-                  onPressed: () {},
-                  width: screenWidth * 0.05,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
             height: 20,
           ),
 
-          TextFormField(
-            decoration: InputDecoration(
-              isDense: true,
-              // Reduces the overall height of the TextField
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-              labelText: 'Enter Notes',
-              labelStyle: TextStyle(
-                fontFamily: 'SanFrancisco',
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-            ),
-            maxLines: 3, // Allow multiline input for basic info
+          CustomTextField(
+            controller: _notesController,
+            hintText: 'Enter notes',
+            width: screenWidth * 0.8,
+            verticalSize: screenWidth * 0.03,
           ),
           SizedBox(
             height: 35,
@@ -600,7 +549,9 @@ class _RxPrescriptionState extends State<RxPrescription> {
               width: 300,
               child: CustomButton(
                 label: 'Prescribe',
-                onPressed: () {},
+                onPressed: () {
+                  _savePrescriptionData();
+                },
                 width: screenWidth * 0.5,
               ),
             ),
