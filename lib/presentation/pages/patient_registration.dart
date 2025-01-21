@@ -6,12 +6,16 @@ import 'package:foxcare_lite/presentation/reception/op_ticket_generate.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:pdf/pdf.dart';
+import '../../utilities/colors.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
 import 'ip_admission.dart';
 import 'op_counters.dart';
 import 'op_ticket.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class PatientRegistration extends StatefulWidget {
   @override
@@ -125,11 +129,76 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
             actions: <Widget>[
               TextButton(
+                onPressed: () async {
+                  final pdf = pw.Document();
+                  pdf.addPage(
+                    pw.Page(
+                      pageFormat: const PdfPageFormat(
+                          10 * PdfPageFormat.cm, 8 * PdfPageFormat.cm),
+                      build: (pw.Context context) => pw.Center(
+                        child: pw.Container(
+                          width: 300,
+                          height: 225,
+                          padding: const pw.EdgeInsets.all(16), // Inner padding
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                                color: PdfColors.grey), // Border color
+                            borderRadius:
+                                pw.BorderRadius.circular(8), // Rounded corners
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                'ABC Hospital ',
+                                style: pw.TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                              pw.SizedBox(height: 2),
+                              pw.Center(
+                                child: pw.Text('Care through excelling'),
+                              ),
+                              pw.SizedBox(height: 2),
+                              pw.Divider(),
+                              pw.SizedBox(height: 5),
+                              pw.Text('Patient ID: $patientID'),
+                              pw.Text(
+                                  'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
+                              pw.Text('Sex: $selectedSex'),
+                              pw.Text('Age: ${age.text}'),
+                              pw.Text('DOB: ${dob.text}'),
+                              pw.Text('Blood Group: $selectedBloodGroup'),
+                              pw.Text(
+                                  'Please bring your card for every check up'),
+                              pw.Divider(),
+                              pw.Text('Contact : '),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+
+                  await Printing.layoutPdf(
+                    onLayout: (format) async => pdf.save(),
+                  );
+                },
+                child: CustomText(
+                  text: 'Print',
+                  color: AppColors.secondaryColor,
+                ),
+              ),
+              TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                   clearForm();
                 },
-                child: const Text('Close'),
+                child: CustomText(
+                  text: 'Close',
+                  color: AppColors.secondaryColor,
+                ),
               ),
             ],
           );

@@ -1,10 +1,8 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
-
 import 'package:foxcare_lite/utilities/colors.dart';
-
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 
@@ -27,15 +25,25 @@ class _DoctorRxList extends State<DoctorRxList> {
     'Abort',
   ];
   List<Map<String, dynamic>> tableData1 = [];
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
     fetchData();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      fetchData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> fetchData() async {
     try {
-      // Fetch all documents from the 'patients' collection
       final QuerySnapshot patientSnapshot =
           await FirebaseFirestore.instance.collection('patients').get();
 
@@ -65,28 +73,32 @@ class _DoctorRxList extends State<DoctorRxList> {
 
         fetchedData.add({
           'Token NO': tokenNo,
-          'OP NO': data['patientID'] ?? '',
-          'Name': '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'.trim(),
-          'Age': data['age'] ?? '',
-          'Place': data['state'] ?? '',
-          'Address': data['address1'] ?? '',
-          'PinCode': data['pincode'] ?? '',
-          'Primary Info': data['primaryInfo'] ?? '',
+          'OP NO': data['patientID'] ?? 'N/A',
+          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+              .trim(),
+          'Age': data['age'] ?? 'N/A',
+          'Place': data['state'] ?? 'N/A',
+          'Address': data['address1'] ?? 'N/A',
+          'PinCode': data['pincode'] ?? 'N/A',
+          'Primary Info': data['otherComments'] ?? 'N/A',
           'Action': TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => RxPrescription(
-                      patientID: data['patientID'] ?? '',
+                      patientID: data['patientID'] ?? 'N/A',
                       name:
-                          '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'
+                          '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
                               .trim(),
-                      age: data['age'] ?? '',
-                      place: data['state'] ?? '',
-                      address: data['address1'] ?? '',
-                      pincode: data['pincode'] ?? '',
-                      primaryInfo: data['primaryInfo'] ?? '',
+                      age: data['age'] ?? 'N/A',
+                      place: data['state'] ?? 'N/A',
+                      address: data['address1'] ?? 'N/A',
+                      pincode: data['pincode'] ?? 'N/A',
+                      primaryInfo: data['otherComments'] ?? 'N/A',
+                      temperature: data['temperature'] ?? 'N/A',
+                      bloodPressure: data['bloodPressure'] ?? 'N/A',
+                      sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
                     ),
                   ),
                 );
@@ -115,11 +127,10 @@ class _DoctorRxList extends State<DoctorRxList> {
         });
       }
 
-      // Sort data by 'Token NO'
       fetchedData.sort((a, b) {
         int tokenA = int.tryParse(a['Token NO']) ?? 0;
         int tokenB = int.tryParse(b['Token NO']) ?? 0;
-        return tokenA.compareTo(tokenB); // Ascending order
+        return tokenA.compareTo(tokenB);
       });
 
       setState(() {

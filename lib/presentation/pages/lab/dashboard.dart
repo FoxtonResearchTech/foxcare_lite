@@ -13,7 +13,6 @@ class LabDashboard extends StatefulWidget {
 }
 
 class _LabDashboardState extends State<LabDashboard> {
-  // To store the index of the selected drawer item
   int selectedIndex = 0;
 
   @override

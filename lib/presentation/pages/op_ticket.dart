@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/text/primary_text.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
@@ -19,14 +17,19 @@ class _OpTicketPageState extends State<OpTicketPage> {
   TimeOfDay now = TimeOfDay.now();
   final date = DateTime.timestamp();
   int selectedIndex = 1;
-  final TextEditingController firstname = TextEditingController();
-  final TextEditingController lastname = TextEditingController();
+  final TextEditingController tokenDate = TextEditingController();
+  final TextEditingController counter = TextEditingController();
+  final TextEditingController doctorName = TextEditingController();
+  final TextEditingController bloodSugarLevel = TextEditingController();
+  final TextEditingController temperature = TextEditingController();
+  final TextEditingController bloodPressure = TextEditingController();
+  final TextEditingController otherComments = TextEditingController();
+
   final TextEditingController searchOpNumber = TextEditingController();
   final TextEditingController searchPhoneNumber = TextEditingController();
 
-  bool isSearchPerformed = false; // To track if search has been performed
-  List<Map<String, String>> searchResults =
-      []; // Dynamically manage search results
+  bool isSearchPerformed = false;
+  List<Map<String, String>> searchResults = [];
   Map<String, String>? selectedPatient;
 
   int tokenNumber = 0;
@@ -37,7 +40,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
     super.initState();
   }
 
-  /// Generate a new token and save to Firestore
   Future<void> _generateToken(String selectedPatientId) async {
     setState(() {
       tokenNumber++;
@@ -46,6 +48,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     try {
       final firestore = FirebaseFirestore.instance;
 
+      await Future.delayed(const Duration(seconds: 1));
       DocumentSnapshot documentSnapshot =
           await firestore.collection('counters').doc('counterDoc').get();
 
@@ -55,12 +58,21 @@ class _OpTicketPageState extends State<OpTicketPage> {
 
       await firestore
           .collection('patients')
-          .doc(selectedPatientId) // Use the selected patient's ID
+          .doc(selectedPatientId)
           .collection('tokens')
-          .doc('currentToken') // Use a static ID or generate unique ones
+          .doc('currentToken')
           .set({
         'tokenNumber': storedTokenValue,
         'date': _currentDateString(),
+      });
+      await firestore.collection('patients').doc(selectedPatientId).update({
+        'date': date,
+        'counter': counter.text,
+        'doctorName': doctorName.text,
+        'bloodPressure': bloodPressure.text,
+        'bloodSugarLevel': bloodSugarLevel.text,
+        'temperature': temperature.text,
+        'otherComments': otherComments.text,
       });
       showDialog(
         context: context,
@@ -156,14 +168,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return patientsList;
   }
 
-  final String documentId = "counterDoc"; // Document ID for Firestore
+  final String documentId = "counterDoc";
 
   // Helper: Check if the time matches the test time
   bool _isTestTime() {
     final now = DateTime.now();
     print("Current time: ${now.hour}:${now.minute}");
     // Replace with your test time
-    return now.hour == 00 && now.minute == 00; // 1:31 PM
+    return now.hour == 08 && now.minute == 42; // 1:31 PM
   }
 
   // Increment function
@@ -179,10 +191,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
         int currentValue = snapshot.get('value') as int;
 
         // Check if it's time to reset
-        if (_isTestTime() && currentValue != 1) {
+        if (_isTestTime() && currentValue != 0) {
           print("Resetting the counter...");
           // Reset the counter at the test time
-          transaction.update(docRef, {'value': 1});
+          transaction.update(docRef, {'value': 0});
         } else {
           print("Incrementing the counter...");
           // Increment the counter
@@ -191,7 +203,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
       } else {
         // Initialize the counter if it doesn't exist
         print("Initializing counter...");
-        transaction.set(docRef, {'value': 1});
+        transaction.set(docRef, {'value': 0});
       }
     });
   }
@@ -705,25 +717,28 @@ class _OpTicketPageState extends State<OpTicketPage> {
                       fontFamily: 'SanFrancisco',
                     ),
                   )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField('sdfsdf', initialValue: '$date')),
+              CustomTextField(
+                hintText: '',
+                controller: TextEditingController(text: date.toString()),
+                width: 250,
+              ),
               const SizedBox(
                 width: 30,
               ),
               const SizedBox(
-                  width: 80,
-                  child: Text(
-                    'TOKEN : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField(
-                    'Enter Token Number',
-                  )),
+                width: 80,
+                child: Text(
+                  'Counter : ',
+                  style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                  ),
+                ),
+              ),
+              CustomTextField(
+                hintText: '',
+                controller: counter,
+                width: 250,
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -733,32 +748,32 @@ class _OpTicketPageState extends State<OpTicketPage> {
               const SizedBox(
                   width: 80,
                   child: Text(
-                    'Counter : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField(
-                    'Counter',
-                  )),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                  width: 80,
-                  child: Text(
                     'Doctor : ',
                     style: TextStyle(
                       fontFamily: 'SanFrancisco',
                     ),
                   )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField(
-                    'Enter Doctor Name',
+              CustomTextField(
+                hintText: '',
+                controller: doctorName,
+                width: 250,
+              ),
+              const SizedBox(
+                width: 20,
+              ),
+              const SizedBox(
+                  width: 100,
+                  child: Text(
+                    'Blood Sugar : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
+                    ),
                   )),
+              CustomTextField(
+                hintText: '',
+                controller: bloodSugarLevel,
+                width: 250,
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -773,11 +788,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
                       fontFamily: 'SanFrancisco',
                     ),
                   )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField(
-                    'Enter Blood Pressure',
-                  )),
+              CustomTextField(
+                hintText: '',
+                controller: bloodPressure,
+                width: 250,
+              ),
               const SizedBox(
                 width: 20,
               ),
@@ -789,37 +804,19 @@ class _OpTicketPageState extends State<OpTicketPage> {
                       fontFamily: 'SanFrancisco',
                     ),
                   )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField(
-                    'Enter Temperature',
-                  )),
+              CustomTextField(
+                hintText: '',
+                controller: temperature,
+                width: 250,
+              ),
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                  width: 90,
-                  child: Text(
-                    'Blood Sugar : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              SizedBox(
-                  width: 220,
-                  child: buildTextField(
-                    'Enter Blood Sugar Level',
-                  )),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const SizedBox(
+          SizedBox(
             width: 600,
             child: CustomTextField(
               hintText: 'Enter Other Comments',
+              controller: otherComments,
               width: null,
             ),
           ),
@@ -833,8 +830,9 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 onPressed: () async {
                   String? selectedPatientId = selectedPatient?['opNumber'];
                   print(selectedPatientId);
-                  await _generateToken(selectedPatientId!);
                   await incrementCounter();
+
+                  await _generateToken(selectedPatientId!);
                 },
                 width: null,
               ),

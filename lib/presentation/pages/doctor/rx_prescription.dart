@@ -15,8 +15,10 @@ class RxPrescription extends StatefulWidget {
   final String place;
   final String address;
   final String pincode;
-
   final String primaryInfo;
+  final String temperature;
+  final String bloodPressure;
+  final String sugarLevel;
 
   const RxPrescription({
     Key? key,
@@ -27,6 +29,9 @@ class RxPrescription extends StatefulWidget {
     required this.primaryInfo,
     required this.address,
     required this.pincode,
+    required this.temperature,
+    required this.bloodPressure,
+    required this.sugarLevel,
   }) : super(key: key);
   @override
   State<RxPrescription> createState() => _RxPrescriptionState();
@@ -417,7 +422,9 @@ class _RxPrescriptionState extends State<RxPrescription> {
 
           // Row 4: Basic Info
           CustomTextField(
-            controller: TextEditingController(),
+            controller: TextEditingController(text: widget.primaryInfo),
+            readOnly: true,
+            obscureText: false,
             hintText: 'Basic Info',
             width: screenWidth * 0.8,
             verticalSize: screenWidth * 0.03,
@@ -441,19 +448,25 @@ class _RxPrescriptionState extends State<RxPrescription> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               CustomTextField(
+                controller: TextEditingController(text: widget.temperature),
                 hintText: 'Temperature ',
                 width: screenWidth * 0.085,
-                controller: _temperatureController,
+                readOnly: true,
+                obscureText: false,
               ),
               CustomTextField(
                 hintText: 'Blood Pressure ',
                 width: screenWidth * 0.1,
-                controller: _bloodPressureController,
+                readOnly: true,
+                controller: TextEditingController(text: widget.bloodPressure),
+                obscureText: false,
               ),
               CustomTextField(
                 hintText: 'Sugar Level ',
                 width: screenWidth * 0.085,
-                controller: _sugarLevelController,
+                readOnly: true,
+                controller: TextEditingController(text: widget.sugarLevel),
+                obscureText: false,
               ),
             ],
           ),
