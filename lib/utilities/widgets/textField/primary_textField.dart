@@ -10,6 +10,7 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final double horizontalSize;
   final FocusNode? focusNode;
+  final onChanged;
 
   final TextEditingController? controller;
   final Icon? icon;
@@ -25,6 +26,7 @@ class CustomTextField extends StatelessWidget {
     this.verticalSize = 8.0,
     this.horizontalSize = 12.0,
     this.focusNode,
+    this.onChanged,
   });
 
   @override
@@ -32,6 +34,8 @@ class CustomTextField extends StatelessWidget {
     return SizedBox(
       width: width,
       child: TextField(
+        onChanged: onChanged,
+        maxLines: null,
         controller: controller,
         obscureText: obscureText,
         readOnly: readOnly,

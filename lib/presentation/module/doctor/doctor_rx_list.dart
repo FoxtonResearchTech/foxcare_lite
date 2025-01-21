@@ -1,37 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/billings/counter_sales.dart';
-import 'package:foxcare_lite/presentation/billings/ip_billing.dart';
-import 'package:foxcare_lite/presentation/billings/medicine_return.dart';
-import 'package:foxcare_lite/presentation/login/login.dart';
+
 import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
-import 'package:foxcare_lite/presentation/reports/broken_or_damaged_statement.dart';
-import 'package:foxcare_lite/presentation/reports/expiry_return_statement.dart';
-import 'package:foxcare_lite/presentation/reports/non_moving_stock.dart';
-import 'package:foxcare_lite/presentation/reports/party_wise_statement.dart';
-import 'package:foxcare_lite/presentation/reports/pending_payment_report.dart';
-import 'package:foxcare_lite/presentation/reports/product_wise_statement.dart';
-import 'package:foxcare_lite/presentation/reports/stock_return_statement.dart';
-import 'package:foxcare_lite/presentation/stock_management/add_product.dart';
-import 'package:foxcare_lite/presentation/stock_management/cancel_bill.dart';
-import 'package:foxcare_lite/presentation/stock_management/damage_return.dart';
-import 'package:foxcare_lite/presentation/stock_management/delete_product.dart';
-import 'package:foxcare_lite/presentation/stock_management/expiry_return.dart';
-import 'package:foxcare_lite/presentation/stock_management/product_list.dart';
-import 'package:foxcare_lite/presentation/stock_management/purchase.dart';
-import 'package:foxcare_lite/presentation/stock_management/purchase_order.dart';
-import 'package:foxcare_lite/presentation/stock_management/stock_return.dart';
-import 'package:foxcare_lite/presentation/tools/add_new_distributor.dart';
-import 'package:foxcare_lite/presentation/tools/distributor_list.dart';
-import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
-import 'package:foxcare_lite/presentation/tools/profile.dart';
+
 import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/foxcare_lite_app_bar.dart';
-import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
-import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 class DoctorRxList extends StatefulWidget {
   const DoctorRxList({super.key});
@@ -116,7 +91,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   ),
                 );
               },
-              child: CustomText(text: 'Open')),
+              child: const CustomText(text: 'Open')),
           'Abort': TextButton(
               onPressed: () async {
                 try {
@@ -136,7 +111,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   );
                 }
               },
-              child: CustomText(text: 'Abort'))
+              child: const CustomText(text: 'Abort'))
         });
       }
 

@@ -45,18 +45,99 @@ class _RxPrescriptionState extends State<RxPrescription> {
       TextEditingController();
 
   int selectedIndex = 1;
-  String selectedValue = 'Medication';
+  String? selectedValue;
   final List<String> _allItems = [
-    'Paracetamol',
-    'Ibuprofen',
-    'Amoxicillin',
-    'Metformin',
-    'Aspirin',
-    'Omeprazole',
-    'Lisinopril',
-    'Atorvastatin',
-    'Albuterol',
-    'Cetirizine',
+    'AFC',
+    'BLOOD ROUTINE [R/E]',
+    'TOTAL WBC COUNT [TC]',
+    'DLC',
+    'ESR',
+    'CBC',
+    'BT, CT',
+    'MP SMEAR',
+    'PVC',
+    'RETICULOCYTE COUNT',
+    'SICKLING TEST',
+    'PT INR',
+    'BLOOD GROUP',
+    'ICT',
+    'DCT',
+    'ASO',
+    'RA FACTOR',
+    'CRP',
+    'VDRL',
+    'WIDAL SLIDE METHOD',
+    'WIDAL TUBE METHOD',
+    'BLOOD SUGAR',
+    'GTT [5 SAMPLE]',
+    'GTT [4 SAMPLE]',
+    'GTT [3 SAMPLE]',
+    'TRIGLYCERIDES',
+    'GCT',
+    'HDL',
+    'LDL',
+    'CHOLESTEROL-TOTAL',
+    'UREA',
+    'CREATININE',
+    'URIC ACID',
+    'CALCIUM',
+    'PHOSPHOROUS',
+    'LDH',
+    'CPX',
+    'CKMB',
+    'AMYLASE',
+    'LIPID PROFILE',
+    'LFT',
+    'SODIUM',
+    'POTASSIUM',
+    'CHLORIDE',
+    'BILIRUBIN',
+    'SGOT',
+    'SGPT',
+    'TOTAL PROTEINS',
+    'RFT',
+    'RFT [ELECTROLYTES]',
+    'ALK 904',
+    'GCT',
+    'HBA1C',
+    'TROPONIN',
+    'URINE ROUTINE',
+    'URINE SUGAR',
+    'BS SP',
+    'URINE MICROSCOPY',
+    'KETONE BODIES',
+    'ACETONES',
+    'BENSE JONES PROTEIN',
+    'URINE SPECIFIC GRAVITY',
+    'URINE MICROALBUMIN',
+    'URINE PREGNANCY TEST',
+    'STOOL ROUTINE',
+    'STOOL REDUCING SUBST',
+    'OCCULT BLOOD',
+    'STOOL MANAGING DROP',
+    'HBSAG CARD',
+    'HIV CARD',
+    'HCV CARD',
+    'DENQUE CARD',
+    'LEPTOSPIRA CARD',
+    'RAPID MALARIA CARD',
+    'URINE C/S',
+    'SPUTUM C/S',
+    'STOOL C/S',
+    'PUS C/S',
+    'OTHER FLUIDS C/S',
+    'T3',
+    'T4',
+    'TSH',
+    'TFT [T3, T4 & TSH]',
+    'FT3',
+    'FT4',
+    'VITAMIN D3',
+    'B-HCG',
+    'IGE',
+    'DENTAL DIGITAL X-RAY',
+    'ECG',
+    'SEMEN ANALYSIS',
   ];
   List<String> _filteredItems = [];
   List<String> _selectedItems = [];
@@ -123,7 +204,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
       }, SetOptions(merge: true));
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Details saved successfully!')),
+        const SnackBar(content: Text('Details saved successfully!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -141,7 +222,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text(
+              title: const Text(
                 'Reception Dashboard',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
@@ -183,7 +264,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
+        const DrawerHeader(
           decoration: BoxDecoration(
             color: Colors.blue,
           ),
@@ -197,11 +278,11 @@ class _RxPrescriptionState extends State<RxPrescription> {
           ),
         ),
         buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
-        Divider(height: 5, color: Colors.grey),
+        const Divider(height: 5, color: Colors.grey),
         buildDrawerItem(1, 'Patient Search', () {}, Iconsax.receipt),
-        Divider(height: 5, color: Colors.grey),
+        const Divider(height: 5, color: Colors.grey),
         buildDrawerItem(2, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
-        Divider(height: 5, color: Colors.grey),
+        const Divider(height: 5, color: Colors.grey),
         buildDrawerItem(7, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
@@ -239,6 +320,8 @@ class _RxPrescriptionState extends State<RxPrescription> {
   // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     bool isMobile = screenWidth < 600;
 
     return SingleChildScrollView(
@@ -247,7 +330,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Row 1: OP Number and Date
-          Text(
+          const Text(
             'Dr. Kathiresan',
             style: TextStyle(
               fontFamily: 'SanFrancisco',
@@ -256,7 +339,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 35,
           ),
           Row(
@@ -270,7 +353,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
                 obscureText: false,
                 width: screenWidth * 0.05,
               )),
-              SizedBox(width: 100),
+              const SizedBox(width: 100),
               Expanded(
                   child: CustomTextField(
                 hintText: 'Date',
@@ -280,7 +363,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               )),
             ],
           ),
-          SizedBox(height: 26),
+          const SizedBox(height: 26),
 
           // Row 2: Full Name and Age
           Row(
@@ -294,7 +377,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
                     readOnly: true,
                     width: screenWidth * 0.05,
                   )),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                   child: CustomTextField(
                 controller: TextEditingController(text: widget.age),
@@ -305,7 +388,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               )),
             ],
           ),
-          SizedBox(height: 26),
+          const SizedBox(height: 26),
 
           // Row 3: Address and Pincode
           Row(
@@ -319,7 +402,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
                     obscureText: false,
                     width: screenWidth * 0.05,
                   )),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                   child: CustomTextField(
                 controller: TextEditingController(text: widget.pincode),
@@ -330,7 +413,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               )),
             ],
           ),
-          SizedBox(height: 26),
+          const SizedBox(height: 26),
 
           // Row 4: Basic Info
           CustomTextField(
@@ -339,10 +422,10 @@ class _RxPrescriptionState extends State<RxPrescription> {
             width: screenWidth * 0.8,
             verticalSize: screenWidth * 0.03,
           ),
-          SizedBox(
+          const SizedBox(
             height: 35,
           ),
-          Text(
+          const Text(
             'Basic Diagnosis :',
             style: TextStyle(
               fontFamily: 'SanFrancisco',
@@ -351,7 +434,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Row(
@@ -374,7 +457,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               ),
             ],
           ),
-          SizedBox(
+          const SizedBox(
             height: 16,
           ),
           // Row 4: Basic Info
@@ -384,7 +467,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
             width: screenWidth * 0.8,
             verticalSize: screenWidth * 0.03,
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
 
@@ -395,7 +478,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
             width: screenWidth * 0.8,
             verticalSize: screenWidth * 0.03,
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
 
@@ -406,10 +489,10 @@ class _RxPrescriptionState extends State<RxPrescription> {
             width: screenWidth * 0.8,
             verticalSize: screenWidth * 0.03,
           ),
-          SizedBox(
+          const SizedBox(
             height: 35,
           ),
-          Text(
+          const Text(
             'Investigation Tests :',
             style: TextStyle(
               fontFamily: 'SanFrancisco',
@@ -418,7 +501,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
 
@@ -428,7 +511,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
             width: screenWidth * 0.8,
             verticalSize: screenWidth * 0.03,
           ),
-          SizedBox(
+          const SizedBox(
             height: 35,
           ),
 
@@ -450,7 +533,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               },
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 35,
           ),
           Container(
@@ -483,20 +566,17 @@ class _RxPrescriptionState extends State<RxPrescription> {
                 ),
                 const SizedBox(height: 20),
                 // Search field
-                TextField(
+                CustomTextField(
                   onChanged: _filterItems,
-                  decoration: InputDecoration(
-                    labelText: 'Search Medication',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                    suffixIcon: const Icon(Icons.search),
-                  ),
+                  hintText: 'Search Medications',
+                  width: screenWidth * 0.8,
+                  verticalSize: screenHeight * 0.03,
                 ),
                 const SizedBox(height: 10),
                 // ListView inside a SizedBox with fixed height
                 SizedBox(
-                  height: 100, // Adjust height based on your layout
+                  height:
+                      screenHeight * 0.3, // Adjust height based on your layout
                   child: ListView.builder(
                     itemCount: _filteredItems.length,
                     itemBuilder: (context, index) {
@@ -522,7 +602,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Text(
+              const Text(
                 'Prescribed By : Dr Kathiresan ',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
@@ -541,7 +621,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
               ),
             ],
           ),
-          SizedBox(
+          const SizedBox(
             height: 35,
           ),
           Center(
