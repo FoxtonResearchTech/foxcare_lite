@@ -8,6 +8,9 @@ import 'package:foxcare_lite/presentation/pages/customerService/admin_chat_panel
 import 'package:foxcare_lite/presentation/pages/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/presentation/pages/lab/dashboard.dart';
+import 'package:foxcare_lite/presentation/pages/lab/lab_accounts.dart';
+import 'package:foxcare_lite/presentation/pages/lab/patient_report.dart';
+import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
 import 'package:foxcare_lite/presentation/pages/op_ticket.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:foxcare_lite/presentation/pages/reception_dashboard.dart';
@@ -34,7 +37,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: PatientRegistration(),
+      home: PatientReport(),
     );
   }
 }

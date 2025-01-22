@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -7,16 +6,17 @@ import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'dashboard.dart';
+import 'lab_accounts.dart';
 import 'lab_testqueue.dart';
 
-class LabAccounts extends StatefulWidget {
-  const LabAccounts({super.key});
+class ReportsSearch extends StatefulWidget {
+  const ReportsSearch({super.key});
 
   @override
-  State<LabAccounts> createState() => _LabAccountsState();
+  State<ReportsSearch> createState() => _ReportsSearch();
 }
 
-int selectedIndex = 2;
+int selectedIndex = 3;
 
 class ReportRow {
   final String slNo;
@@ -45,9 +45,7 @@ final List<String> headers = [
   'Report Number',
   'Name',
   'OP Number',
-  'Total Amount',
-  'Collection',
-  'Balance',
+  'Report Use'
 ];
 final List<Map<String, dynamic>> tableData = [
   {
@@ -55,13 +53,14 @@ final List<Map<String, dynamic>> tableData = [
     'Report Number': '',
     'Name': '',
     'OP Number': '',
-    'Total Amount': '',
-    'Collection': '',
-    'Balance': ''
+    'Report Use': TextButton(
+      onPressed: () {},
+      child: CustomText(text: 'View'),
+    ),
   },
 ];
 
-class _LabAccountsState extends State<LabAccounts> {
+class _ReportsSearch extends State<ReportsSearch> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -179,16 +178,23 @@ class _LabAccountsState extends State<LabAccounts> {
           ),
           child: Column(
             children: [
+              SizedBox(height: screenHeight * 0.04),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomText(
-                    text: "Today's Collection Report ",
-                    size: screenHeight * 0.032,
+                  CustomTextField(
+                    hintText: 'Report Number',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {},
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.025),
               Row(
                 children: [
                   CustomTextField(
@@ -223,34 +229,10 @@ class _LabAccountsState extends State<LabAccounts> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.05),
-              const Row(
-                children: [CustomText(text: 'Collection Report Of Date')],
-              ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
                 tableData: tableData,
                 headers: headers,
-              ),
-              Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.37),
-                width: screenWidth,
-                height: screenHeight * 0.030,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 0.5,
-                  ),
-                ),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    CustomText(
-                      text: 'Total : ',
-                    )
-                  ],
-                ),
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../utilities/widgets/textField/primary_textField.dart';
@@ -85,9 +86,13 @@ class _LabDashboardState extends State<LabDashboard> {
           );
         }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(7, 'Logout', () {
-          // Handle logout action
-        }, Iconsax.logout),
+        buildDrawerItem(3, 'Report search', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ReportsSearch()),
+          );
+        }, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(4, 'Logout', () {}, Iconsax.logout),
       ],
     );
   }
