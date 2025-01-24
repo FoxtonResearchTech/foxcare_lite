@@ -38,6 +38,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
+    incrementCounter();
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -170,15 +171,13 @@ class _OpTicketPageState extends State<OpTicketPage> {
 
   final String documentId = "counterDoc";
 
-  // Helper: Check if the time matches the test time
-  bool _isTestTime() {
+  bool _shouldResetCounter(DateTime lastReset) {
     final now = DateTime.now();
-    print("Current time: ${now.hour}:${now.minute}");
-    // Replace with your test time
-    return now.hour == 08 && now.minute == 42; // 1:31 PM
+    return now.year != lastReset.year ||
+        now.month != lastReset.month ||
+        now.day != lastReset.day;
   }
 
-  // Increment function
   Future<void> incrementCounter() async {
     final docRef =
         FirebaseFirestore.instance.collection('counters').doc(documentId);
@@ -187,14 +186,21 @@ class _OpTicketPageState extends State<OpTicketPage> {
       final snapshot = await transaction.get(docRef);
 
       if (snapshot.exists) {
-        // Get the current value
+        // Get the current value and last reset timestamp
         int currentValue = snapshot.get('value') as int;
+        Timestamp lastResetTimestamp = snapshot.get('lastReset') as Timestamp;
+
+        DateTime lastReset = lastResetTimestamp.toDate();
+        print(lastReset);
 
         // Check if it's time to reset
-        if (_isTestTime() && currentValue != 0) {
+        if (_shouldResetCounter(lastReset)) {
           print("Resetting the counter...");
-          // Reset the counter at the test time
-          transaction.update(docRef, {'value': 0});
+          // Reset the counter and update the last reset timestamp
+          transaction.update(docRef, {
+            'value': 0,
+            'lastReset': FieldValue.serverTimestamp(),
+          });
         } else {
           print("Incrementing the counter...");
           // Increment the counter
@@ -203,7 +209,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
       } else {
         // Initialize the counter if it doesn't exist
         print("Initializing counter...");
-        transaction.set(docRef, {'value': 0});
+        transaction.set(docRef, {
+          'value': 0,
+          'lastReset': FieldValue.serverTimestamp(),
+        });
       }
     });
   }
@@ -831,7 +840,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   String? selectedPatientId = selectedPatient?['opNumber'];
                   print(selectedPatientId);
                   await incrementCounter();
-
                   await _generateToken(selectedPatientId!);
                 },
                 width: null,
