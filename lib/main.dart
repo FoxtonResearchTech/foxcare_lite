@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/presentation/pages/lab/dashboard.dart';
 import 'package:foxcare_lite/presentation/pages/lab/lab_accounts.dart';
 import 'package:foxcare_lite/presentation/pages/lab/patient_report.dart';
+import 'package:foxcare_lite/presentation/pages/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
 import 'package:foxcare_lite/presentation/pages/op_ticket.dart';
 import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: OpTicketPage(),
+      home: PatientsLabDetails(),
     );
   }
 }

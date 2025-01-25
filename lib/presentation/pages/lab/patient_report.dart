@@ -10,7 +10,36 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 class PatientReport extends StatefulWidget {
-  const PatientReport({super.key});
+  final String patientID;
+  final String name;
+  final String age;
+  final String sex;
+  final String dob;
+
+  final String place;
+  final String address;
+  final String pincode;
+  final String primaryInfo;
+  final String temperature;
+  final String bloodPressure;
+  final String sugarLevel;
+  final List<dynamic> medication;
+
+  const PatientReport(
+      {super.key,
+      required this.patientID,
+      required this.name,
+      required this.age,
+      required this.place,
+      required this.address,
+      required this.pincode,
+      required this.primaryInfo,
+      required this.temperature,
+      required this.bloodPressure,
+      required this.sugarLevel,
+      required this.sex,
+      required this.medication,
+      required this.dob});
 
   @override
   State<PatientReport> createState() => _PatientReport();
@@ -23,20 +52,23 @@ class _PatientReport extends State<PatientReport> {
     'Unit',
     'Reference Range',
   ];
-  List<Map<String, dynamic>> tableData1 = [
-    {
-      'Test Descriptions': '',
-      'Values': '',
-      'Unit': '',
-      'Reference Range': '',
-    }
-  ];
+  List<Map<String, dynamic>> tableData1 = [];
 
   String? selectedValue;
 
   @override
   void initState() {
     super.initState();
+    if (widget.medication.isNotEmpty) {
+      tableData1 = widget.medication.map((med) {
+        return {
+          'Test Descriptions': med,
+          'Values': '',
+          'Unit': '',
+          'Reference Range': '',
+        };
+      }).toList();
+    }
   }
 
   @override
@@ -82,27 +114,51 @@ class _PatientReport extends State<PatientReport> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomTextField(
-                      hintText: 'Patient Name ', width: screenWidth * 0.2),
+                      controller: TextEditingController(text: widget.name),
+                      hintText: 'Patient Name ',
+                      readOnly: true,
+                      width: screenWidth * 0.2),
                   CustomTextField(
-                      hintText: 'OP Number ', width: screenWidth * 0.2)
+                    controller: TextEditingController(text: widget.patientID),
+                    hintText: 'OP Number ',
+                    width: screenWidth * 0.2,
+                    readOnly: true,
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomTextField(hintText: 'Age ', width: screenWidth * 0.2),
+                  CustomTextField(
+                    controller: TextEditingController(text: widget.age),
+                    hintText: 'Age ',
+                    width: screenWidth * 0.2,
+                    readOnly: true,
+                  ),
                   SizedBox(width: screenWidth * 0.02),
-                  CustomTextField(hintText: 'Sex ', width: screenWidth * 0.2),
+                  CustomTextField(
+                    controller: TextEditingController(text: widget.sex),
+                    hintText: 'Sex ',
+                    width: screenWidth * 0.2,
+                    readOnly: true,
+                  ),
                   SizedBox(width: screenWidth * 0.02),
-                  CustomTextField(hintText: 'DOB ', width: screenWidth * 0.2)
+                  CustomTextField(
+                    controller: TextEditingController(text: widget.dob),
+                    hintText: 'DOB ',
+                    width: screenWidth * 0.2,
+                    readOnly: true,
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomTextField(
+                controller: TextEditingController(text: widget.primaryInfo),
                 hintText: 'Basic Information / Diagnostics',
                 width: screenWidth,
                 verticalSize: screenHeight * 0.03,
+                readOnly: true,
               ),
               SizedBox(height: screenHeight * 0.04),
               Row(
@@ -150,7 +206,9 @@ class _PatientReport extends State<PatientReport> {
                 children: [
                   CustomButton(
                       label: 'Print',
-                      onPressed: () {},
+                      onPressed: () {
+                        print(widget.medication);
+                      },
                       width: screenWidth * 0.1)
                 ],
               ),
