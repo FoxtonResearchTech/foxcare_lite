@@ -23,7 +23,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
     'Place',
     'List of Tests',
     'Action',
-    'Abort',
+    'Sample Data',
   ];
   List<Map<String, dynamic>> tableData1 = [];
   Timer? _timer;
@@ -87,6 +87,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           'Place': data['state'] ?? 'N/A',
           'Address': data['address1'] ?? 'N/A',
           'PinCode': data['pincode'] ?? 'N/A',
+          'Status': data['status'] ?? 'N/A',
           'List of Tests': data['Medications'] ?? 'N/A',
           'Action': TextButton(
               onPressed: () {
@@ -114,26 +115,9 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 );
               },
               child: const CustomText(text: 'Open')),
-          'Abort': TextButton(
-              onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('patients')
-                      .doc(data['patientID'])
-                      .update({'status': 'aborted'});
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Status updated to aborted')),
-                  );
-                } catch (e) {
-                  print(
-                      'Error updating status for patient ${data['patientID']}: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update status')),
-                  );
-                }
-              },
-              child: const CustomText(text: 'Abort'))
+          'Sample Data': TextButton(
+              onPressed: () async {},
+              child: const CustomText(text: 'Enter Sample Data'))
         });
       }
 
@@ -180,6 +164,11 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
               CustomDataTable(
                 tableData: tableData1,
                 headers: headers1,
+                rowColorResolver: (row) {
+                  return row['Status'] == 'aborted'
+                      ? Colors.red.shade200
+                      : Colors.transparent;
+                },
               ),
               SizedBox(height: screenHeight * 0.08),
             ],

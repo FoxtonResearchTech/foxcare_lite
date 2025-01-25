@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 
@@ -80,6 +81,7 @@ class _DoctorRxList extends State<DoctorRxList> {
           'Place': data['state'] ?? 'N/A',
           'Address': data['address1'] ?? 'N/A',
           'PinCode': data['pincode'] ?? 'N/A',
+          'Status': data['status'] ?? 'N/A',
           'Primary Info': data['otherComments'] ?? 'N/A',
           'Action': TextButton(
               onPressed: () {
@@ -112,9 +114,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                       .doc(data['patientID'])
                       .update({'status': 'aborted'});
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Status updated to aborted')),
-                  );
+                  CustomSnackBar(context, message: 'Status updated to aborted');
                 } catch (e) {
                   print(
                       'Error updating status for patient ${data['patientID']}: $e');
@@ -170,6 +170,11 @@ class _DoctorRxList extends State<DoctorRxList> {
               CustomDataTable(
                 tableData: tableData1,
                 headers: headers1,
+                rowColorResolver: (row) {
+                  return row['Status'] == 'aborted'
+                      ? Colors.red.shade200
+                      : Colors.transparent;
+                },
               ),
               SizedBox(height: screenHeight * 0.08),
             ],

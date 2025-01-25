@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: PatientsLabDetails(),
+      home: DoctorRxList(),
     );
   }
 }

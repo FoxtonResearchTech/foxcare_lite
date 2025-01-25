@@ -134,11 +134,11 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                   pdf.addPage(
                     pw.Page(
                       pageFormat: const PdfPageFormat(
-                          10 * PdfPageFormat.cm, 8 * PdfPageFormat.cm),
+                          10 * PdfPageFormat.cm, 7 * PdfPageFormat.cm),
                       build: (pw.Context context) => pw.Center(
                         child: pw.Container(
                           width: 300,
-                          height: 225,
+                          height: 200,
                           padding: const pw.EdgeInsets.all(16), // Inner padding
                           decoration: pw.BoxDecoration(
                             border: pw.Border.all(
@@ -166,13 +166,13 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                               pw.Text('Patient ID: $patientID'),
                               pw.Text(
                                   'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
-                              pw.Text('Sex: $selectedSex'),
-                              pw.Text('Age: ${age.text}'),
                               pw.Text('DOB: ${dob.text}'),
-                              pw.Text('Blood Group: $selectedBloodGroup'),
+                              pw.Text(
+                                  'Address: ${address1.text},${city.text},${pincode.text}'),
+                              pw.Divider(),
                               pw.Text(
                                   'Please bring your card for every check up'),
-                              pw.Divider(),
+                              pw.SizedBox(height: 2),
                               pw.Text('Contact : '),
                             ],
                           ),

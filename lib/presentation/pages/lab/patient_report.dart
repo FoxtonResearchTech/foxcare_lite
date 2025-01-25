@@ -5,6 +5,7 @@ import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
@@ -68,6 +69,35 @@ class _PatientReport extends State<PatientReport> {
           'Reference Range': '',
         };
       }).toList();
+    }
+  }
+
+  Future<void> submitData() async {
+    try {
+      for (var row in tableData1) {
+        final testDescription = row['Test Descriptions'];
+        final value = row['Values'];
+
+        if (testDescription != null && value != '') {
+          await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(widget.patientID)
+              .collection('tests')
+              .doc(testDescription)
+              .set({
+            'Values': value,
+          }, SetOptions(merge: true));
+        }
+      }
+
+      CustomSnackBar(context,
+          message: 'All values have been successfully submitted',
+          backgroundColor: AppColors.secondaryColor);
+      print('All values have been successfully submitted.');
+    } catch (e) {
+      CustomSnackBar(context,
+          message: 'Error submitting data: $e', backgroundColor: Colors.red);
+      print('Error submitting data: $e');
     }
   }
 
@@ -197,8 +227,16 @@ class _PatientReport extends State<PatientReport> {
               ),
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
+                editableColumns: ['Values'],
                 tableData: tableData1,
                 headers: headers1,
+                onValueChanged: (rowIndex, header, value) async {
+                  if (header == 'Values') {
+                    setState(() {
+                      tableData1[rowIndex][header] = value;
+                    });
+                  }
+                },
               ),
               SizedBox(height: screenHeight * 0.08),
               Row(
@@ -206,8 +244,15 @@ class _PatientReport extends State<PatientReport> {
                 children: [
                   CustomButton(
                       label: 'Print',
-                      onPressed: () {
-                        print(widget.medication);
+                      onPressed: () {},
+                      width: screenWidth * 0.1),
+                  SizedBox(
+                    width: screenWidth * 0.05,
+                  ),
+                  CustomButton(
+                      label: 'Submit',
+                      onPressed: () async {
+                        await submitData();
                       },
                       width: screenWidth * 0.1)
                 ],
