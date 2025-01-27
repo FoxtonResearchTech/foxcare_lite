@@ -6,6 +6,9 @@ import 'package:foxcare_lite/presentation/pages/lab/patient_report.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:intl/intl.dart';
+
+import '../../../utilities/widgets/snackBar/snakbar.dart';
 
 class PatientsLabDetails extends StatefulWidget {
   const PatientsLabDetails({super.key});
@@ -116,7 +119,27 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
               },
               child: const CustomText(text: 'Open')),
           'Sample Data': TextButton(
-              onPressed: () async {},
+              onPressed: () async {
+                final time = DateFormat('HH:mm:ss').format(DateTime.now());
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('patients')
+                      .doc(data['patientID'])
+                      .collection('sampleData')
+                      .doc('data')
+                      .set({
+                    'Time': time,
+                  }, SetOptions(merge: true));
+
+                  CustomSnackBar(context,
+                      message: "Sample Date Entered $time",
+                      backgroundColor: Colors.green);
+                } catch (e) {
+                  CustomSnackBar(context,
+                      message: 'Failed to save: $e',
+                      backgroundColor: Colors.red);
+                }
+              },
               child: const CustomText(text: 'Enter Sample Data'))
         });
       }

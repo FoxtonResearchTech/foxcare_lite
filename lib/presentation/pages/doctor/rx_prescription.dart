@@ -1,9 +1,14 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/pages/doctor/patient_history_dialog.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:timeline_tile/timeline_tile.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
@@ -188,6 +193,15 @@ class _RxPrescriptionState extends State<RxPrescription> {
     });
   }
 
+  void showPatientHistoryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PatientHistoryDialog();
+      },
+    );
+  }
+
   Future<void> _savePrescriptionData() async {
     try {
       await FirebaseFirestore.instance
@@ -208,19 +222,17 @@ class _RxPrescriptionState extends State<RxPrescription> {
         },
       }, SetOptions(merge: true));
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Details saved successfully!')),
-      );
+      CustomSnackBar(context,
+          message: 'Details saved successfully!',
+          backgroundColor: Colors.green);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      CustomSnackBar(context,
+          message: 'Failed to save: $e', backgroundColor: Colors.red);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
@@ -447,6 +459,14 @@ class _RxPrescriptionState extends State<RxPrescription> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              CustomButton(
+                label: 'Patient History',
+                onPressed: () {
+                  showPatientHistoryDialog(context);
+                },
+                width: screenWidth * 0.12,
+                height: screenHeight * 0.05,
+              ),
               CustomTextField(
                 controller: TextEditingController(text: widget.temperature),
                 hintText: 'Temperature ',
@@ -473,18 +493,6 @@ class _RxPrescriptionState extends State<RxPrescription> {
           const SizedBox(
             height: 16,
           ),
-          // Row 4: Basic Info
-          CustomTextField(
-            controller: _patientHistoryController,
-            hintText: 'Patient History',
-            width: screenWidth * 0.8,
-            verticalSize: screenWidth * 0.03,
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-
-          // Row 4: Basic Info
           CustomTextField(
             controller: _diagnosisSignsController,
             hintText: 'Diagnosis Sign',
