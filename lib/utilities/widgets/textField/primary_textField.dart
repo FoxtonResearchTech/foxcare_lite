@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../colors.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -11,7 +10,7 @@ class CustomTextField extends StatelessWidget {
   final double horizontalSize;
   final FocusNode? focusNode;
   final onChanged;
-
+  final GestureTapCallback? onTap;
   final TextEditingController? controller;
   final Icon? icon;
 
@@ -27,6 +26,7 @@ class CustomTextField extends StatelessWidget {
     this.horizontalSize = 12.0,
     this.focusNode,
     this.onChanged,
+    this.onTap,
   });
 
   @override
@@ -40,8 +40,7 @@ class CustomTextField extends StatelessWidget {
         obscureText: obscureText,
         readOnly: readOnly,
         decoration: InputDecoration(
-          isDense: true,
-          // Reduces the overall height of the TextField
+          isDense: true, // Reduces the overall height of the TextField
           contentPadding: EdgeInsets.symmetric(
               vertical: verticalSize, horizontal: horizontalSize),
           labelText: hintText,
@@ -64,7 +63,18 @@ class CustomTextField extends StatelessWidget {
             borderSide: BorderSide(color: Colors.lightBlue, width: 1),
             borderRadius: BorderRadius.circular(10),
           ),
-          suffixIcon: icon,
+          suffixIcon: icon != null
+              ? GestureDetector(
+                  onTap: onTap,
+                  child: Row(
+                    mainAxisSize:
+                        MainAxisSize.min, // Ensures the icon does not expand
+                    children: [
+                      icon!,
+                    ],
+                  ),
+                )
+              : null,
           suffixIconColor: AppColors.secondaryColor,
         ),
       ),

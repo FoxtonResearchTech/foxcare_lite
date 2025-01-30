@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:intl/intl.dart';
 
 class PatientReport extends StatefulWidget {
   final String patientID;
@@ -47,6 +48,13 @@ class PatientReport extends StatefulWidget {
 }
 
 class _PatientReport extends State<PatientReport> {
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController paidController = TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  TextEditingController _dateController = TextEditingController(
+    text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+  );
+
   final List<String> headers1 = [
     'Test Descriptions',
     'Values',
@@ -60,6 +68,8 @@ class _PatientReport extends State<PatientReport> {
   @override
   void initState() {
     super.initState();
+    totalAmountController.addListener(_updateBalance);
+    paidController.addListener(_updateBalance);
     if (widget.medication.isNotEmpty) {
       tableData1 = widget.medication.map((med) {
         return {
@@ -89,6 +99,15 @@ class _PatientReport extends State<PatientReport> {
           }, SetOptions(merge: true));
         }
       }
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .set({
+        'totalAmount': totalAmountController.text,
+        'collected': paidController.text,
+        'balance': balanceController.text,
+        'reportDate': _dateController.text,
+      }, SetOptions(merge: true));
 
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
@@ -101,9 +120,26 @@ class _PatientReport extends State<PatientReport> {
     }
   }
 
+  void _updateBalance() {
+    double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
+    double paidAmount = double.tryParse(paidController.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    balanceController.text = balance.toStringAsFixed(2); // Update balance field
+  }
+
   @override
   void dispose() {
+    totalAmountController.dispose();
+    paidController.dispose();
+    balanceController.dispose();
     super.dispose();
+  }
+
+  void clear() {
+    totalAmountController.clear();
+    paidController.clear();
+    balanceController.clear();
   }
 
   @override
@@ -197,7 +233,10 @@ class _PatientReport extends State<PatientReport> {
                   CustomTextField(
                       hintText: 'Report Number ', width: screenWidth * 0.2),
                   CustomTextField(
-                      hintText: 'Report Date ', width: screenWidth * 0.2)
+                      controller: _dateController,
+                      readOnly: true,
+                      hintText: 'Report Date ',
+                      width: screenWidth * 0.2),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
@@ -238,7 +277,32 @@ class _PatientReport extends State<PatientReport> {
                   }
                 },
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.06),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                      controller: totalAmountController,
+                      hintText: 'Total Amount',
+                      width: screenWidth * 0.2),
+                  SizedBox(width: screenWidth * 0.03),
+                  CustomTextField(
+                      controller: paidController,
+                      hintText: 'Paid',
+                      width: screenWidth * 0.2),
+                  SizedBox(width: screenWidth * 0.03),
+                  CustomText(
+                    text: 'Balance : ',
+                    size: screenWidth * 0.012,
+                  ),
+                  SizedBox(width: screenWidth * 0.01),
+                  CustomTextField(
+                      controller: balanceController,
+                      hintText: '',
+                      width: screenWidth * 0.2),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.06),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

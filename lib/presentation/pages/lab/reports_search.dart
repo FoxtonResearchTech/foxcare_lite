@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/table/data_table.dart';
@@ -40,27 +42,97 @@ class ReportRow {
   );
 }
 
-final List<String> headers = [
-  'Date',
-  'Report Number',
-  'Name',
-  'OP Number',
-  'Report Use'
-];
-final List<Map<String, dynamic>> tableData = [
-  {
-    'Date': '',
-    'Report Number': '',
-    'Name': '',
-    'OP Number': '',
-    'Report Use': TextButton(
-      onPressed: () {},
-      child: CustomText(text: 'View'),
-    ),
-  },
-];
-
 class _ReportsSearch extends State<ReportsSearch> {
+  TextEditingController _reportNumber = TextEditingController();
+  TextEditingController _dateController = TextEditingController();
+  TextEditingController _fromDateController = TextEditingController();
+  TextEditingController _toDateController = TextEditingController();
+
+  final List<String> headers = [
+    'Report Date',
+    'Report No',
+    'Name',
+    'OP Number',
+    'Report Use'
+  ];
+  List<Map<String, dynamic>> tableData = [];
+
+  Future<void> fetchData(
+      {String? singleDate, String? fromDate, String? toDate}) async {
+    try {
+      Query query = FirebaseFirestore.instance.collection('patients');
+
+      if (singleDate != null) {
+        query = query.where('reportDate', isEqualTo: singleDate);
+      } else if (fromDate != null && toDate != null) {
+        query = query
+            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
+            .where('reportDate', isLessThanOrEqualTo: toDate);
+      }
+
+      final QuerySnapshot snapshot = await query.get();
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        fetchedData.add({
+          'Report Date': data['reportDate'] ?? 'N/A',
+          'Report No': data['reportNo'] ?? 'N/A',
+          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+              .trim(),
+          'OP Number': data['patientID'] ?? 'N/A',
+          'Report Use': TextButton(
+            onPressed: () {},
+            child: CustomText(text: 'View'),
+          )
+        });
+      }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Report No']) ?? 0;
+        int tokenB = int.tryParse(b['Report No']) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+      setState(() {
+        tableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _dateController.dispose();
+    _toDateController.dispose();
+    _fromDateController.dispose();
+    _reportNumber.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -184,6 +256,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                   CustomTextField(
                     hintText: 'Report Number',
                     width: screenWidth * 0.15,
+                    controller: _reportNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
@@ -200,11 +273,16 @@ class _ReportsSearch extends State<ReportsSearch> {
                   CustomTextField(
                     hintText: 'Date',
                     width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    controller: _dateController,
+                    onTap: () => _selectDate(context, _dateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(singleDate: _dateController.text);
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),
@@ -212,18 +290,29 @@ class _ReportsSearch extends State<ReportsSearch> {
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, _fromDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, _toDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(
+                        fromDate: _fromDateController.text,
+                        toDate: _toDateController.text,
+                      );
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),

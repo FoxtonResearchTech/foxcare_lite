@@ -35,20 +35,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'FoxCare Lite',
-      home: RxPrescription(
-          patientID: '',
-          name: '',
-          age: '',
-          place: '',
-          primaryInfo: '',
-          address: '',
-          pincode: '',
-          temperature: '',
-          bloodPressure: '',
-          sugarLevel: ''),
-    );
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'FoxCare Lite',
+        home: ReportsSearch());
   }
 }
