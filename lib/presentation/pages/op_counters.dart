@@ -4,7 +4,9 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
+import 'doctor_schedule.dart';
 import 'ip_admission.dart';
+import 'ip_patients_admission.dart';
 import 'op_ticket.dart';
 
 class OpCounters extends StatefulWidget {
@@ -218,8 +220,21 @@ class _OpCountersState extends State<OpCounters> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(5, 'Doctor Visit Schedule', () {}, Iconsax.hospital),
+        buildDrawerItem(5, 'Doctor Visit Schedule', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => doctorSchedule()),
+          );
+        }, Iconsax.hospital),
         Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(6, 'Ip Patients Admission', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
+          );
+        }, Icons.approval),
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -288,7 +303,10 @@ class _OpCountersState extends State<OpCounters> {
                 ),
                 SizedBox(
                   width: 200,
-                  child: CustomTextField(hintText: 'Total Counters', width: null,),
+                  child: CustomTextField(
+                    hintText: 'Total Counters',
+                    width: null,
+                  ),
                 ),
                 SizedBox(
                   width: 20,
@@ -301,7 +319,10 @@ class _OpCountersState extends State<OpCounters> {
                 ),
                 SizedBox(
                   width: 250,
-                  child: CustomTextField(hintText: 'Total Token Generated', width: null,),
+                  child: CustomTextField(
+                    hintText: 'Total Token Generated',
+                    width: null,
+                  ),
                 ),
               ],
             ),
@@ -318,7 +339,10 @@ class _OpCountersState extends State<OpCounters> {
                 ),
                 SizedBox(
                   width: 250,
-                  child: CustomTextField(hintText: 'Total Waiting Tokens', width: null,),
+                  child: CustomTextField(
+                    hintText: 'Total Waiting Tokens',
+                    width: null,
+                  ),
                 ),
               ],
             ),

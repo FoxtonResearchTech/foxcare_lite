@@ -83,7 +83,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 
         fetchedData.add({
           'Token NO': tokenNo,
-          'OP NO': data['patientID'] ?? 'N/A',
+          'OP NO': data['opNumber'] ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
           'Age': data['age'] ?? 'N/A',
@@ -98,7 +98,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => PatientReport(
-                      patientID: data['patientID'] ?? 'N/A',
+                      patientID: data['opNumber'] ?? 'N/A',
                       name:
                           '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
                               .trim(),
@@ -124,7 +124,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 try {
                   await FirebaseFirestore.instance
                       .collection('patients')
-                      .doc(data['patientID'])
+                      .doc(data['opNumber'])
                       .collection('sampleData')
                       .doc('data')
                       .set({

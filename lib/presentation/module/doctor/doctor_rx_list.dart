@@ -45,8 +45,10 @@ class _DoctorRxList extends State<DoctorRxList> {
 
   Future<void> fetchData() async {
     try {
-      final QuerySnapshot patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .where('opNumber', isGreaterThan: '')
+          .get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
@@ -74,7 +76,8 @@ class _DoctorRxList extends State<DoctorRxList> {
 
         fetchedData.add({
           'Token NO': tokenNo,
-          'OP NO': data['patientID'] ?? 'N/A',
+          'OP NO': data['opNumber'] ?? 'N/A',
+          'IP NO': data['ipNumber'] ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
           'Age': data['age'] ?? 'N/A',
@@ -89,7 +92,8 @@ class _DoctorRxList extends State<DoctorRxList> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => RxPrescription(
-                      patientID: data['patientID'] ?? 'N/A',
+                      patientID: data['opNumber'] ?? 'N/A',
+                      ipNumber: data['ipNumber'] ?? 'N/A',
                       name:
                           '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
                               .trim(),
@@ -111,7 +115,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                 try {
                   await FirebaseFirestore.instance
                       .collection('patients')
-                      .doc(data['patientID'])
+                      .doc(data['opNumber'])
                       .update({'status': 'aborted'});
 
                   CustomSnackBar(context, message: 'Status updated to aborted');

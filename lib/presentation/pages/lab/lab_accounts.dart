@@ -84,7 +84,7 @@ class _LabAccountsState extends State<LabAccounts> {
           'Report No': data['reportNo'] ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
-          'OP Number': data['patientID'] ?? 'N/A',
+          'OP Number': data['opNumber'] ?? 'N/A',
           'Total Amount': data['totalAmount'] ?? '0',
           'Collected': data['collected'] ?? '0',
           'Balance': data['balance'] ?? '0',

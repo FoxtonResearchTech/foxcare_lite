@@ -11,7 +11,9 @@ import '../../utilities/colors.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
+import 'doctor_schedule.dart';
 import 'ip_admission.dart';
+import 'ip_patients_admission.dart';
 import 'op_counters.dart';
 import 'op_ticket.dart';
 import 'package:printing/printing.dart';
@@ -68,7 +70,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
     // Create patient data object
     Map<String, dynamic> patientData = {
-      'patientID': patientID,
+      'opNumber': patientID,
       'firstName': firstname.text,
       'middleName': middlename.text,
       'lastName': lastname.text,
@@ -349,7 +351,20 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(5, 'Doctor Visit Schedule', () {}, Iconsax.hospital),
+        buildDrawerItem(5, 'Doctor Visit Schedule', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => doctorSchedule()),
+          );
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(6, 'Ip Patients Admission', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
+          );
+        }, Icons.approval),
         const Divider(
           height: 5,
           color: Colors.grey,
@@ -387,7 +402,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     );
   }
 
-  // Form layout for web with three columns
   Widget buildThreeColumnForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

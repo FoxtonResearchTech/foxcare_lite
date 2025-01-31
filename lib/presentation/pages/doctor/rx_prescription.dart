@@ -15,6 +15,8 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 
 class RxPrescription extends StatefulWidget {
   final String patientID;
+  final String ipNumber;
+
   final String name;
   final String age;
   final String place;
@@ -37,6 +39,7 @@ class RxPrescription extends StatefulWidget {
     required this.temperature,
     required this.bloodPressure,
     required this.sugarLevel,
+    required this.ipNumber,
   }) : super(key: key);
   @override
   State<RxPrescription> createState() => _RxPrescriptionState();
@@ -152,7 +155,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
   List<String> _filteredItems = [];
   List<String> _selectedItems = [];
   String _searchQuery = '';
-
+  bool _isSwitched = false;
   @override
   void initState() {
     super.initState();
@@ -168,6 +171,35 @@ class _RxPrescriptionState extends State<RxPrescription> {
     _notesController.dispose();
     _diagnosisSignsController.dispose();
     _symptomsController.dispose();
+  }
+
+  Future<void> _onToggle(bool value) async {
+    var firestore = FirebaseFirestore.instance;
+    var docRef = firestore.collection('patients').doc(widget.patientID);
+
+    setState(() {
+      _isSwitched = value;
+    });
+
+    if (_isSwitched) {
+      // Move 'opNumber' value to 'ipNumber' and delete 'opNumber'
+      await docRef.update({
+        'ipNumber': widget.patientID,
+        'opNumber': FieldValue.delete(),
+      });
+      CustomSnackBar(context,
+          message: 'Patients Marked as IP',
+          backgroundColor: AppColors.secondaryColor);
+    } else {
+      // Move 'ipNumber' value back to 'opNumber' and delete 'ipNumber'
+      await docRef.update({
+        'opNumber': widget.patientID,
+        'ipNumber': FieldValue.delete(),
+      });
+      CustomSnackBar(context,
+          message: 'Patients Marked as OP',
+          backgroundColor: AppColors.secondaryColor);
+    }
   }
 
   void _filterItems(String query) {
@@ -209,6 +241,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
           .doc(widget.patientID)
           .set({
         'Medications': _selectedItems,
+        'proceedTo': selectedValue,
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
           'bloodPressure': _bloodPressureController.text,
@@ -346,15 +379,23 @@ class _RxPrescriptionState extends State<RxPrescription> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row 1: OP Number and Date
-          const Text(
-            'Dr. Kathiresan',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.black,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              CustomText(
+                text: 'Dr. Kathiresan',
+                size: screenWidth * 0.02,
+              ),
+              SizedBox(width: screenWidth * 0.47),
+              CustomText(text: 'OP Number'),
+              SizedBox(width: screenWidth * 0.01),
+              Switch(
+                activeColor: AppColors.secondaryColor,
+                value: _isSwitched,
+                onChanged: _onToggle,
+              ),
+              SizedBox(width: screenWidth * 0.01),
+              CustomText(text: 'IP Number'),
+            ],
           ),
           const SizedBox(
             height: 35,
@@ -539,7 +580,7 @@ class _RxPrescriptionState extends State<RxPrescription> {
           SizedBox(
             width: 250,
             child: CustomDropdown(
-              label: 'Select',
+              label: 'Proceed To',
               items: [
                 'Medication',
                 'Examination',

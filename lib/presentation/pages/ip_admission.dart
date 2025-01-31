@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import 'admission_status.dart';
 import 'doctor_schedule.dart';
+import 'ip_patients_admission.dart';
 import 'op_counters.dart';
 import 'op_ticket.dart';
 
@@ -79,7 +80,7 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
     false,
   ];
 
-  //int selectedIndex = 1;
+  int selectedIndex1 = 2;
   //String selectedSex = 'Male'; // Default value for Sex
   String selectedBloodGroup = 'A+'; // Default value for Blood Group
 
@@ -213,7 +214,11 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(2, 'IP Admission', () {}, Iconsax.add_circle),
+        buildDrawerItem(2, 'IP Admission', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => IpAdmissionPage()),
+          );
+        }, Iconsax.add_circle),
         Divider(
           height: 5,
           color: Colors.grey,
@@ -246,6 +251,15 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
           height: 5,
           color: Colors.grey,
         ),
+        buildDrawerItem(6, 'Ip Patients Admission', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
+          );
+        }, Icons.approval),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
         buildDrawerItem(7, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
@@ -256,23 +270,23 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
   Widget buildDrawerItem(
       int index, String title, VoidCallback onTap, IconData icon) {
     return ListTile(
-      selected: selectedIndex == index,
+      selected: selectedIndex1 == index,
       selectedTileColor: Colors.blueAccent.shade100,
       // Highlight color for the selected item
       leading: Icon(
         icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
+        color: selectedIndex1 == index ? Colors.blue : Colors.white,
       ),
       title: Text(
         title,
         style: TextStyle(
             fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
+            color: selectedIndex1 == index ? Colors.blue : Colors.black54,
             fontWeight: FontWeight.w700),
       ),
       onTap: () {
         setState(() {
-          selectedIndex = index; // Update the selected index
+          selectedIndex1 = index; // Update the selected index
         });
         onTap();
       },
@@ -623,7 +637,8 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
                   isDataLoaded = true; // Show the data list on button click
                   patientData = samplePatients; // Load patient data
                 });
-              }, width: null,
+              },
+              width: null,
             ),
           ),
           SizedBox(height: 20),
@@ -978,7 +993,8 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
                 isDataLoaded = true; // Show the data list on button click
                 patientData = samplePatients; // Load patient data
               });
-            }, width: null,
+            },
+            width: null,
           ),
         ),
         SizedBox(height: 20),
@@ -1070,7 +1086,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 20),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: selectedPatient['opNumber'], width: null,),
+                child: CustomTextField(
+                  hintText: selectedPatient['opNumber'],
+                  width: null,
+                ),
               ),
               SizedBox(
                 width: 20,
@@ -1084,7 +1103,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 20),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: selectedPatient['name'], width: null,),
+                child: CustomTextField(
+                  hintText: selectedPatient['name'],
+                  width: null,
+                ),
               ),
             ],
           ),
@@ -1102,9 +1124,9 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 65),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText:
-
-                  selectedPatient['age'].toString(), width: null,
+                child: CustomTextField(
+                  hintText: selectedPatient['age'].toString(),
+                  width: null,
                 ),
               ),
               SizedBox(
@@ -1119,7 +1141,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 20),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: selectedPatient['address'], width: null,),
+                child: CustomTextField(
+                  hintText: selectedPatient['address'],
+                  width: null,
+                ),
               ),
             ],
           ),
@@ -1137,7 +1162,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 20),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: selectedPatient['ipFromDate'], width: null,),
+                child: CustomTextField(
+                  hintText: selectedPatient['ipFromDate'],
+                  width: null,
+                ),
               ),
               SizedBox(
                 width: 20,
@@ -1151,7 +1179,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 20),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: selectedPatient['ipToDate'], width: null,),
+                child: CustomTextField(
+                  hintText: selectedPatient['ipToDate'],
+                  width: null,
+                ),
               ),
             ],
           ),
@@ -1169,11 +1200,13 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 60),
               SizedBox(
                 width: 200,
-                child: CustomDropdown(label:
-                    'Stay',items: ['Room', 'Ward', 'vipRoom', 'ICU'], selectedItem: SelectedRoom,onChanged:
-                    (value) {
-                  SelectedRoom = value!;
-                }),
+                child: CustomDropdown(
+                    label: 'Stay',
+                    items: ['Room', 'Ward', 'vipRoom', 'ICU'],
+                    selectedItem: SelectedRoom,
+                    onChanged: (value) {
+                      SelectedRoom = value!;
+                    }),
               ),
               SizedBox(
                 width: 20,
@@ -1187,10 +1220,13 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 15),
               SizedBox(
                 width: 200,
-                child: CustomDropdown(label:
-                    'Vacant', items: ['1', '2', '3', '4'], selectedItem: vacantRoom,onChanged:  (value) {
-                  vacantRoom = value!;
-                }),
+                child: CustomDropdown(
+                    label: 'Vacant',
+                    items: ['1', '2', '3', '4'],
+                    selectedItem: vacantRoom,
+                    onChanged: (value) {
+                      vacantRoom = value!;
+                    }),
               ),
             ],
           ),
@@ -1208,12 +1244,13 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               SizedBox(width: 20),
               SizedBox(
                 width: 200,
-                child: CustomDropdown(label:
-                    'Station',items:
-                    ['Station A', 'Station B', 'ICU Station'],selectedItem:
-                    nursingStation, onChanged: (value) {
-                  nursingStation = value!;
-                }),
+                child: CustomDropdown(
+                    label: 'Station',
+                    items: ['Station A', 'Station B', 'ICU Station'],
+                    selectedItem: nursingStation,
+                    onChanged: (value) {
+                      nursingStation = value!;
+                    }),
               ),
               SizedBox(
                 width: 20,
@@ -1243,7 +1280,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               ),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: 'Enter Name', width: null,),
+                child: CustomTextField(
+                  hintText: 'Enter Name',
+                  width: null,
+                ),
               ),
               SizedBox(
                 width: 20,
@@ -1256,7 +1296,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               ),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: 'Enter Phone No', width: null,),
+                child: CustomTextField(
+                  hintText: 'Enter Phone No',
+                  width: null,
+                ),
               ),
             ],
           ),
@@ -1276,7 +1319,10 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               ),
               SizedBox(
                 width: 200,
-                child: CustomTextField(hintText: 'Relation with patient', width: null,),
+                child: CustomTextField(
+                  hintText: 'Relation with patient',
+                  width: null,
+                ),
               ),
             ],
           ),
@@ -1290,7 +1336,11 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
               ),
               SizedBox(
                 width: 250,
-                child: CustomButton(label: 'Register', onPressed: () {}, width: null,),
+                child: CustomButton(
+                  label: 'Register',
+                  onPressed: () {},
+                  width: null,
+                ),
               ),
             ],
           ),

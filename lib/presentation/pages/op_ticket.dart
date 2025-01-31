@@ -6,7 +6,9 @@ import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/text/primary_text.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
+import 'doctor_schedule.dart';
 import 'ip_admission.dart';
+import 'ip_patients_admission.dart';
 
 class OpTicketPage extends StatefulWidget {
   @override
@@ -14,8 +16,7 @@ class OpTicketPage extends StatefulWidget {
 }
 
 class _OpTicketPageState extends State<OpTicketPage> {
-  TimeOfDay now = TimeOfDay.now();
-  final date = DateTime.timestamp();
+  final dateTime = DateTime.timestamp();
   int selectedIndex = 1;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController counter = TextEditingController();
@@ -67,7 +68,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
         'date': _currentDateString(),
       });
       await firestore.collection('patients').doc(selectedPatientId).update({
-        'date': date,
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
         'counter': counter.text,
         'doctorName': doctorName.text,
         'bloodPressure': bloodPressure.text,
@@ -130,7 +135,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     if (opNumber.isNotEmpty) {
       final QuerySnapshot snapshot = await firestore
           .collection('patients')
-          .where('patientID', isEqualTo: opNumber)
+          .where('opNumber', isEqualTo: opNumber)
           .get();
       docs.addAll(snapshot.docs);
     }
@@ -157,7 +162,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     // Map documents to the desired structure
     for (var doc in uniqueDocs) {
       patientsList.add({
-        'opNumber': doc['patientID'] ?? '',
+        'opNumber': doc['opNumber'] ?? '',
         'name':
             ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '')).trim(),
         'age': doc['age'] ?? '',
@@ -324,8 +329,21 @@ class _OpTicketPageState extends State<OpTicketPage> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(5, 'Doctor Visit Schedule', () {}, Iconsax.hospital),
+        buildDrawerItem(5, 'Doctor Visit Schedule', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => doctorSchedule()),
+          );
+        }, Iconsax.hospital),
 
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(6, 'Ip Patients Admission', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
+          );
+        }, Icons.approval),
         const Divider(
           height: 5,
           color: Colors.grey,
@@ -728,7 +746,12 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   )),
               CustomTextField(
                 hintText: '',
-                controller: TextEditingController(text: date.toString()),
+                controller: TextEditingController(
+                    text: dateTime.year.toString() +
+                        '-' +
+                        dateTime.month.toString().padLeft(2, '0') +
+                        '-' +
+                        dateTime.day.toString().padLeft(2, '0')),
                 width: 250,
               ),
               const SizedBox(

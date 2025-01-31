@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 
 import 'doctor_schedule.dart';
 import 'ip_admission.dart';
+import 'ip_patients_admission.dart';
 import 'op_counters.dart';
 import 'op_ticket.dart';
 
@@ -146,6 +147,15 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
           );
         }, Iconsax.hospital),
         Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(6, 'Ip Patients Admission', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
+          );
+        }, Icons.approval),
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),

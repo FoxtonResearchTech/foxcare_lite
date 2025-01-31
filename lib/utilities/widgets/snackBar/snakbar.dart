@@ -18,9 +18,11 @@ void CustomSnackBar(
         if (icon != null) Icon(icon, color: Colors.white, size: iconSize),
         if (icon != null) SizedBox(width: 10),
         Expanded(
-          child: CustomText(
-            text: message,
-            color: Colors.white,
+          child: Center(
+            child: CustomText(
+              text: message,
+              color: Colors.white,
+            ),
           ),
         ),
       ],
