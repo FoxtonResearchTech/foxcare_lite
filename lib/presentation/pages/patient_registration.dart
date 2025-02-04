@@ -42,12 +42,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   final TextEditingController phone1 = TextEditingController();
   final TextEditingController phone2 = TextEditingController();
 
-  // final Uri uuid = Uuid(); // Create an instance of Uuid
-
-  // Function to generate a unique ID
   String generateNumericUid() {
     var random = Random();
-    // Generate a 6-digit random number and concatenate it with "Fox"
     return 'Fox' +
         List.generate(6, (_) => random.nextInt(10).toString()).join();
   }
@@ -235,7 +231,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
   @override
   void initState() {
-    // Call the method to generate the UID and assign it to 'uid'
     uid = generateNumericUid();
     super.initState();
   }
@@ -736,28 +731,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               )),
         ),
       ],
-    );
-  }
-
-  // Helper widget to create Dropdowns
-  Widget buildDrop(String label, List<String> items, String selectedItem,
-      ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(
-          fontFamily: 'SanFrancisco',
-        ),
-        border: const OutlineInputBorder(),
-      ),
-      value: selectedItem,
-      items: items.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value),
-        );
-      }).toList(),
-      onChanged: onChanged,
     );
   }
 }

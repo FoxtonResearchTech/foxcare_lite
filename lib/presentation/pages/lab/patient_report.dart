@@ -84,31 +84,37 @@ class _PatientReport extends State<PatientReport> {
 
   Future<void> submitData() async {
     try {
+      // Reference to the patient's Firestore document
+      final patientRef = FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID);
+
+      // Store test descriptions and values in Firestore
       for (var row in tableData1) {
         final testDescription = row['Test Descriptions'];
         final value = row['Values'];
 
         if (testDescription != null && value != '') {
-          await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(widget.patientID)
-              .collection('tests')
-              .doc(testDescription)
-              .set({
+          await patientRef.collection('tests').doc(testDescription).set({
             'Values': value,
           }, SetOptions(merge: true));
         }
       }
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.patientID)
-          .set({
+
+      // Update patient financial details
+      await patientRef.set({
         'totalAmount': totalAmountController.text,
         'collected': paidController.text,
         'balance': balanceController.text,
         'reportDate': _dateController.text,
       }, SetOptions(merge: true));
 
+      // Increment the submission counter in Firestore
+      await patientRef.set({
+        'reportNo': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+
+      // Show success message
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
           backgroundColor: AppColors.secondaryColor);

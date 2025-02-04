@@ -58,7 +58,10 @@ class _ReportsSearch extends State<ReportsSearch> {
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+      {String? singleDate,
+      String? fromDate,
+      String? toDate,
+      String? reportNo}) async {
     try {
       Query query = FirebaseFirestore.instance.collection('patients');
 
@@ -68,31 +71,46 @@ class _ReportsSearch extends State<ReportsSearch> {
         query = query
             .where('reportDate', isGreaterThanOrEqualTo: fromDate)
             .where('reportDate', isLessThanOrEqualTo: toDate);
+      } else if (reportNo != null) {
+        int? reportNoInt = int.tryParse(reportNo);
+        if (reportNoInt != null) {
+          query = query.where('reportNo', isEqualTo: reportNoInt);
+        }
       }
 
       final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+        return;
+      }
+
       List<Map<String, dynamic>> fetchedData = [];
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
         fetchedData.add({
-          'Report Date': data['reportDate'] ?? 'N/A',
-          'Report No': data['reportNo'] ?? 'N/A',
+          'Report Date': data['reportDate']?.toString() ?? 'N/A',
+          'Report No': data['reportNo']?.toString() ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
-          'OP Number': data['patientID'] ?? 'N/A',
-          'Report Use': TextButton(
-            onPressed: () {},
-            child: CustomText(text: 'View'),
-          )
+          'OP Number': data['opNumber']?.toString() ?? 'N/A',
+          'Total Amount': data['totalAmount']?.toString() ?? '0',
+          'Collected': data['collected']?.toString() ?? '0',
+          'Balance': data['balance']?.toString() ?? '0',
         });
       }
+
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No']) ?? 0;
-        int tokenB = int.tryParse(b['Report No']) ?? 0;
+        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
         return tokenA.compareTo(tokenB);
       });
+
       setState(() {
         tableData = fetchedData;
       });
@@ -261,7 +279,9 @@ class _ReportsSearch extends State<ReportsSearch> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(reportNo: _reportNumber.text);
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),

@@ -4,6 +4,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_view.dart';
+import 'package:foxcare_lite/presentation/module/manager/edit_delete_patient_information.dart';
+import 'package:foxcare_lite/presentation/module/manager/patient_history.dart';
+import 'package:foxcare_lite/presentation/module/manager/patient_info.dart';
 import 'package:foxcare_lite/presentation/pages/customerService/admin_chat_panel.dart';
 import 'package:foxcare_lite/presentation/pages/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
@@ -40,6 +43,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: IpPatientsAdmission());
+        home: PatientHistory());
   }
 }

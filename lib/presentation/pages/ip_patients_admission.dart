@@ -204,9 +204,9 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
               child: Container(
                 padding: EdgeInsets.only(
                   top: screenHeight * 0.01,
-                  left: screenWidth * 0.05,
-                  right: screenWidth * 0.05,
-                  bottom: screenWidth * 0.01,
+                  left: screenWidth * 0.04,
+                  right: screenWidth * 0.04,
+                  bottom: screenWidth * 0.33,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,

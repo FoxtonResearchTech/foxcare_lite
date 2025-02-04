@@ -72,29 +72,39 @@ class _LabAccountsState extends State<LabAccounts> {
             .where('reportDate', isGreaterThanOrEqualTo: fromDate)
             .where('reportDate', isLessThanOrEqualTo: toDate);
       }
-
       final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+        return;
+      }
+
       List<Map<String, dynamic>> fetchedData = [];
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
         fetchedData.add({
-          'Report Date': data['reportDate'] ?? 'N/A',
-          'Report No': data['reportNo'] ?? 'N/A',
+          'Report Date': data['reportDate']?.toString() ?? 'N/A',
+          'Report No': data['reportNo']?.toString() ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
-          'OP Number': data['opNumber'] ?? 'N/A',
-          'Total Amount': data['totalAmount'] ?? '0',
-          'Collected': data['collected'] ?? '0',
-          'Balance': data['balance'] ?? '0',
+          'OP Number': data['opNumber']?.toString() ?? 'N/A',
+          'Total Amount': data['totalAmount']?.toString() ?? '0',
+          'Collected': data['collected']?.toString() ?? '0',
+          'Balance': data['balance']?.toString() ?? '0',
         });
       }
+
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No']) ?? 0;
-        int tokenB = int.tryParse(b['Report No']) ?? 0;
+        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
         return tokenA.compareTo(tokenB);
       });
+
       setState(() {
         tableData = fetchedData;
       });
