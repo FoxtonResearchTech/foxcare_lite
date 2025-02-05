@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
@@ -8,17 +12,16 @@ import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'dashboard.dart';
-import 'lab_accounts.dart';
 import 'lab_testqueue.dart';
 
-class ReportsSearch extends StatefulWidget {
-  const ReportsSearch({super.key});
+class LabAccounts extends StatefulWidget {
+  const LabAccounts({super.key});
 
   @override
-  State<ReportsSearch> createState() => _ReportsSearch();
+  State<LabAccounts> createState() => _LabAccountsState();
 }
 
-int selectedIndex = 3;
+int selectedIndex = 2;
 
 class ReportRow {
   final String slNo;
@@ -42,8 +45,7 @@ class ReportRow {
   );
 }
 
-class _ReportsSearch extends State<ReportsSearch> {
-  TextEditingController _reportNumber = TextEditingController();
+class _LabAccountsState extends State<LabAccounts> {
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
@@ -53,15 +55,14 @@ class _ReportsSearch extends State<ReportsSearch> {
     'Report No',
     'Name',
     'OP Number',
-    'Report Use'
+    'Total Amount',
+    'Collected',
+    'Balance',
   ];
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData(
-      {String? singleDate,
-      String? fromDate,
-      String? toDate,
-      String? reportNo}) async {
+      {String? singleDate, String? fromDate, String? toDate}) async {
     try {
       Query query = FirebaseFirestore.instance.collection('patients');
 
@@ -71,13 +72,7 @@ class _ReportsSearch extends State<ReportsSearch> {
         query = query
             .where('reportDate', isGreaterThanOrEqualTo: fromDate)
             .where('reportDate', isLessThanOrEqualTo: toDate);
-      } else if (reportNo != null) {
-        int? reportNoInt = int.tryParse(reportNo);
-        if (reportNoInt != null) {
-          query = query.where('reportNo', isEqualTo: reportNoInt);
-        }
       }
-
       final QuerySnapshot snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
@@ -136,9 +131,59 @@ class _ReportsSearch extends State<ReportsSearch> {
     }
   }
 
+  int _totalAmountCollected() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Total Amount'];
+        if (value == null) return sum;
+        if (value is String) {
+          value = int.tryParse(value) ?? 0;
+        }
+        return sum + (value as int);
+      },
+    );
+  }
+
+  int _totalCollected() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Collected'];
+        if (value == null) return sum;
+        if (value is String) {
+          value = int.tryParse(value) ?? 0;
+        }
+        return sum + (value as int);
+      },
+    );
+  }
+
+  int _totalBalance() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Balance'];
+        if (value == null) return sum;
+        // Convert string to double safely
+        if (value is String) {
+          value = double.tryParse(value) ?? 0.0;
+        }
+        // Ensure value is double before conversion to int
+        if (value is double) {
+          value = value.toInt();
+        }
+        return sum + (value as int);
+      },
+    );
+  }
+
   @override
   void initState() {
     fetchData();
+    _totalAmountCollected();
+    _totalCollected();
+    _totalBalance();
     super.initState();
   }
 
@@ -148,7 +193,6 @@ class _ReportsSearch extends State<ReportsSearch> {
     _dateController.dispose();
     _toDateController.dispose();
     _fromDateController.dispose();
-    _reportNumber.dispose();
   }
 
   @override
@@ -209,11 +253,7 @@ class _ReportsSearch extends State<ReportsSearch> {
           );
         }, Iconsax.receipt),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(2, 'Accounts', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabAccounts()),
-          );
-        }, Iconsax.add_circle),
+        buildDrawerItem(2, 'Accounts', () {}, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(3, 'Report search', () {
           Navigator.of(context).pushReplacement(
@@ -221,7 +261,13 @@ class _ReportsSearch extends State<ReportsSearch> {
           );
         }, Iconsax.search_favorite),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(4, 'Logout', () {
+        buildDrawerItem(4, 'Patient Lab Details', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => PatientsLabDetails()),
+          );
+        }, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(5, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
       ],
@@ -229,7 +275,11 @@ class _ReportsSearch extends State<ReportsSearch> {
   }
 
   Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
+    int index,
+    String title,
+    VoidCallback onTap,
+    IconData icon,
+  ) {
     return ListTile(
       selected: selectedIndex == index,
       selectedTileColor: Colors.blueAccent.shade100,
@@ -268,34 +318,24 @@ class _ReportsSearch extends State<ReportsSearch> {
           ),
           child: Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: "Today's Collection Report ",
+                    size: screenHeight * 0.032,
+                  ),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
                   CustomTextField(
-                    hintText: 'Report Number',
-                    width: screenWidth * 0.15,
-                    controller: _reportNumber,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(reportNo: _reportNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.025),
-              Row(
-                children: [
-                  CustomTextField(
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
+                    onTap: () => _selectDate(context, _dateController),
                     icon: Icon(Icons.date_range),
                     controller: _dateController,
-                    onTap: () => _selectDate(context, _dateController),
+                    hintText: 'Date',
+                    width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
@@ -310,19 +350,19 @@ class _ReportsSearch extends State<ReportsSearch> {
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    onTap: () => _selectDate(context, _fromDateController),
+                    icon: Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
-                    icon: Icon(Icons.date_range),
-                    onTap: () => _selectDate(context, _fromDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    onTap: () => _selectDate(context, _toDateController),
+                    icon: Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
-                    icon: Icon(Icons.date_range),
-                    onTap: () => _selectDate(context, _toDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
@@ -338,10 +378,44 @@ class _ReportsSearch extends State<ReportsSearch> {
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.05),
+              const Row(
+                children: [CustomText(text: 'Collection Report Of Date')],
+              ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
                 tableData: tableData,
                 headers: headers,
+              ),
+              Container(
+                width: screenWidth,
+                height: screenHeight * 0.030,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: screenWidth * 0.38),
+                    CustomText(
+                      text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.086),
+                    CustomText(
+                      text: '${_totalAmountCollected()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.08),
+                    CustomText(
+                      text: '${_totalCollected()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.083),
+                    CustomText(
+                      text: '${_totalBalance()}',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

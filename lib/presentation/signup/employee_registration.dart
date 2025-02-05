@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
-import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 
 import '../../utilities/colors.dart';
@@ -224,7 +223,8 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                           'Pharmacist',
                           'Receptionist',
                           'Doctor',
-                          'Lab Assistance',
+                          'Manager'
+                              'Lab Assistance',
                           'X-Ray Technician'
                         ],
                         selectedItem: positionSelectedValue,

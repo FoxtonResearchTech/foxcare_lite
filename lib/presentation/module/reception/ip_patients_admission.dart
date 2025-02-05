@@ -1,19 +1,14 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/doctor/ip_prescription.dart';
-import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
+import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../utilities/colors.dart';
-import '../../utilities/widgets/buttons/primary_button.dart';
-import '../../utilities/widgets/snackBar/snakbar.dart';
-import '../../utilities/widgets/table/data_table.dart';
-import '../../utilities/widgets/text/primary_text.dart';
-import '../../utilities/widgets/textField/primary_textField.dart';
+import '../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../utilities/widgets/table/data_table.dart';
+import '../../../utilities/widgets/text/primary_text.dart';
+import '../doctor/ip_prescription.dart';
 import 'admission_status.dart';
-import 'doctor/rx_prescription.dart';
 import 'doctor_schedule.dart';
 import 'ip_admission.dart';
 import 'op_ticket.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
-import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:iconsax/iconsax.dart';
 import 'admission_status.dart';
@@ -29,7 +28,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text(
+              title: const Text(
                 'Reception Dashboard',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
@@ -64,7 +63,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
+        const DrawerHeader(
           decoration: BoxDecoration(
             color: Colors.blue,
           ),
@@ -84,7 +83,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
             ),
           );
         }, Iconsax.mask),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -95,7 +94,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
             ),
           );
         }, Iconsax.receipt),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -106,38 +105,38 @@ class _doctorScheduleState extends State<doctorSchedule> {
             ),
           );
         }, Iconsax.add_circle),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(3, 'OP Counters', () {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => OpCounters(),
+              builder: (context) => const OpCounters(),
             ),
           );
         }, Iconsax.square),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => AdmissionStatus(),
+              builder: (context) => const AdmissionStatus(),
             ),
           );
         }, Iconsax.status),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(5, 'Doctor Visit Schedule', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => doctorSchedule()),
+            MaterialPageRoute(builder: (context) => const doctorSchedule()),
           );
         }, Iconsax.hospital),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -198,7 +197,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Todays Doctor Schedule',
               style: TextStyle(
                   fontFamily: 'SanFrancisco',
@@ -206,10 +205,10 @@ class _doctorScheduleState extends State<doctorSchedule> {
                   fontWeight: FontWeight.normal),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            Row(
+            const Row(
               children: [
                 Text(
                   'Counter 1 :',
@@ -226,11 +225,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
               ],
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -268,11 +267,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
                 ],
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -311,11 +310,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
               ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SizedBox(
+            const SizedBox(
               width: 700,
               child: Divider(
                 color: Colors.grey, // Color of the divider
@@ -324,10 +323,10 @@ class _doctorScheduleState extends State<doctorSchedule> {
                 endIndent: 0, // Indent from the end (right side)
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -349,11 +348,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
               ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -391,11 +390,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
                 ],
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -434,11 +433,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
               ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SizedBox(
+            const SizedBox(
               width: 700,
               child: Divider(
                 color: Colors.grey, // Color of the divider
@@ -447,11 +446,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
                 endIndent: 0, // Indent from the end (right side)
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -473,11 +472,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
               ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -515,11 +514,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
                 ],
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SingleChildScrollView(
+            const SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -558,11 +557,11 @@ class _doctorScheduleState extends State<doctorSchedule> {
               ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
 
-            SizedBox(
+            const SizedBox(
               width: 700,
               child: Divider(
                 color: Colors.grey, // Color of the divider
@@ -571,7 +570,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
                 endIndent: 0, // Indent from the end (right side)
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             SingleChildScrollView(
@@ -584,28 +583,28 @@ class _doctorScheduleState extends State<doctorSchedule> {
                     columnSpacing: 20.0, // Add space between columns
                     dataRowHeight: 140.0, // Increase the height of each row
                     columns: [
-                      DataColumn(
+                      const DataColumn(
                           label: Text(
                         'Day',
                         style: TextStyle(
                             fontFamily: 'SanFrancisco',
                             fontWeight: FontWeight.bold),
                       )),
-                      DataColumn(
+                      const DataColumn(
                           label: Text(
                         'Counter 1',
                         style: TextStyle(
                             fontFamily: 'SanFrancisco',
                             fontWeight: FontWeight.bold),
                       )),
-                      DataColumn(
+                      const DataColumn(
                           label: Text(
                         'Counter 2',
                         style: TextStyle(
                             fontFamily: 'SanFrancisco',
                             fontWeight: FontWeight.bold),
                       )),
-                      DataColumn(
+                      const DataColumn(
                           label: Text(
                         'Counter 3',
                         style: TextStyle(
@@ -665,7 +664,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
 class ScheduleInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return const SizedBox(
       height: 350, // Reduced height
       child: Column(
         children: [

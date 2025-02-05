@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:iconsax/iconsax.dart';
 
 import 'dashboard.dart';
@@ -94,11 +95,7 @@ class _LabTestQueueState extends State<LabTestQueue> {
           );
         }, Iconsax.mask),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(1, 'Test Queue', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabTestQueue()),
-          );
-        }, Iconsax.receipt),
+        buildDrawerItem(1, 'Test Queue', () {}, Iconsax.receipt),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(2, 'Accounts', () {
           Navigator.of(context).pushReplacement(
@@ -112,7 +109,13 @@ class _LabTestQueueState extends State<LabTestQueue> {
           );
         }, Iconsax.search_favorite),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(4, 'Logout', () {
+        buildDrawerItem(4, 'Patient Lab Details', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => PatientsLabDetails()),
+          );
+        }, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(5, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
       ],

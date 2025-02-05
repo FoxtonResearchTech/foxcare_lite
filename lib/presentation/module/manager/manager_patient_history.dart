@@ -1,24 +1,34 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+import 'package:foxcare_lite/presentation/module/manager/patient_history.dart';
 import 'package:foxcare_lite/presentation/module/manager/patient_info.dart';
-import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
-import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/table/data_table.dart';
+import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../doctor/patient_history_dialog.dart';
+import '../lab/dashboard.dart';
+import '../lab/lab_accounts.dart';
+import '../lab/lab_testqueue.dart';
+import 'manager_dashboard.dart';
+import 'manager_patient_info.dart';
 
-class PatientHistory extends StatefulWidget {
-  const PatientHistory({super.key});
+class ManagerPatientHistory extends StatefulWidget {
+  const ManagerPatientHistory({super.key});
 
   @override
-  State<PatientHistory> createState() => _PatientHistory();
+  State<ManagerPatientHistory> createState() => _ManagerPatientHistory();
 }
 
-class _PatientHistory extends State<PatientHistory> {
+int selectedIndex = 2;
+
+class _ManagerPatientHistory extends State<ManagerPatientHistory> {
   TextEditingController _opNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
 
@@ -104,26 +114,108 @@ class _PatientHistory extends State<PatientHistory> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isMobile = screenWidth < 600;
+
+    return Scaffold(
+      appBar: isMobile
+          ? AppBar(
+              title: const Text('Patient History'),
+            )
+          : null,
+      drawer: isMobile
+          ? Drawer(
+              child: buildDrawerContent(),
+            )
+          : null,
+      body: Row(
+        children: [
+          if (!isMobile)
+            Container(
+              width: 300,
+              color: Colors.blue.shade100,
+              child: buildDrawerContent(),
+            ),
+          Expanded(child: dashboard()),
+        ],
+      ),
+    );
+  }
+
+  Widget buildDrawerContent() {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+          ),
+          child: Text(
+            'Patient History',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        buildDrawerItem(0, 'Dashboard', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ManagerDashboard()),
+          );
+        }, Iconsax.mask),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(1, 'Patient Information', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ManagerPatientInfo()),
+          );
+        }, Iconsax.receipt),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(2, 'Patient History', () {}, Iconsax.check),
+      ],
+    );
+  }
+
+  Widget buildDrawerItem(
+    int index,
+    String title,
+    VoidCallback onTap,
+    IconData icon,
+  ) {
+    return ListTile(
+      selected: selectedIndex == index,
+      selectedTileColor: Colors.blueAccent.shade100,
+      leading: Icon(
+        icon,
+        color: selectedIndex == index ? Colors.blue : Colors.white,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: selectedIndex == index ? Colors.blue : Colors.black54,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      onTap: () {
+        setState(() {
+          selectedIndex = index;
+        });
+        onTap();
+      },
+    );
+  }
+
+  Widget dashboard() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-            child: CustomText(
-          text: "Patient History ",
-          size: screenWidth * 0.015,
-          color: Colors.white,
-        )),
-        backgroundColor: AppColors.secondaryColor,
-      ),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
-            bottom: screenWidth * 0.05,
+            top: screenHeight * 0.03,
+            left: screenWidth * 0.01,
+            right: screenWidth * 0.01,
+            bottom: screenWidth * 0.01,
           ),
           child: Column(
             children: [

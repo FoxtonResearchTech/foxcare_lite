@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:iconsax/iconsax.dart';
 
 class DoctorDashboard extends StatefulWidget {
@@ -9,10 +10,8 @@ class DoctorDashboard extends StatefulWidget {
 }
 
 class _DoctorDashboardState extends State<DoctorDashboard> {
-  // To store the index of the selected drawer item
   int selectedIndex = 0;
 
-  // List of patients data for the table
   final List<Map<String, dynamic>> patientData = [
     {
       'opNum': 'B00010',
@@ -51,7 +50,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
@@ -112,7 +110,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         ),
         buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(1, 'Patient Search', () {}, Iconsax.receipt),
+        buildDrawerItem(1, 'Patient Search', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => DoctorRxList()));
+        }, Iconsax.receipt),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(2, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),

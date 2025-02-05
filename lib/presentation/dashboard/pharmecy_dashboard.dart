@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 
 import '../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../utilities/widgets/decoration/gradient_box.dart';
 
 class SalesChartScreen extends StatelessWidget {
   const SalesChartScreen({Key? key}) : super(key: key);
@@ -218,7 +219,6 @@ class SalesLineChart extends StatelessWidget {
             show: true,
             drawHorizontalLine: true,
             horizontalInterval: 1000,
-
             verticalInterval: 1,
             getDrawingHorizontalLine: (value) => FlLine(
               color: Colors.grey.shade300,
@@ -320,65 +320,6 @@ class SalesLineChart extends StatelessWidget {
                 color: Colors.red.withOpacity(0.1),
               ),
               dotData: const FlDotData(show: false),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class GradientBox extends StatelessWidget {
-  final List<Color> gradientColors;
-  final String text;
-  final String subText; // New text
-
-  const GradientBox({
-    Key? key,
-    required this.gradientColors,
-    required this.text,
-    required this.subText, // Accept new text as a parameter
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 300,
-      height: 300,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(5, 5),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8), // Space between the two texts
-            Text(
-              subText,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
             ),
           ],
         ),

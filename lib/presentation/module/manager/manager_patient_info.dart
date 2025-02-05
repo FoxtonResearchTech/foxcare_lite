@@ -1,21 +1,25 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/manager/edit_delete_patient_information.dart';
-import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
+
+import 'package:iconsax/iconsax.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
-class PatientInfo extends StatefulWidget {
+import 'edit_delete_patient_information.dart';
+import 'manager_dashboard.dart';
+import 'manager_patient_history.dart';
+
+class ManagerPatientInfo extends StatefulWidget {
   final String? opNumberEdit;
   final String? firstNameEdit;
   final String? middleNameEdit;
@@ -32,32 +36,32 @@ class PatientInfo extends StatefulWidget {
   final String? phone1Edit;
   final String? phone2Edit;
   final String? bloodGroupEdit;
-
-  const PatientInfo({
-    super.key,
-    this.opNumberEdit,
-    this.firstNameEdit,
-    this.middleNameEdit,
-    this.lastNameEdit,
-    this.sexEdit,
-    this.ageEdit,
-    this.dobEdit,
-    this.address1Edit,
-    this.address2Edit,
-    this.landmarkEdit,
-    this.cityEdit,
-    this.stateEdit,
-    this.pincodeEdit,
-    this.phone1Edit,
-    this.phone2Edit,
-    this.bloodGroupEdit,
-  });
+  const ManagerPatientInfo(
+      {super.key,
+      this.opNumberEdit,
+      this.firstNameEdit,
+      this.middleNameEdit,
+      this.lastNameEdit,
+      this.sexEdit,
+      this.ageEdit,
+      this.dobEdit,
+      this.address1Edit,
+      this.address2Edit,
+      this.landmarkEdit,
+      this.cityEdit,
+      this.stateEdit,
+      this.pincodeEdit,
+      this.phone1Edit,
+      this.phone2Edit,
+      this.bloodGroupEdit});
 
   @override
-  State<PatientInfo> createState() => _PatientInfoState();
+  State<ManagerPatientInfo> createState() => _ManagerPatientInfo();
 }
 
-class _PatientInfoState extends State<PatientInfo> {
+int selectedIndex = 1;
+
+class _ManagerPatientInfo extends State<ManagerPatientInfo> {
   String? selectedSex;
   String? selectedBloodGroup;
   bool isEditing = false;
@@ -437,27 +441,108 @@ class _PatientInfoState extends State<PatientInfo> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isMobile = screenWidth < 600;
+
+    return Scaffold(
+      appBar: isMobile
+          ? AppBar(
+              title: const Text('Patient Information'),
+            )
+          : null,
+      drawer: isMobile
+          ? Drawer(
+              child: buildDrawerContent(),
+            )
+          : null,
+      body: Row(
+        children: [
+          if (!isMobile)
+            Container(
+              width: 300,
+              color: Colors.blue.shade100,
+              child: buildDrawerContent(),
+            ),
+          Expanded(child: dashboard()),
+        ],
+      ),
+    );
+  }
+
+  Widget buildDrawerContent() {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+          ),
+          child: Text(
+            'Patient Information',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        buildDrawerItem(0, 'Dashboard', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ManagerDashboard()),
+          );
+        }, Iconsax.mask),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(1, 'Patient Information', () {}, Iconsax.receipt),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(2, 'Patient History', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ManagerPatientHistory()),
+          );
+        }, Iconsax.check),
+      ],
+    );
+  }
+
+  Widget buildDrawerItem(
+    int index,
+    String title,
+    VoidCallback onTap,
+    IconData icon,
+  ) {
+    return ListTile(
+      selected: selectedIndex == index,
+      selectedTileColor: Colors.blueAccent.shade100,
+      leading: Icon(
+        icon,
+        color: selectedIndex == index ? Colors.blue : Colors.white,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: selectedIndex == index ? Colors.blue : Colors.black54,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      onTap: () {
+        setState(() {
+          selectedIndex = index;
+        });
+        onTap();
+      },
+    );
+  }
+
+  Widget dashboard() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: CustomText(
-            text: 'Patient Information',
-            size: screenWidth * 0.02,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppColors.appBar,
-      ),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
-            bottom: screenWidth * 0.05,
+            top: screenHeight * 0.01,
+            left: screenWidth * 0.01,
+            right: screenWidth * 0.01,
+            bottom: screenWidth * 0.01,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,26 +550,22 @@ class _PatientInfoState extends State<PatientInfo> {
               Row(
                 children: [
                   CustomText(
-                    text: isEditing
-                        ? 'Edit Patient Information'
-                        : 'Patient Registration : ',
+                    text: 'Patient Registration : ',
                     size: screenWidth * 0.02,
                   ),
-                  SizedBox(width: screenWidth * 0.52),
-                  isEditing
-                      ? SizedBox()
-                      : CustomButton(
-                          label: 'Edit/Delete Patients',
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditDeletePatientInformation()));
-                          },
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.05,
-                        )
+                  SizedBox(width: screenWidth * 0.45),
+                  CustomButton(
+                    label: 'Edit/Delete Patients',
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  EditDeletePatientInformation()));
+                    },
+                    width: screenWidth * 0.1,
+                    height: screenHeight * 0.05,
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),

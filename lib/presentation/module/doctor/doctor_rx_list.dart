@@ -1,11 +1,15 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
-import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
-import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
+import 'package:iconsax/iconsax.dart';
+
+import '../../../utilities/colors.dart';
+import '../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../utilities/widgets/table/data_table.dart';
+import '../../../utilities/widgets/text/primary_text.dart';
 
 class DoctorRxList extends StatefulWidget {
   const DoctorRxList({super.key});
@@ -15,6 +19,7 @@ class DoctorRxList extends StatefulWidget {
 }
 
 class _DoctorRxList extends State<DoctorRxList> {
+  int selectedIndex = 1;
   final List<String> headers1 = [
     'Token NO',
     'OP NO',
@@ -147,26 +152,118 @@ class _DoctorRxList extends State<DoctorRxList> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen width using MediaQuery
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isMobile = screenWidth < 600;
+
+    return Scaffold(
+      appBar: isMobile
+          ? AppBar(
+              title: Text('Doctor Dashboard'),
+            )
+          : null, // No AppBar for web view
+      drawer: isMobile
+          ? Drawer(
+              child: buildDrawerContent(), // Drawer minimized for mobile
+            )
+          : null, // No drawer for web view (permanently open)
+      body: Row(
+        children: [
+          if (!isMobile)
+            Container(
+              width: 300, // Fixed width for the sidebar
+              color: Colors.blue.shade100,
+              child: buildDrawerContent(), // Sidebar always open for web view
+            ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: dashboard()),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Drawer content reused for both web and mobile
+  Widget buildDrawerContent() {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+          ),
+          child: Text(
+            'Doctor - Consultation',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'SanFrancisco',
+              fontSize: 24,
+            ),
+          ),
+        ),
+        buildDrawerItem(0, 'Home', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => DoctorDashboard()));
+        }, Iconsax.mask),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(1, 'Patient Search', () {}, Iconsax.receipt),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(2, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(7, 'Logout', () {
+          // Handle logout action
+        }, Iconsax.logout),
+      ],
+    );
+  }
+
+  // Helper method to build drawer items with the ability to highlight the selected item
+  Widget buildDrawerItem(
+      int index, String title, VoidCallback onTap, IconData icon) {
+    return ListTile(
+      selected: selectedIndex == index,
+      selectedTileColor: Colors.blueAccent.shade100,
+      // Highlight color for the selected item
+      leading: Icon(
+        icon, // Replace with actual icons
+        color: selectedIndex == index ? Colors.blue : Colors.white,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+            color: selectedIndex == index ? Colors.blue : Colors.black54,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'SanFrancisco'),
+      ),
+      onTap: () {
+        setState(() {
+          selectedIndex = index; // Update the selected index
+        });
+        onTap();
+      },
+    );
+  }
+
+  Widget dashboard() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-            child: CustomText(
-          text: "Doctor RX Prescription",
-          size: screenWidth * 0.015,
-          color: Colors.white,
-        )),
-        backgroundColor: AppColors.secondaryColor,
-      ),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
-            bottom: screenWidth * 0.05,
+            top: screenHeight * 0.02,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
+            bottom: screenWidth * 0.02,
           ),
           child: Column(
             children: [

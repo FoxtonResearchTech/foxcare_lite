@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -8,8 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:printing/printing.dart';
 
-import '../../utilities/widgets/buttons/primary_button.dart';
-import '../pages/patient_registration.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 
 class PdfPage extends StatefulWidget {
   final String opNumber;

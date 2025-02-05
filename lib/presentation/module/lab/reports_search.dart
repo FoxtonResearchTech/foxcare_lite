@@ -1,8 +1,6 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
@@ -11,16 +9,17 @@ import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'dashboard.dart';
+import 'lab_accounts.dart';
 import 'lab_testqueue.dart';
 
-class LabAccounts extends StatefulWidget {
-  const LabAccounts({super.key});
+class ReportsSearch extends StatefulWidget {
+  const ReportsSearch({super.key});
 
   @override
-  State<LabAccounts> createState() => _LabAccountsState();
+  State<ReportsSearch> createState() => _ReportsSearch();
 }
 
-int selectedIndex = 2;
+int selectedIndex = 3;
 
 class ReportRow {
   final String slNo;
@@ -44,7 +43,8 @@ class ReportRow {
   );
 }
 
-class _LabAccountsState extends State<LabAccounts> {
+class _ReportsSearch extends State<ReportsSearch> {
+  TextEditingController _reportNumber = TextEditingController();
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
@@ -54,14 +54,15 @@ class _LabAccountsState extends State<LabAccounts> {
     'Report No',
     'Name',
     'OP Number',
-    'Total Amount',
-    'Collected',
-    'Balance',
+    'Report Use'
   ];
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+      {String? singleDate,
+      String? fromDate,
+      String? toDate,
+      String? reportNo}) async {
     try {
       Query query = FirebaseFirestore.instance.collection('patients');
 
@@ -71,7 +72,13 @@ class _LabAccountsState extends State<LabAccounts> {
         query = query
             .where('reportDate', isGreaterThanOrEqualTo: fromDate)
             .where('reportDate', isLessThanOrEqualTo: toDate);
+      } else if (reportNo != null) {
+        int? reportNoInt = int.tryParse(reportNo);
+        if (reportNoInt != null) {
+          query = query.where('reportNo', isEqualTo: reportNoInt);
+        }
       }
+
       final QuerySnapshot snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
@@ -130,59 +137,9 @@ class _LabAccountsState extends State<LabAccounts> {
     }
   }
 
-  int _totalAmountCollected() {
-    return tableData.fold<int>(
-      0,
-      (sum, entry) {
-        var value = entry['Total Amount'];
-        if (value == null) return sum;
-        if (value is String) {
-          value = int.tryParse(value) ?? 0;
-        }
-        return sum + (value as int);
-      },
-    );
-  }
-
-  int _totalCollected() {
-    return tableData.fold<int>(
-      0,
-      (sum, entry) {
-        var value = entry['Collected'];
-        if (value == null) return sum;
-        if (value is String) {
-          value = int.tryParse(value) ?? 0;
-        }
-        return sum + (value as int);
-      },
-    );
-  }
-
-  int _totalBalance() {
-    return tableData.fold<int>(
-      0,
-      (sum, entry) {
-        var value = entry['Balance'];
-        if (value == null) return sum;
-        // Convert string to double safely
-        if (value is String) {
-          value = double.tryParse(value) ?? 0.0;
-        }
-        // Ensure value is double before conversion to int
-        if (value is double) {
-          value = value.toInt();
-        }
-        return sum + (value as int);
-      },
-    );
-  }
-
   @override
   void initState() {
     fetchData();
-    _totalAmountCollected();
-    _totalCollected();
-    _totalBalance();
     super.initState();
   }
 
@@ -192,6 +149,7 @@ class _LabAccountsState extends State<LabAccounts> {
     _dateController.dispose();
     _toDateController.dispose();
     _fromDateController.dispose();
+    _reportNumber.dispose();
   }
 
   @override
@@ -258,13 +216,15 @@ class _LabAccountsState extends State<LabAccounts> {
           );
         }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(3, 'Report search', () {
+        buildDrawerItem(3, 'Report search', () {}, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(4, 'Patient Lab Details', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => ReportsSearch()),
+            MaterialPageRoute(builder: (context) => PatientsLabDetails()),
           );
         }, Iconsax.search_favorite),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(4, 'Logout', () {
+        buildDrawerItem(5, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
       ],
@@ -272,11 +232,7 @@ class _LabAccountsState extends State<LabAccounts> {
   }
 
   Widget buildDrawerItem(
-    int index,
-    String title,
-    VoidCallback onTap,
-    IconData icon,
-  ) {
+      int index, String title, VoidCallback onTap, IconData icon) {
     return ListTile(
       selected: selectedIndex == index,
       selectedTileColor: Colors.blueAccent.shade100,
@@ -315,24 +271,34 @@ class _LabAccountsState extends State<LabAccounts> {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomText(
-                    text: "Today's Collection Report ",
-                    size: screenHeight * 0.032,
-                  ),
-                ],
-              ),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
                   CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
+                    hintText: 'Report Number',
+                    width: screenWidth * 0.15,
+                    controller: _reportNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(reportNo: _reportNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.025),
+              Row(
+                children: [
+                  CustomTextField(
                     hintText: 'Date',
                     width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    controller: _dateController,
+                    onTap: () => _selectDate(context, _dateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
@@ -347,19 +313,19 @@ class _LabAccountsState extends State<LabAccounts> {
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _fromDateController),
-                    icon: Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, _fromDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _toDateController),
-                    icon: Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, _toDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
@@ -375,44 +341,10 @@ class _LabAccountsState extends State<LabAccounts> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.05),
-              const Row(
-                children: [CustomText(text: 'Collection Report Of Date')],
-              ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
                 tableData: tableData,
                 headers: headers,
-              ),
-              Container(
-                width: screenWidth,
-                height: screenHeight * 0.030,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(width: screenWidth * 0.38),
-                    CustomText(
-                      text: 'Total : ',
-                    ),
-                    SizedBox(width: screenWidth * 0.086),
-                    CustomText(
-                      text: '${_totalAmountCollected()}',
-                    ),
-                    SizedBox(width: screenWidth * 0.08),
-                    CustomText(
-                      text: '${_totalCollected()}',
-                    ),
-                    SizedBox(width: screenWidth * 0.083),
-                    CustomText(
-                      text: '${_totalBalance()}',
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

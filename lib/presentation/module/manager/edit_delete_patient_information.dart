@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/manager/patient_info.dart';
-import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
@@ -144,6 +143,7 @@ class _EditDeletePatientInformation
                                       content: Text('Failed to update status')),
                                 );
                               }
+                              Navigator.pop(context);
                             },
                             child: CustomText(text: 'Delete')),
                         TextButton(

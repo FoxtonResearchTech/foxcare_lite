@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
-import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
+import 'package:foxcare_lite/presentation/dashboard/pharmecy_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/image/custom_image.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
+import '../module/doctor/doctor_dashboard.dart';
+import '../module/lab/dashboard.dart';
+import '../module/reception/patient_registration.dart';
+import '../module/reception/reception_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -164,19 +168,19 @@ class _LoginFormState extends State<LoginForm> {
         case 'Pharmacist':
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PharmacyInfo()),
+            MaterialPageRoute(builder: (context) => SalesChartScreen()),
           );
           break;
         case 'Receptionist':
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PatientRegistration()),
+            MaterialPageRoute(builder: (context) => ReceptionDashboard()),
           );
           break;
         case 'Lab Assistance':
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PatientRegistration()),
+            MaterialPageRoute(builder: (context) => LabDashboard()),
           );
           break;
         case 'X-Ray Technician':
@@ -188,7 +192,13 @@ class _LoginFormState extends State<LoginForm> {
         case 'Doctor':
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => EmployeeRegistration()),
+            MaterialPageRoute(builder: (context) => DoctorDashboard()),
+          );
+          break;
+        case 'Manager':
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagerDashboard()),
           );
           break;
         default:

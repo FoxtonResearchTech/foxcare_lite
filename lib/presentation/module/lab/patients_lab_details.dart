@@ -1,14 +1,20 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
-import 'package:foxcare_lite/presentation/pages/lab/patient_report.dart';
-import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
-import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/presentation/module/lab/patient_report.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../utilities/widgets/table/data_table.dart';
+import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
+import 'dashboard.dart';
+import 'lab_accounts.dart';
+import 'lab_testqueue.dart';
 
 class PatientsLabDetails extends StatefulWidget {
   const PatientsLabDetails({super.key});
@@ -18,6 +24,7 @@ class PatientsLabDetails extends StatefulWidget {
 }
 
 class _PatientsLabDetails extends State<PatientsLabDetails> {
+  int selectedIndex = 4;
   final List<String> headers1 = [
     'Token NO',
     'OP NO',
@@ -160,26 +167,125 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screeHeight = MediaQuery.of(context).size.height;
+    bool isMobile = screenWidth < 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-            child: CustomText(
-          text: "Patients Lab Test",
-          size: screenWidth * 0.015,
-          color: Colors.white,
-        )),
-        backgroundColor: AppColors.secondaryColor,
+      appBar: isMobile
+          ? AppBar(
+              title: Text('Laboratory Dashboard'),
+            )
+          : null, // No AppBar for web view
+      drawer: isMobile
+          ? Drawer(
+              child: buildDrawerContent(), // Drawer minimized for mobile
+            )
+          : null, // No drawer for web view (permanently open)
+      body: Row(
+        children: [
+          if (!isMobile)
+            Container(
+              width: 300, // Fixed width for the sidebar
+              color: Colors.blue.shade100,
+              child: buildDrawerContent(), // Sidebar always open for web view
+            ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: dashboard(),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget buildDrawerContent() {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+          ),
+          child: Text(
+            'Laboratory',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        buildDrawerItem(0, 'Dashboard', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LabDashboard()),
+          );
+        }, Iconsax.mask),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(1, 'Test Queue', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LabTestQueue()),
+          );
+        }, Iconsax.receipt),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(2, 'Accounts', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LabAccounts()),
+          );
+        }, Iconsax.add_circle),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(3, 'Report search', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ReportsSearch()),
+          );
+        }, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(
+            4, 'Patient Lab Details', () {}, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(5, 'Logout', () {}, Iconsax.logout),
+      ],
+    );
+  }
+
+  Widget buildDrawerItem(
+      int index, String title, VoidCallback onTap, IconData icon) {
+    return ListTile(
+      selected: selectedIndex == index,
+      selectedTileColor:
+          Colors.blueAccent.shade100, // Highlight color for the selected item
+      leading: Icon(
+        icon,
+        color: selectedIndex == index ? Colors.blue : Colors.white,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: selectedIndex == index ? Colors.blue : Colors.black54,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      onTap: () {
+        setState(() {
+          selectedIndex = index; // Update the selected index
+        });
+        onTap();
+      },
+    );
+  }
+
+  Widget dashboard() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
-            bottom: screenWidth * 0.05,
+            top: screenHeight * 0.02,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
+            bottom: screenWidth * 0.02,
           ),
           child: Column(
             children: [

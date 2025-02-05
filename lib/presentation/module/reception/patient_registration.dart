@@ -2,14 +2,13 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/reception/op_ticket_generate.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:pdf/pdf.dart';
-import '../../utilities/colors.dart';
-import '../../utilities/widgets/buttons/primary_button.dart';
-import '../../utilities/widgets/textField/primary_textField.dart';
+import '../../../utilities/colors.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
 import 'doctor_schedule.dart';
 import 'ip_admission.dart';

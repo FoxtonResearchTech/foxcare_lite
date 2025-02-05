@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';

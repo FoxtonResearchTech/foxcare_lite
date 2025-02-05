@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/lab/reports_search.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../../utilities/widgets/textField/primary_textField.dart';
@@ -92,7 +93,13 @@ class _LabDashboardState extends State<LabDashboard> {
           );
         }, Iconsax.search_favorite),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(4, 'Logout', () {}, Iconsax.logout),
+        buildDrawerItem(4, 'Patient Lab Details', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => PatientsLabDetails()),
+          );
+        }, Iconsax.search_favorite),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(5, 'Logout', () {}, Iconsax.logout),
       ],
     );
   }

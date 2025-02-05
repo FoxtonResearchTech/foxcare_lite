@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/pages/patient_registration.dart';
+import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../utilities/images.dart';
+
+import '../../../utilities/images.dart';
 import 'admission_status.dart';
 import 'doctor_schedule.dart';
 import 'ip_admission.dart';
