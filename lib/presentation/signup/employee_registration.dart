@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 
 import '../../utilities/colors.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
@@ -164,8 +165,11 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
             .then((value) => debugPrint('Role added successfully'))
             .catchError((error) => debugPrint('Failed to add role: $error'));
       }
-
-      showMessage('Employee registered successfully!');
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      CustomSnackBar(context,
+          message: 'Employee registered successfully!',
+          backgroundColor: Colors.green);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         showMessage('Email already in use.');
@@ -223,8 +227,8 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                           'Pharmacist',
                           'Receptionist',
                           'Doctor',
-                          'Manager'
-                              'Lab Assistance',
+                          'Manager',
+                          'Lab Assistance',
                           'X-Ray Technician'
                         ],
                         selectedItem: positionSelectedValue,
@@ -548,10 +552,6 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                         label: 'Create',
                         onPressed: () {
                           registerEmployee();
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => LoginScreen()));
                         },
                         width: screenWidth * 0.08,
                         height: screenHeight * 0.05,

@@ -35,7 +35,7 @@ class CustomTextField extends StatelessWidget {
       width: width,
       child: TextField(
         onChanged: onChanged,
-        maxLines: null,
+        maxLines: obscureText ? 1 : null,
         controller: controller,
         obscureText: obscureText,
         readOnly: readOnly,

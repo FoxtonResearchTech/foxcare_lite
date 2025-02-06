@@ -1,24 +1,11 @@
-import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_patient_history.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_patient_info.dart';
-import 'package:foxcare_lite/presentation/module/manager/patient_history.dart';
-import 'package:foxcare_lite/presentation/module/manager/patient_info.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:intl/intl.dart';
 
-import '../../../utilities/widgets/buttons/primary_button.dart';
+import 'package:iconsax/iconsax.dart';
+
 import '../../../utilities/widgets/decoration/gradient_box.dart';
-import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
-import '../../../utilities/widgets/textField/primary_textField.dart';
-import '../../dashboard/pharmecy_dashboard.dart';
-import '../lab/dashboard.dart';
-import '../lab/lab_accounts.dart';
-import '../lab/lab_testqueue.dart';
 
 class ManagerDashboard extends StatefulWidget {
   const ManagerDashboard({super.key});

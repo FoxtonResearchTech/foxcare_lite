@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:foxcare_lite/presentation/dashboard/pharmecy_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
-import 'package:foxcare_lite/presentation/tools/pharmacy_info.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
@@ -11,6 +9,7 @@ import '../../utilities/widgets/image/custom_image.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
 import '../module/doctor/doctor_dashboard.dart';
 import '../module/lab/dashboard.dart';
+import '../module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import '../module/reception/patient_registration.dart';
 import '../module/reception/reception_dashboard.dart';
 
@@ -141,7 +140,6 @@ class _LoginFormState extends State<LoginForm> {
         password: password,
       );
 
-      // Step 2: Fetch the employee's role from Firestore (fetch the first document in the 'roles' subcollection)
       QuerySnapshot roleSnapshot = await FirebaseFirestore.instance
           .collection('employees')
           .doc(userCredential.user!.uid)
