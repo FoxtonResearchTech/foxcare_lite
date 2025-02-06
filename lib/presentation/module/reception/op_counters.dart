@@ -130,7 +130,7 @@ class _OpCountersState extends State<OpCounters> {
       appBar: isMobile
           ? AppBar(
               title: Text(
-                'Reception Dashboard',
+                'OP Counter ',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
                 ),
@@ -152,7 +152,6 @@ class _OpCountersState extends State<OpCounters> {
             ),
           Expanded(
             child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
               child: dashboard(),
             ),
           ),
@@ -165,7 +164,7 @@ class _OpCountersState extends State<OpCounters> {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
+        const DrawerHeader(
           decoration: BoxDecoration(
             color: Colors.blue,
           ),
@@ -178,12 +177,13 @@ class _OpCountersState extends State<OpCounters> {
             ),
           ),
         ),
+        // Drawer items here
         buildDrawerItem(0, 'Patient Registration', () {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => PatientRegistration()),
           );
         }, Iconsax.mask),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -192,7 +192,7 @@ class _OpCountersState extends State<OpCounters> {
             MaterialPageRoute(builder: (context) => OpTicketPage()),
           );
         }, Iconsax.receipt),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -201,21 +201,21 @@ class _OpCountersState extends State<OpCounters> {
             MaterialPageRoute(builder: (context) => IpAdmissionPage()),
           );
         }, Iconsax.add_circle),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(3, 'OP Counters', () {}, Iconsax.square),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdmissionStatus()),
+            MaterialPageRoute(builder: (context) => const AdmissionStatus()),
           );
         }, Iconsax.status),
-        Divider(
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),
@@ -224,7 +224,8 @@ class _OpCountersState extends State<OpCounters> {
             MaterialPageRoute(builder: (context) => doctorSchedule()),
           );
         }, Iconsax.hospital),
-        Divider(
+
+        const Divider(
           height: 5,
           color: Colors.grey,
         ),

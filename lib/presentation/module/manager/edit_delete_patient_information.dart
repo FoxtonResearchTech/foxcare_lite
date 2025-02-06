@@ -131,6 +131,24 @@ class _EditDeletePatientInformation
                                 await FirebaseFirestore.instance
                                     .collection('patients')
                                     .doc(data['opNumber'])
+                                    .collection('ipPrescription')
+                                    .doc()
+                                    .delete();
+                                await FirebaseFirestore.instance
+                                    .collection('patients')
+                                    .doc(data['opNumber'])
+                                    .collection('sampleData')
+                                    .doc()
+                                    .delete();
+                                await FirebaseFirestore.instance
+                                    .collection('patients')
+                                    .doc(data['opNumber'])
+                                    .collection('tokens')
+                                    .doc()
+                                    .delete();
+                                await FirebaseFirestore.instance
+                                    .collection('patients')
+                                    .doc(data['opNumber'])
                                     .delete();
 
                                 CustomSnackBar(context,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:iconsax/iconsax.dart';
 
+import 'ip_patients_details.dart';
+
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({super.key});
 
@@ -90,7 +92,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     );
   }
 
-  // Drawer content reused for both web and mobile
   Widget buildDrawerContent() {
     return ListView(
       padding: EdgeInsets.zero,
@@ -110,14 +111,19 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         ),
         buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(1, 'Patient Search', () {
+        buildDrawerItem(1, ' OP Patient', () {
           Navigator.push(
               context, MaterialPageRoute(builder: (context) => DoctorRxList()));
         }, Iconsax.receipt),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(2, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
+        buildDrawerItem(2, 'IP Patients', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => IpPatientsDetails()));
+        }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(7, 'Logout', () {
+        buildDrawerItem(3, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
+        Divider(height: 5, color: Colors.grey),
+        buildDrawerItem(3, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
       ],

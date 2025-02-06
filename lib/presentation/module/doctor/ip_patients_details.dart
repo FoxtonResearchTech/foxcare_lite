@@ -1,29 +1,24 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
+import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
-
-import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
-import 'ip_patients_details.dart';
+import '../doctor/ip_prescription.dart';
+import 'doctor_rx_list.dart';
 
-class DoctorRxList extends StatefulWidget {
-  const DoctorRxList({super.key});
-
+class IpPatientsDetails extends StatefulWidget {
   @override
-  State<DoctorRxList> createState() => _DoctorRxList();
+  State<IpPatientsDetails> createState() => _IpPatientsDetails();
 }
 
-class _DoctorRxList extends State<DoctorRxList> {
-  int selectedIndex = 1;
+class _IpPatientsDetails extends State<IpPatientsDetails> {
   final List<String> headers1 = [
     'Token NO',
-    'OP NO',
+    'IP NO',
     'Name',
     'Age',
     'Place',
@@ -33,6 +28,7 @@ class _DoctorRxList extends State<DoctorRxList> {
   ];
   List<Map<String, dynamic>> tableData1 = [];
   Timer? _timer;
+  int selectedIndex = 2;
 
   @override
   void initState() {
@@ -53,7 +49,7 @@ class _DoctorRxList extends State<DoctorRxList> {
     try {
       final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
           .collection('patients')
-          .where('opNumber', isGreaterThan: '')
+          .where('ipNumber', isGreaterThan: '')
           .get();
 
       List<Map<String, dynamic>> fetchedData = [];
@@ -62,6 +58,8 @@ class _DoctorRxList extends State<DoctorRxList> {
         final data = doc.data() as Map<String, dynamic>;
 
         String tokenNo = '';
+        bool hasIpPrescription = false;
+
         try {
           final tokenSnapshot = await FirebaseFirestore.instance
               .collection('patients')
@@ -75,6 +73,15 @@ class _DoctorRxList extends State<DoctorRxList> {
             if (tokenData != null && tokenData['tokenNumber'] != null) {
               tokenNo = tokenData['tokenNumber'].toString();
             }
+          }
+          final ipPrescriptionSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('ipPrescription')
+              .get();
+
+          if (ipPrescriptionSnapshot.docs.isNotEmpty) {
+            hasIpPrescription = true;
           }
         } catch (e) {
           print('Error fetching tokenNo for patient ${doc.id}: $e');
@@ -92,36 +99,39 @@ class _DoctorRxList extends State<DoctorRxList> {
           'PinCode': data['pincode'] ?? 'N/A',
           'Status': data['status'] ?? 'N/A',
           'Primary Info': data['otherComments'] ?? 'N/A',
-          'Action': TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RxPrescription(
-                      patientID: data['opNumber'] ?? 'N/A',
-                      ipNumber: data['ipNumber'] ?? 'N/A',
-                      name:
-                          '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
-                              .trim(),
-                      age: data['age'] ?? 'N/A',
-                      place: data['state'] ?? 'N/A',
-                      address: data['address1'] ?? 'N/A',
-                      pincode: data['pincode'] ?? 'N/A',
-                      primaryInfo: data['otherComments'] ?? 'N/A',
-                      temperature: data['temperature'] ?? 'N/A',
-                      bloodPressure: data['bloodPressure'] ?? 'N/A',
-                      sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
-                    ),
-                  ),
-                );
-              },
-              child: const CustomText(text: 'Open')),
+          'Action': hasIpPrescription
+              ? TextButton(
+                  onPressed: () {}, child: const CustomText(text: 'End IP'))
+              : TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => IpPrescription(
+                          patientID: data['opNumber'] ?? 'N/A',
+                          ipNumber: data['ipNumber'] ?? 'N/A',
+                          name:
+                              '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
+                                  .trim(),
+                          age: data['age'] ?? 'N/A',
+                          place: data['state'] ?? 'N/A',
+                          address: data['address1'] ?? 'N/A',
+                          pincode: data['pincode'] ?? 'N/A',
+                          primaryInfo: data['otherComments'] ?? 'N/A',
+                          temperature: data['temperature'] ?? 'N/A',
+                          bloodPressure: data['bloodPressure'] ?? 'N/A',
+                          sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+                        ),
+                      ),
+                    );
+                  },
+                  child: const CustomText(text: 'Create')),
           'Abort': TextButton(
               onPressed: () async {
                 try {
                   await FirebaseFirestore.instance
                       .collection('patients')
-                      .doc(data['opNumber'])
+                      .doc(data['ipNumber'])
                       .update({'status': 'aborted'});
 
                   CustomSnackBar(context, message: 'Status updated to aborted');
@@ -153,37 +163,57 @@ class _DoctorRxList extends State<DoctorRxList> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
-    double screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text('Doctor Dashboard'),
+              title: const Text(
+                'OP Ticket Dashboard',
+                style: TextStyle(
+                  fontFamily: 'SanFrancisco',
+                ),
+              ),
             )
-          : null, // No AppBar for web view
+          : null,
       drawer: isMobile
           ? Drawer(
               child: buildDrawerContent(), // Drawer minimized for mobile
             )
-          : null, // No drawer for web view (permanently open)
+          : null, // No AppBar for web view
       body: Row(
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300, // Sidebar width for larger screens
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: buildDrawerContent(), // Sidebar content
             ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(child: dashboard()),
-                ],
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.only(
+                  top: screenHeight * 0.01,
+                  left: screenWidth * 0.04,
+                  right: screenWidth * 0.04,
+                  bottom: screenWidth * 0.33,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CustomDataTable(
+                      tableData: tableData1,
+                      headers: headers1,
+                      rowColorResolver: (row) {
+                        return row['Status'] == 'aborted'
+                            ? Colors.red.shade200
+                            : Colors.transparent;
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -192,7 +222,6 @@ class _DoctorRxList extends State<DoctorRxList> {
     );
   }
 
-  // Drawer content reused for both web and mobile
   Widget buildDrawerContent() {
     return ListView(
       padding: EdgeInsets.zero,
@@ -212,12 +241,12 @@ class _DoctorRxList extends State<DoctorRxList> {
         ),
         buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
+        buildDrawerItem(1, ' OP Patient', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => DoctorRxList()));
+        }, Iconsax.receipt),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(2, 'IP Patients', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => IpPatientsDetails()));
-        }, Iconsax.add_circle),
+        buildDrawerItem(2, 'IP Patients', () {}, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(3, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
@@ -228,13 +257,12 @@ class _DoctorRxList extends State<DoctorRxList> {
     );
   }
 
-  // Helper method to build drawer items with the ability to highlight the selected item
   Widget buildDrawerItem(
       int index, String title, VoidCallback onTap, IconData icon) {
     return ListTile(
       selected: selectedIndex == index,
-      selectedTileColor: Colors.blueAccent.shade100,
-      // Highlight color for the selected item
+      selectedTileColor:
+          Colors.blueAccent.shade100, // Highlight color for the selected item
       leading: Icon(
         icon, // Replace with actual icons
         color: selectedIndex == index ? Colors.blue : Colors.white,
@@ -242,9 +270,9 @@ class _DoctorRxList extends State<DoctorRxList> {
       title: Text(
         title,
         style: TextStyle(
+            fontFamily: 'SanFrancisco',
             color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'SanFrancisco'),
+            fontWeight: FontWeight.w700),
       ),
       onTap: () {
         setState(() {
@@ -252,39 +280,6 @@ class _DoctorRxList extends State<DoctorRxList> {
         });
         onTap();
       },
-    );
-  }
-
-  Widget dashboard() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
-            left: screenWidth * 0.04,
-            right: screenWidth * 0.04,
-            bottom: screenWidth * 0.25,
-          ),
-          child: Column(
-            children: [
-              SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
-                tableData: tableData1,
-                headers: headers1,
-                rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
-                      : Colors.transparent;
-                },
-              ),
-              SizedBox(height: screenHeight * 0.08),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -87,7 +87,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
             hasIpPrescription = true;
           }
         } catch (e) {
-          print('Error fetching tokenNo for patient ${doc.id}: $e');
+          print('Error fetching token No for patient ${doc.id}: $e');
         }
 
         fetchedData.add({
@@ -102,33 +102,30 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           'PinCode': data['pincode'] ?? 'N/A',
           'Status': data['status'] ?? 'N/A',
           'Primary Info': data['otherComments'] ?? 'N/A',
-          'Action': hasIpPrescription
-              ? TextButton(
-                  onPressed: () {}, child: const CustomText(text: 'End IP'))
-              : TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => IpPrescription(
-                          patientID: data['opNumber'] ?? 'N/A',
-                          ipNumber: data['ipNumber'] ?? 'N/A',
-                          name:
-                              '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
-                                  .trim(),
-                          age: data['age'] ?? 'N/A',
-                          place: data['state'] ?? 'N/A',
-                          address: data['address1'] ?? 'N/A',
-                          pincode: data['pincode'] ?? 'N/A',
-                          primaryInfo: data['otherComments'] ?? 'N/A',
-                          temperature: data['temperature'] ?? 'N/A',
-                          bloodPressure: data['bloodPressure'] ?? 'N/A',
-                          sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const CustomText(text: 'Create')),
+          'Action': TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => IpPrescription(
+                      patientID: data['opNumber'] ?? 'N/A',
+                      ipNumber: data['ipNumber'] ?? 'N/A',
+                      name:
+                          '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
+                              .trim(),
+                      age: data['age'] ?? 'N/A',
+                      place: data['state'] ?? 'N/A',
+                      address: data['address1'] ?? 'N/A',
+                      pincode: data['pincode'] ?? 'N/A',
+                      primaryInfo: data['otherComments'] ?? 'N/A',
+                      temperature: data['temperature'] ?? 'N/A',
+                      bloodPressure: data['bloodPressure'] ?? 'N/A',
+                      sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+                    ),
+                  ),
+                );
+              },
+              child: const CustomText(text: 'Create')),
           'Abort': TextButton(
               onPressed: () async {
                 try {
@@ -190,7 +187,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
         children: [
           if (!isMobile)
             Container(
-              width: 250, // Sidebar width for larger screens
+              width: 300, // Sidebar width for larger screens
               color: Colors.blue.shade100,
               child: buildDrawerContent(), // Sidebar content
             ),

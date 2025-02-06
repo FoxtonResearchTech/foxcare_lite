@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
+import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/reception/ip_admission.dart';
+import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'firebase_options.dart';
 
@@ -23,6 +27,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: EmployeeRegistration());
+        home: ManagerDashboard());
   }
 }

@@ -247,7 +247,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
         children: [
           if (!isMobile)
             Container(
-              width: 250, // Sidebar width for larger screens
+              width: 300, // Sidebar width for larger screens
               color: Colors.blue.shade100,
               child: buildDrawerContent(), // Sidebar content
             ),
