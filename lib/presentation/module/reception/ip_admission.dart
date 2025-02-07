@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
+import 'package:foxcare_lite/presentation/module/reception/total_room_update.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:iconsax/iconsax.dart';
@@ -294,6 +295,7 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
 
   Widget buildThreeColumnForm() {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     bool isMobile = screenWidth < 600;
     return Align(
@@ -313,12 +315,28 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
           SizedBox(
             height: 30,
           ),
-          Text(
-            'Rooms / Ward Availability',
-            style: TextStyle(
-                fontFamily: 'SanFrancisco',
-                fontSize: 18,
-                fontWeight: FontWeight.normal),
+          Row(
+            children: [
+              Text(
+                'Rooms / Ward Availability',
+                style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal),
+              ),
+              SizedBox(width: screenWidth * 0.5),
+              CustomButton(
+                label: 'Total Rooms',
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TotalRoomUpdate()));
+                },
+                width: screenWidth * 0.1,
+                height: screenHeight * 0.038,
+              )
+            ],
           ),
           SizedBox(
             height: 15,
@@ -383,7 +401,17 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
                             ),
                           ),
                           onTap: () {
+                            setState(() {
+                              roomStatus[index] =
+                                  true; // Correctly update the value
+                            });
                             print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              roomStatus[index] =
+                                  false; // Correctly update the value
+                            });
                           },
                         ),
                       );
@@ -456,7 +484,17 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
                             ),
                           ),
                           onTap: () {
+                            setState(() {
+                              wardStatus[index] =
+                                  true; // Correctly update the value
+                            });
                             print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              wardStatus[index] =
+                                  false; // Correctly update the value
+                            });
                           },
                         ),
                       );
@@ -526,7 +564,17 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
                             ),
                           ),
                           onTap: () {
+                            setState(() {
+                              viproomStatus[index] =
+                                  true; // Correctly update the value
+                            });
                             print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              viproomStatus[index] =
+                                  false; // Correctly update the value
+                            });
                           },
                         ),
                       );
@@ -599,7 +647,17 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
                             ),
                           ),
                           onTap: () {
+                            setState(() {
+                              ICUStatus[index] =
+                                  true; // Correctly update the value
+                            });
                             print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              ICUStatus[index] =
+                                  false; // Correctly update the value
+                            });
                           },
                         ),
                       );
