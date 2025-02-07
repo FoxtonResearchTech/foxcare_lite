@@ -242,7 +242,7 @@ class _IpPrescription extends State<IpPrescription> {
           .collection('patients')
           .doc(widget.ipNumber)
           .collection('ipPrescription')
-          .doc()
+          .doc('details')
           .set({
         'date': dateTime.year.toString() +
             '-' +
@@ -523,39 +523,6 @@ class _IpPrescription extends State<IpPrescription> {
                     },
                   ),
                 ),
-                SizedBox(
-                  width: 250,
-                  child: CustomDropdown(
-                    label: 'Select IP Admission',
-                    items: ['ICU', 'OT', 'Casuality', 'Ward ROom'],
-                    selectedItem: selectedIPAdmissionValue,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedIPAdmissionValue = value!;
-                      });
-                    },
-                  ),
-                ),
-                CustomTextField(
-                    controller: TextEditingController(
-                      text: dateTime.year.toString() +
-                          '-' +
-                          dateTime.month.toString().padLeft(2, '0') +
-                          '-' +
-                          dateTime.day.toString().padLeft(2, '0'),
-                    ),
-                    hintText: 'Date',
-                    width: screenWidth * 0.075),
-                CustomTextField(
-                    controller: TextEditingController(
-                      text: dateTime.hour.toString() +
-                          '-' +
-                          dateTime.minute.toString().padLeft(2, '0') +
-                          '-' +
-                          dateTime.second.toString().padLeft(2, '0'),
-                    ),
-                    hintText: 'Time',
-                    width: screenWidth * 0.075)
               ]),
               const SizedBox(
                 height: 35,

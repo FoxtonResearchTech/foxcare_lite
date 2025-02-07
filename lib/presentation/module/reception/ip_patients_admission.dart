@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
+import 'package:foxcare_lite/presentation/module/reception/reception_ip_patient.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
@@ -107,7 +108,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => IpPrescription(
+                    builder: (context) => ReceptionIpPatient(
                       patientID: data['opNumber'] ?? 'N/A',
                       ipNumber: data['ipNumber'] ?? 'N/A',
                       name:
@@ -125,7 +126,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                   ),
                 );
               },
-              child: const CustomText(text: 'Create')),
+              child: const CustomText(text: 'IP Rooms')),
           'Abort': TextButton(
               onPressed: () async {
                 try {

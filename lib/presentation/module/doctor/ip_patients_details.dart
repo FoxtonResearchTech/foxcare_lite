@@ -29,6 +29,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   List<Map<String, dynamic>> tableData1 = [];
   Timer? _timer;
   int selectedIndex = 2;
+  String? roomNumber;
+  String? roomType;
 
   @override
   void initState() {
@@ -43,6 +45,61 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  Future<void> endIP(String ipNumber) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(ipNumber)
+          .collection('ipPrescription')
+          .doc('details')
+          .get();
+
+      String roomNumber = querySnapshot['ipAdmission']['roomNumber'];
+      String roomType = querySnapshot['ipAdmission']['roomType'];
+
+      int index = int.parse(roomNumber) - 1;
+
+      DocumentReference totalRoomRef =
+          FirebaseFirestore.instance.collection('totalRoom').doc('status');
+
+      final totalRoomSnapshot = await totalRoomRef.get();
+
+      if (totalRoomSnapshot.exists) {
+        Map<String, dynamic> data =
+            totalRoomSnapshot.data() as Map<String, dynamic>;
+
+        List<bool> roomStatus = List<bool>.from(data['roomStatus']);
+        List<bool> wardStatus = List<bool>.from(data['wardStatus']);
+        List<bool> viproomStatus = List<bool>.from(data['viproomStatus']);
+        List<bool> ICUStatus = List<bool>.from(data['ICUStatus']);
+
+        if (roomType == "Ward Room") {
+          wardStatus[index] = false;
+        } else if (roomType == "VIP Room") {
+          viproomStatus[index] = false;
+        } else if (roomType == "ICU") {
+          ICUStatus[index] = false;
+        } else if (roomType == "Room") {
+          roomStatus[index] = false;
+        }
+
+        await totalRoomRef.update({
+          "roomStatus": roomStatus,
+          "wardStatus": wardStatus,
+          "viproomStatus": viproomStatus,
+          "ICUStatus": ICUStatus,
+        });
+
+        CustomSnackBar(context, message: 'IP Ended Successfully');
+      } else {
+        CustomSnackBar(context, message: 'Total Room Data Not Found');
+      }
+    } catch (e) {
+      CustomSnackBar(context, message: 'Cannot End IP');
+      print("Error updating totalRoom: $e");
+    }
   }
 
   Future<void> fetchData() async {
@@ -101,7 +158,11 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
           'Primary Info': data['otherComments'] ?? 'N/A',
           'Action': hasIpPrescription
               ? TextButton(
-                  onPressed: () {}, child: const CustomText(text: 'End IP'))
+                  onPressed: () {
+                    endIP(data['ipNumber']);
+                  },
+                  child: const CustomText(text: 'End IP'),
+                )
               : TextButton(
                   onPressed: () {
                     Navigator.push(

@@ -84,7 +84,11 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
     return Scaffold(
       appBar: AppBar(
         title: Center(
-          child: CustomText(text: 'Total Rooms', color: Colors.white),
+          child: CustomText(
+            text: 'Total Rooms',
+            color: Colors.white,
+            size: screenWidth * 0.02,
+          ),
         ),
         backgroundColor: AppColors.secondaryColor,
       ),
