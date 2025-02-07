@@ -35,7 +35,6 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
     return List.generate(totalRooms, (index) => index < bookedRooms);
   }
 
-  /// Upload data to Firestore
   Future<void> updateFirestore() async {
     int totalRooms = int.tryParse(_totalRoomsController.text) ?? 0;
     int bookedRooms = int.tryParse(_bookedRoomsController.text) ?? 0;
@@ -59,11 +58,22 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
     await FirebaseFirestore.instance
         .collection('totalRoom')
         .doc('status')
-        .set(data);
+        .update(data);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Room data updated successfully!')),
     );
+  }
+
+  void clearController() {
+    _totalRoomsController.clear();
+    _bookedRoomsController.clear();
+    _totalWardsController.clear();
+    _bookedWardsController.clear();
+    _totalVipRoomsController.clear();
+    _bookedVipRoomsController.clear();
+    _totalICUController.clear();
+    _bookedICUController.clear();
   }
 
   @override
@@ -127,7 +137,10 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
                   width: screenWidth * 0.2),
               CustomButton(
                   label: 'Update',
-                  onPressed: updateFirestore,
+                  onPressed: () {
+                    updateFirestore();
+                    clearController();
+                  },
                   width: screenWidth * 0.2),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/total_room_update.dart';
@@ -24,63 +25,12 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
   String nursingStation = 'Station A';
 
   // List of room statuses (true = booked, false = available)
-  List<bool> roomStatus = [
-    true,
-    true,
-    true,
-    true,
-    true,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ];
-  List<bool> wardStatus = [
-    true,
-    true,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-  ];
-  List<bool> viproomStatus = [
-    true,
-    true,
-    true,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ];
-  List<bool> ICUStatus = [
-    true,
-    true,
-    false,
-    false,
-    false,
-  ];
-
+  List<bool> roomStatus = [];
+  List<bool> wardStatus = [];
+  List<bool> viproomStatus = [];
+  List<bool> ICUStatus = [];
   int selectedIndex1 = 2;
+
   //String selectedSex = 'Male'; // Default value for Sex
   String selectedBloodGroup = 'A+'; // Default value for Blood Group
 
@@ -94,6 +44,27 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
   bool isDataLoaded = false; // To control data loading when button is clicked
   List<Map<String, dynamic>> patientData = []; // Patient data
   int? selectedIndex; // Store selected checkbox index
+  Future<void> fetchRoomData() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('totalRoom')
+          .doc('status')
+          .get();
+
+      if (doc.exists) {
+        setState(() {
+          roomStatus = List<bool>.from(doc['roomStatus']);
+          wardStatus = List<bool>.from(doc['wardStatus']);
+          viproomStatus = List<bool>.from(doc['viproomStatus']);
+          ICUStatus = List<bool>.from(doc['ICUStatus']);
+        });
+      } else {
+        print("Document does not exist.");
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
 
   // Sample dummy data for patients
   List<Map<String, dynamic>> samplePatients = [
@@ -122,6 +93,11 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
       "ipToDate": "2024-01-18"
     }
   ];
+  @override
+  void initState() {
+    super.initState();
+    fetchRoomData();
+  }
 
   @override
   void dispose() {
