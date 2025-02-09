@@ -36,6 +36,9 @@ class ManagerPatientInfo extends StatefulWidget {
   final String? phone1Edit;
   final String? phone2Edit;
   final String? bloodGroupEdit;
+  final String? opAmountEdit;
+  final String? opAmountCollectedEdit;
+
   const ManagerPatientInfo(
       {super.key,
       this.opNumberEdit,
@@ -53,7 +56,9 @@ class ManagerPatientInfo extends StatefulWidget {
       this.pincodeEdit,
       this.phone1Edit,
       this.phone2Edit,
-      this.bloodGroupEdit});
+      this.bloodGroupEdit,
+      this.opAmountEdit,
+      this.opAmountCollectedEdit});
 
   @override
   State<ManagerPatientInfo> createState() => _ManagerPatientInfo();
@@ -62,6 +67,8 @@ class ManagerPatientInfo extends StatefulWidget {
 int selectedIndex = 1;
 
 class _ManagerPatientInfo extends State<ManagerPatientInfo> {
+  final dateTime = DateTime.timestamp();
+
   String? selectedSex;
   String? selectedBloodGroup;
   bool isEditing = false;
@@ -78,6 +85,8 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
   final TextEditingController pincode = TextEditingController();
   final TextEditingController phone1 = TextEditingController();
   final TextEditingController phone2 = TextEditingController();
+  final TextEditingController opAmount = TextEditingController();
+  final TextEditingController opAmountCollected = TextEditingController();
 
   String generateNumericUid() {
     var random = Random();
@@ -119,6 +128,13 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
       'phone1': phone1.text,
       'phone2': phone2.text,
       'bloodGroup': selectedBloodGroup,
+      'opAmount': opAmount.text,
+      'opAmountCollected': opAmountCollected.text,
+      'opAdmissionDate': dateTime.year.toString() +
+          '-' +
+          dateTime.month.toString().padLeft(2, '0') +
+          '-' +
+          dateTime.day.toString().padLeft(2, '0'),
     };
 
     try {
@@ -139,7 +155,7 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
             title: Text('Patient Details'),
             content: Container(
               width: 350,
-              height: 300,
+              height: 350,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -159,6 +175,8 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
                   CustomText(text: 'Phone 1: ${phone1.text}'),
                   CustomText(text: 'Phone 2: ${phone2.text}'),
                   CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
+                  CustomText(text: 'Amount: ${opAmount.text}'),
+                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
                 ],
               ),
             ),
@@ -270,6 +288,8 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
       'phone1': phone1.text,
       'phone2': phone2.text,
       'bloodGroup': selectedBloodGroup,
+      'opAmount': opAmount.text,
+      'opAmountCollected': opAmountCollected.text,
     };
 
     try {
@@ -288,7 +308,7 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
             title: Text('Patient Details'),
             content: Container(
               width: 350,
-              height: 300,
+              height: 350,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -308,6 +328,10 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
                   CustomText(text: 'Phone 1: ${phone1.text}'),
                   CustomText(text: 'Phone 2: ${phone2.text}'),
                   CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
+                  CustomText(text: 'Amount: ${opAmount.text}'),
+                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
+                  CustomText(text: 'Amount: ${opAmount.text}'),
+                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
                 ],
               ),
             ),
@@ -413,6 +437,8 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
       selectedSex = null;
       selectedBloodGroup = null;
     });
+    opAmount.clear();
+    opAmountCollected.clear();
   }
 
   @override
@@ -435,6 +461,8 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
       phone1.text = widget.phone1Edit ?? '';
       phone2.text = widget.phone2Edit ?? '';
       selectedBloodGroup = widget.bloodGroupEdit;
+      opAmount.text = widget.opAmountEdit ?? '';
+      opAmountCollected.text = widget.opAmountCollectedEdit ?? '';
     }
     super.initState();
   }
@@ -675,15 +703,31 @@ class _ManagerPatientInfo extends State<ManagerPatientInfo> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDropdown(
-                  label: 'Blood Group',
-                  items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
-                  selectedItem: selectedBloodGroup,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedBloodGroup = value!;
-                    });
-                  }),
+              Row(
+                children: [
+                  CustomDropdown(
+                      label: 'Blood Group',
+                      items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+                      selectedItem: selectedBloodGroup,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedBloodGroup = value!;
+                        });
+                      }),
+                  SizedBox(width: screenWidth * 0.12),
+                  CustomTextField(
+                    hintText: 'OP Amount',
+                    width: screenWidth * 0.1,
+                    controller: opAmount,
+                  ),
+                  SizedBox(width: screenWidth * 0.12),
+                  CustomTextField(
+                    hintText: 'Collected',
+                    width: screenWidth * 0.1,
+                    controller: opAmountCollected,
+                  )
+                ],
+              ),
               SizedBox(height: screenHeight * 0.04),
               Center(
                   child: CustomButton(

@@ -196,7 +196,6 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
-    // List of room statuses (true = booked, false = available)
     List<bool> roomStatus = [
       true,
       true,

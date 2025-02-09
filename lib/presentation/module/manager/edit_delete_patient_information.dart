@@ -101,6 +101,8 @@ class _EditDeletePatientInformation
                       phone1Edit: data['phone1'] ?? 'N/A',
                       phone2Edit: data['phone2'] ?? 'N/A',
                       bloodGroupEdit: data['bloodGroup'] ?? 'N/A',
+                      opAmountEdit: data['opAmount'] ?? 'N/A',
+                      opAmountCollectedEdit: data['opAmountCollected'] ?? 'N/A',
                     ),
                   ),
                 );

@@ -24,6 +24,8 @@ class PatientRegistration extends StatefulWidget {
 }
 
 class _PatientRegistrationState extends State<PatientRegistration> {
+  final dateTime = DateTime.timestamp();
+
   int selectedIndex = 0;
   String? selectedSex; // Default value for Sex
   String? selectedBloodGroup; // Default value for Blood Group
@@ -40,6 +42,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   final TextEditingController pincode = TextEditingController();
   final TextEditingController phone1 = TextEditingController();
   final TextEditingController phone2 = TextEditingController();
+  final TextEditingController opAmount = TextEditingController();
+  final TextEditingController opAmountCollected = TextEditingController();
 
   String generateNumericUid() {
     var random = Random();
@@ -81,6 +85,13 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       'phone1': phone1.text,
       'phone2': phone2.text,
       'bloodGroup': selectedBloodGroup,
+      'opAmount': opAmount.text,
+      'opAmountCollected': opAmountCollected.text,
+      'opAdmissionDate': dateTime.year.toString() +
+          '-' +
+          dateTime.month.toString().padLeft(2, '0') +
+          '-' +
+          dateTime.day.toString().padLeft(2, '0'),
     };
 
     try {
@@ -121,6 +132,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                   CustomText(text: 'Phone 1: ${phone1.text}'),
                   CustomText(text: 'Phone 2: ${phone2.text}'),
                   CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
+                  CustomText(text: 'Amount: ${opAmount.text}'),
+                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
                 ],
               ),
             ),
@@ -226,6 +239,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       selectedSex = null;
       selectedBloodGroup = null;
     });
+    opAmount.clear();
+    opAmountCollected.clear();
   }
 
   @override
@@ -397,6 +412,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   }
 
   Widget buildThreeColumnForm() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -578,6 +595,18 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                     selectedBloodGroup = value!;
                   });
                 }),
+            SizedBox(width: screenWidth * 0.12),
+            CustomTextField(
+              hintText: 'OP Amount',
+              width: screenWidth * 0.1,
+              controller: opAmount,
+            ),
+            SizedBox(width: screenWidth * 0.12),
+            CustomTextField(
+              hintText: 'Collected',
+              width: screenWidth * 0.1,
+              controller: opAmountCollected,
+            )
           ],
         ),
         const SizedBox(height: 20),

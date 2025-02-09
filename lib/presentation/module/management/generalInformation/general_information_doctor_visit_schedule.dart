@@ -9,109 +9,20 @@ import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import 'general_information_doctor_visit_schedule.dart';
+import 'general_information_admission_status.dart';
 import 'general_information_edit_doctor_visit_schedule.dart';
 import 'general_information_ip_admission.dart';
 
-class GeneralInformationAdmissionStatus extends StatefulWidget {
+class GeneralInformationDoctorVisitSchedule extends StatefulWidget {
   @override
-  State<GeneralInformationAdmissionStatus> createState() =>
-      _GeneralInformationAdmissionStatus();
+  State<GeneralInformationDoctorVisitSchedule> createState() =>
+      _GeneralInformationDoctorVisitSchedule();
 }
 
-class _GeneralInformationAdmissionStatus
-    extends State<GeneralInformationAdmissionStatus> {
+class _GeneralInformationDoctorVisitSchedule
+    extends State<GeneralInformationDoctorVisitSchedule> {
   // To store the index of the selected drawer item
-  int selectedIndex = 2;
-  TextEditingController _patientID = TextEditingController();
-  TextEditingController _phoneNumber = TextEditingController();
-
-  final List<String> headers1 = [
-    'Patient ID',
-    'Name',
-    'Room/Ward',
-    'Consulting Doctor',
-    'Admission Date',
-  ];
-  List<Map<String, dynamic>> tableData1 = [];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  Future<void> fetchData({String? patientId, String? phoneNumber}) async {
-    try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-
-      if (patientId != null) {
-        query = query.where('opNumber', isEqualTo: patientId);
-      } else if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
-      }
-
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData1 = [];
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        bool hasOpNumber =
-            data.containsKey('opNumber') && data['opNumber'] != null;
-
-        // Fetch 'details' document inside 'ipPrescription' subcollection
-        DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(doc.id)
-            .collection('ipPrescription')
-            .doc('details')
-            .get();
-
-        Map<String, dynamic>? detailsData = detailsDoc.exists
-            ? detailsDoc.data() as Map<String, dynamic>?
-            : null;
-
-        fetchedData.add(
-          {
-            'Patient ID': hasOpNumber
-                ? data['opNumber'] ?? 'N/A'
-                : data['ipNumber'] ?? 'N/A',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
-            'Room/Ward': detailsData?['ipAdmission']?['roomType'] != null &&
-                    detailsData?['ipAdmission']?['roomNumber'] != null
-                ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
-                : 'N/A',
-            'Consulting Doctor': data['consultingDoctor'] ?? 'N/A',
-            'Admission Date': data['opAdmissionDate'] ?? 'N/A',
-          },
-        );
-      }
-
-      setState(() {
-        tableData1 = fetchedData;
-      });
-    } catch (e) {
-      print('Error fetching data from Firestore: $e');
-    }
-  }
+  int selectedIndex = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -189,18 +100,17 @@ class _GeneralInformationAdmissionStatus
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(2, 'Admission Status', () {}, Iconsax.add_circle),
+        buildDrawerItem(2, 'Admission Status', () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => GeneralInformationAdmissionStatus()));
+        }, Iconsax.add_circle),
         Divider(
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(3, 'Doctor Visit  Schedule', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      GeneralInformationDoctorVisitSchedule()));
-        }, Iconsax.add_circle),
+        buildDrawerItem(3, 'Doctor Visit  Schedule', () {}, Iconsax.add_circle),
         Divider(
           height: 5,
           color: Colors.grey,
@@ -268,53 +178,7 @@ class _GeneralInformationAdmissionStatus
             bottom: screenWidth * 0.01,
           ),
           child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomTextField(
-                    hintText: 'OP Number',
-                    width: screenWidth * 0.15,
-                    controller: _patientID,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(patientId: _patientID.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
-                tableData: tableData1,
-                headers: headers1,
-                rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
-                      : Colors.transparent;
-                },
-              ),
-              SizedBox(height: screenHeight * 0.08),
-            ],
+            children: [],
           ),
         ),
       ),

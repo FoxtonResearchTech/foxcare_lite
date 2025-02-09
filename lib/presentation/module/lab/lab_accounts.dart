@@ -23,28 +23,6 @@ class LabAccounts extends StatefulWidget {
 
 int selectedIndex = 2;
 
-class ReportRow {
-  final String slNo;
-  final String opNumber;
-  final String name;
-  final String age;
-  final String testType;
-  final String dateOfReport;
-  final String amountCollected;
-  final String paymentStatus;
-
-  ReportRow(
-    this.slNo,
-    this.opNumber,
-    this.name,
-    this.age,
-    this.testType,
-    this.dateOfReport,
-    this.amountCollected,
-    this.paymentStatus,
-  );
-}
-
 class _LabAccountsState extends State<LabAccounts> {
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
