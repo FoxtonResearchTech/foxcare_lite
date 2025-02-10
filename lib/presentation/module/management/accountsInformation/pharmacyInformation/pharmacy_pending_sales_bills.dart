@@ -7,18 +7,41 @@ import 'package:foxcare_lite/presentation/module/management/management_dashboard
 
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../../utilities/widgets/table/data_table.dart';
 import '../../../../../utilities/widgets/text/primary_text.dart';
+import '../../../../../utilities/widgets/textField/primary_textField.dart';
 import '../new_patient_register_collection.dart';
 
-class PharmacyPayedBills extends StatefulWidget {
+class PharmacyPendingSalesBills extends StatefulWidget {
   @override
-  State<PharmacyPayedBills> createState() => _PharmacyPayedBills();
+  State<PharmacyPendingSalesBills> createState() =>
+      _PharmacyPendingSalesBills();
 }
 
-class _PharmacyPayedBills extends State<PharmacyPayedBills> {
+class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
   // To store the index of the selected drawer item
-  int selectedIndex = 3;
-
+  int selectedIndex = 1;
+  final List<String> headers = [
+    'Date',
+    'Bill NO',
+    'OP NO',
+    'Name',
+    'Amount',
+    'Collected',
+    'Collect',
+  ];
+  final List<Map<String, dynamic>> tableData = [
+    {
+      'Date': '',
+      'Bill NO': '',
+      'OP NO': '',
+      'Name': '',
+      'Amount': '',
+      'Collected': '',
+      'Collect': TextButton(onPressed: () {}, child: CustomText(text: 'Pay')),
+    }
+  ];
   @override
   Widget build(BuildContext context) {
     // Get the screen width using MediaQuery
@@ -83,10 +106,7 @@ class _PharmacyPayedBills extends State<PharmacyPayedBills> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(1, 'Purchase', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyPurchase()));
-        }, Iconsax.receipt),
+        buildDrawerItem(1, 'Pending Sales Bill', () {}, Iconsax.receipt),
         Divider(
           height: 5,
           color: Colors.grey,
@@ -101,7 +121,10 @@ class _PharmacyPayedBills extends State<PharmacyPayedBills> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(3, 'Payed Bills', () {}, Iconsax.add_circle),
+        buildDrawerItem(3, 'Purchase', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => PharmacyPurchase()));
+        }, Iconsax.add_circle),
         const Divider(
           height: 5,
           color: Colors.grey,
@@ -155,14 +178,84 @@ class _PharmacyPayedBills extends State<PharmacyPayedBills> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.01,
-            left: screenWidth * 0.04,
-            right: screenWidth * 0.04,
-            bottom: screenWidth * 0.25,
+            left: screenWidth * 0.01,
+            right: screenWidth * 0.01,
+            bottom: screenWidth * 0.01,
           ),
           child: Column(
             children: [
-              SizedBox(height: screenHeight * 0.08),
-              SizedBox(height: screenHeight * 0.08),
+              Row(
+                children: [
+                  CustomTextField(
+                    icon: Icon(Icons.date_range),
+                    hintText: 'Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {},
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomText(text: 'OR'),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    icon: Icon(Icons.date_range),
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    icon: Icon(Icons.date_range),
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {},
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              CustomDataTable(
+                tableData: tableData,
+                headers: headers,
+              ),
+              Container(
+                width: screenWidth,
+                height: screenHeight * 0.030,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: screenWidth * 0.38),
+                    CustomText(
+                      text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.086),
+                    CustomText(
+                      text: '',
+                    ),
+                    SizedBox(width: screenWidth * 0.08),
+                    CustomText(
+                      text: '',
+                    ),
+                    SizedBox(width: screenWidth * 0.083),
+                    CustomText(
+                      text: '',
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

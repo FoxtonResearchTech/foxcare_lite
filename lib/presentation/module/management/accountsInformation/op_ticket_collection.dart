@@ -8,11 +8,15 @@ import 'package:foxcare_lite/presentation/module/reception/patient_registration.
 import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../utilities/colors.dart';
+import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../management_dashboard.dart';
 import 'hospital_direct_purchase.dart';
 import 'hospital_direct_purchase_still_pending.dart';
 import 'ip_admission_collection.dart';
+import 'ip_admit.dart';
+import 'ip_admit_list.dart';
 import 'lab_collection.dart';
 import 'new_patient_register_collection.dart';
 import 'other_expense.dart';
@@ -25,7 +29,73 @@ class OpTicketCollection extends StatefulWidget {
 class _OpTicketCollection extends State<OpTicketCollection> {
   // To store the index of the selected drawer item
   int selectedIndex = 1;
-
+  final List<String> headers = [
+    'OP Ticket',
+    'OP NO',
+    'Name',
+    'City',
+    'Doctor Name',
+    'Total Amount',
+    'Collected',
+    'Balance',
+    'Pay',
+  ];
+  List<Map<String, dynamic>> tableData = [
+    {
+      'OP Ticket': '',
+      'OP NO': '',
+      'Name': '',
+      'City': '',
+      'Doctor Name': '',
+      'Total Amount': '',
+      'Collected': '',
+      'Balance': '',
+      'Pay': TextButton(
+        onPressed: () {
+          // showDialog(
+          //   context: context,
+          //   builder: (BuildContext context) {
+          //     return AlertDialog(
+          //       title: CustomText(
+          //         text: 'Payment Details',
+          //         size: 24,
+          //       ),
+          //       content: Container(
+          //         width: 250,
+          //         height: 150,
+          //         child: Column(
+          //           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //           ],
+          //         ),
+          //       ),
+          //       actions: <Widget>[
+          //         TextButton(
+          //           onPressed: () async {},
+          //           child: CustomText(
+          //             text: 'Pay',
+          //             color: AppColors.secondaryColor,
+          //           ),
+          //         ),
+          //         TextButton(
+          //           onPressed: () {
+          //             Navigator.of(context).pop();
+          //           },
+          //           child: CustomText(
+          //             text: 'Close',
+          //             color: AppColors.secondaryColor,
+          //           ),
+          //         ),
+          //       ],
+          //     );
+          //   },
+          // );
+        },
+        child: CustomText(text: 'Pay'),
+      ),
+    }
+  ];
   @override
   Widget build(BuildContext context) {
     // Get the screen width using MediaQuery
@@ -159,7 +229,23 @@ class _OpTicketCollection extends State<OpTicketCollection> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(9, 'Back To Management Dashboard', () {
+        buildDrawerItem(9, 'IP Admit', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => IpAdmit()));
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(10, 'IP Admit List', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => IpAdmitList()));
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(11, 'Back To Management Dashboard', () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => ManagementDashboard()));
         }, Iconsax.logout),
@@ -206,14 +292,56 @@ class _OpTicketCollection extends State<OpTicketCollection> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.01,
-            left: screenWidth * 0.04,
-            right: screenWidth * 0.04,
-            bottom: screenWidth * 0.25,
+            left: screenWidth * 0.01,
+            right: screenWidth * 0.01,
+            bottom: screenWidth * 0.01,
           ),
           child: Column(
             children: [
-              SizedBox(height: screenHeight * 0.08),
-              SizedBox(height: screenHeight * 0.08),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: "OP Registration Collection ",
+                    size: screenHeight * 0.032,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              CustomDataTable(
+                tableData: tableData,
+                headers: headers,
+              ),
+              Container(
+                width: screenWidth,
+                height: screenHeight * 0.030,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: screenWidth * 0.38),
+                    CustomText(
+                      text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.086),
+                    CustomText(
+                      text: '',
+                    ),
+                    SizedBox(width: screenWidth * 0.08),
+                    CustomText(
+                      text: '',
+                    ),
+                    SizedBox(width: screenWidth * 0.083),
+                    CustomText(
+                      text: '',
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

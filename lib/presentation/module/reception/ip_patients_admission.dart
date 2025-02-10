@@ -292,11 +292,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(6, 'Ip Patients Admission', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
-          );
-        }, Icons.approval),
+        buildDrawerItem(6, 'Ip Patients Admission', () {}, Icons.approval),
         const Divider(
           height: 5,
           color: Colors.grey,

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase_still_pending.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admission_collection.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit_list.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
@@ -99,11 +101,26 @@ class _NewPatientRegisterCollection
                       size: 24,
                     ),
                     content: Container(
-                      width: 350,
-                      height: 275,
+                      width: 250,
+                      height: 150,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [],
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                              text: 'OP Number : ${data['opNumber'] ?? 'N/A'}'),
+                          CustomText(
+                              text:
+                                  'Name : ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'),
+                          CustomText(text: 'City : ${data['city'] ?? 'N/A'}'),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CustomText(text: 'Repayable Amount :$balance')
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     actions: <Widget>[
@@ -360,7 +377,23 @@ class _NewPatientRegisterCollection
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(9, 'Back To Management Dashboard', () {
+        buildDrawerItem(9, 'IP Admit', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => IpAdmit()));
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(10, 'IP Admit List', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => IpAdmitList()));
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(11, 'Back To Management Dashboard', () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => ManagementDashboard()));
         }, Iconsax.logout),

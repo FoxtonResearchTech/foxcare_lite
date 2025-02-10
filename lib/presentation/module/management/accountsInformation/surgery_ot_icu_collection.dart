@@ -12,6 +12,8 @@ import '../management_dashboard.dart';
 import 'hospital_direct_purchase.dart';
 import 'hospital_direct_purchase_still_pending.dart';
 import 'ip_admission_collection.dart';
+import 'ip_admit.dart';
+import 'ip_admit_list.dart';
 import 'lab_collection.dart';
 import 'new_patient_register_collection.dart';
 import 'op_ticket_collection.dart';
@@ -158,7 +160,23 @@ class _SurgeryOtIcuCollection extends State<SurgeryOtIcuCollection> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(9, 'Back To Management Dashboard', () {
+        buildDrawerItem(9, 'IP Admit', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => IpAdmit()));
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(10, 'IP Admit List', () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => IpAdmitList()));
+        }, Iconsax.hospital),
+        const Divider(
+          height: 5,
+          color: Colors.grey,
+        ),
+        buildDrawerItem(11, 'Back To Management Dashboard', () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => ManagementDashboard()));
         }, Iconsax.logout),

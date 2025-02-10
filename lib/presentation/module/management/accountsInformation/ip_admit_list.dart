@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
@@ -8,92 +10,44 @@ import 'package:foxcare_lite/presentation/module/reception/patient_registration.
 import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../../utilities/widgets/text/primary_text.dart';
+import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
-import '../../../../utilities/widgets/text/primary_text.dart';
+import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../management_dashboard.dart';
 import 'hospital_direct_purchase.dart';
 import 'hospital_direct_purchase_still_pending.dart';
-import 'ip_admit.dart';
-import 'ip_admit_list.dart';
+import 'ip_admission_collection.dart';
 import 'lab_collection.dart';
-import 'new_patient_register_collection.dart';
 import 'op_ticket_collection.dart';
 import 'other_expense.dart';
 
-class IpAdmissionCollection extends StatefulWidget {
+class IpAdmitList extends StatefulWidget {
   @override
-  State<IpAdmissionCollection> createState() => _IpAdmissionCollection();
+  State<IpAdmitList> createState() => _IpAdmitList();
 }
 
-class _IpAdmissionCollection extends State<IpAdmissionCollection> {
+class _IpAdmitList extends State<IpAdmitList> {
   // To store the index of the selected drawer item
-  int selectedIndex = 2;
-
+  int selectedIndex = 10;
   final List<String> headers = [
-    'OP Ticket',
+    'OP NO',
     'IP NO',
     'Name',
     'City',
-    'Doctor Name',
+    'Admit Date',
+    'Discharge Date',
     'Total Amount',
-    'Collected',
-    'Balance',
-    'Pay',
   ];
-  List<Map<String, dynamic>> tableData = [
+  final List<Map<String, dynamic>> tableData = [
     {
-      'OP Ticket': '',
+      'OP NO': '',
       'IP NO': '',
       'Name': '',
       'City': '',
-      'Doctor Name': '',
+      'Admit Date': '',
+      'Discharge Date': '',
       'Total Amount': '',
-      'Collected': '',
-      'Balance': '',
-      'Pay': TextButton(
-        onPressed: () {
-          // showDialog(
-          //   context: context,
-          //   builder: (BuildContext context) {
-          //     return AlertDialog(
-          //       title: CustomText(
-          //         text: 'Payment Details',
-          //         size: 24,
-          //       ),
-          //       content: Container(
-          //         width: 250,
-          //         height: 150,
-          //         child: Column(
-          //           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //           ],
-          //         ),
-          //       ),
-          //       actions: <Widget>[
-          //         TextButton(
-          //           onPressed: () async {},
-          //           child: CustomText(
-          //             text: 'Pay',
-          //             color: AppColors.secondaryColor,
-          //           ),
-          //         ),
-          //         TextButton(
-          //           onPressed: () {
-          //             Navigator.of(context).pop();
-          //           },
-          //           child: CustomText(
-          //             text: 'Close',
-          //             color: AppColors.secondaryColor,
-          //           ),
-          //         ),
-          //       ],
-          //     );
-          //   },
-          // );
-        },
-        child: CustomText(text: 'Pay'),
-      ),
     }
   ];
   @override
@@ -170,8 +124,10 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(
-            2, 'IP Admission Collection', () {}, Iconsax.add_circle),
+        buildDrawerItem(2, 'IP Admission Collection', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => IpAdmissionCollection()));
+        }, Iconsax.add_circle),
         Divider(
           height: 5,
           color: Colors.grey,
@@ -238,10 +194,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(10, 'IP Admit List', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => IpAdmitList()));
-        }, Iconsax.hospital),
+        buildDrawerItem(10, 'IP Admit List', () {}, Iconsax.hospital),
         const Divider(
           height: 5,
           color: Colors.grey,
@@ -300,11 +253,39 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomText(
-                    text: "IP Admission Collection ",
-                    size: screenHeight * 0.032,
+                  CustomTextField(
+                    icon: Icon(Icons.date_range),
+                    hintText: 'Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {},
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomText(text: 'OR'),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    icon: Icon(Icons.date_range),
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    icon: Icon(Icons.date_range),
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {},
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
                   ),
                 ],
               ),

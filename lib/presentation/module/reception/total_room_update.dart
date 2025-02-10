@@ -35,7 +35,7 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
     return List.generate(totalRooms, (index) => index < bookedRooms);
   }
 
-  Future<void> updateFirestore() async {
+  Future<void> updateRooms() async {
     int totalRooms = int.tryParse(_totalRoomsController.text) ?? 0;
     int bookedRooms = int.tryParse(_bookedRoomsController.text) ?? 0;
 
@@ -142,7 +142,7 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
               CustomButton(
                   label: 'Update',
                   onPressed: () {
-                    updateFirestore();
+                    updateRooms();
                     clearController();
                   },
                   width: screenWidth * 0.2),

@@ -268,14 +268,14 @@ class _GeneralInformationEditDoctorVisitSchedule
 
   void _removeMonthlyScheduleWidget(int index) {
     setState(() {
-      if (index >= 0 && index < addedWidgets.length) {
-        addedWidgets.removeAt(index);
-        consultingTimeControllers1.removeAt(index);
-        consultingTimeControllers2.removeAt(index);
+      if (index >= 0 && index < addedMonthlyWidgets.length) {
+        addedMonthlyWidgets.removeAt(index);
+        consultingTimeMonthlyControllers1.removeAt(index);
+        consultingTimeMonthlyControllers2.removeAt(index);
         dateMonthlyControllers.removeAt(index);
 
-        doctorNameControllers.removeAt(index);
-        departmentControllers.removeAt(index);
+        doctorNameMonthlyControllers.removeAt(index);
+        departmentMonthlyControllers.removeAt(index);
       }
     });
   }
