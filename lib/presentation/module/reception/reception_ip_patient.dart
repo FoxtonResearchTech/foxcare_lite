@@ -349,7 +349,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                 child: SizedBox(
                   width: 300,
                   child: CustomButton(
-                    label: 'Prescribe',
+                    label: 'Admit',
                     onPressed: () {
                       _savePrescriptionData();
                       updateRoomAvailability();

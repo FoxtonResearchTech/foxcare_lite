@@ -10,14 +10,9 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
-import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_register_patient.dart';
-import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
-import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
-import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
+
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
@@ -49,8 +44,11 @@ class _NewPatientRegisterCollection
   ];
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
       Query query = FirebaseFirestore.instance.collection('patients');
 
@@ -58,8 +56,8 @@ class _NewPatientRegisterCollection
         query = query.where('opAdmissionDate', isEqualTo: singleDate);
       } else if (fromDate != null && toDate != null) {
         query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
+            .where('opAdmissionDate', isGreaterThanOrEqualTo: fromDate)
+            .where('opAdmissionDate', isLessThanOrEqualTo: toDate);
       }
       final QuerySnapshot snapshot = await query.get();
 
@@ -76,6 +74,8 @@ class _NewPatientRegisterCollection
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         if (!data.containsKey('opNumber')) continue;
+        if (!data.containsKey('opAdmissionDate')) continue;
+
         double opAmount =
             double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
         double opAmountCollected =
