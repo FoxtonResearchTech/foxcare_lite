@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:foxcare_lite/presentation/module/dental/dental_appointment.dart';
+import 'package:foxcare_lite/presentation/module/dental/dental_billing.dart';
+import 'package:foxcare_lite/presentation/module/dental/dental_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/dental/dental_opTickets.dart';
+import 'package:foxcare_lite/presentation/module/dental/dental_patient_registration.dart';
+import 'package:foxcare_lite/presentation/module/dental/dental_pending_bills.dart';
+import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_edit_doctor_visit_schedule.dart';
+import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/add_product.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/product_list.dart';
@@ -21,9 +30,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: ProductList());
+        home: DentalPendingBills());
   }
 }

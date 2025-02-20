@@ -33,7 +33,7 @@ class _AddProduct extends State<AddProduct> {
       'Category': '',
       'Company': '',
       'Composition': '',
-      'Type': CustomTextField(
+      'Type': const CustomTextField(
         hintText: '',
         width: 250,
         icon: Icon(Icons.arrow_drop_down_sharp),
