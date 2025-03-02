@@ -1,12 +1,15 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../tools/manage_pharmacy_info.dart';
 
 class DeleteProduct extends StatefulWidget {
@@ -17,6 +20,11 @@ class DeleteProduct extends StatefulWidget {
 }
 
 class _DeleteProduct extends State<DeleteProduct> {
+  String? selectedCategory;
+  String productName = '';
+  String companyName = '';
+  String hsnCode = '';
+
   final List<String> headers = [
     'Product Name',
     'HSN Code',
@@ -26,26 +34,112 @@ class _DeleteProduct extends State<DeleteProduct> {
     'Type',
     'Action',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'Product Name': '',
-      'HSN Code': '',
-      'Category': '',
-      'Company': '',
-      'Composition': '',
-      'Type': CustomTextField(
-        hintText: '',
-        width: 250,
-        icon: Icon(Icons.arrow_drop_down_sharp),
-      ),
-      'Action': CustomButton(
-        label: 'Delete',
-        onPressed: () {},
-        width: 100,
-        height: 32,
-      ),
-    },
-  ];
+
+  List<Map<String, dynamic>> allProducts = [];
+
+  List<Map<String, dynamic>> filteredProducts = [];
+  Future<void> fetchData() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
+          await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in stockSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'id': doc.id, // Store document ID for deletion
+          'Product Name': data['productName'],
+          'HSN Code': data['hsnCode'],
+          'Category': data['category'],
+          'Company': data['companyName'],
+          'Composition': data['composition'],
+          'Type': data['type'],
+          'Action': TextButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Deletion Confirmation'),
+                    content: const CustomText(
+                        text: 'Are you sure you want to delete?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () async {
+                          await FirebaseFirestore.instance
+                              .collection('stock')
+                              .doc('Products')
+                              .collection('AddedProducts')
+                              .doc(doc.id)
+                              .delete();
+
+                          Navigator.of(context).pop(); // Close dialog
+
+                          fetchData();
+                          CustomSnackBar(context,
+                              message: 'Product Deleted',
+                              backgroundColor: Colors.green);
+                        },
+                        child: const CustomText(text: 'Delete'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const CustomText(text: 'Close'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: const CustomText(text: 'Delete'),
+          ),
+        });
+      }
+
+      setState(() {
+        allProducts = fetchedData;
+        filteredProducts = List.from(allProducts);
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+    filteredProducts = List.from(allProducts);
+  }
+
+  void filterProducts() {
+    setState(() {
+      filteredProducts = allProducts.where((product) {
+        return (selectedCategory == null ||
+                selectedCategory == 'All' ||
+                product['Category'] == selectedCategory) &&
+            (productName.isEmpty ||
+                product['Product Name']!
+                    .toLowerCase()
+                    .contains(productName.toLowerCase())) &&
+            (companyName.isEmpty ||
+                product['Company']!
+                    .toLowerCase()
+                    .contains(companyName.toLowerCase())) &&
+            (hsnCode.isEmpty ||
+                product['HSN Code']!
+                    .toLowerCase()
+                    .contains(hsnCode.toLowerCase()));
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,29 +150,29 @@ class _DeleteProduct extends State<DeleteProduct> {
       appBar: const FoxCareLiteAppBar(),
       body: SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
-            bottom: screenWidth * 0.05,
-          ),
+          padding: EdgeInsets.all(screenWidth * 0.05),
           child: Column(
             children: [
-              Row(
-                children: [
-                  CustomText(
-                    text: 'Delete Product',
-                    size: screenWidth * 0.012,
-                  ),
-                ],
-              ),
+              Row(children: [
+                CustomText(text: 'Delete Product', size: screenWidth * 0.012),
+              ]),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
-                  CustomTextField(
-                    hintText: 'Select Category',
-                    width: screenWidth * 0.25,
-                    icon: Icon(Icons.arrow_drop_down_sharp),
+                  CustomDropdown(
+                    label: 'Select Category',
+                    items: const [
+                      'All',
+                      'Medicine',
+                      'Equipment',
+                      'Supplements',
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedCategory = value;
+                      });
+                      filterProducts();
+                    },
                   ),
                 ],
               ),
@@ -88,27 +182,39 @@ class _DeleteProduct extends State<DeleteProduct> {
                   CustomTextField(
                     hintText: 'Product Name',
                     width: screenWidth * 0.20,
+                    onChanged: (value) {
+                      productName = value;
+                      filterProducts();
+                    },
                   ),
                   SizedBox(width: screenHeight * 0.045),
                   CustomTextField(
                     hintText: 'Company Name',
                     width: screenWidth * 0.20,
+                    onChanged: (value) {
+                      companyName = value;
+                      filterProducts();
+                    },
                   ),
-                  SizedBox(width: screenHeight * 0.3),
+                  SizedBox(width: screenHeight * 0.045),
                   CustomTextField(
                     hintText: 'HSN Code',
                     width: screenWidth * 0.10,
+                    onChanged: (value) {
+                      hsnCode = value;
+                      filterProducts();
+                    },
                   ),
                   SizedBox(width: screenHeight * 0.045),
                   CustomButton(
-                      label: 'Search',
-                      onPressed: () {},
-                      width: screenWidth * 0.1)
+                    label: 'Search',
+                    onPressed: filterProducts,
+                    width: screenWidth * 0.1,
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(headers: headers, tableData: tableData),
-              SizedBox(height: screenHeight * 0.06),
+              CustomDataTable(headers: headers, tableData: filteredProducts),
             ],
           ),
         ),

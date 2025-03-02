@@ -10,6 +10,7 @@ class CustomDataTable extends StatefulWidget {
   final Color borderColor;
   final Color Function(Map<String, dynamic>)? rowColorResolver;
   final Function(int rowIndex, String header, String value)? onValueChanged;
+  final List<Map<String, TextEditingController>>? controllers;
 
   const CustomDataTable({
     super.key,
@@ -21,6 +22,7 @@ class CustomDataTable extends StatefulWidget {
     this.borderColor = Colors.black,
     this.rowColorResolver,
     this.onValueChanged,
+    this.controllers,
   });
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase_entry.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
@@ -63,7 +64,12 @@ class _Purchase extends State<Purchase> {
                   const CustomText(text: 'Bill Approve List '),
                   CustomButton(
                     label: 'Purchase Entry',
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const PurchaseEntry()));
+                    },
                     width: screenWidth * 0.12,
                     height: screenHeight * 0.04,
                   )

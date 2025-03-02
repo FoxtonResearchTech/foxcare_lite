@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/foxcare_lite_app_bar.dart';
@@ -20,13 +21,6 @@ class _ProductListState extends State<ProductList> {
   String companyName = '';
   String hsnCode = '';
 
-  final List<String> categories = [
-    'All',
-    'Medicine',
-    'Equipment',
-    'Supplements'
-  ];
-
   final List<String> headers = [
     'Product Name',
     'HSN Code',
@@ -37,67 +31,48 @@ class _ProductListState extends State<ProductList> {
     'Action',
   ];
 
-  final List<Map<String, String>> allProducts = [
-    {
-      'Product Name': 'Paracetamol',
-      'HSN Code': '3004',
-      'Category': 'Medicine',
-      'Company': 'ABC Pharma',
-      'Composition': 'Acetaminophen',
-      'Type': 'Tablet',
-      'Action': '',
-    },
-    {
-      'Product Name': 'Cetirizine ',
-      'HSN Code': '3007',
-      'Category': 'Medicine',
-      'Company': 'ABC Pharma',
-      'Composition': 'Acetaminophen',
-      'Type': 'Tablet',
-      'Action': '',
-    },
-    {
-      'Product Name': 'X-Ray',
-      'HSN Code': '9077',
-      'Category': 'Equipment',
-      'Company': 'XYZ Healthcare',
-      'Composition': 'N/A',
-      'Type': 'Device',
-      'Action': '',
-    }, {
-      'Product Name': 'Thermometer',
-      'HSN Code': '9025',
-      'Category': 'Equipment',
-      'Company': 'XYZ Healthcare',
-      'Composition': 'N/A',
-      'Type': 'Device',
-      'Action': '',
-    },
-    {
-      'Product Name': 'BP-Monitor',
-      'HSN Code': '9000',
-      'Category': 'Equipment',
-      'Company': 'AAA Healthcare',
-      'Composition': 'N/A',
-      'Type': 'Device',
-      'Action': '',
-    },
-    {
-      'Product Name': 'Vitamin C',
-      'HSN Code': '2106',
-      'Category': 'Supplements',
-      'Company': 'HealthPlus',
-      'Composition': 'Ascorbic Acid',
-      'Type': 'Tablet',
-      'Action': '',
-    },
-  ];
+  List<Map<String, dynamic>> allProducts = [];
 
-  List<Map<String, String>> filteredProducts = [];
+  List<Map<String, dynamic>> filteredProducts = [];
+  Future<void> fetchData() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
+          await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products') // Access the 'products' document
+              .collection(
+                  'AddedProducts') // Access the 'addedproducts' subcollection
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in stockSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Product Name': data['productName'],
+          'HSN Code': data['hsnCode'],
+          'Category': data['category'],
+          'Company': data['companyName'],
+          'Composition': data['composition'],
+          'Type': data['type'],
+          'Action': '',
+        });
+      }
+
+      setState(() {
+        allProducts = fetchedData;
+        filteredProducts = List.from(allProducts); // Update filtered list too
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    fetchData();
+
     filteredProducts = List.from(allProducts);
   }
 
@@ -143,14 +118,19 @@ class _ProductListState extends State<ProductList> {
                 children: [
                   CustomDropdown(
                     label: 'Select Category',
-                    items: categories,
+                    items: const [
+                      'All',
+                      'Medicine',
+                      'Equipment',
+                      'Supplements',
+                    ],
                     onChanged: (value) {
                       setState(() {
                         selectedCategory = value;
                       });
                       filterProducts();
                     },
-                  )
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),

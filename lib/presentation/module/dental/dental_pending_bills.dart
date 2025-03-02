@@ -62,6 +62,7 @@ class _DentalPendingBills extends State<DentalPendingBills> {
       ),
     }
   ];
+
   @override
   Widget build(BuildContext context) {
     // Get the screen width using MediaQuery

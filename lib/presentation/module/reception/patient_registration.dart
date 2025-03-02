@@ -62,7 +62,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         selectedSex == null ||
         selectedBloodGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all required fields")),
+        const SnackBar(content: Text("Please fill all required fields")),
       );
       return;
     }
@@ -101,7 +101,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           .set(patientData);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Patient registered successfully")),
+        const SnackBar(content: Text("Patient registered successfully")),
       );
 
       // Show a dialog with the entered details
@@ -109,7 +109,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Patient Details'),
+            title: const Text('Patient Details'),
             content: Container(
               width: 350,
               height: 300,
@@ -362,7 +362,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         ),
         buildDrawerItem(5, 'Doctor Visit Schedule', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => doctorSchedule()),
+            MaterialPageRoute(builder: (context) => const doctorSchedule()),
           );
         }, Iconsax.hospital),
         const Divider(
@@ -468,7 +468,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             Expanded(
               child: CustomDropdown(
                 label: 'Sex',
-                items: ['Male', 'Female', 'Other'],
+                items: const ['Male', 'Female', 'Other'],
                 selectedItem: selectedSex,
                 onChanged: (value) {
                   setState(() {
@@ -588,7 +588,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
             CustomDropdown(
                 label: 'Blood Group',
-                items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+                items: const ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
                 selectedItem: selectedBloodGroup,
                 onChanged: (value) {
                   setState(() {
@@ -671,7 +671,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         const SizedBox(height: 16),
         CustomDropdown(
             label: 'Sex',
-            items: ['Male', 'Female', 'Other'],
+            items: const ['Male', 'Female', 'Other'],
             selectedItem: selectedSex,
             onChanged: (value) {
               setState(() {
@@ -741,7 +741,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         const SizedBox(height: 16),
         CustomDropdown(
             label: 'Blood Group',
-            items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+            items: const ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
             selectedItem: selectedBloodGroup,
             onChanged: (value) {
               setState(() {
