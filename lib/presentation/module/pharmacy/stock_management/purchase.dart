@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase_entry.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
@@ -18,6 +19,9 @@ class Purchase extends StatefulWidget {
 }
 
 class _Purchase extends State<Purchase> {
+  TextEditingController _purchaseBillNo = TextEditingController();
+  TextEditingController _billNo = TextEditingController();
+
   final List<String> headers = [
     'Bill NO',
     'Bill Date',
@@ -26,21 +30,74 @@ class _Purchase extends State<Purchase> {
     'Due Date',
     'Action',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'Bill NO': '',
-      'Bill date': '',
-      'Distributor Name': '',
-      'Bill Amount': '',
-      'Due Date': '',
-      'Action': CustomButton(
-        label: 'Edit',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-  ];
+  List<Map<String, dynamic>> tableData = [];
+  Future<void> fetchData({String? purchaseBillNo, String? billNo}) async {
+    try {
+      CollectionReference productsCollection = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts');
+
+      Query query = productsCollection;
+      if (purchaseBillNo != null) {
+        query = query.where('purchaseBillNo', isEqualTo: purchaseBillNo);
+      } else if (billNo != null) {
+        query = query.where('billNo', isEqualTo: billNo);
+      }
+      final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        fetchedData.add({
+          'Bill NO': data['billNo']?.toString() ?? 'N/A',
+          'Bill Date': data['reportDate']?.toString() ?? 'N/A',
+          'Distributor Name': '${data['distributor'] ?? 'N/A'}'.trim(),
+          'Bill Amount': data['amount']?.toString() ?? 'N/A',
+          'Due Date': data['DueDate']?.toString() ?? 'N/A',
+          'Action':
+              TextButton(onPressed: () {}, child: CustomText(text: 'Edit')),
+        });
+      }
+
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+
+      setState(() {
+        tableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    fetchData();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _purchaseBillNo.dispose();
+    _billNo.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -79,23 +136,29 @@ class _Purchase extends State<Purchase> {
               Row(
                 children: [
                   CustomTextField(
+                    controller: _purchaseBillNo,
                     hintText: 'Purchase Bill No',
                     width: screenWidth * 0.25,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                       label: 'Search',
-                      onPressed: () {},
+                      onPressed: () {
+                        fetchData(purchaseBillNo: _purchaseBillNo.text);
+                      },
                       width: screenWidth * 0.08),
                   SizedBox(width: screenHeight * 0.2),
                   CustomTextField(
+                    controller: _billNo,
                     hintText: 'Bill No',
                     width: screenWidth * 0.25,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                       label: 'Search',
-                      onPressed: () {},
+                      onPressed: () {
+                        fetchData(billNo: _billNo.text);
+                      },
                       width: screenWidth * 0.08),
                 ],
               ),
