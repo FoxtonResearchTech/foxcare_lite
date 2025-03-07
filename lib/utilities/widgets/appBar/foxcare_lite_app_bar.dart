@@ -47,7 +47,6 @@ class FoxCareLiteAppBar extends StatelessWidget implements PreferredSizeWidget {
         },
         'Stock Management': {
           'Purchase': (context) => const Purchase(),
-          'Purchase Order': (context) => const PurchaseOrder(),
           'Stock Return': (context) => const StockReturn(),
           'Product List': (context) => const ProductList(),
           'Add Product': (context) => const AddProduct(),
@@ -71,7 +70,7 @@ class FoxCareLiteAppBar extends StatelessWidget implements PreferredSizeWidget {
           'Manage Pharmacy Information': (context) =>
               const ManagePharmacyInfo(),
           'Distributor List': (context) => const DistributorList(),
-          'Add / Delete Distributor': (context) => const AddNewDistributor(),
+          'Add Distributor': (context) => const AddNewDistributor(),
           'Profile': (context) => const Profile(),
           'Logout': (context) => LoginScreen(),
         }

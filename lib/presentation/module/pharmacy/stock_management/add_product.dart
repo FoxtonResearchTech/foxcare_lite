@@ -24,6 +24,7 @@ class _AddProduct extends State<AddProduct> {
   final TextEditingController _companyName = TextEditingController();
   final TextEditingController _referredByDoctor = TextEditingController();
   final TextEditingController _additionalInformation = TextEditingController();
+  final dateTime = DateTime.timestamp();
 
   final List<String> headers = [
     'Product Name',
@@ -33,16 +34,65 @@ class _AddProduct extends State<AddProduct> {
     'Composition',
     'Type',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'Product Name': '',
-      'HSN Code': '',
-      'Category': '',
-      'Company': '',
-      'Composition': '',
-      'Type': '',
-    },
-  ];
+  List<Map<String, dynamic>> allProducts = [];
+
+  List<Map<String, dynamic>> filteredProducts = [];
+
+  void fetchRecentProducts() async {
+    try {
+      // Get the date 30 days ago
+      DateTime thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+
+      // Fetch all products from Firestore (filtering done later)
+      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
+          await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in stockSnapshot.docs) {
+        final data = doc.data();
+
+        // Convert productAddedDate (String) to DateTime
+        DateTime? addedDate;
+        try {
+          addedDate = DateTime.parse(
+              data['productAddedDate']); // Convert String to DateTime
+        } catch (e) {
+          print("Invalid date format: ${data['productAddedDate']}");
+          continue; // Skip invalid date entries
+        }
+
+        // Check if the product was added within the last 30 days
+        if (addedDate.isAfter(thirtyDaysAgo)) {
+          fetchedData.add({
+            'Product Name': data['productName'],
+            'HSN Code': data['hsnCode'],
+            'Category': data['category'],
+            'Company': data['companyName'],
+            'Composition': data['composition'],
+            'Type': data['type'],
+          });
+        }
+      }
+
+      setState(() {
+        allProducts = fetchedData;
+        filteredProducts = List.from(allProducts);
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  String? selectedCategoryFilter;
+  String productName = '';
+  String companyName = '';
+  String hsnCode = '';
+
   List<String> distributorsNames = [];
   String? selectedType;
   String? selectedCategory;
@@ -60,6 +110,11 @@ class _AddProduct extends State<AddProduct> {
         'companyName': _companyName.text,
         'referredByDoctor': _referredByDoctor.text,
         'additionalInformation': _additionalInformation.text,
+        'productAddedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
       };
       await FirebaseFirestore.instance
           .collection('stock')
@@ -98,7 +153,6 @@ class _AddProduct extends State<AddProduct> {
       setState(() {
         distributorsNames = distributors;
       });
-      print(distributorsNames);
     } catch (e) {
       print('Error fetching distributors: $e');
     }
@@ -118,6 +172,30 @@ class _AddProduct extends State<AddProduct> {
   void initState() {
     super.initState();
     fetchDistributors();
+    fetchRecentProducts();
+    filteredProducts = List.from(allProducts);
+  }
+
+  void filterProducts() {
+    setState(() {
+      filteredProducts = allProducts.where((product) {
+        return (selectedCategoryFilter == null ||
+                selectedCategoryFilter == 'All' ||
+                product['Category'] == selectedCategoryFilter) &&
+            (productName.isEmpty ||
+                product['Product Name']!
+                    .toLowerCase()
+                    .contains(productName.toLowerCase())) &&
+            (companyName.isEmpty ||
+                product['Company']!
+                    .toLowerCase()
+                    .contains(companyName.toLowerCase())) &&
+            (hsnCode.isEmpty ||
+                product['HSN Code']!
+                    .toLowerCase()
+                    .contains(hsnCode.toLowerCase()));
+      }).toList();
+    });
   }
 
   @override
@@ -149,10 +227,20 @@ class _AddProduct extends State<AddProduct> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomTextField(
-                    hintText: 'Select Category',
-                    width: screenWidth * 0.25,
-                    icon: Icon(Icons.arrow_drop_down_sharp),
+                  CustomDropdown(
+                    label: 'Select Category',
+                    items: const [
+                      'All',
+                      'Medicine',
+                      'Equipment',
+                      'Supplements',
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedCategoryFilter = value;
+                      });
+                      filterProducts();
+                    },
                   ),
                   CustomButton(
                     label: 'Add',
@@ -346,22 +434,48 @@ class _AddProduct extends State<AddProduct> {
                   CustomTextField(
                     hintText: 'Product Name',
                     width: screenWidth * 0.20,
+                    onChanged: (value) {
+                      productName = value;
+                      filterProducts();
+                    },
                   ),
                   SizedBox(width: screenHeight * 0.045),
                   CustomTextField(
                     hintText: 'Company Name',
                     width: screenWidth * 0.20,
+                    onChanged: (value) {
+                      companyName = value;
+                      filterProducts();
+                    },
                   ),
-                  SizedBox(width: screenHeight * 0.3),
+                  SizedBox(width: screenHeight * 0.045),
                   CustomTextField(
                     hintText: 'HSN Code',
                     width: screenWidth * 0.10,
+                    onChanged: (value) {
+                      hsnCode = value;
+                      filterProducts();
+                    },
                   ),
                   SizedBox(width: screenHeight * 0.045),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: filterProducts,
+                    width: screenWidth * 0.1,
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(headers: headers, tableData: tableData),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Products Added in Last 30 days',
+                    size: screenWidth * 0.012,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              CustomDataTable(headers: headers, tableData: filteredProducts),
               SizedBox(height: screenHeight * 0.06),
             ],
           ),

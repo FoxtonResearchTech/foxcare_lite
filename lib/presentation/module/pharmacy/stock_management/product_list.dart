@@ -39,9 +39,8 @@ class _ProductListState extends State<ProductList> {
       QuerySnapshot<Map<String, dynamic>> stockSnapshot =
           await FirebaseFirestore.instance
               .collection('stock')
-              .doc('Products') // Access the 'products' document
-              .collection(
-                  'AddedProducts') // Access the 'addedproducts' subcollection
+              .doc('Products')
+              .collection('AddedProducts')
               .get();
 
       List<Map<String, dynamic>> fetchedData = [];
