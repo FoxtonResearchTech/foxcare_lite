@@ -71,19 +71,25 @@ class _DeleteProduct extends State<DeleteProduct> {
                     actions: <Widget>[
                       TextButton(
                         onPressed: () async {
-                          await FirebaseFirestore.instance
-                              .collection('stock')
-                              .doc('Products')
-                              .collection('AddedProducts')
-                              .doc(doc.id)
-                              .delete();
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('stock')
+                                .doc('Products')
+                                .collection('AddedProducts')
+                                .doc(doc.id)
+                                .delete();
 
-                          Navigator.of(context).pop(); // Close dialog
+                            Navigator.of(context).pop(); // Close dialog
 
-                          fetchData();
-                          CustomSnackBar(context,
-                              message: 'Product Deleted',
-                              backgroundColor: Colors.green);
+                            fetchData();
+                            CustomSnackBar(context,
+                                message: 'Product Deleted',
+                                backgroundColor: Colors.green);
+                          } catch (e) {
+                            CustomSnackBar(context,
+                                message: 'Product not Deleted',
+                                backgroundColor: Colors.red);
+                          }
                         },
                         child: const CustomText(text: 'Delete'),
                       ),

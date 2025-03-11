@@ -23,12 +23,12 @@ class _Purchase extends State<Purchase> {
   TextEditingController _billNo = TextEditingController();
 
   final List<String> headers = [
+    'Product Name',
     'Bill NO',
     'Bill Date',
     'Distributor Name',
     'Bill Amount',
     'Due Date',
-    'Action',
   ];
   List<Map<String, dynamic>> tableData = [];
   Future<void> fetchData({String? purchaseBillNo, String? billNo}) async {
@@ -60,13 +60,12 @@ class _Purchase extends State<Purchase> {
         final data = doc.data() as Map<String, dynamic>;
 
         fetchedData.add({
+          'Product Name': data['productName'] ?? 'N/A',
           'Bill NO': data['billNo']?.toString() ?? 'N/A',
           'Bill Date': data['reportDate']?.toString() ?? 'N/A',
           'Distributor Name': '${data['distributor'] ?? 'N/A'}'.trim(),
           'Bill Amount': data['amount']?.toString() ?? 'N/A',
           'Due Date': data['DueDate']?.toString() ?? 'N/A',
-          'Action':
-              TextButton(onPressed: () {}, child: CustomText(text: 'Edit')),
         });
       }
 

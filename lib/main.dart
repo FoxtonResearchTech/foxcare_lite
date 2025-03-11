@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/add_product.dart';
-import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/product_list.dart';
-import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase.dart';
-import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/stock_return.dart';
+import 'package:foxcare_lite/presentation/login/login.dart';
+
+import 'package:foxcare_lite/presentation/module/pharmacy/tools/distributor_list.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/tools/manage_pharmacy_info.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/tools/pharmacy_info.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/tools/profile.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -13,7 +15,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(
+    const MyApp(),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -24,6 +28,6 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: ProductList());
+        home: Profile());
   }
 }

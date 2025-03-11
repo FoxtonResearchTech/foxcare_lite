@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/op_billing.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 
 import '../../../presentation/login/login.dart';
@@ -40,7 +41,7 @@ class FoxCareLiteAppBar extends StatelessWidget implements PreferredSizeWidget {
       navigationMap: {
         'Billing': {
           'Counter Sales': (context) => const CounterSales(),
-          'OP Billings': (context) => const CounterSales(),
+          'OP Billings': (context) => const OpBilling(),
           'Bill Canceling': (context) => const CancelBill(),
           'Medicine Return': (context) => const MedicineReturn(),
           'IP Billing': (context) => const IPBilling(),

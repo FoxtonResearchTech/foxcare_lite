@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
+import 'package:intl/intl.dart';
 
 import '../../utilities/colors.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
@@ -20,6 +21,7 @@ class EmployeeRegistration extends StatefulWidget {
 class _EmployeeRegistrationState extends State<EmployeeRegistration> {
   String? positionSelectedValue;
   String? relationSelectedValue;
+  String? selectedSex;
 
   // Controllers for employee details
   final TextEditingController empCodeController = TextEditingController();
@@ -62,6 +64,8 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
   // Controllers for password
   final TextEditingController passwordController = TextEditingController();
 
+  final TextEditingController dobController = TextEditingController();
+
   bool isSameAsPermanent = true;
   bool isPostgraduate = false;
 
@@ -81,6 +85,21 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
     tempCityController.clear();
     tempStateController.clear();
     tempPinCodeController.clear();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        dobController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+      });
+    }
   }
 
   Future<void> registerEmployee() async {
@@ -113,6 +132,8 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
               'password': passwordController.text,
               'phone1': phone1Controller.text,
               'phone2': phone2Controller.text,
+              'gender': selectedSex,
+              'dob': dobController.text,
               'address': {
                 'permanent': {
                   'lane1': lane1Controller.text,
@@ -281,6 +302,33 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                             relationSelectedValue = value!;
                           });
                         },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
+
+                  Row(
+                    children: [
+                      CustomDropdown(
+                        label: 'Sex',
+                        items: const [
+                          'Male',
+                          'Female',
+                        ],
+                        selectedItem: selectedSex,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedSex = value!;
+                          });
+                        },
+                      ),
+                      SizedBox(width: screenHeight * 0.2),
+                      CustomTextField(
+                        controller: dobController,
+                        hintText: 'Date of Birth',
+                        width: screenWidth * 0.15,
+                        icon: const Icon(Icons.date_range),
+                        onTap: () => _selectDate(context),
                       ),
                     ],
                   ),

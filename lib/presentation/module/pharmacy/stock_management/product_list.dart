@@ -288,7 +288,10 @@ class _ProductListState extends State<ProductList> {
                       ),
                       actions: <Widget>[
                         TextButton(
-                          onPressed: () => updateProduct(docId),
+                          onPressed: () {
+                            updateProduct(docId);
+                            Navigator.of(context).pop();
+                          },
                           child: CustomText(
                             text: 'Submit ',
                             color: AppColors.secondaryColor,
@@ -327,6 +330,7 @@ class _ProductListState extends State<ProductList> {
   void initState() {
     super.initState();
     fetchData();
+    fetchDistributors();
 
     filteredProducts = List.from(allProducts);
   }
