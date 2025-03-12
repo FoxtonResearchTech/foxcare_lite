@@ -15,7 +15,7 @@ import '../reports/pending_payment_report.dart';
 import '../reports/product_wise_statement.dart';
 import '../reports/stock_return_statement.dart';
 import '../stock_management/add_product.dart';
-import '../stock_management/cancel_bill.dart';
+import 'cancel_bill.dart';
 import '../stock_management/damage_return.dart';
 import '../stock_management/delete_product.dart';
 import '../stock_management/expiry_return.dart';

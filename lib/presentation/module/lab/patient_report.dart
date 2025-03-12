@@ -88,7 +88,6 @@ class _PatientReport extends State<PatientReport> {
           .collection('patients')
           .doc(widget.patientID);
 
-      // Store test descriptions and values in Firestore
       for (var row in tableData1) {
         final testDescription = row['Test Descriptions'];
         final value = row['Values'];

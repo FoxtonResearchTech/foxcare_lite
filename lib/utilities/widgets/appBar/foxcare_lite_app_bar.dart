@@ -14,7 +14,7 @@ import '../../../presentation/module/pharmacy/reports/pending_payment_report.dar
 import '../../../presentation/module/pharmacy/reports/product_wise_statement.dart';
 import '../../../presentation/module/pharmacy/reports/stock_return_statement.dart';
 import '../../../presentation/module/pharmacy/stock_management/add_product.dart';
-import '../../../presentation/module/pharmacy/stock_management/cancel_bill.dart';
+import '../../../presentation/module/pharmacy/billings/cancel_bill.dart';
 import '../../../presentation/module/pharmacy/stock_management/damage_return.dart';
 import '../../../presentation/module/pharmacy/stock_management/delete_product.dart';
 import '../../../presentation/module/pharmacy/stock_management/expiry_return.dart';

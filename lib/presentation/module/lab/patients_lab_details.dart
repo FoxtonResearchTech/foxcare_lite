@@ -58,9 +58,9 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
       // Query to fetch patients with non-empty Medications field
       final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
           .collection('patients')
-          .where('Medications',
+          .where('Examination',
               isNotEqualTo: null) // Ensures Medications exists
-          .where('Medications',
+          .where('Examination',
               isNotEqualTo: '') // Ensures Medications is not empty
           .get();
 
@@ -98,7 +98,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           'Address': data['address1'] ?? 'N/A',
           'PinCode': data['pincode'] ?? 'N/A',
           'Status': data['status'] ?? 'N/A',
-          'List of Tests': data['Medications'] ?? 'N/A',
+          'List of Tests': data['Examination'] ?? 'N/A',
           'Action': TextButton(
               onPressed: () {
                 Navigator.push(
@@ -113,7 +113,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                       sex: data['sex'] ?? 'N/A',
                       place: data['state'] ?? 'N/A',
                       dob: data['dob'] ?? 'N/A',
-                      medication: data['Medications'] ?? 'N/A',
+                      medication: data['Examination'] ?? 'N/A',
                       address: data['address1'] ?? 'N/A',
                       pincode: data['pincode'] ?? 'N/A',
                       primaryInfo: data['otherComments'] ?? 'N/A',

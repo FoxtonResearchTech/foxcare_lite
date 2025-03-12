@@ -153,7 +153,6 @@ class _DoctorRxList extends State<DoctorRxList> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 

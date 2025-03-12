@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
+import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
+import 'package:foxcare_lite/presentation/module/doctor/patient_view.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/counter_sales.dart';
 
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/distributor_list.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/manage_pharmacy_info.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/pharmacy_info.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/profile.dart';
+import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -25,9 +31,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: Profile());
+        home: DoctorRxList());
   }
 }

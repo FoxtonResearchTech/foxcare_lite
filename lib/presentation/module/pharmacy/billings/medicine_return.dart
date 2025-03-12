@@ -222,19 +222,20 @@ class _MedicineReturn extends State<MedicineReturn> {
               Container(
                 padding: EdgeInsets.only(right: screenWidth * 0.08),
                 width: screenWidth,
-                height: screenHeight * 0.025,
+                height: screenHeight * 0.028,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.black,
                     width: 0.5,
                   ),
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     CustomText(
                       text: 'Total : ',
+                      size: screenWidth * 0.0085,
                     )
                   ],
                 ),

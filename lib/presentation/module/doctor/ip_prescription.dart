@@ -156,12 +156,23 @@ class _IpPrescription extends State<IpPrescription> {
   ];
   List<String> _filteredItems = [];
   List<String> _selectedItems = [];
+
   String _searchQuery = '';
   bool _isSwitched = false;
+  bool isMed = false;
+  bool isLabTest = false;
+  List<String> medicineNames = [];
+  List<String> _filteredMedicine = [];
+  List<String> _selectedMedicine = [];
+  String _searchMedicine = '';
+
   @override
   void initState() {
     super.initState();
     _filteredItems = _allItems;
+    _filteredMedicine = medicineNames;
+
+    fetchMedicine();
   }
 
   @override
@@ -173,6 +184,34 @@ class _IpPrescription extends State<IpPrescription> {
     _notesController.dispose();
     _diagnosisSignsController.dispose();
     _symptomsController.dispose();
+  }
+
+  Future<void> fetchMedicine() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .where('category', isEqualTo: 'Medicine')
+              .get();
+
+      setState(() {
+        medicineNames = distributorsSnapshot.docs
+            .map((doc) => doc['productName'].toString())
+            .toList();
+      });
+      print(medicineNames);
+    } catch (e) {
+      print('Error fetching Medicine: $e');
+    }
+  }
+
+  void isMedication(String value) {
+    setState(() {
+      isMed = value == 'Medication';
+      isLabTest = value == 'Examination';
+    });
   }
 
   Future<void> _onToggle(bool value) async {
@@ -202,6 +241,15 @@ class _IpPrescription extends State<IpPrescription> {
           message: 'Patients Marked as OP',
           backgroundColor: AppColors.secondaryColor);
     }
+  }
+
+  void _filterMedicine(String query) {
+    setState(() {
+      _searchMedicine = query;
+      _filteredMedicine = medicineNames
+          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
   void _filterItems(String query) {
@@ -254,7 +302,8 @@ class _IpPrescription extends State<IpPrescription> {
             dateTime.minute.toString().padLeft(2, '0') +
             '-' +
             dateTime.second.toString().padLeft(2, '0'),
-        'Medications': _selectedItems,
+        'Medication': _selectedMedicine,
+        'Examination': _selectedItems,
         'proceedTo': selectedValue,
         'ipAdmission': selectedIPAdmissionValue,
         'basicDiagnosis': {
@@ -312,16 +361,16 @@ class _IpPrescription extends State<IpPrescription> {
                     text: 'Dr. Kathiresan',
                     size: screenWidth * 0.02,
                   ),
-                  SizedBox(width: screenWidth * 0.47),
-                  CustomText(text: 'OP Number'),
-                  SizedBox(width: screenWidth * 0.01),
-                  Switch(
-                    activeColor: AppColors.secondaryColor,
-                    value: _isSwitched,
-                    onChanged: _onToggle,
-                  ),
-                  SizedBox(width: screenWidth * 0.01),
-                  CustomText(text: 'IP Number'),
+                  // SizedBox(width: screenWidth * 0.47),
+                  // CustomText(text: 'OP Number'),
+                  // SizedBox(width: screenWidth * 0.01),
+                  // Switch(
+                  //   activeColor: AppColors.secondaryColor,
+                  //   value: _isSwitched,
+                  //   onChanged: _onToggle,
+                  // ),
+                  // SizedBox(width: screenWidth * 0.01),
+                  // CustomText(text: 'IP Number'),
                 ],
               ),
               const SizedBox(
@@ -504,92 +553,203 @@ class _IpPrescription extends State<IpPrescription> {
               const SizedBox(
                 height: 35,
               ),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                SizedBox(
-                  width: 250,
-                  child: CustomDropdown(
-                    label: 'Proceed To',
-                    items: [
-                      'Medication',
-                      'Examination',
-                      'Appointment',
-                      'Investigation'
-                    ],
-                    selectedItem: selectedValue,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedValue = value!;
-                      });
-                    },
+              Row(
+                children: [
+                  SizedBox(
+                    width: 250,
+                    child: CustomDropdown(
+                      label: 'Proceed To',
+                      items: [
+                        'Medication',
+                        'Examination',
+                        'Appointment',
+                        'Investigation'
+                      ],
+                      selectedItem: selectedValue,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedValue = value!;
+                          isMedication(selectedValue!);
+                        });
+                      },
+                    ),
                   ),
-                ),
-              ]),
+                  SizedBox(width: screenWidth * 0.05),
+                  if (isMed)
+                    CustomButton(
+                      label: 'Add Medicines',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return StatefulBuilder(
+                              builder: (context, setState) {
+                                // ✅ Ensures setState works inside dialog
+                                return AlertDialog(
+                                  title: Text('Add Medicines'),
+                                  content: SizedBox(
+                                    width: screenWidth * 0.5,
+                                    height: screenHeight * 0.5,
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Wrap(
+                                            spacing: 8.0,
+                                            runSpacing: 4.0,
+                                            children: _selectedMedicine
+                                                .map((item) => Chip(
+                                                      shadowColor: Colors.white,
+                                                      backgroundColor: AppColors
+                                                          .secondaryColor,
+                                                      label: CustomText(
+                                                          text: item,
+                                                          color: Colors.white),
+                                                      deleteIcon: const Icon(
+                                                          Icons.close,
+                                                          color: Colors.white),
+                                                      onDeleted: () {
+                                                        setState(() {
+                                                          // ✅ Updates UI inside dialog
+                                                          _selectedMedicine
+                                                              .remove(item);
+                                                        });
+                                                      },
+                                                    ))
+                                                .toList(),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          // Search field
+                                          CustomTextField(
+                                            onChanged: (query) {
+                                              setState(() {
+                                                if (query.isEmpty) {
+                                                  _filteredMedicine =
+                                                      List.from(medicineNames);
+                                                } else {
+                                                  _filteredMedicine =
+                                                      medicineNames
+                                                          .where((item) => item
+                                                              .toLowerCase()
+                                                              .contains(query
+                                                                  .toLowerCase()))
+                                                          .toList();
+                                                }
+                                              });
+                                            },
+                                            hintText: 'Search Medicine',
+                                            width: screenWidth * 0.8,
+                                            verticalSize: screenHeight * 0.03,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          // ListView inside a SizedBox with fixed height
+                                          SizedBox(
+                                            height: screenHeight *
+                                                0.3, // Adjust height as needed
+                                            child: ListView.builder(
+                                              itemCount:
+                                                  _filteredMedicine.length,
+                                              itemBuilder: (context, index) {
+                                                final item =
+                                                    _filteredMedicine[index];
+                                                return ListTile(
+                                                  title: Text(item),
+                                                  onTap: () {
+                                                    if (!_selectedMedicine
+                                                        .contains(item)) {
+                                                      setState(() {
+                                                        _selectedMedicine
+                                                            .add(item);
+                                                      });
+                                                    }
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                      width: screenWidth * 0.2,
+                      height: screenHeight * 0.05,
+                    ),
+                ],
+              ),
               const SizedBox(
                 height: 35,
               ),
-              Container(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 8.0,
-                      runSpacing: 4.0,
-                      children: _selectedItems
-                          .map((item) => Chip(
-                                shadowColor: Colors.white,
-                                backgroundColor: AppColors.secondaryColor,
-                                label: CustomText(
-                                  text: item,
-                                  color: Colors.white,
-                                ),
-                                deleteIcon: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                ),
-                                onDeleted: () {
-                                  // Remove item from selected items
-                                  setState(() {
-                                    _selectedItems.remove(item);
-                                  });
-                                },
-                              ))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 20),
-                    // Search field
-                    CustomTextField(
-                      onChanged: _filterItems,
-                      hintText: 'Search Medications',
-                      width: screenWidth * 0.9,
-                      verticalSize: screenHeight * 0.03,
-                    ),
-                    const SizedBox(height: 10),
-                    // ListView inside a SizedBox with fixed height
-                    SizedBox(
-                      height: screenHeight *
-                          0.3, // Adjust height based on your layout
-                      child: ListView.builder(
-                        itemCount: _filteredItems.length,
-                        itemBuilder: (context, index) {
-                          final item = _filteredItems[index];
-                          return ListTile(
-                            title: Text(item),
-                            onTap: () {
-                              // Add item to selected items
-                              if (!_selectedItems.contains(item)) {
-                                setState(() {
-                                  _selectedItems.add(item);
-                                });
-                              }
-                              print('Selected: $item');
-                            },
-                          );
-                        },
+              isLabTest
+                  ? Container(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 4.0,
+                            children: _selectedItems
+                                .map((item) => Chip(
+                                      shadowColor: Colors.white,
+                                      backgroundColor: AppColors.secondaryColor,
+                                      label: CustomText(
+                                        text: item,
+                                        color: Colors.white,
+                                      ),
+                                      deleteIcon: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                      ),
+                                      onDeleted: () {
+                                        // Remove item from selected items
+                                        setState(() {
+                                          _selectedItems.remove(item);
+                                        });
+                                      },
+                                    ))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          // Search field
+                          CustomTextField(
+                            onChanged: _filterItems,
+                            hintText: 'Search Tests',
+                            width: screenWidth * 0.8,
+                            verticalSize: screenHeight * 0.03,
+                          ),
+                          const SizedBox(height: 10),
+                          // ListView inside a SizedBox with fixed height
+                          SizedBox(
+                            height: screenHeight *
+                                0.3, // Adjust height based on your layout
+                            child: ListView.builder(
+                              itemCount: _filteredItems.length,
+                              itemBuilder: (context, index) {
+                                final item = _filteredItems[index];
+                                return ListTile(
+                                  title: Text(item),
+                                  onTap: () {
+                                    // Add item to selected items
+                                    if (!_selectedItems.contains(item)) {
+                                      setState(() {
+                                        _selectedItems.add(item);
+                                      });
+                                    }
+                                    print('Selected: $item');
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    )
+                  : SizedBox(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
