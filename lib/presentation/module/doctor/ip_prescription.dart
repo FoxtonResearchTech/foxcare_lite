@@ -193,15 +193,21 @@ class _IpPrescription extends State<IpPrescription> {
               .collection('stock')
               .doc('Products')
               .collection('AddedProducts')
-              .where('category', isEqualTo: 'Medicine')
               .get();
 
+      List<String> validMedicines = [];
+
+      for (var doc in distributorsSnapshot.docs) {
+        Map<String, dynamic> data = doc.data();
+
+        if (data.containsKey('mrp') && (data['quantity'] ?? 0) > 0) {
+          validMedicines.add(data['productName'].toString());
+        }
+      }
+
       setState(() {
-        medicineNames = distributorsSnapshot.docs
-            .map((doc) => doc['productName'].toString())
-            .toList();
+        medicineNames = validMedicines;
       });
-      print(medicineNames);
     } catch (e) {
       print('Error fetching Medicine: $e');
     }

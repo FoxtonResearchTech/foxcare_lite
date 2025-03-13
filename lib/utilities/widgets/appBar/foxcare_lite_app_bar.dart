@@ -44,7 +44,7 @@ class FoxCareLiteAppBar extends StatelessWidget implements PreferredSizeWidget {
           'OP Billings': (context) => const OpBilling(),
           'Bill Canceling': (context) => const CancelBill(),
           'Medicine Return': (context) => const MedicineReturn(),
-          'IP Billing': (context) => const IPBilling(),
+          'IP Billing': (context) => const IpBilling(),
         },
         'Stock Management': {
           'Purchase': (context) => const Purchase(),

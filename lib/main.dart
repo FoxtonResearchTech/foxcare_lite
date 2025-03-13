@@ -6,6 +6,8 @@ import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_view.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/counter_sales.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/ip_billing.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/op_billing.dart';
 
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/distributor_list.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/manage_pharmacy_info.dart';
@@ -34,6 +36,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: DoctorRxList());
+        home: OpBilling());
   }
 }
