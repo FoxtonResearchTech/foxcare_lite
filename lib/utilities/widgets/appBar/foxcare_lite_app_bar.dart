@@ -56,7 +56,6 @@ class FoxCareLiteAppBar extends StatelessWidget implements PreferredSizeWidget {
           'Expiry Return': (context) => const ExpiryReturn(),
         },
         'Reports': {
-          'Stock Statement': (context) => const StockReturnStatement(),
           'Party Wise Statement': (context) => const PartyWiseStatement(),
           'Product Wise Statement': (context) => const ProductWiseStatement(),
           'Non Moving Statement': (context) => const NonMovingStock(),

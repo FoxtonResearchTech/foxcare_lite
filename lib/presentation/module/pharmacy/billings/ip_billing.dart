@@ -240,6 +240,54 @@ class _IpBilling extends State<IpBilling> {
       };
 
       await billingRef.set(billingData);
+      for (var product in tableData) {
+        String productName = product['Product Name'];
+        String batch = product['Batch'];
+        String hsn = product['HSN'];
+
+        double Quantity = double.tryParse(product['Quantity'].toString()) ?? 0;
+
+        print('Return Quantity: $Quantity');
+
+        if (Quantity > 0) {
+          QuerySnapshot<Map<String, dynamic>> productSnapshot =
+              await FirebaseFirestore.instance
+                  .collection('stock')
+                  .doc('Products')
+                  .collection('AddedProducts')
+                  .where('productName', isEqualTo: productName)
+                  .where('batchNumber', isEqualTo: batch)
+                  .where('hsnCode', isEqualTo: hsn)
+                  .get();
+
+          if (productSnapshot.docs.isEmpty) {
+            print(
+                'No matching product found for $productName, Batch: $batch, HSN: $hsn');
+          } else {
+            print('Found ${productSnapshot.docs.length} matching products.');
+
+            for (var doc in productSnapshot.docs) {
+              double currentQuantity =
+                  double.tryParse(doc['quantity'].toString()) ?? 0;
+
+              double updatedQuantity =
+                  (currentQuantity - Quantity).clamp(0, double.infinity);
+
+              print(
+                  'Current Quantity: $currentQuantity, Updated Quantity: $updatedQuantity');
+
+              await FirebaseFirestore.instance
+                  .collection('stock')
+                  .doc('Products')
+                  .collection('AddedProducts')
+                  .doc(doc.id)
+                  .update({
+                'quantity': updatedQuantity.toString(),
+              });
+            }
+          }
+        }
+      }
 
       CustomSnackBar(context,
           message: 'Billing data submitted successfully',

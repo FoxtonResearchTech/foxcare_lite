@@ -5,6 +5,7 @@ import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_view.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/cancel_bill.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/counter_sales.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/medicine_return.dart';
@@ -37,9 +38,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: Purchase());
+        home: CancelBill());
   }
 }
