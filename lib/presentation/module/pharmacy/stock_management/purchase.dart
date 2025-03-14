@@ -23,7 +23,6 @@ class _Purchase extends State<Purchase> {
   TextEditingController _billNo = TextEditingController();
 
   final List<String> headers = [
-    'Product Name',
     'Bill NO',
     'Bill Date',
     'Distributor Name',
@@ -36,7 +35,7 @@ class _Purchase extends State<Purchase> {
       CollectionReference productsCollection = FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
-          .collection('AddedProducts');
+          .collection('PurchaseEntry');
 
       Query query = productsCollection;
       if (purchaseBillNo != null) {
@@ -60,7 +59,6 @@ class _Purchase extends State<Purchase> {
         final data = doc.data() as Map<String, dynamic>;
 
         fetchedData.add({
-          'Product Name': data['productName'] ?? 'N/A',
           'Bill NO': data['billNo']?.toString() ?? 'N/A',
           'Bill Date': data['reportDate']?.toString() ?? 'N/A',
           'Distributor Name': '${data['distributor'] ?? 'N/A'}'.trim(),
@@ -69,15 +67,10 @@ class _Purchase extends State<Purchase> {
         });
       }
 
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
       setState(() {
         tableData = fetchedData;
       });
+      print(tableData);
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -117,7 +110,7 @@ class _Purchase extends State<Purchase> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const CustomText(text: 'Bill Approve List '),
+                  const CustomText(text: 'Purchase'),
                   CustomButton(
                     label: 'Purchase Entry',
                     onPressed: () {
@@ -163,7 +156,7 @@ class _Purchase extends State<Purchase> {
               ),
               SizedBox(height: screenHeight * 0.08),
               const Row(
-                children: [CustomText(text: 'Add Product List')],
+                children: [CustomText(text: 'Bill List')],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(

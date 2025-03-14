@@ -34,7 +34,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     'MRP',
     'Price',
     'GST',
-    'Amount'
+    'Amount',
+    'Product Total',
   ];
 
   List<Map<String, dynamic>> allProducts = [];
@@ -80,6 +81,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
           'Price': '',
           'GST': '',
           'Amount': '',
+          'Product Total': '',
           'Distributor': data['distributor'] ?? ''
         };
       }).toList();
@@ -114,7 +116,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
               'MRP',
               'Price',
               'GST',
-              'Amount'
+              'Amount',
+              'Product Total',
             ].contains(header))
               header: TextEditingController(text: row[header]?.toString() ?? '')
         };
@@ -271,6 +274,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                     setState(() {
                       filteredProducts[rowIndex][header] = value;
                       controllers[rowIndex][header]?.text = value;
+
                       if (header == 'Price' || header == 'GST') {
                         double price = double.tryParse(
                                 controllers[rowIndex]['Price']?.text ?? '0') ??
@@ -287,10 +291,28 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                         filteredProducts[rowIndex]['Amount'] =
                             amount.toStringAsFixed(2);
                       }
+
+                      // Calculate Product Total = Quantity * Amount
+                      double quantity = double.tryParse(
+                              filteredProducts[rowIndex]['Quantity'] ?? '0') ??
+                          0;
+                      double amount = double.tryParse(
+                              filteredProducts[rowIndex]['Amount'] ?? '0') ??
+                          0;
+                      double productTotal = quantity * amount;
+
+                      controllers[rowIndex]['Product Total']?.text =
+                          productTotal.toStringAsFixed(2);
+                      filteredProducts[rowIndex]['Product Total'] =
+                          productTotal.toStringAsFixed(2);
+
+                      // Update totalAmount
                       totalAmount = filteredProducts.fold(
                         0.0,
                         (sum, item) =>
-                            sum + (double.tryParse(item['Amount'] ?? '0') ?? 0),
+                            sum +
+                            (double.tryParse(item['Product Total'] ?? '0') ??
+                                0),
                       );
                     });
                   },
@@ -307,7 +329,9 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                   child: Row(
                     children: [
                       SizedBox(width: screenWidth * 0.73),
-                      CustomText(text: 'Total :    $totalAmount'),
+                      CustomText(
+                          text:
+                              'Grand Total :    ${totalAmount.toStringAsFixed(2)}'),
                     ],
                   ),
                 ),
@@ -330,7 +354,6 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                                 filteredProducts[i]['Distributor'];
                             String amount = filteredProducts[i]['Amount'];
 
-                            // Find the document reference for the specific product
                             QuerySnapshot<Map<String, dynamic>> querySnapshot =
                                 await FirebaseFirestore.instance
                                     .collection('stock')
@@ -362,6 +385,19 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                               });
                             }
                           }
+                          await FirebaseFirestore.instance
+                              .collection('stock')
+                              .doc('Products')
+                              .collection('PurchaseEntry')
+                              .doc()
+                              .set({
+                            'reportDate': _dateController.text ?? '',
+                            'billNo': _billNo.text ?? '',
+                            'entryNo': _entryNo.text ?? '',
+                            'amount': totalAmount.toStringAsFixed(2) ?? '',
+                            'entryProducts': filteredProducts,
+                            'distributor': selectedDistributor,
+                          });
                           updateEntryNo();
                           fetchEntryNo();
                           CustomSnackBar(context,

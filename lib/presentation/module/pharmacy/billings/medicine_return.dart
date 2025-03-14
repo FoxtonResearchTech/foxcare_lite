@@ -18,6 +18,12 @@ class MedicineReturn extends StatefulWidget {
 }
 
 class _MedicineReturn extends State<MedicineReturn> {
+  TextEditingController _dateController = TextEditingController();
+  TextEditingController _opNumber = TextEditingController();
+  TextEditingController patientName = TextEditingController();
+  TextEditingController phoneNumber = TextEditingController();
+  TextEditingController billNo = TextEditingController();
+
   final List<String> headers1 = [
     'Bill NO',
     'Patient Name',
@@ -26,112 +32,20 @@ class _MedicineReturn extends State<MedicineReturn> {
     'Bill Date',
     'Action',
   ];
-  final List<Map<String, dynamic>> tableData1 = [
-    {
-      'Bill NO': '001',
-      'Patient Name': 'Ramesh',
-      'OP NO': '007',
-      'Doctor Name': 'DR.Nandhu',
-      'Bill Date': '17/24',
-      'Action': 'Return',
-    },
-    {
-      'Bill NO': '001',
-      'Patient Name': 'Ramesh',
-      'OP NO': '007',
-      'Doctor Name': 'DR.Nandhu',
-      'Bill Date': '17/24',
-      'Action': 'Return',
-    },
-    {
-      'Bill NO': '001',
-      'Patient Name': 'Ramesh',
-      'OP NO': '007',
-      'Doctor Name': 'DR.Nandhu',
-      'Bill Date': '17/24',
-      'Action': 'Return',
-    },
-    {
-      'Bill NO': '001',
-      'Patient Name': 'Ramesh',
-      'OP NO': '007',
-      'Doctor Name': 'DR.Nandhu',
-      'Bill Date': '17/24',
-      'Action': 'Return',
-    },
-  ];
+  List<Map<String, dynamic>> tableData1 = [];
   final List<String> headers2 = [
-    'Patient Name',
+    'Product Name',
     'Type',
     'Batch',
     'EXP',
     'HSN',
     'MRP',
-    'OT',
-    'Discount',
     'Price',
     'GST',
     'Returning Qut',
     'Returning Cost'
   ];
-  final List<Map<String, dynamic>> tableData2 = [
-    {
-      'Patient Name': '',
-      'Type': '',
-      'Batch': '',
-      'EXP': '',
-      'HSN': '',
-      'MRP': '',
-      'OT': '',
-      'Discount': '',
-      'Price': '',
-      'GST': '',
-      'Returning Qut': '',
-      'Returning Cost': '',
-    },
-    {
-      'Patient Name': '',
-      'Type': '',
-      'Batch': '',
-      'EXP': '',
-      'HSN': '',
-      'MRP': '',
-      'OT': '',
-      'Discount': '',
-      'Price': '',
-      'GST': '',
-      'Returning Qut': '',
-      'Returning Cost': '',
-    },
-    {
-      'Patient Name': '',
-      'Type': '',
-      'Batch': '',
-      'EXP': '',
-      'HSN': '',
-      'MRP': '',
-      'OT': '',
-      'Discount': '',
-      'Price': '',
-      'GST': '',
-      'Returning Qut': '',
-      'Returning Cost': '',
-    },
-    {
-      'Patient Name': '',
-      'Type': '',
-      'Batch': '',
-      'EXP': '',
-      'HSN': '',
-      'MRP': '',
-      'OT': '',
-      'Discount': '',
-      'Price': '',
-      'GST': '',
-      'Returning Qut': '',
-      'Returning Cost': '',
-    },
-  ];
+  List<Map<String, dynamic>> tableData2 = [];
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -166,38 +80,6 @@ class _MedicineReturn extends State<MedicineReturn> {
               Row(
                 children: [
                   CustomTextField(
-                      hintText: 'OP Number', width: screenWidth * 0.25),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
-                tableData: tableData1,
-                headers: headers1,
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                    hintText: 'Bill No',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                    hintText: 'Date',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
                       hintText: 'Patient Name', width: screenWidth * 0.25),
                   SizedBox(width: screenHeight * 0.5),
                   CustomTextField(
@@ -214,6 +96,10 @@ class _MedicineReturn extends State<MedicineReturn> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
+              CustomDataTable(
+                tableData: tableData1,
+                headers: headers1,
+              ),
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
                 tableData: tableData2,

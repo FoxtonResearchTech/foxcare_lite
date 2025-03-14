@@ -111,9 +111,11 @@ class _StockReturn extends State<StockReturn> {
         final data = doc.data();
         fetchedData.add({
           'Product Name': data['productName'] ?? 'N/A',
-          'Batch': data['batch'] ?? 'N/A',
+          'Batch': data['batchNumber'] ?? 'N/A',
           'Expiry': data['expiry'] ?? 'N/A',
           'Quantity': data['quantity'] ?? 'N/A',
+          'HSN': data['hsnCode'] ?? 'N/A',
+          'Return Quantity': '',
           'Free': data['free'] ?? 'N/A',
           'MRP': data['mrp'] ?? 'N/A',
           'Price': data['price'] ?? 'N/A',
@@ -123,6 +125,7 @@ class _StockReturn extends State<StockReturn> {
           'HSN Code': data['hsnCode'],
           'Category': data['category'],
           'Company': data['companyName'],
+          'Return Amount': '',
         });
       }
 
@@ -143,7 +146,6 @@ class _StockReturn extends State<StockReturn> {
     }
 
     try {
-      // Create stock return data
       Map<String, dynamic> stockReturnData = {
         'returnNo': returnNo,
         'distributor': selectedDistributor,
@@ -167,11 +169,72 @@ class _StockReturn extends State<StockReturn> {
           .collection('stock')
           .doc('Products')
           .collection('StockReturn')
-          .doc(returnNo) // Using return number as document ID
+          .doc(returnNo)
           .set(stockReturnData);
 
+      for (var product in filteredProducts) {
+        String productName = product['Product Name'];
+        String batch = product['Batch'];
+        String hsn = product['HSN Code'];
+
+        double returnQuantity =
+            double.tryParse(product['Return Quantity'].toString()) ?? 0;
+        double returnAmount =
+            double.tryParse(product['Return Amount'].toString()) ?? 0;
+
+        print('Return Quantity: $returnQuantity');
+        print('Return Amount: $returnAmount');
+
+        if (returnQuantity > 0) {
+          QuerySnapshot<Map<String, dynamic>> productSnapshot =
+              await FirebaseFirestore.instance
+                  .collection('stock')
+                  .doc('Products')
+                  .collection('AddedProducts')
+                  .where('productName', isEqualTo: productName)
+                  .where('batchNumber', isEqualTo: batch)
+                  .where('hsnCode', isEqualTo: hsn)
+                  .get();
+
+          if (productSnapshot.docs.isEmpty) {
+            print(
+                'No matching product found for $productName, Batch: $batch, HSN: $hsn');
+          } else {
+            print('Found ${productSnapshot.docs.length} matching products.');
+
+            for (var doc in productSnapshot.docs) {
+              double currentQuantity =
+                  double.tryParse(doc['quantity'].toString()) ?? 0;
+              double currentAmount =
+                  double.tryParse(doc['amount'].toString()) ?? 0;
+
+              double updatedQuantity =
+                  (currentQuantity - returnQuantity).clamp(0, double.infinity);
+              double updatedAmount =
+                  (currentAmount - returnAmount).clamp(0, double.infinity);
+              String formattedAmount = updatedAmount.toStringAsFixed(2);
+
+              print(
+                  'Current Quantity: $currentQuantity, Updated Quantity: $updatedQuantity');
+              print(
+                  'Current Amount: $currentAmount, Updated Amount: $updatedAmount');
+
+              await FirebaseFirestore.instance
+                  .collection('stock')
+                  .doc('Products')
+                  .collection('AddedProducts')
+                  .doc(doc.id)
+                  .update({
+                'quantity': updatedQuantity.toString(),
+                // 'amount': formattedAmount.toString()
+              });
+            }
+          }
+        }
+      }
+
       CustomSnackBar(context,
-          message: 'Stock return submitted successfully',
+          message: 'Stock return submitted successfully and stock updated',
           backgroundColor: Colors.green);
     } catch (e) {
       CustomSnackBar(context,
@@ -188,6 +251,22 @@ class _StockReturn extends State<StockReturn> {
     generateNumericUid();
 
     filteredProducts = List.from(allProducts);
+  }
+
+  void updateReturnAmount(int index, String returnQty) {
+    setState(() {
+      double quantity =
+          double.tryParse(filteredProducts[index]['Quantity'].toString()) ?? 1;
+      double amount =
+          double.tryParse(filteredProducts[index]['Amount'].toString()) ?? 0;
+      double returnQuantity = double.tryParse(returnQty) ?? 0;
+
+      double returnAmount = (amount / quantity) * returnQuantity;
+
+      filteredProducts[index]['Return Quantity'] = returnQuantity.toString();
+      filteredProducts[index]['Return Amount'] =
+          returnAmount.toStringAsFixed(2);
+    });
   }
 
   @override
@@ -237,11 +316,13 @@ class _StockReturn extends State<StockReturn> {
     'Batch',
     'Expiry',
     'Quantity',
+    'Return Quantity',
     'Free',
     'MRP',
     'Price',
     'Tax',
     'Amount',
+    'Return Amount',
   ];
 
   @override
@@ -464,7 +545,23 @@ class _StockReturn extends State<StockReturn> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(headers: headers, tableData: filteredProducts),
+              if (filteredProducts.isNotEmpty || allProducts.isNotEmpty) ...[
+                CustomDataTable(
+                  headers: headers,
+                  tableData: filteredProducts,
+                  editableColumns: ['Return Quantity'],
+                  onValueChanged: (index, column, value) {
+                    setState(
+                      () {
+                        if (column == 'Return Quantity') {
+                          filteredProducts[index]['Return Quantity'] = value;
+                          updateReturnAmount(index, value);
+                        }
+                      },
+                    );
+                  },
+                ),
+              ],
               SizedBox(height: screenHeight * 0.04),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

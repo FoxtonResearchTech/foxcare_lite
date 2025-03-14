@@ -7,7 +7,11 @@ import 'package:foxcare_lite/presentation/module/doctor/patient_view.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/counter_sales.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/ip_billing.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/op_billing.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase_entry.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/stock_return.dart';
 
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/distributor_list.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/tools/manage_pharmacy_info.dart';
@@ -36,6 +40,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: OpBilling());
+        home: Purchase());
   }
 }
