@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/module/pharmacy/billings/counter_sales
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/ip_billing.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/medicine_return.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/op_billing.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/reports/stock_return_statement.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purchase_entry.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/stock_return.dart';
@@ -38,9 +39,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: CancelBill());
+        home: StockReturn());
   }
 }

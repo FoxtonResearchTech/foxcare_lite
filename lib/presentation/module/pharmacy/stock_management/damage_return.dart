@@ -42,11 +42,15 @@ class _DamageReturn extends State<DamageReturn> {
   String hsnCode = '';
   String? selectedDistributor;
   String returnNo = '';
+  bool isLoading = false;
+  double totalAmount = 0.0;
 
   List<Map<String, dynamic>> allProducts = [];
   List<String> distributorsNames = [];
 
   List<Map<String, dynamic>> filteredProducts = [];
+  List<Map<String, dynamic>> tableData2 = [];
+
   String generateNumericUid() {
     var random = Random();
     returnNo = 'DamageReturnNo' +
@@ -85,7 +89,6 @@ class _DamageReturn extends State<DamageReturn> {
             .map((doc) => doc['distributorName'].toString())
             .toList();
 
-        // Store distributor details
         distributorsDetails = {
           for (var doc in distributorsSnapshot.docs)
             doc['distributorName']: doc.data(),
@@ -94,6 +97,15 @@ class _DamageReturn extends State<DamageReturn> {
     } catch (e) {
       print('Error fetching distributors: $e');
     }
+  }
+
+  void calculateTotals() {
+    totalAmount = tableData2.fold(
+      0.0,
+      (sum, item) =>
+          sum +
+          (double.tryParse(item['Return Amount']?.toString() ?? '0') ?? 0),
+    );
   }
 
   Future<void> fetchData() async {
@@ -115,7 +127,6 @@ class _DamageReturn extends State<DamageReturn> {
           'Expiry': data['expiry'] ?? 'N/A',
           'Quantity': data['quantity'] ?? 'N/A',
           'HSN': data['hsnCode'] ?? 'N/A',
-          'Return Quantity': '',
           'Free': data['free'] ?? 'N/A',
           'MRP': data['mrp'] ?? 'N/A',
           'Price': data['price'] ?? 'N/A',
@@ -125,20 +136,52 @@ class _DamageReturn extends State<DamageReturn> {
           'HSN Code': data['hsnCode'],
           'Category': data['category'],
           'Company': data['companyName'],
-          'Return Amount': '',
+          'Action': TextButton(
+            onPressed: () async {
+              setState(() {
+                isLoading = true;
+              });
+
+              await Future.delayed(const Duration(seconds: 1));
+
+              setState(() {
+                tableData2.add({
+                  'Product Name': data['productName'] ?? 'N/A',
+                  'Batch': data['batchNumber'] ?? 'N/A',
+                  'Expiry': data['expiry'] ?? 'N/A',
+                  'Quantity': data['quantity'] ?? 'N/A',
+                  'HSN': data['hsnCode'] ?? 'N/A',
+                  'Return Quantity': '',
+                  'Free': data['free'] ?? 'N/A',
+                  'MRP': data['mrp'] ?? 'N/A',
+                  'Price': data['price'] ?? 'N/A',
+                  'Tax': data['gst'] ?? 'N/A',
+                  'Amount': data['amount'] ?? 'N/A',
+                  'Distributor': data['distributor'] ?? '',
+                  'HSN Code': data['hsnCode'],
+                  'Category': data['category'],
+                  'Company': data['companyName'],
+                  'Return Amount': '',
+                });
+
+                isLoading = false;
+              });
+            },
+            child: const CustomText(text: 'Add'),
+          ),
         });
       }
 
       setState(() {
         allProducts = fetchedData;
-        filteredProducts = List.from(allProducts); // Update filtered list too
+        filteredProducts = List.from(allProducts);
       });
     } catch (e) {
       print('Error fetching data: $e');
     }
   }
 
-  Future<void> submitStockReturn() async {
+  Future<void> submitDamageReturn() async {
     if (selectedDistributor == null || selectedDistributor!.isEmpty) {
       CustomSnackBar(context,
           message: 'Please select a distributor', backgroundColor: Colors.red);
@@ -161,8 +204,9 @@ class _DamageReturn extends State<DamageReturn> {
         'emailId': emailId.text,
         'phoneNo1': phoneNo1.text,
         'phoneNo2': phoneNO2.text,
-        'products': filteredProducts,
+        'products': tableData2,
         'returnDate': _dateController.text,
+        'totalReturnAmount': totalAmount,
       };
 
       await FirebaseFirestore.instance
@@ -172,7 +216,7 @@ class _DamageReturn extends State<DamageReturn> {
           .doc(returnNo)
           .set(stockReturnData);
 
-      for (var product in filteredProducts) {
+      for (var product in tableData2) {
         String productName = product['Product Name'];
         String batch = product['Batch'];
         String hsn = product['HSN Code'];
@@ -234,11 +278,12 @@ class _DamageReturn extends State<DamageReturn> {
       }
 
       CustomSnackBar(context,
-          message: 'Damage return submitted successfully and stock updated',
+          message:
+              'Damaged Stock return submitted successfully and stock updated',
           backgroundColor: Colors.green);
     } catch (e) {
       CustomSnackBar(context,
-          message: 'Error submitting Damage return: $e',
+          message: 'Error submitting damaged stock return: $e',
           backgroundColor: Colors.red);
     }
   }
@@ -256,16 +301,15 @@ class _DamageReturn extends State<DamageReturn> {
   void updateReturnAmount(int index, String returnQty) {
     setState(() {
       double quantity =
-          double.tryParse(filteredProducts[index]['Quantity'].toString()) ?? 1;
+          double.tryParse(tableData2[index]['Quantity'].toString()) ?? 1;
       double amount =
-          double.tryParse(filteredProducts[index]['Amount'].toString()) ?? 0;
+          double.tryParse(tableData2[index]['Amount'].toString()) ?? 0;
       double returnQuantity = double.tryParse(returnQty) ?? 0;
 
       double returnAmount = (amount / quantity) * returnQuantity;
 
-      filteredProducts[index]['Return Quantity'] = returnQuantity.toString();
-      filteredProducts[index]['Return Amount'] =
-          returnAmount.toStringAsFixed(2);
+      tableData2[index]['Return Quantity'] = returnQuantity.toString();
+      tableData2[index]['Return Amount'] = returnAmount.toStringAsFixed(2);
     });
   }
 
@@ -316,6 +360,18 @@ class _DamageReturn extends State<DamageReturn> {
     'Batch',
     'Expiry',
     'Quantity',
+    'Free',
+    'MRP',
+    'Price',
+    'Tax',
+    'Amount',
+    'Action',
+  ];
+  final List<String> headers2 = [
+    'Product Name',
+    'Batch',
+    'Expiry',
+    'Quantity',
     'Return Quantity',
     'Free',
     'MRP',
@@ -345,7 +401,7 @@ class _DamageReturn extends State<DamageReturn> {
               Row(
                 children: [
                   CustomText(
-                    text: 'Damage Return ',
+                    text: 'Damaged Return ',
                     size: screenWidth * 0.012,
                   ),
                 ],
@@ -549,18 +605,54 @@ class _DamageReturn extends State<DamageReturn> {
                 CustomDataTable(
                   headers: headers,
                   tableData: filteredProducts,
-                  editableColumns: ['Return Quantity'],
-                  onValueChanged: (index, column, value) {
-                    setState(
-                      () {
-                        if (column == 'Return Quantity') {
-                          filteredProducts[index]['Return Quantity'] = value;
-                          updateReturnAmount(index, value);
-                        }
-                      },
-                    );
-                  },
                 ),
+              ],
+              SizedBox(height: screenHeight * 0.04),
+              if (tableData2.isNotEmpty) ...[
+                isLoading
+                    ? CircularProgressIndicator()
+                    : Column(
+                        children: [
+                          CustomDataTable(
+                            headers: headers2,
+                            tableData: tableData2,
+                            editableColumns: ['Return Quantity'],
+                            onValueChanged: (index, column, value) {
+                              setState(
+                                () {
+                                  if (column == 'Return Quantity') {
+                                    tableData2[index]['Return Quantity'] =
+                                        value;
+                                    updateReturnAmount(index, value);
+                                  }
+                                  calculateTotals();
+                                },
+                              );
+                            },
+                          ),
+                          Container(
+                            padding: EdgeInsets.only(right: screenWidth * 0.03),
+                            width: screenWidth,
+                            height: screenHeight * 0.030,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                CustomText(
+                                  text:
+                                      'Total : ${totalAmount.toStringAsFixed(2)}',
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
               ],
               SizedBox(height: screenHeight * 0.04),
               Row(
@@ -569,7 +661,7 @@ class _DamageReturn extends State<DamageReturn> {
                   CustomButton(
                       label: 'Submit',
                       onPressed: () {
-                        submitStockReturn();
+                        submitDamageReturn();
                       },
                       width: screenWidth * 0.1)
                 ],

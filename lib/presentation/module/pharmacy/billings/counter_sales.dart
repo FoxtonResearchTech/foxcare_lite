@@ -270,7 +270,7 @@ class _CounterSales extends State<CounterSales> {
 
       setState(() {
         allProducts = fetchedData;
-        filteredProducts = List.from(allProducts); // Update filtered list too
+        filteredProducts = List.from(allProducts);
       });
     } catch (e) {
       print('Error fetching data: $e');
