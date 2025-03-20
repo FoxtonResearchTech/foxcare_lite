@@ -47,6 +47,7 @@ class _DamageReturn extends State<DamageReturn> {
 
   List<Map<String, dynamic>> allProducts = [];
   List<String> distributorsNames = [];
+  final dateTime = DateTime.timestamp();
 
   List<Map<String, dynamic>> filteredProducts = [];
   List<Map<String, dynamic>> tableData2 = [];
@@ -192,7 +193,11 @@ class _DamageReturn extends State<DamageReturn> {
       Map<String, dynamic> stockReturnData = {
         'returnNo': returnNo,
         'distributor': selectedDistributor,
-        'date': _dateController.text,
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
         'dlNo1': dlNo1Controller.text,
         'expiryDate1': expiryDate1Controller.text,
         'dlNo2': dlNo2Controller.text,

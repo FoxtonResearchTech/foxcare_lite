@@ -24,6 +24,8 @@ class StockReturn extends StatefulWidget {
 
 class _StockReturn extends State<StockReturn> {
   TextEditingController _dateController = TextEditingController();
+  TextEditingController _billDate = TextEditingController();
+
   TextEditingController dlNo1Controller = TextEditingController();
   TextEditingController expiryDate1Controller = TextEditingController();
   TextEditingController dlNo2Controller = TextEditingController();
@@ -44,6 +46,7 @@ class _StockReturn extends State<StockReturn> {
   String returnNo = '';
   bool isLoading = false;
   double totalAmount = 0.0;
+  final dateTime = DateTime.timestamp();
 
   List<Map<String, dynamic>> allProducts = [];
   List<String> distributorsNames = [];
@@ -192,7 +195,11 @@ class _StockReturn extends State<StockReturn> {
       Map<String, dynamic> stockReturnData = {
         'returnNo': returnNo,
         'distributor': selectedDistributor,
-        'date': _dateController.text,
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
         'dlNo1': dlNo1Controller.text,
         'expiryDate1': expiryDate1Controller.text,
         'dlNo2': dlNo2Controller.text,

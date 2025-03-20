@@ -68,23 +68,31 @@ class _PurchaseEntry extends State<PurchaseEntry> {
               .collection('AddedProducts')
               .get();
 
-      List<Map<String, dynamic>> fetchedData = stockSnapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'Product Name': data['productName'] ?? '',
-          'HSN Code': data['hsnCode'] ?? '',
-          'Quantity': data['quantity'] ?? '',
-          'Batch Number': '',
-          'Expiry': '',
-          'Free': '',
-          'MRP': '',
-          'Price': '',
-          'GST': '',
-          'Amount': '',
-          'Product Total': '',
-          'Distributor': data['distributor'] ?? ''
-        };
-      }).toList();
+      List<Map<String, dynamic>> fetchedData = stockSnapshot.docs
+          .map((doc) {
+            final data = doc.data();
+
+            if (data.containsKey('price') && data.containsKey('amount')) {
+              return null;
+            }
+
+            return {
+              'Product Name': data['productName'] ?? '',
+              'HSN Code': data['hsnCode'] ?? '',
+              'Quantity': data['quantity'] ?? '',
+              'Batch Number': '',
+              'Expiry': '',
+              'Free': '',
+              'MRP': '',
+              'Price': '',
+              'GST': '',
+              'Amount': '',
+              'Product Total': '',
+              'Distributor': data['distributor'] ?? ''
+            };
+          })
+          .whereType<Map<String, dynamic>>()
+          .toList(); // Remove null values
 
       setState(() {
         allProducts = fetchedData;
