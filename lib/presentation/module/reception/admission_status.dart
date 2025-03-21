@@ -1,6 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
+import 'package:foxcare_lite/presentation/module/reception/total_room_update.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
+import 'admission_status.dart';
 import 'doctor_schedule.dart';
 import 'ip_admission.dart';
 import 'ip_patients_admission.dart';
@@ -8,43 +15,101 @@ import 'op_counters.dart';
 import 'op_ticket.dart';
 
 class AdmissionStatus extends StatefulWidget {
-  const AdmissionStatus({super.key});
-
   @override
-  State<AdmissionStatus> createState() => _AdmissionStatusState();
+  State<AdmissionStatus> createState() => _AdmissionStatus();
 }
 
-class _AdmissionStatusState extends State<AdmissionStatus> {
-  int selectedIndex = 4;
-  ScrollController _scrollController5 = ScrollController();
+class _AdmissionStatus extends State<AdmissionStatus> {
+  TimeOfDay now = TimeOfDay.now();
+  final date = DateTime.timestamp();
+  String SelectedRoom = 'Room';
+  String vacantRoom = '1';
+  String nursingStation = 'Station A';
+
+  // List of room statuses (true = booked, false = available)
+  List<bool> roomStatus = [];
+  List<bool> wardStatus = [];
+  List<bool> viproomStatus = [];
+  List<bool> ICUStatus = [];
+  int selectedIndex1 = 4;
+
+  //String selectedSex = 'Male'; // Default value for Sex
+  String selectedBloodGroup = 'A+'; // Default value for Blood Group
+
+  bool isSearchPerformed = false; // To track if search has been performed
+  Map<String, String>? selectedPatient;
+  ScrollController _scrollController = ScrollController();
   ScrollController _scrollController1 = ScrollController();
   ScrollController _scrollController2 = ScrollController();
   ScrollController _scrollController3 = ScrollController();
 
-  // Example patient data structure with name and address
-  List<Map<String, String>> roomData = [
-    {'name': 'John Doe', 'address': '123 Street A'},
-    {'name': 'Jane Smith', 'address': '456 Street B'},
-    {'name': 'Robert Brown', 'address': '789 Street C'},
-    // Add more rooms with patient data or empty for vacant rooms
-    {'name': '', 'address': ''}, // Vacant room
-    // ... add more room entries
+  bool isDataLoaded = false; // To control data loading when button is clicked
+  List<Map<String, dynamic>> patientData = []; // Patient data
+  int? selectedIndex; // Store selected checkbox index
+  Future<void> fetchRoomData() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('totalRoom')
+          .doc('status')
+          .get();
+
+      if (doc.exists) {
+        setState(() {
+          roomStatus = List<bool>.from(doc['roomStatus']);
+          wardStatus = List<bool>.from(doc['wardStatus']);
+          viproomStatus = List<bool>.from(doc['viproomStatus']);
+          ICUStatus = List<bool>.from(doc['ICUStatus']);
+        });
+      } else {
+        print("Document does not exist.");
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  // Sample dummy data for patients
+  List<Map<String, dynamic>> samplePatients = [
+    {
+      "opNumber": "OP001",
+      "name": "John Doe",
+      "age": 30,
+      "address": "123 Street, City",
+      "ipFromDate": "2024-01-10",
+      "ipToDate": "2024-01-20"
+    },
+    {
+      "opNumber": "OP002",
+      "name": "Jane Smith",
+      "age": 40,
+      "address": "456 Avenue, City",
+      "ipFromDate": "2024-01-05",
+      "ipToDate": "2024-01-15"
+    },
+    {
+      "opNumber": "OP003",
+      "name": "Robert Brown",
+      "age": 50,
+      "address": "789 Boulevard, City",
+      "ipFromDate": "2024-01-08",
+      "ipToDate": "2024-01-18"
+    }
   ];
+  @override
+  void initState() {
+    super.initState();
+    fetchRoomData();
+  }
 
   @override
   void dispose() {
     // Dispose the controller when it's no longer needed
-    _scrollController5.dispose();
-    _scrollController1.dispose();
-    _scrollController2.dispose();
-    _scrollController3.dispose();
-
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
@@ -52,29 +117,38 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
       appBar: isMobile
           ? AppBar(
               title: Text(
-                'Reception Dashboard',
+                'OP Ticket Dashboard',
                 style: TextStyle(
                   fontFamily: 'SanFrancisco',
                 ),
               ),
             )
-          : null, // No AppBar for web view
+          : null,
       drawer: isMobile
           ? Drawer(
               child: buildDrawerContent(), // Drawer minimized for mobile
             )
-          : null, // No drawer for web view (permanently open)
+          : null, // No AppBar for web view
       body: Row(
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300, // Sidebar width for larger screens
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: buildDrawerContent(), // Sidebar content
             ),
           Expanded(
             child: SingleChildScrollView(
-              child: dashboard(),
+              padding: EdgeInsets.all(16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth > 600) {
+                    return buildThreeColumnForm(); // Web view
+                  } else {
+                    return buildSingleColumnForm(); // Mobile view
+                  }
+                },
+              ),
             ),
           ),
         ],
@@ -99,6 +173,7 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
             ),
           ),
         ),
+        // Drawer items here
         buildDrawerItem(0, 'Patient Registration', () {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => PatientRegistration()),
@@ -135,7 +210,11 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(4, 'Admission Status', () {}, Iconsax.status),
+        buildDrawerItem(4, 'Admission Status', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => AdmissionStatus()),
+          );
+        }, Iconsax.status),
         Divider(
           height: 5,
           color: Colors.grey,
@@ -145,6 +224,7 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
             MaterialPageRoute(builder: (context) => doctorSchedule()),
           );
         }, Iconsax.hospital),
+
         Divider(
           height: 5,
           color: Colors.grey,
@@ -165,240 +245,109 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
     );
   }
 
-  // Helper method to build drawer items with the ability to highlight the selected item
   Widget buildDrawerItem(
       int index, String title, VoidCallback onTap, IconData icon) {
     return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
+      selected: selectedIndex1 == index,
+      selectedTileColor: Colors.blueAccent.shade100,
+      // Highlight color for the selected item
       leading: Icon(
         icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
+        color: selectedIndex1 == index ? Colors.blue : Colors.white,
       ),
       title: Text(
         title,
         style: TextStyle(
             fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
+            color: selectedIndex1 == index ? Colors.blue : Colors.black54,
             fontWeight: FontWeight.w700),
       ),
       onTap: () {
         setState(() {
-          selectedIndex = index; // Update the selected index
+          selectedIndex1 = index; // Update the selected index
         });
         onTap();
       },
     );
   }
 
-  // The form displayed in the body
-  Widget dashboard() {
+  Widget buildThreeColumnForm() {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     bool isMobile = screenWidth < 600;
-    List<bool> roomStatus = [
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
-    ];
-    List<String> patientNames = [
-      "John",
-      "Jane",
-      "Alice",
-      "Bob",
-      "Chris",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ];
-    List<String> patientPlaces = [
-      "Room A",
-      "Room B",
-      "Room C",
-      "Room D",
-      "Room E",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ];
-
-    List<bool> wardStatus = [
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-    ];
-    List<String> wardNames = [
-      "Ward 1",
-      "Ward 2",
-      "Ward 3",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ];
-    List<String> wardPlaces = [
-      "Ward 1",
-      "Ward 2",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ];
-
-    List<bool> viproomStatus = [
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
-    ];
-    List<String> viproomNames = [
-      "VIP 1",
-      "VIP 2",
-      "VIP 3",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ];
-    List<String> viproomPlaces = [
-      "VIP 1",
-      "VIP 2",
-      "VIP 3",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      ""
-    ];
-
-    List<bool> ICUStatus = [
-      true,
-      true,
-      false,
-      false,
-      false,
-    ];
-    List<String> ICUroomNames = ["ICU 1", "ICU 2", "", "", ""];
-    List<String> ICUroomPlaces = ["ICU 1", "ICU 2", "", "", ""];
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Align(
-        alignment: isMobile
-            ? Alignment.center
-            : Alignment.topLeft, // Align top-left for web, center for mobile
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Admission Status',
-              style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  fontSize: 18,
-                  fontWeight: FontWeight.normal),
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Scrollbar(
-              controller: _scrollController5, // Attach the ScrollController
-              thumbVisibility: true,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                controller: _scrollController5,
-                child: Row(
-                  children: [
-                    Text('Rooms : '),
-                    SizedBox(
-                      width: 30,
+    return Align(
+      alignment: isMobile ? Alignment.center : Alignment.topLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          CustomText(
+            text: 'Admission Status',
+            size: 24,
+          ),
+          SizedBox(
+            height: 30,
+          ),
+          Row(
+            children: [
+              Text(
+                'Rooms / Ward Availability',
+                style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal),
+              ),
+              SizedBox(width: screenWidth * 0.5),
+              CustomButton(
+                label: 'Total Rooms',
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TotalRoomUpdate()));
+                },
+                width: screenWidth * 0.1,
+                height: screenHeight * 0.038,
+              )
+            ],
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Scrollbar(
+            controller: _scrollController, // Attach the ScrollController
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              controller: _scrollController,
+              child: Row(
+                children: [
+                  Text(
+                    'Rooms : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
                     ),
-                    Wrap(
-                      spacing: 10, // Horizontal spacing between rooms
-                      runSpacing: 10, // Vertical spacing between rooms
-                      children: List.generate(roomStatus.length, (index) {
-                        return GestureDetector(
-                          onTap: roomStatus[index]
-                              ? null // Disable interaction if the room is booked
-                              : () {
-                                  // Optional: Add booking functionality here if needed
-                                  // setState to toggle room status or handle booking logic
-                                },
+                  ),
+                  SizedBox(
+                    width: 30,
+                  ),
+                  Wrap(
+                    spacing: 10, // Horizontal spacing between rooms
+                    runSpacing: 10, // Vertical spacing between rooms
+                    children: List.generate(roomStatus.length, (index) {
+                      return GestureDetector(
+                        onTap: roomStatus[index]
+                            ? null // Disable interaction if the room is booked
+                            : () {
+                                // Optional: Add booking functionality here if needed
+                                // setState to toggle room status or handle booking logic
+                              },
+                        child: InkWell(
                           child: Container(
-                            width: 70,
+                            width: 50,
                             // Set a fixed width for each room box
-                            height: 75,
+                            height: 60,
                             // Set a fixed height for each room box
                             decoration: BoxDecoration(
                               color: roomStatus[index]
@@ -412,21 +361,10 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
                             child: Column(
                               children: [
                                 Text(
-                                  roomStatus[index]
-                                      ? patientNames[index] // Show patient name
-                                      : "Vaccant", // Show "Available" if room is free
+                                  '${index + 1}',
                                   style: TextStyle(
-                                      fontFamily: 'SanFrancisco',
-                                      color: Colors.white),
-                                ),
-                                // Display place of the room
-                                Text(
-                                  roomStatus[index]
-                                      ? patientPlaces[index] // Show place
-                                      : "No place", // Show placeholder
-                                  style: TextStyle(
-                                      fontFamily: 'SanFrancisco',
-                                      color: Colors.white),
+                                    fontFamily: 'SanFrancisco',
+                                  ),
                                 ),
                                 Icon(
                                   Icons.bed_sharp,
@@ -436,272 +374,654 @@ class _AdmissionStatusState extends State<AdmissionStatus> {
                               ],
                             ),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                          onTap: () {
+                            setState(() {
+                              roomStatus[index] =
+                                  true; // Correctly update the value
+                            });
+                            print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              roomStatus[index] =
+                                  false; // Correctly update the value
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: 20,
-            ),
-            Scrollbar(
-              thumbVisibility: true,
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Scrollbar(
+            thumbVisibility: true,
+            controller: _scrollController1,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               controller: _scrollController1,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                controller: _scrollController1,
-                child: Row(
-                  children: [
-                    Text(
-                      'Wards : ',
-                      style: TextStyle(
-                        fontFamily: 'SanFrancisco',
-                      ),
+              child: Row(
+                children: [
+                  Text(
+                    'Wards : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
                     ),
-                    SizedBox(
-                      width: 30,
-                    ),
-                    Wrap(
-                      spacing: 10, // Horizontal spacing between rooms
-                      runSpacing: 10, // Vertical spacing between rooms
-                      children: List.generate(wardStatus.length, (index) {
-                        return GestureDetector(
-                          onTap: wardStatus[index]
-                              ? null // Disable interaction if the room is booked
-                              : () {
-                                  // Optional: Add booking functionality here if needed
-                                  // setState to toggle room status or handle booking logic
-                                },
-                          child: InkWell(
-                            child: Container(
-                              width: 70,
-                              // Set a fixed width for each room box
-                              height: 75,
-                              // Set a fixed height for each room box
-                              decoration: BoxDecoration(
-                                color: wardStatus[index]
-                                    ? Colors.green[200]
-                                    : Colors.grey,
-                                // Red for booked, green for available
-                                borderRadius: BorderRadius.circular(2),
-                                //border: Border.all(color: Colors.black, width: 1),
-                              ),
-                              alignment: Alignment.center,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    roomStatus[index]
-                                        ? wardNames[index] // Show patient name
-                                        : "Vaccant", // Show "Available" if room is free
-                                    style: TextStyle(
-                                        fontFamily: 'SanFrancisco',
-                                        color: Colors.white),
-                                  ),
-                                  // Display place of the room
-                                  Text(
-                                    roomStatus[index]
-                                        ? wardPlaces[index] // Show place
-                                        : "No place", // Show placeholder
-                                    style: TextStyle(
-                                        fontFamily: 'SanFrancisco',
-                                        color: Colors.white),
-                                  ),
-                                  Icon(
-                                    Icons.bed_sharp,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ],
-                              ),
+                  ),
+                  SizedBox(
+                    width: 30,
+                  ),
+                  Wrap(
+                    spacing: 10, // Horizontal spacing between rooms
+                    runSpacing: 10, // Vertical spacing between rooms
+                    children: List.generate(wardStatus.length, (index) {
+                      return GestureDetector(
+                        onTap: wardStatus[index]
+                            ? null // Disable interaction if the room is booked
+                            : () {
+                                // Optional: Add booking functionality here if needed
+                                // setState to toggle room status or handle booking logic
+                              },
+                        child: InkWell(
+                          child: Container(
+                            width: 50,
+                            // Set a fixed width for each room box
+                            height: 60,
+                            // Set a fixed height for each room box
+                            decoration: BoxDecoration(
+                              color: wardStatus[index]
+                                  ? Colors.green[200]
+                                  : Colors.grey,
+                              // Red for booked, green for available
+                              borderRadius: BorderRadius.circular(2),
+                              //border: Border.all(color: Colors.black, width: 1),
                             ),
-                            onTap: () {
-                              print('${index + 1} pressed');
-                            },
+                            alignment: Alignment.center,
+                            child: Column(
+                              children: [
+                                Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    fontFamily: 'SanFrancisco',
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.bed_sharp,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                          onTap: () {
+                            setState(() {
+                              wardStatus[index] =
+                                  true; // Correctly update the value
+                            });
+                            print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              wardStatus[index] =
+                                  false; // Correctly update the value
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: 20,
-            ),
-            Scrollbar(
-              thumbVisibility: true,
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Scrollbar(
+            thumbVisibility: true,
+            controller: _scrollController2,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               controller: _scrollController2,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                controller: _scrollController2,
-                child: Row(
-                  children: [
-                    Text(
-                      'VIP Rooms : ',
-                      style: TextStyle(
-                        fontFamily: 'SanFrancisco',
-                      ),
+              child: Row(
+                children: [
+                  Text(
+                    'VIP Rooms : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
                     ),
-                    Wrap(
-                      spacing: 10, // Horizontal spacing between rooms
-                      runSpacing: 10, // Vertical spacing between rooms
-                      children: List.generate(viproomStatus.length, (index) {
-                        return GestureDetector(
-                          onTap: viproomStatus[index]
-                              ? null // Disable interaction if the room is booked
-                              : () {
-                                  // Optional: Add booking functionality here if needed
-                                  // setState to toggle room status or handle booking logic
-                                },
-                          child: InkWell(
-                            child: Container(
-                              width: 70,
-                              // Set a fixed width for each room box
-                              height: 75,
-                              // Set a fixed height for each room box
-                              decoration: BoxDecoration(
-                                color: viproomStatus[index]
-                                    ? Colors.green[200]
-                                    : Colors.grey,
-                                // Red for booked, green for available
-                                borderRadius: BorderRadius.circular(2),
-                                //border: Border.all(color: Colors.black, width: 1),
-                              ),
-                              alignment: Alignment.center,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    roomStatus[index]
-                                        ? viproomNames[
-                                            index] // Show patient name
-                                        : "Vaccant", // Show "Available" if room is free
-                                    style: TextStyle(
-                                        fontFamily: 'SanFrancisco',
-                                        color: Colors.white),
-                                  ),
-                                  // Display place of the room
-                                  Text(
-                                    roomStatus[index]
-                                        ? viproomPlaces[index] // Show place
-                                        : "No place", // Show placeholder
-                                    style: TextStyle(
-                                        fontFamily: 'SanFrancisco',
-                                        color: Colors.white),
-                                  ),
-                                  Icon(
-                                    Icons.bed_sharp,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ],
-                              ),
+                  ),
+                  Wrap(
+                    spacing: 10, // Horizontal spacing between rooms
+                    runSpacing: 10, // Vertical spacing between rooms
+                    children: List.generate(viproomStatus.length, (index) {
+                      return GestureDetector(
+                        onTap: viproomStatus[index]
+                            ? null // Disable interaction if the room is booked
+                            : () {
+                                // Optional: Add booking functionality here if needed
+                                // setState to toggle room status or handle booking logic
+                              },
+                        child: InkWell(
+                          child: Container(
+                            width: 50,
+                            // Set a fixed width for each room box
+                            height: 60,
+                            // Set a fixed height for each room box
+                            decoration: BoxDecoration(
+                              color: viproomStatus[index]
+                                  ? Colors.green[200]
+                                  : Colors.grey,
+                              // Red for booked, green for available
+                              borderRadius: BorderRadius.circular(2),
+                              //border: Border.all(color: Colors.black, width: 1),
                             ),
-                            onTap: () {
-                              print('${index + 1} pressed');
-                            },
+                            alignment: Alignment.center,
+                            child: Column(
+                              children: [
+                                Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    fontFamily: 'SanFrancisco',
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.bed_sharp,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                          onTap: () {
+                            setState(() {
+                              viproomStatus[index] =
+                                  true; // Correctly update the value
+                            });
+                            print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              viproomStatus[index] =
+                                  false; // Correctly update the value
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: 20,
-            ),
-            Scrollbar(
-              thumbVisibility: true,
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Scrollbar(
+            thumbVisibility: true,
+            controller: _scrollController3,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               controller: _scrollController3,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                controller: _scrollController3,
-                child: Row(
-                  children: [
-                    Text(
-                      'ICU : ',
-                      style: TextStyle(
-                        fontFamily: 'SanFrancisco',
-                      ),
+              child: Row(
+                children: [
+                  Text(
+                    'ICU : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
                     ),
-                    SizedBox(
-                      width: 45,
-                    ),
-                    Wrap(
-                      spacing: 10, // Horizontal spacing between rooms
-                      runSpacing: 10, // Vertical spacing between rooms
-                      children: List.generate(ICUStatus.length, (index) {
-                        return GestureDetector(
-                          onTap: ICUStatus[index]
-                              ? null // Disable interaction if the room is booked
-                              : () {
-                                  // Optional: Add booking functionality here if needed
-                                  // setState to toggle room status or handle booking logic
-                                },
-                          child: InkWell(
-                            child: Container(
-                              width: 70,
-                              // Set a fixed width for each room box
-                              height: 75,
-                              // Set a fixed height for each room box
-                              decoration: BoxDecoration(
-                                color: ICUStatus[index]
-                                    ? Colors.green[200]
-                                    : Colors.grey,
-                                // Red for booked, green for available
-                                borderRadius: BorderRadius.circular(2),
-                                //border: Border.all(color: Colors.black, width: 1),
-                              ),
-                              alignment: Alignment.center,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    roomStatus[index]
-                                        ? ICUroomNames[
-                                            index] // Show patient name
-                                        : "Vaccant", // Show "Available" if room is free
-                                    style: TextStyle(
-                                        fontFamily: 'SanFrancisco',
-                                        color: Colors.white),
-                                  ),
-                                  // Display place of the room
-                                  Text(
-                                    roomStatus[index]
-                                        ? ICUroomPlaces[index] // Show place
-                                        : "No place", // Show placeholder
-                                    style: TextStyle(
-                                        fontFamily: 'SanFrancisco',
-                                        color: Colors.white),
-                                  ),
-                                  Icon(
-                                    Icons.bed_sharp,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ],
-                              ),
+                  ),
+                  SizedBox(
+                    width: 45,
+                  ),
+                  Wrap(
+                    spacing: 10, // Horizontal spacing between rooms
+                    runSpacing: 10, // Vertical spacing between rooms
+                    children: List.generate(ICUStatus.length, (index) {
+                      return GestureDetector(
+                        onTap: ICUStatus[index]
+                            ? null // Disable interaction if the room is booked
+                            : () {
+                                // Optional: Add booking functionality here if needed
+                                // setState to toggle room status or handle booking logic
+                              },
+                        child: InkWell(
+                          child: Container(
+                            width: 50,
+                            // Set a fixed width for each room box
+                            height: 60,
+                            // Set a fixed height for each room box
+                            decoration: BoxDecoration(
+                              color: ICUStatus[index]
+                                  ? Colors.green[200]
+                                  : Colors.grey,
+                              // Red for booked, green for available
+                              borderRadius: BorderRadius.circular(2),
+                              //border: Border.all(color: Colors.black, width: 1),
                             ),
-                            onTap: () {
-                              print('${index + 1} pressed');
-                            },
+                            alignment: Alignment.center,
+                            child: Column(
+                              children: [
+                                Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    fontFamily: 'SanFrancisco',
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.bed_sharp,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                          onTap: () {
+                            setState(() {
+                              ICUStatus[index] =
+                                  true; // Correctly update the value
+                            });
+                            print('${index + 1} pressed');
+                          },
+                          onDoubleTap: () {
+                            setState(() {
+                              ICUStatus[index] =
+                                  false; // Correctly update the value
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
+          ),
+          SizedBox(
+            height: 40,
+          ),
+        ],
+      ),
+    );
+  }
 
-            SizedBox(
-              height: 40,
+  Widget buildSingleColumnForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Text(
+          'IP Admission Portal :',
+          style: TextStyle(
+              fontFamily: 'SanFrancisco',
+              fontSize: 24,
+              fontWeight: FontWeight.bold),
+        ),
+        SizedBox(
+          height: 30,
+        ),
+        Text(
+          'Rooms / Ward Availability',
+          style: TextStyle(
+              fontFamily: 'SanFrancisco',
+              fontSize: 18,
+              fontWeight: FontWeight.normal),
+        ),
+        SizedBox(
+          height: 15,
+        ),
+        Scrollbar(
+          controller: _scrollController, // Attach the ScrollController
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _scrollController,
+            child: Row(
+              children: [
+                Text(
+                  'Rooms : ',
+                  style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                  ),
+                ),
+                SizedBox(
+                  width: 30,
+                ),
+                Wrap(
+                  spacing: 10, // Horizontal spacing between rooms
+                  runSpacing: 10, // Vertical spacing between rooms
+                  children: List.generate(roomStatus.length, (index) {
+                    return GestureDetector(
+                      onTap: roomStatus[index]
+                          ? null // Disable interaction if the room is booked
+                          : () {
+                              // Optional: Add booking functionality here if needed
+                              // setState to toggle room status or handle booking logic
+                            },
+                      child: InkWell(
+                        child: Container(
+                          width: 50,
+                          // Set a fixed width for each room box
+                          height: 60,
+                          // Set a fixed height for each room box
+                          decoration: BoxDecoration(
+                            color: roomStatus[index]
+                                ? Colors.green[200]
+                                : Colors.grey,
+                            // Red for booked, green for available
+                            borderRadius: BorderRadius.circular(2),
+                            //border: Border.all(color: Colors.black, width: 1),
+                          ),
+                          alignment: Alignment.center,
+                          child: Column(
+                            children: [
+                              Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              Icon(
+                                Icons.bed_sharp,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onTap: () {
+                          print('${index + 1} pressed');
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ],
             ),
-            // Add other form fields or content below
-          ],
+          ),
+        ),
+        SizedBox(
+          height: 20,
+        ),
+        Scrollbar(
+          thumbVisibility: true,
+          controller: _scrollController1,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _scrollController1,
+            child: Row(
+              children: [
+                Text(
+                  'Wards : ',
+                  style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                  ),
+                ),
+                SizedBox(
+                  width: 30,
+                ),
+                Wrap(
+                  spacing: 10, // Horizontal spacing between rooms
+                  runSpacing: 10, // Vertical spacing between rooms
+                  children: List.generate(wardStatus.length, (index) {
+                    return GestureDetector(
+                      onTap: wardStatus[index]
+                          ? null // Disable interaction if the room is booked
+                          : () {
+                              // Optional: Add booking functionality here if needed
+                              // setState to toggle room status or handle booking logic
+                            },
+                      child: InkWell(
+                        child: Container(
+                          width: 50,
+                          // Set a fixed width for each room box
+                          height: 60,
+                          // Set a fixed height for each room box
+                          decoration: BoxDecoration(
+                            color: wardStatus[index]
+                                ? Colors.green[200]
+                                : Colors.grey,
+                            // Red for booked, green for available
+                            borderRadius: BorderRadius.circular(2),
+                            //border: Border.all(color: Colors.black, width: 1),
+                          ),
+                          alignment: Alignment.center,
+                          child: Column(
+                            children: [
+                              Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              Icon(
+                                Icons.bed_sharp,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onTap: () {
+                          print('${index + 1} pressed');
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 20,
+        ),
+        Scrollbar(
+          thumbVisibility: true,
+          controller: _scrollController2,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _scrollController2,
+            child: Row(
+              children: [
+                Text(
+                  'VIP Rooms : ',
+                  style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                  ),
+                ),
+                Wrap(
+                  spacing: 10, // Horizontal spacing between rooms
+                  runSpacing: 10, // Vertical spacing between rooms
+                  children: List.generate(viproomStatus.length, (index) {
+                    return GestureDetector(
+                      onTap: viproomStatus[index]
+                          ? null // Disable interaction if the room is booked
+                          : () {
+                              // Optional: Add booking functionality here if needed
+                              // setState to toggle room status or handle booking logic
+                            },
+                      child: InkWell(
+                        child: Container(
+                          width: 50,
+                          // Set a fixed width for each room box
+                          height: 60,
+                          // Set a fixed height for each room box
+                          decoration: BoxDecoration(
+                            color: viproomStatus[index]
+                                ? Colors.green[200]
+                                : Colors.grey,
+                            // Red for booked, green for available
+                            borderRadius: BorderRadius.circular(2),
+                            //border: Border.all(color: Colors.black, width: 1),
+                          ),
+                          alignment: Alignment.center,
+                          child: Column(
+                            children: [
+                              Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              Icon(
+                                Icons.bed_sharp,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onTap: () {
+                          print('${index + 1} pressed');
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 20,
+        ),
+        Scrollbar(
+          thumbVisibility: true,
+          controller: _scrollController3,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _scrollController3,
+            child: Row(
+              children: [
+                Text(
+                  'ICU : ',
+                  style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                  ),
+                ),
+                SizedBox(
+                  width: 45,
+                ),
+                Wrap(
+                  spacing: 10, // Horizontal spacing between rooms
+                  runSpacing: 10, // Vertical spacing between rooms
+                  children: List.generate(ICUStatus.length, (index) {
+                    return GestureDetector(
+                      onTap: ICUStatus[index]
+                          ? null // Disable interaction if the room is booked
+                          : () {
+                              // Optional: Add booking functionality here if needed
+                              // setState to toggle room status or handle booking logic
+                            },
+                      child: InkWell(
+                        child: Container(
+                          width: 50,
+                          // Set a fixed width for each room box
+                          height: 60,
+                          // Set a fixed height for each room box
+                          decoration: BoxDecoration(
+                            color: ICUStatus[index]
+                                ? Colors.green[200]
+                                : Colors.grey,
+                            // Red for booked, green for available
+                            borderRadius: BorderRadius.circular(2),
+                            //border: Border.all(color: Colors.black, width: 1),
+                          ),
+                          alignment: Alignment.center,
+                          child: Column(
+                            children: [
+                              Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              Icon(
+                                Icons.bed_sharp,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onTap: () {
+                          print('${index + 1} pressed');
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 40,
+        ),
+      ],
+    );
+  }
+
+  // Build the list of patients with checkboxes
+  Widget buildPatientList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: patientData.length,
+      itemBuilder: (context, index) {
+        return CheckboxListTile(
+          title: Text(
+            "${patientData[index]['opNumber']} - ${patientData[index]['name']}",
+            style: TextStyle(
+              fontFamily: 'SanFrancisco',
+            ),
+          ),
+          subtitle: Text(
+            "Age: ${patientData[index]['age']} - IP from ${patientData[index]['ipFromDate']} to ${patientData[index]['ipToDate']}",
+            style: TextStyle(
+              fontFamily: 'SanFrancisco',
+            ),
+          ),
+          value: selectedIndex == index,
+          onChanged: (bool? value) {
+            setState(() {
+              selectedIndex = index; // Set the selected patient
+            });
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildTextField(String label,
+      {String? initialValue, TextInputType inputType = TextInputType.text}) {
+    return TextField(
+      decoration: InputDecoration(
+        isDense: true,
+        // Reduces the overall height of the TextField
+        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        hintText: label,
+        hintStyle: TextStyle(
+          fontFamily: 'SanFrancisco',
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2.0),
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.lightBlue, width: 1),
+          borderRadius: BorderRadius.circular(15.0),
         ),
       ),
+      keyboardType: inputType,
+      controller: TextEditingController(text: initialValue),
     );
   }
 }

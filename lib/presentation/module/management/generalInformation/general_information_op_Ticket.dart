@@ -377,17 +377,21 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Patient Search: ',
-                style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold)),
+            const CustomText(
+              text: 'Patient Search',
+              size: 25,
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Text('Enter OP Number: ',
-                    style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
+                const CustomText(
+                  text: 'Enter OP Number            :',
+                  size: 18,
+                ),
+                const SizedBox(
+                  width: 25,
+                ),
                 SizedBox(
                   width: 250,
                   child: CustomTextField(
@@ -403,8 +407,11 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Text('Enter Phone Number: ',
-                    style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
+                const CustomText(
+                  text: 'Enter Phone Number      :',
+                  size: 18,
+                ),
+                const SizedBox(width: 25),
                 SizedBox(
                   width: 250,
                   child: CustomTextField(
@@ -420,24 +427,23 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 250,
-                  child: CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      // Fetch patients based on OP number and phone number
-                      final searchResultsFetched = await searchPatients(
-                        searchOpNumber.text,
-                        searchPhoneNumber.text,
-                      );
-                      setState(() {
-                        searchResults =
-                            searchResultsFetched; // Update searchResults
-                        isSearchPerformed = true; // Show the table after search
-                      });
-                    },
-                    width: null,
-                  ),
+                const SizedBox(width: 200),
+                CustomButton(
+                  width: 125,
+                  height: 35,
+                  label: 'Search',
+                  onPressed: () async {
+                    // Fetch patients based on OP number and phone number
+                    final searchResultsFetched = await searchPatients(
+                      searchOpNumber.text,
+                      searchPhoneNumber.text,
+                    );
+                    setState(() {
+                      searchResults =
+                          searchResultsFetched; // Update searchResults
+                      isSearchPerformed = true; // Show the table after search
+                    });
+                  },
                 ),
               ],
             ),

@@ -275,7 +275,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AdmissionStatus()),
+            MaterialPageRoute(builder: (context) => AdmissionStatus()),
           );
         }, Iconsax.status),
         const Divider(

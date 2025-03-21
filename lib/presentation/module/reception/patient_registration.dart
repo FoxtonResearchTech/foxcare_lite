@@ -112,9 +112,10 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             title: const Text('Patient Details'),
             content: Container(
               width: 350,
-              height: 300,
+              height: 350,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CustomText(text: 'Patient ID: $patientID'),
                   CustomText(text: 'First Name: ${firstname.text}'),
@@ -353,7 +354,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AdmissionStatus()),
+            MaterialPageRoute(builder: (context) => AdmissionStatus()),
           );
         }, Iconsax.status),
         const Divider(

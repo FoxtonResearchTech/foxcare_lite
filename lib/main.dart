@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-
-import 'package:foxcare_lite/presentation/module/pharmacy/reports/stock_return_statement.dart';
-
+import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
+import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -22,9 +22,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'FoxCare Lite',
-        home: StockReturnStatement());
+        home: ManagementDashboard());
   }
 }

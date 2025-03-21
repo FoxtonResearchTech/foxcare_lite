@@ -17,7 +17,6 @@ class ReceptionDashboard extends StatefulWidget {
 }
 
 class _ReceptionDashboardState extends State<ReceptionDashboard> {
-  // To store the index of the selected drawer item
   int selectedIndex = 0;
 
   @override

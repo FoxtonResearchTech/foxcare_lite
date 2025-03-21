@@ -123,7 +123,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const AdmissionStatus(),
+              builder: (context) => AdmissionStatus(),
             ),
           );
         }, Iconsax.status),

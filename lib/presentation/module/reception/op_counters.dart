@@ -212,7 +212,7 @@ class _OpCountersState extends State<OpCounters> {
         ),
         buildDrawerItem(4, 'Admission Status', () {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AdmissionStatus()),
+            MaterialPageRoute(builder: (context) => AdmissionStatus()),
           );
         }, Iconsax.status),
         const Divider(
