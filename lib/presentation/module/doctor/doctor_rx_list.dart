@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/doctor/pharmacy_stocks.dart';
 import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -209,7 +210,10 @@ class _DoctorRxList extends State<DoctorRxList> {
             ),
           ),
         ),
-        buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
+        buildDrawerItem(0, 'Home', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => DoctorDashboard()));
+        }, Iconsax.mask),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
         Divider(height: 5, color: Colors.grey),
@@ -218,7 +222,10 @@ class _DoctorRxList extends State<DoctorRxList> {
               MaterialPageRoute(builder: (context) => IpPatientsDetails()));
         }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(3, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
+        buildDrawerItem(3, 'Pharmacy Stocks', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => PharmacyStocks()));
+        }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(4, 'Logout', () {
           // Handle logout action

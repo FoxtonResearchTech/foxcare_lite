@@ -439,9 +439,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                       searchPhoneNumber.text,
                     );
                     setState(() {
-                      searchResults =
-                          searchResultsFetched; // Update searchResults
-                      isSearchPerformed = true; // Show the table after search
+                      searchResults = searchResultsFetched;
+                      isSearchPerformed = true;
                     });
                   },
                 ),
@@ -455,6 +454,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                       fontSize: 22,
                       fontWeight: FontWeight.bold)),
               DataTable(
+                columnSpacing: 180,
                 columns: [
                   const DataColumn(label: Text('OP Number')),
                   const DataColumn(label: Text('Name')),

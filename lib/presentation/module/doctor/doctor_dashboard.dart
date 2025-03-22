@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
+import 'package:foxcare_lite/presentation/module/doctor/pharmacy_stocks.dart';
 import 'package:iconsax/iconsax.dart';
 
 import 'ip_patients_details.dart';
@@ -121,7 +122,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               MaterialPageRoute(builder: (context) => IpPatientsDetails()));
         }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(3, 'Pharmacy Stocks', () {}, Iconsax.add_circle),
+        buildDrawerItem(3, 'Pharmacy Stocks', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => PharmacyStocks()));
+        }, Iconsax.add_circle),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(3, 'Logout', () {
           // Handle logout action

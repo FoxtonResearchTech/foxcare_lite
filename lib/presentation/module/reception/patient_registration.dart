@@ -316,11 +316,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
           ),
         ),
-        buildDrawerItem(0, 'Patient Registration', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => PatientRegistration()),
-          );
-        }, Iconsax.mask),
+        buildDrawerItem(0, 'Patient Registration', () {}, Iconsax.mask),
         const Divider(
           height: 5,
           color: Colors.grey,

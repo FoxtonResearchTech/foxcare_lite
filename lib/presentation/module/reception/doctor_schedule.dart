@@ -15,7 +15,7 @@ class doctorSchedule extends StatefulWidget {
   State<doctorSchedule> createState() => _doctorScheduleState();
 }
 
-int selectedIndex = 5;
+int selectedIndex = 6;
 
 class _doctorScheduleState extends State<doctorSchedule> {
   @override
@@ -131,11 +131,7 @@ class _doctorScheduleState extends State<doctorSchedule> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(5, 'Doctor Visit Schedule', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const doctorSchedule()),
-          );
-        }, Iconsax.hospital),
+        buildDrawerItem(5, 'Doctor Visit Schedule', () {}, Iconsax.hospital),
         const Divider(
           height: 5,
           color: Colors.grey,

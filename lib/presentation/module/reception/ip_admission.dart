@@ -101,7 +101,6 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
 
   @override
   void dispose() {
-    // Dispose the controller when it's no longer needed
     _scrollController.dispose();
     super.dispose();
   }
@@ -190,11 +189,7 @@ class _IpAdmissionPageState extends State<IpAdmissionPage> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(2, 'IP Admission', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => IpAdmissionPage()),
-          );
-        }, Iconsax.add_circle),
+        buildDrawerItem(2, 'IP Admission', () {}, Iconsax.add_circle),
         Divider(
           height: 5,
           color: Colors.grey,

@@ -297,11 +297,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(1, 'OP Ticket', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => OpTicketPage()),
-          );
-        }, Iconsax.receipt),
+        buildDrawerItem(1, 'OP Ticket', () {}, Iconsax.receipt),
         const Divider(
           height: 5,
           color: Colors.grey,
@@ -465,31 +461,34 @@ class _OpTicketPageState extends State<OpTicketPage> {
                     fontFamily: 'SanFrancisco',
                     fontSize: 22,
                     fontWeight: FontWeight.bold)),
-            DataTable(
-              columns: [
-                const DataColumn(label: Text('OP Number')),
-                const DataColumn(label: Text('Name')),
-                const DataColumn(label: Text('Age')),
-                const DataColumn(label: Text('Phone')),
-                const DataColumn(label: Text('Address')),
-              ],
-              rows: searchResults.map((result) {
-                return DataRow(
-                  selected: selectedPatient == result,
-                  onSelectChanged: (isSelected) {
-                    setState(() {
-                      selectedPatient = result;
-                    });
-                  },
-                  cells: [
-                    DataCell(Text(result['opNumber']!)),
-                    DataCell(Text(result['name']!)),
-                    DataCell(Text(result['age']!)),
-                    DataCell(Text(result['phone']!)),
-                    DataCell(Text(result['address']!)),
-                  ],
-                );
-              }).toList(),
+            Center(
+              child: DataTable(
+                columnSpacing: 180,
+                columns: [
+                  const DataColumn(label: Text('OP Number')),
+                  const DataColumn(label: Text('Name')),
+                  const DataColumn(label: Text('Age')),
+                  const DataColumn(label: Text('Phone')),
+                  const DataColumn(label: Text('Address')),
+                ],
+                rows: searchResults.map((result) {
+                  return DataRow(
+                    selected: selectedPatient == result,
+                    onSelectChanged: (isSelected) {
+                      setState(() {
+                        selectedPatient = result;
+                      });
+                    },
+                    cells: [
+                      DataCell(Text(result['opNumber']!)),
+                      DataCell(Text(result['name']!)),
+                      DataCell(Text(result['age']!)),
+                      DataCell(Text(result['phone']!)),
+                      DataCell(Text(result['address']!)),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
             const SizedBox(height: 30),
             if (selectedPatient != null) buildPatientDetailsForm(),

@@ -210,11 +210,7 @@ class _AdmissionStatus extends State<AdmissionStatus> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(4, 'Admission Status', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdmissionStatus()),
-          );
-        }, Iconsax.status),
+        buildDrawerItem(4, 'Admission Status', () {}, Iconsax.status),
         Divider(
           height: 5,
           color: Colors.grey,
