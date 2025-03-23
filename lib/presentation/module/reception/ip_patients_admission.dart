@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/reception/op_counters.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_ip_patient.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../doctor/ip_prescription.dart';
 import 'admission_status.dart';
 import 'doctor_schedule.dart';
@@ -20,6 +23,9 @@ class IpPatientsAdmission extends StatefulWidget {
 }
 
 class _IpPatientsAdmission extends State<IpPatientsAdmission> {
+  TextEditingController _ipNumber = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
+
   final List<String> headers1 = [
     'Token NO',
     'IP NO',
@@ -38,9 +44,6 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
   void initState() {
     super.initState();
     fetchData();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      fetchData();
-    });
   }
 
   @override
@@ -49,17 +52,25 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
     super.dispose();
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .where('ipNumber', isGreaterThan: '')
-          .get();
+      Query query = FirebaseFirestore.instance.collection('patients');
+
+      if (ipNumber != null) {
+        query = query.where('ipNumber', isEqualTo: ipNumber);
+      } else if (phoneNumber != null) {
+        query = query.where(Filter.or(
+          Filter('phone1', isEqualTo: phoneNumber),
+          Filter('phone2', isEqualTo: phoneNumber),
+        ));
+      }
+      final QuerySnapshot snapshot = await query.get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in patientSnapshot.docs) {
+      for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('ipNumber')) continue;
 
         String tokenNo = '';
         bool hasIpPrescription = false;
@@ -204,6 +215,41 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CustomTextField(
+                          hintText: 'IP Number',
+                          width: screenWidth * 0.15,
+                          controller: _ipNumber,
+                        ),
+                        SizedBox(width: screenHeight * 0.02),
+                        CustomButton(
+                          label: 'Search',
+                          onPressed: () {
+                            fetchData(ipNumber: _ipNumber.text);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
+                        SizedBox(width: screenHeight * 0.05),
+                        CustomTextField(
+                          hintText: 'Phone Number',
+                          width: screenWidth * 0.15,
+                          controller: _phoneNumber,
+                        ),
+                        SizedBox(width: screenHeight * 0.02),
+                        CustomButton(
+                          label: 'Search',
+                          onPressed: () {
+                            fetchData(phoneNumber: _phoneNumber.text);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.08),
                     CustomDataTable(
                       tableData: tableData1,
                       headers: headers1,
@@ -268,7 +314,11 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(3, 'OP Counters', () {}, Iconsax.square),
+        buildDrawerItem(3, 'OP Counters', () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => OpCounters()),
+          );
+        }, Iconsax.square),
         const Divider(
           height: 5,
           color: Colors.grey,

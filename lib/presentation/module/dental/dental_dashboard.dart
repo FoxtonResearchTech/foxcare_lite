@@ -15,7 +15,6 @@ class DentalDashboard extends StatefulWidget {
 }
 
 class _DentalDashboard extends State<DentalDashboard> {
-  // To store the index of the selected drawer item
   int selectedIndex = 0;
   final scheduleHeaders = ['Doctor Name', 'Speciality', 'Morning', 'Evening'];
   final List<Map<String, dynamic>> scheduleTableData = [
