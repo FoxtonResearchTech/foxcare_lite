@@ -36,7 +36,6 @@ class _CustomDataTableState extends State<CustomDataTable> {
   void initState() {
     super.initState();
 
-    // Initialize controllers for editable cells
     controllers = widget.tableData.map((row) {
       return {
         for (String header in widget.headers)
@@ -98,10 +97,8 @@ class _CustomDataTableState extends State<CustomDataTable> {
                       widget.editableColumns?.contains(header) ?? false;
 
                   if (cellData is Widget) {
-                    // Render widget-based cells directly
                     return Center(child: cellData);
                   } else if (isEditable) {
-                    // Render editable cells with TextField
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(

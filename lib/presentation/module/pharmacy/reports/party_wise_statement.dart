@@ -33,6 +33,8 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
   ];
   List<Map<String, dynamic>> tableData = [];
   List<String> distributorsNames = [];
+  double totalAmount = 0.0;
+
   final List<String> headers2 = [
     'Product Name',
     'Batch',
@@ -215,10 +217,19 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
 
       setState(() {
         tableData = fetchedData;
+        calculateTotals();
       });
     } catch (e) {
       print('Error fetching data: $e');
     }
+  }
+
+  void calculateTotals() {
+    totalAmount = tableData.fold(
+      0.0,
+      (sum, item) =>
+          sum + (double.tryParse(item['Bill Value']?.toString() ?? '0') ?? 0),
+    );
   }
 
   @override
@@ -332,7 +343,7 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.42),
+                padding: EdgeInsets.only(left: screenWidth * 0.23),
                 width: screenWidth,
                 height: screenHeight * 0.030,
                 decoration: BoxDecoration(
@@ -344,7 +355,7 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
                 child: Column(
                   children: [
                     CustomText(
-                      text: 'Total : ',
+                      text: 'Total : ${totalAmount.toStringAsFixed(2)} ',
                     )
                   ],
                 ),
