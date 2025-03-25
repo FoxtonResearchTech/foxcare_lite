@@ -225,117 +225,135 @@ class _DoctorRxList extends State<DoctorRxList> {
     String formattedDate =
         '${getDayWithSuffix(now.day)} ${DateFormat('MMMM').format(now)}';
     String formattedYear = DateFormat('y').format(now);
-    return ListView(
+    return Column(
       children: [
-        Container(
-          height: 225,
-          child: DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF21b0d1),
-                  Color(0xFF106ac2),
-                ],
-                begin: Alignment.bottomLeft,
-                end: Alignment.topRight,
+        Expanded(
+          child: ListView(
+            children: [
+              Container(
+                height: 225,
+                child: DrawerHeader(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF21b0d1),
+                        Color(0xFF106ac2),
+                      ],
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                    ),
+                  ),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Hi',
+                              size: 25,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 10,
+                            ),
+                            CustomText(
+                              text: 'Dr.Ramesh',
+                              size: 30,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                        CustomText(
+                          text: 'MBBS,MD(General Medicine)',
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Container(
+                              width: 200,
+                              height: 25,
+                              child: Center(
+                                  child: CustomText(
+                                text: 'General Medicine',
+                                color: Color(0xFF106ac2),
+                              )),
+                              color: Colors.white,
+                            )
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            CustomText(
+                              text: '$formattedTime  ',
+                              size: 30,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 5),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: formattedDate,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                                CustomText(
+                                  text: formattedYear,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      ]),
+                ),
               ),
-            ),
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'Hi',
-                        size: 25,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 10,
-                      ),
-                      CustomText(
-                        text: 'Dr.Ramesh',
-                        size: 30,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                  CustomText(
-                    text: 'MBBS,MD(General Medicine)',
-                    size: 12,
-                    color: Colors.white,
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Container(
-                        width: 200,
-                        height: 25,
-                        child: Center(
-                            child: CustomText(
-                          text: 'General Medicine',
-                          color: Color(0xFF106ac2),
-                        )),
-                        color: Colors.white,
-                      )
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(width: 10),
-                      CustomText(
-                        text: '$formattedTime  ',
-                        size: 30,
-                        color: Colors.white,
-                      ),
-                      SizedBox(width: 5),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          CustomText(
-                            text: formattedDate,
-                            size: 15,
-                            color: Colors.white,
-                          ),
-                          CustomText(
-                            text: formattedYear,
-                            size: 15,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                ]),
+              buildDrawerItem(0, 'Home', () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => DoctorDashboard()));
+              }, Iconsax.mask),
+              Divider(height: 5, color: Colors.white),
+              buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
+              Divider(height: 5, color: Colors.white),
+              buildDrawerItem(2, 'IP Patients', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => IpPatientsDetails()));
+              }, Iconsax.receipt),
+              Divider(height: 5, color: Colors.white),
+              buildDrawerItem(3, 'Pharmacy Stocks', () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => PharmacyStocks()));
+              }, Iconsax.add_circle),
+              Divider(height: 5, color: Colors.white),
+              buildDrawerItem(4, 'Logout', () {
+                // Handle logout action
+              }, Iconsax.logout),
+            ],
           ),
         ),
-        buildDrawerItem(0, 'Home', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => DoctorDashboard()));
-        }, Iconsax.mask),
-        Divider(height: 5, color: Colors.white),
-        buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
-        Divider(height: 5, color: Colors.white),
-        buildDrawerItem(2, 'IP Patients', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => IpPatientsDetails()));
-        }, Iconsax.receipt),
-        Divider(height: 5, color: Colors.white),
-        buildDrawerItem(3, 'Pharmacy Stocks', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyStocks()));
-        }, Iconsax.add_circle),
-        Divider(height: 5, color: Colors.white),
-        buildDrawerItem(4, 'Logout', () {
-          // Handle logout action
-        }, Iconsax.logout),
+        Container(
+          height: 25,
+          color: Color(0xFF106ac2),
+          child: Center(
+            child: CustomText(
+              text: 'Main Road, Trivandrum-690001',
+              color: Colors.white,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -354,14 +372,29 @@ class _DoctorRxList extends State<DoctorRxList> {
         });
       },
       child: Container(
-        color: selectedIndex == index
-            ? const Color(0xFF106ac2)
-            : (hoveredIndex == index ? Color(0xFF21b0d1) : Colors.transparent),
+        decoration: BoxDecoration(
+          gradient: selectedIndex == index
+              ? const LinearGradient(
+                  colors: [Color(0xFF21b0d1), Color(0xFF106ac2)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : (hoveredIndex == index
+                  ? const LinearGradient(
+                      colors: [Color(0xFF42c4e3), Color(0xFF21b0d1)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    )
+                  : null),
+          color: selectedIndex == index || hoveredIndex == index
+              ? null
+              : Colors.transparent,
+        ),
         child: ListTile(
           selected: selectedIndex == index,
-          selectedTileColor: const Color(0xFF106ac2),
+          selectedTileColor: Colors.transparent,
           leading: Icon(
-            icon, // Replace with actual icons
+            icon,
             color: selectedIndex == index
                 ? Colors.white
                 : (hoveredIndex == index
