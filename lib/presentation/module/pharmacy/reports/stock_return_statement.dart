@@ -63,8 +63,11 @@ class _StockReturnStatement extends State<StockReturnStatement> {
   ];
   List<Map<String, dynamic>> tableData2 = [];
 
-  Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
       Query query = FirebaseFirestore.instance
           .collection('stock')

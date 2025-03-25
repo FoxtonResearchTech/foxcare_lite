@@ -26,6 +26,13 @@ class IpPrescription extends StatefulWidget {
   final String temperature;
   final String bloodPressure;
   final String sugarLevel;
+  final String phone1;
+  final String phone2;
+  final String sex;
+  final String bloodGroup;
+  final String firstName;
+  final String lastName;
+  final String dob;
 
   const IpPrescription({
     Key? key,
@@ -40,6 +47,13 @@ class IpPrescription extends StatefulWidget {
     required this.bloodPressure,
     required this.sugarLevel,
     required this.ipNumber,
+    required this.phone1,
+    required this.phone2,
+    required this.sex,
+    required this.bloodGroup,
+    required this.firstName,
+    required this.lastName,
+    required this.dob,
   }) : super(key: key);
   @override
   State<IpPrescription> createState() => _IpPrescription();
@@ -289,7 +303,17 @@ class _IpPrescription extends State<IpPrescription> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return PatientHistoryDialog();
+        return PatientHistoryDialog(
+          firstName: widget.firstName,
+          lastName: widget.lastName,
+          sex: widget.sex,
+          bloodGroup: widget.bloodGroup,
+          phone1: widget.phone1,
+          phone2: widget.phone2,
+          dob: widget.dob,
+          opNumber: widget.patientID,
+          ipNumber: widget.ipNumber,
+        );
       },
     );
   }

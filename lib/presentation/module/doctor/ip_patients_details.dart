@@ -184,6 +184,13 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                           temperature: data['temperature'] ?? 'N/A',
                           bloodPressure: data['bloodPressure'] ?? 'N/A',
                           sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+                          phone1: data['phone1'],
+                          phone2: data['phone2'],
+                          sex: data['sex'],
+                          bloodGroup: data['bloodGroup'],
+                          firstName: data['firstName'],
+                          lastName: data['lastName'],
+                          dob: data['dob'],
                         ),
                       ),
                     );

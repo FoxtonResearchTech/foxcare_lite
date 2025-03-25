@@ -103,6 +103,7 @@ class _AddProduct extends State<AddProduct> {
         'productName': _productName.text,
         'composition': _composition.text,
         'quantity': _quantity.text,
+        'fixedQuantity': _quantity.text,
         'type': selectedType,
         'category': selectedCategory,
         'distributor': selectedDistributor,

@@ -97,10 +97,26 @@ class _ManagerPatientHistory extends State<ManagerPatientHistory> {
             'Phone No': data['phone1'] ?? 'N/A',
             'DOB': data['dob'] ?? 'N/A',
             'View': TextButton(
-                onPressed: () {
-                  showPatientHistoryDialog(context);
-                },
-                child: const CustomText(text: 'View')),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return PatientHistoryDialog(
+                      firstName: data['firstName'],
+                      lastName: data['lastName'],
+                      dob: data['dob'],
+                      sex: data['sex'],
+                      phone1: data['phone1'],
+                      phone2: data['phone2'],
+                      opNumber: data['opNumber'],
+                      ipNumber: data['ipNumber'],
+                      bloodGroup: data['bloodGroup'],
+                    );
+                  },
+                );
+              },
+              child: const CustomText(text: 'View'),
+            ),
           },
         );
       }

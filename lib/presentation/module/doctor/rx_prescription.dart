@@ -15,7 +15,6 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 class RxPrescription extends StatefulWidget {
   final String patientID;
   final String ipNumber;
-
   final String name;
   final String age;
   final String place;
@@ -25,6 +24,13 @@ class RxPrescription extends StatefulWidget {
   final String temperature;
   final String bloodPressure;
   final String sugarLevel;
+  final String phone1;
+  final String phone2;
+  final String sex;
+  final String bloodGroup;
+  final String firstName;
+  final String lastName;
+  final String dob;
   const RxPrescription(
       {super.key,
       required this.patientID,
@@ -37,7 +43,14 @@ class RxPrescription extends StatefulWidget {
       required this.primaryInfo,
       required this.temperature,
       required this.bloodPressure,
-      required this.sugarLevel});
+      required this.sugarLevel,
+      required this.phone1,
+      required this.phone2,
+      required this.sex,
+      required this.bloodGroup,
+      required this.firstName,
+      required this.lastName,
+      required this.dob});
 
   @override
   State<RxPrescription> createState() => _RxPrescription();
@@ -299,7 +312,17 @@ class _RxPrescription extends State<RxPrescription> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return PatientHistoryDialog();
+        return PatientHistoryDialog(
+          firstName: widget.firstName,
+          lastName: widget.lastName,
+          sex: widget.sex,
+          bloodGroup: widget.bloodGroup,
+          phone1: widget.phone1,
+          phone2: widget.phone2,
+          dob: widget.dob,
+          opNumber: widget.patientID,
+          ipNumber: widget.ipNumber,
+        );
       },
     );
   }
