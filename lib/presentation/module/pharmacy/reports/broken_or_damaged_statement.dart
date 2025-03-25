@@ -63,8 +63,11 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
   ];
   List<Map<String, dynamic>> tableData2 = [];
 
-  Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
       Query query = FirebaseFirestore.instance
           .collection('stock')
@@ -404,6 +407,12 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
       (sum, item) =>
           sum + (double.tryParse(item['Return value']?.toString() ?? '0') ?? 0),
     );
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
   }
 
   @override

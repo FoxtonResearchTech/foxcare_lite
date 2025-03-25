@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
@@ -5,8 +6,10 @@ import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../tools/manage_pharmacy_info.dart';
 
 class PartyWiseStatement extends StatefulWidget {
@@ -17,55 +20,214 @@ class PartyWiseStatement extends StatefulWidget {
 }
 
 class _PartyWiseStatement extends State<PartyWiseStatement> {
+  String? selectedDistributor;
+  TextEditingController _dateController = TextEditingController();
+  TextEditingController _fromDateController = TextEditingController();
+  TextEditingController _toDateController = TextEditingController();
   final List<String> headers = [
     'Bill NO',
     'Bill Date',
     'Bill Value',
-    'Return Value',
     'Payment Status',
     'Open Bill',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'Bill NO': '',
-      'Bill Date': '',
-      'Bill Value': '',
-      'Return Value': '',
-      'Payment Status': '',
-      'Open Bill': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'Bill NO': '',
-      'Bill Date': '',
-      'Bill Value': '',
-      'Return Value': '',
-      'Payment Status': '',
-      'Open Bill': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'Bill NO': '',
-      'Bill Date': '',
-      'Bill Value': '',
-      'Return Value': '',
-      'Payment Status': '',
-      'Open Bill': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
+  List<Map<String, dynamic>> tableData = [];
+  List<String> distributorsNames = [];
+  final List<String> headers2 = [
+    'Product Name',
+    'Batch',
+    'Expiry',
+    'Quantity',
+    'HSN',
+    'Free',
+    'MRP',
+    'Price',
+    'Tax',
+    'Amount',
+    'Product Total'
   ];
+  List<Map<String, dynamic>> tableData2 = [];
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  Future<void> fetchDistributors() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('pharmacy')
+              .doc('distributors')
+              .collection('distributor')
+              .get();
+      List<String> distributors = [];
+
+      for (var doc in distributorsSnapshot.docs) {
+        distributors.add(doc['distributorName']);
+      }
+      setState(() {
+        distributorsNames = distributors;
+      });
+    } catch (e) {
+      print('Error fetching distributors: $e');
+    }
+  }
+
+  Future<void> fetchData({
+    String? distributor,
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
+    try {
+      Query query = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('PurchaseEntry');
+      if (distributor != null) {
+        query = query.where('distributor', isEqualTo: distributor);
+      }
+      if (singleDate != null) {
+        query = query.where('reportDate', isEqualTo: singleDate);
+      } else if (fromDate != null && toDate != null) {
+        query = query
+            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
+            .where('reportDate', isLessThanOrEqualTo: toDate);
+      }
+      final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        fetchedData.add({
+          'Bill NO': data['billNo']?.toString() ?? 'N/A',
+          'Bill Date': data['reportDate']?.toString() ?? 'N/A',
+          'Distributor Name': data['distributor']?.toString() ?? 'N/A',
+          'Bill Value': data['amount']?.toString() ?? 'N/A',
+          'Payment Status': data['paymentStatus']?.toString() ?? 'N/A',
+          'Open Bill': TextButton(
+            onPressed: () {
+              for (var product in data['entryProducts']) {
+                tableData2.add({
+                  'Product Name': product['Product Name'],
+                  'Batch': product['Batch Number'],
+                  'Expiry': product['Expiry'],
+                  'Quantity': product['Quantity'],
+                  'Free': product['Free'],
+                  'HSN': product['HSN Code'],
+                  'MRP': product['MRP'],
+                  'Price': product['Price'],
+                  'Tax': product['GST'] + '%',
+                  'Amount': product['Amount'],
+                  'HSN Code': product['HSN Code'],
+                  'Category': product['Category'],
+                  'Company': product['Company'],
+                  'Distributor': product['Distributor'],
+                  'Product Total': product['Product Total'],
+                });
+              }
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('View Bill'),
+                    content: Container(
+                      width: 850,
+                      height: 150,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SingleChildScrollView(
+                                    child: Container(
+                                  width: 850,
+                                  height: 200,
+                                  child: Column(children: [
+                                    CustomDataTable(
+                                        headers: headers2,
+                                        tableData: tableData2),
+                                    SizedBox(height: 10),
+                                  ]),
+                                ))
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: CustomText(
+                          text: 'Ok ',
+                          color: AppColors.secondaryColor,
+                          size: 14,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: CustomText(
+                          text: 'Cancel',
+                          color: AppColors.secondaryColor,
+                          size: 14,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ).then((_) {
+                tableData2.clear();
+              });
+            },
+            child: CustomText(text: 'Open Bill'),
+          ),
+        });
+      }
+
+      setState(() {
+        tableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    fetchDistributors();
+    fetchData();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -91,10 +253,21 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
               SizedBox(height: screenHeight * 0.08),
               Row(
                 children: [
-                  CustomTextField(
-                    hintText: 'Distributor Name',
-                    width: screenWidth * 0.25,
-                    icon: Icon(Icons.arrow_drop_down_outlined),
+                  SizedBox(
+                    width: screenWidth * 0.15,
+                    child: CustomDropdown(
+                      label: 'Distributor',
+                      items: distributorsNames,
+                      selectedItem: selectedDistributor,
+                      onChanged: (value) {
+                        setState(
+                          () {
+                            selectedDistributor = value;
+                            fetchData(distributor: selectedDistributor);
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -102,19 +275,51 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
               Row(
                 children: [
                   CustomTextField(
-                    hintText: 'From',
-                    width: screenWidth * 0.25,
+                    onTap: () => _selectDate(context, _dateController),
+                    icon: Icon(Icons.date_range),
+                    controller: _dateController,
+                    hintText: 'Date',
+                    width: screenWidth * 0.15,
                   ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    hintText: 'To',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.1),
+                  SizedBox(width: screenHeight * 0.02),
                   CustomButton(
-                      label: 'Generate',
-                      onPressed: () {},
-                      width: screenWidth * 0.08)
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(singleDate: _dateController.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomText(text: 'OR'),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _fromDateController),
+                    icon: Icon(Icons.date_range),
+                    controller: _fromDateController,
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _toDateController),
+                    icon: Icon(Icons.date_range),
+                    controller: _toDateController,
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(
+                        fromDate: _fromDateController.text,
+                        toDate: _toDateController.text,
+                      );
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),

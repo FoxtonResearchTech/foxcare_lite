@@ -9,6 +9,7 @@ import 'package:foxcare_lite/presentation/module/management/management_dashboard
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/reports/non_moving_stock.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/reports/party_wise_statement.dart';
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: NonMovingStock(),
+      home: PartyWiseStatement(),
     );
   }
 }
