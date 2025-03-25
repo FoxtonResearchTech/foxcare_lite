@@ -344,6 +344,38 @@ class _DoctorRxList extends State<DoctorRxList> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 45, right: 45),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 100,
+                height: 40,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/hospital_logo_demo.png'))),
+              ),
+              SizedBox(
+                width: 2.5,
+                height: 50,
+                child: Container(
+                  color: Colors.grey,
+                ),
+              ),
+              Container(
+                width: 100,
+                height: 50,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/NIH_Logo.png'))),
+              )
+            ],
+          ),
+        ),
+        SizedBox(height: 10),
         Container(
           height: 25,
           color: Color(0xFF106ac2),

@@ -285,8 +285,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             child: SingleChildScrollView(
               child: Container(
                 padding: EdgeInsets.only(
-                  left: screenWidth * 0.04,
-                  right: screenWidth * 0.04,
+                  left: screenWidth * 0.03,
+                  right: screenWidth * 0.03,
                   bottom: screenWidth * 0.33,
                 ),
                 child: Column(
@@ -479,6 +479,38 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 45, right: 45),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 100,
+                height: 40,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/hospital_logo_demo.png'))),
+              ),
+              SizedBox(
+                width: 2.5,
+                height: 50,
+                child: Container(
+                  color: Colors.grey,
+                ),
+              ),
+              Container(
+                width: 100,
+                height: 50,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/NIH_Logo.png'))),
+              )
+            ],
+          ),
+        ),
+        SizedBox(height: 10),
         Container(
           height: 25,
           color: Color(0xFF106ac2),
