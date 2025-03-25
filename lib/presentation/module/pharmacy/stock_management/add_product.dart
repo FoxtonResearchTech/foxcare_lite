@@ -97,6 +97,7 @@ class _AddProduct extends State<AddProduct> {
   String? selectedType;
   String? selectedCategory;
   String? selectedDistributor;
+
   Future<void> addProduct() async {
     try {
       Map<String, dynamic> data = {

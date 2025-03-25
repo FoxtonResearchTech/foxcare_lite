@@ -1,15 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
+
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
-import '../tools/manage_pharmacy_info.dart';
 
 class NonMovingStock extends StatefulWidget {
   const NonMovingStock({super.key});
@@ -66,13 +65,71 @@ class _NonMovingStock extends State<NonMovingStock> {
         final data = doc.data() as Map<String, dynamic>;
         if (!data.containsKey('amount')) continue;
 
-        fetchedData.add({
-          'SL No': i++,
-          'Product Name': data['productName'],
-          'Opening Stock': data['fixedQuantity'],
-          'Expiry Date': data['expiry'],
-          'Non-Moving Details': '',
-        });
+        if (data.containsKey('fixedQuantity') &&
+            data.containsKey('quantity') &&
+            data['fixedQuantity'] == data['quantity']) {
+          fetchedData.add({
+            'SL No': i++,
+            'Product Name': data['productName'],
+            'Opening Stock': data['fixedQuantity'],
+            'Remaining Stock': data['quantity'],
+            'Expiry Date': data['expiry'],
+            'Non-Moving Details': TextButton(
+              onPressed: () {
+                DateTime reportDate = DateTime.parse(data['reportDate']);
+                DateTime today = DateTime.now();
+                int daysDifference = today.difference(reportDate).inDays;
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Non-Moving Stocks Details'),
+                      content: Container(
+                        width: 350,
+                        height: 180,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Product Entry Date: ${data['reportDate']}',
+                            ),
+                            CustomText(
+                              text: 'Product Name: ${data['productName']}',
+                            ),
+                            CustomText(
+                              text: 'Opening Stock: ${data['fixedQuantity']}',
+                            ),
+                            CustomText(
+                              text: 'Remaining Stock: ${data['quantity']}',
+                            ),
+                            CustomText(
+                              text: 'Expiry Date: ${data['expiry']}',
+                            ),
+                            CustomText(
+                                text: 'Days Since Entry: $daysDifference days'),
+                          ],
+                        ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: CustomText(
+                            text: 'Close',
+                            color: AppColors.secondaryColor,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: CustomText(text: 'View Details'),
+            ),
+          });
+        }
       }
 
       setState(() {
@@ -143,6 +200,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                     label: 'Search',
                     onPressed: () {
                       fetchData(singleDate: _dateController.text);
+                      i = 1;
                     },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
@@ -173,6 +231,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                         fromDate: _fromDateController.text,
                         toDate: _toDateController.text,
                       );
+                      i = 1;
                     },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
