@@ -6,6 +6,7 @@ import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/doctor/pharmacy_stocks.dart';
 import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
@@ -22,6 +23,25 @@ class DoctorRxList extends StatefulWidget {
 
 class _DoctorRxList extends State<DoctorRxList> {
   int selectedIndex = 1;
+  int hoveredIndex = -1;
+  String getDayWithSuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return '${day}th';
+    }
+    switch (day % 10) {
+      case 1:
+        return '${day}st';
+      case 2:
+        return '${day}nd';
+      case 3:
+        return '${day}rd';
+      default:
+        return '${day}th';
+    }
+  }
+
+  DateTime now = DateTime.now();
+
   final List<String> headers1 = [
     'Token NO',
     'OP NO',
@@ -179,13 +199,13 @@ class _DoctorRxList extends State<DoctorRxList> {
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300,
               color: Colors.blue.shade100,
               child: buildDrawerContent(), // Sidebar always open for web view
             ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -201,39 +221,118 @@ class _DoctorRxList extends State<DoctorRxList> {
 
   // Drawer content reused for both web and mobile
   Widget buildDrawerContent() {
+    String formattedTime = DateFormat('h:mm a').format(now);
+    String formattedDate =
+        '${getDayWithSuffix(now.day)} ${DateFormat('MMMM').format(now)}';
+    String formattedYear = DateFormat('y').format(now);
     return ListView(
-      padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Doctor - Consultation',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'SanFrancisco',
-              fontSize: 24,
+        Container(
+          height: 225,
+          child: DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF21b0d1),
+                  Color(0xFF106ac2),
+                ],
+                begin: Alignment.bottomLeft,
+                end: Alignment.topRight,
+              ),
             ),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Hi',
+                        size: 25,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 10,
+                      ),
+                      CustomText(
+                        text: 'Dr.Ramesh',
+                        size: 30,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                  CustomText(
+                    text: 'MBBS,MD(General Medicine)',
+                    size: 12,
+                    color: Colors.white,
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Container(
+                        width: 200,
+                        height: 25,
+                        child: Center(
+                            child: CustomText(
+                          text: 'General Medicine',
+                          color: Color(0xFF106ac2),
+                        )),
+                        color: Colors.white,
+                      )
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(width: 10),
+                      CustomText(
+                        text: '$formattedTime  ',
+                        size: 30,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 5),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: formattedDate,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                          CustomText(
+                            text: formattedYear,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                ]),
           ),
         ),
         buildDrawerItem(0, 'Home', () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => DoctorDashboard()));
         }, Iconsax.mask),
-        Divider(height: 5, color: Colors.grey),
+        Divider(height: 5, color: Colors.white),
         buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
-        Divider(height: 5, color: Colors.grey),
+        Divider(height: 5, color: Colors.white),
         buildDrawerItem(2, 'IP Patients', () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => IpPatientsDetails()));
-        }, Iconsax.add_circle),
-        Divider(height: 5, color: Colors.grey),
+        }, Iconsax.receipt),
+        Divider(height: 5, color: Colors.white),
         buildDrawerItem(3, 'Pharmacy Stocks', () {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => PharmacyStocks()));
         }, Iconsax.add_circle),
-        Divider(height: 5, color: Colors.grey),
+        Divider(height: 5, color: Colors.white),
         buildDrawerItem(4, 'Logout', () {
           // Handle logout action
         }, Iconsax.logout),
@@ -241,30 +340,53 @@ class _DoctorRxList extends State<DoctorRxList> {
     );
   }
 
-  // Helper method to build drawer items with the ability to highlight the selected item
   Widget buildDrawerItem(
       int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor: Colors.blueAccent.shade100,
-      // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'SanFrancisco'),
-      ),
-      onTap: () {
+    return MouseRegion(
+      onEnter: (_) {
         setState(() {
-          selectedIndex = index; // Update the selected index
+          hoveredIndex = index;
         });
-        onTap();
       },
+      onExit: (_) {
+        setState(() {
+          hoveredIndex = -1;
+        });
+      },
+      child: Container(
+        color: selectedIndex == index
+            ? const Color(0xFF106ac2)
+            : (hoveredIndex == index ? Color(0xFF21b0d1) : Colors.transparent),
+        child: ListTile(
+          selected: selectedIndex == index,
+          selectedTileColor: const Color(0xFF106ac2),
+          leading: Icon(
+            icon, // Replace with actual icons
+            color: selectedIndex == index
+                ? Colors.white
+                : (hoveredIndex == index
+                    ? Colors.white
+                    : const Color(0xFF106ac2)),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+                color: selectedIndex == index
+                    ? Colors.white
+                    : (hoveredIndex == index
+                        ? Colors.white
+                        : const Color(0xFF106ac2)),
+                fontWeight: FontWeight.w700,
+                fontFamily: 'SanFrancisco'),
+          ),
+          onTap: () {
+            setState(() {
+              selectedIndex = index;
+            });
+            onTap();
+          },
+        ),
+      ),
     );
   }
 
@@ -276,15 +398,57 @@ class _DoctorRxList extends State<DoctorRxList> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
-            left: screenWidth * 0.04,
-            right: screenWidth * 0.04,
-            bottom: screenWidth * 0.25,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
+            bottom: screenWidth * 0.1,
           ),
           child: Column(
             children: [
-              SizedBox(height: screenHeight * 0.08),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      CustomText(
+                        text: 'OP Prescription',
+                        size: screenWidth * .02,
+                      ),
+                      CustomText(
+                        text: 'Waiting Que',
+                        size: screenWidth * .01,
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.15,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Dept : General Medicine',
+                    size: screenWidth * .015,
+                    color: Color(0xFF106ac2),
+                  ),
+                  SizedBox(width: screenWidth * 0.08),
+                  CustomText(
+                    text: 'Counter A',
+                    size: screenWidth * .015,
+                    color: Color(0xFF106ac2),
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.008),
               CustomDataTable(
+                headerColor: Colors.white,
+                headerBackgroundColor: Color(0xFF106ac2),
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
@@ -293,7 +457,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                       : Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.02),
             ],
           ),
         ),

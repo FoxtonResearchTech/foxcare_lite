@@ -7,6 +7,8 @@ class CustomDataTable extends StatefulWidget {
   final List<String>? editableColumns;
   final Map<int, TableColumnWidth> columnWidths;
   final Color headerBackgroundColor;
+  final Color headerColor;
+
   final Color borderColor;
   final Color Function(Map<String, dynamic>)? rowColorResolver;
   final Function(int rowIndex, String header, String value)? onValueChanged;
@@ -23,6 +25,7 @@ class CustomDataTable extends StatefulWidget {
     this.rowColorResolver,
     this.onValueChanged,
     this.controllers,
+    this.headerColor = Colors.black,
   });
 
   @override
@@ -75,7 +78,10 @@ class _CustomDataTableState extends State<CustomDataTable> {
           children: widget.headers
               .map(
                 (header) => Center(
-                  child: CustomText(text: header),
+                  child: CustomText(
+                    text: header,
+                    color: widget.headerColor,
+                  ),
                 ),
               )
               .toList(),
