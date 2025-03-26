@@ -99,20 +99,17 @@ class _PatientReport extends State<PatientReport> {
         }
       }
 
-      // Update patient financial details
       await patientRef.set({
-        'totalAmount': totalAmountController.text,
-        'collected': paidController.text,
-        'balance': balanceController.text,
+        'labTotalAmount': totalAmountController.text,
+        'labCollected': paidController.text,
+        'labBalance': balanceController.text,
         'reportDate': _dateController.text,
       }, SetOptions(merge: true));
 
-      // Increment the submission counter in Firestore
       await patientRef.set({
         'reportNo': FieldValue.increment(1),
       }, SetOptions(merge: true));
 
-      // Show success message
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
           backgroundColor: AppColors.secondaryColor);

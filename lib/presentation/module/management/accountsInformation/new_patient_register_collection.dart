@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
+import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -95,53 +96,12 @@ class _NewPatientRegisterCollection
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: CustomText(
-                      text: 'Payment Details',
-                      size: 24,
-                    ),
-                    content: Container(
-                      width: 250,
-                      height: 150,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                              text: 'OP Number : ${data['opNumber'] ?? 'N/A'}'),
-                          CustomText(
-                              text:
-                                  'Name : ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'),
-                          CustomText(text: 'City : ${data['city'] ?? 'N/A'}'),
-                          SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CustomText(text: 'Repayable Amount :$balance')
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () async {},
-                        child: CustomText(
-                          text: 'Pay',
-                          color: AppColors.secondaryColor,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Close',
-                          color: AppColors.secondaryColor,
-                        ),
-                      ),
-                    ],
-                  );
+                  return PaymentDialog(
+                      patientID: data['opNumber'],
+                      firstName: data['firstName'],
+                      lastName: data['lastName'],
+                      city: data['city'],
+                      balance: balance.toString());
                 },
               );
             },

@@ -28,6 +28,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
   final TextEditingController temperature = TextEditingController();
   final TextEditingController bloodPressure = TextEditingController();
   final TextEditingController otherComments = TextEditingController();
+  final TextEditingController opTicketTotalAmount = TextEditingController();
+  final TextEditingController opTicketCollectedAmount = TextEditingController();
 
   final TextEditingController searchOpNumber = TextEditingController();
   final TextEditingController searchPhoneNumber = TextEditingController();
@@ -68,7 +70,11 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
           .doc('currentToken')
           .set({
         'tokenNumber': storedTokenValue,
-        'date': _currentDateString(),
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
       });
       await firestore.collection('patients').doc(selectedPatientId).update({
         'date': dateTime.year.toString() +
@@ -80,6 +86,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         'doctorName': doctorName.text,
         'bloodPressure': bloodPressure.text,
         'bloodSugarLevel': bloodSugarLevel.text,
+        'opTicketTotalAmount': opTicketTotalAmount.text,
+        'opTicketCollectedAmount': opTicketCollectedAmount.text,
         'temperature': temperature.text,
         'otherComments': otherComments.text,
       });
@@ -114,11 +122,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     } catch (e) {
       showMessage('Failed to save token: $e');
     }
-  }
-
-  String _currentDateString() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month}-${now.day}';
   }
 
   void showMessage(String message) {
@@ -728,6 +731,41 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
               CustomTextField(
                 hintText: '',
                 controller: temperature,
+                width: 250,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(
+                  width: 80,
+                  child: Text(
+                    'OP Ticket Amount : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
+                    ),
+                  )),
+              CustomTextField(
+                hintText: '',
+                controller: opTicketTotalAmount,
+                width: 250,
+              ),
+              const SizedBox(
+                width: 20,
+              ),
+              const SizedBox(
+                  width: 80,
+                  child: Text(
+                    'Collected : ',
+                    style: TextStyle(
+                      fontFamily: 'SanFrancisco',
+                    ),
+                  )),
+              CustomTextField(
+                hintText: '',
+                controller: opTicketCollectedAmount,
                 width: 250,
               ),
             ],
