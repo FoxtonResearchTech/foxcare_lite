@@ -471,16 +471,18 @@ class _DoctorRxList extends State<DoctorRxList> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(
                         text: 'OP Prescription',
-                        size: screenWidth * .02,
+                        size: screenWidth * .04,
                       ),
                       CustomText(
                         text: 'Waiting Que',
-                        size: screenWidth * .01,
+                        size: screenWidth * .02,
                       ),
                     ],
                   ),
