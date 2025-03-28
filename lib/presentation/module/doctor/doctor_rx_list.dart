@@ -213,7 +213,7 @@ class _DoctorRxList extends State<DoctorRxList> {
             Container(
               width: 300,
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: buildDrawerContent(),
             ),
           Expanded(
             child: Padding(
@@ -245,11 +245,11 @@ class _DoctorRxList extends State<DoctorRxList> {
               Container(
                 height: 225,
                 child: DrawerHeader(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xFF21b0d1),
-                        Color(0xFF106ac2),
+                        AppColors.lightBlue,
+                        AppColors.blue,
                       ],
                       begin: Alignment.bottomLeft,
                       end: Alignment.topRight,
@@ -394,7 +394,7 @@ class _DoctorRxList extends State<DoctorRxList> {
         const SizedBox(height: 10),
         Container(
           height: 25,
-          color: const Color(0xFF106ac2),
+          color: AppColors.blue,
           child: const Center(
             child: CustomText(
               text: 'Main Road, Trivandrum-690001',
@@ -422,14 +422,20 @@ class _DoctorRxList extends State<DoctorRxList> {
       child: Container(
         decoration: BoxDecoration(
           gradient: selectedIndex == index
-              ? const LinearGradient(
-                  colors: [Color(0xFF21b0d1), Color(0xFF106ac2)],
+              ? LinearGradient(
+                  colors: [
+                    AppColors.lightBlue,
+                    AppColors.blue,
+                  ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 )
               : (hoveredIndex == index
-                  ? const LinearGradient(
-                      colors: [Color(0xFF42c4e3), Color(0xFF21b0d1)],
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     )
@@ -445,18 +451,14 @@ class _DoctorRxList extends State<DoctorRxList> {
             icon,
             color: selectedIndex == index
                 ? Colors.white
-                : (hoveredIndex == index
-                    ? Colors.white
-                    : const Color(0xFF106ac2)),
+                : (hoveredIndex == index ? Colors.white : AppColors.blue),
           ),
           title: Text(
             title,
             style: TextStyle(
                 color: selectedIndex == index
                     ? Colors.white
-                    : (hoveredIndex == index
-                        ? Colors.white
-                        : const Color(0xFF106ac2)),
+                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
                 fontWeight: FontWeight.w700,
                 fontFamily: 'SanFrancisco'),
           ),
@@ -518,13 +520,13 @@ class _DoctorRxList extends State<DoctorRxList> {
                   CustomText(
                     text: 'Dept : General Medicine',
                     size: screenWidth * .015,
-                    color: const Color(0xFF106ac2),
+                    color: AppColors.blue,
                   ),
                   SizedBox(width: screenWidth * 0.08),
                   CustomText(
                     text: 'Counter A',
                     size: screenWidth * .015,
-                    color: const Color(0xFF106ac2),
+                    color: AppColors.blue,
                   ),
                 ],
               ),

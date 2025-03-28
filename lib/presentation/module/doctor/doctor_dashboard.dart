@@ -4,6 +4,7 @@ import 'package:foxcare_lite/presentation/module/doctor/pharmacy_stocks.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import 'ip_patients_details.dart';
 
@@ -129,8 +130,8 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xFF21b0d1),
-                        Color(0xFF106ac2),
+                        AppColors.lightBlue,
+                        AppColors.blue,
                       ],
                       begin: Alignment.bottomLeft,
                       end: Alignment.topRight,
@@ -271,7 +272,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         SizedBox(height: 10),
         Container(
           height: 25,
-          color: Color(0xFF106ac2),
+          color: AppColors.blue,
           child: Center(
             child: CustomText(
               text: 'Main Road, Trivandrum-690001',
@@ -299,14 +300,20 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       child: Container(
         decoration: BoxDecoration(
           gradient: selectedIndex == index
-              ? const LinearGradient(
-                  colors: [Color(0xFF21b0d1), Color(0xFF106ac2)],
+              ? LinearGradient(
+                  colors: [
+                    AppColors.lightBlue,
+                    AppColors.blue,
+                  ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 )
               : (hoveredIndex == index
-                  ? const LinearGradient(
-                      colors: [Color(0xFF42c4e3), Color(0xFF21b0d1)],
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     )
@@ -322,18 +329,14 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             icon,
             color: selectedIndex == index
                 ? Colors.white
-                : (hoveredIndex == index
-                    ? Colors.white
-                    : const Color(0xFF106ac2)),
+                : (hoveredIndex == index ? Colors.white : AppColors.blue),
           ),
           title: Text(
             title,
             style: TextStyle(
                 color: selectedIndex == index
                     ? Colors.white
-                    : (hoveredIndex == index
-                        ? Colors.white
-                        : const Color(0xFF106ac2)),
+                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
                 fontWeight: FontWeight.w700,
                 fontFamily: 'SanFrancisco'),
           ),

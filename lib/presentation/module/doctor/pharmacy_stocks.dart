@@ -221,8 +221,8 @@ class _PharmacyStocks extends State<PharmacyStocks> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xFF21b0d1),
-                        Color(0xFF106ac2),
+                        AppColors.lightBlue,
+                        AppColors.blue,
                       ],
                       begin: Alignment.bottomLeft,
                       end: Alignment.topRight,
@@ -363,7 +363,7 @@ class _PharmacyStocks extends State<PharmacyStocks> {
         SizedBox(height: 10),
         Container(
           height: 25,
-          color: Color(0xFF106ac2),
+          color: AppColors.blue,
           child: Center(
             child: CustomText(
               text: 'Main Road, Trivandrum-690001',
@@ -391,14 +391,20 @@ class _PharmacyStocks extends State<PharmacyStocks> {
       child: Container(
         decoration: BoxDecoration(
           gradient: selectedIndex == index
-              ? const LinearGradient(
-                  colors: [Color(0xFF21b0d1), Color(0xFF106ac2)],
+              ? LinearGradient(
+                  colors: [
+                    AppColors.lightBlue,
+                    AppColors.blue,
+                  ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 )
               : (hoveredIndex == index
-                  ? const LinearGradient(
-                      colors: [Color(0xFF42c4e3), Color(0xFF21b0d1)],
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     )
@@ -414,18 +420,14 @@ class _PharmacyStocks extends State<PharmacyStocks> {
             icon,
             color: selectedIndex == index
                 ? Colors.white
-                : (hoveredIndex == index
-                    ? Colors.white
-                    : const Color(0xFF106ac2)),
+                : (hoveredIndex == index ? Colors.white : AppColors.blue),
           ),
           title: Text(
             title,
             style: TextStyle(
                 color: selectedIndex == index
                     ? Colors.white
-                    : (hoveredIndex == index
-                        ? Colors.white
-                        : const Color(0xFF106ac2)),
+                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
                 fontWeight: FontWeight.w700,
                 fontFamily: 'SanFrancisco'),
           ),
@@ -440,7 +442,6 @@ class _PharmacyStocks extends State<PharmacyStocks> {
     );
   }
 
-  // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
 
