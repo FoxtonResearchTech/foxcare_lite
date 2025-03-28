@@ -187,7 +187,7 @@ class _DoctorRxList extends State<DoctorRxList> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text('Doctor Dashboard'),
+              title: const Text('Doctor Dashboard'),
             )
           : null, // No AppBar for web view
       drawer: isMobile
@@ -233,7 +233,7 @@ class _DoctorRxList extends State<DoctorRxList> {
               Container(
                 height: 225,
                 child: DrawerHeader(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
                         Color(0xFF21b0d1),
@@ -246,7 +246,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             CustomText(
@@ -256,7 +256,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                             ),
                           ],
                         ),
-                        Row(
+                        const Row(
                           children: [
                             SizedBox(
                               width: 10,
@@ -268,37 +268,37 @@ class _DoctorRxList extends State<DoctorRxList> {
                             ),
                           ],
                         ),
-                        CustomText(
+                        const CustomText(
                           text: 'MBBS,MD(General Medicine)',
                           size: 12,
                           color: Colors.white,
                         ),
                         Row(
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               width: 10,
                             ),
                             Container(
                               width: 200,
                               height: 25,
-                              child: Center(
+                              color: Colors.white,
+                              child: const Center(
                                   child: CustomText(
                                 text: 'General Medicine',
                                 color: Color(0xFF106ac2),
                               )),
-                              color: Colors.white,
                             )
                           ],
                         ),
                         Row(
                           children: [
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             CustomText(
                               text: '$formattedTime  ',
                               size: 30,
                               color: Colors.white,
                             ),
-                            SizedBox(width: 5),
+                            const SizedBox(width: 5),
                             Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
@@ -320,24 +320,28 @@ class _DoctorRxList extends State<DoctorRxList> {
                 ),
               ),
               buildDrawerItem(0, 'Home', () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => DoctorDashboard()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DoctorDashboard()));
               }, Iconsax.mask),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(2, 'IP Patients', () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => IpPatientsDetails()));
               }, Iconsax.receipt),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(3, 'Pharmacy Stocks', () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => PharmacyStocks()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PharmacyStocks()));
               }, Iconsax.add_circle),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(4, 'Logout', () {
                 // Handle logout action
               }, Iconsax.logout),
@@ -352,7 +356,7 @@ class _DoctorRxList extends State<DoctorRxList> {
               Container(
                 width: 100,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                     shape: BoxShape.rectangle,
                     image: DecorationImage(
                         image: AssetImage('assets/hospital_logo_demo.png'))),
@@ -367,7 +371,7 @@ class _DoctorRxList extends State<DoctorRxList> {
               Container(
                 width: 100,
                 height: 50,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                     shape: BoxShape.rectangle,
                     image: DecorationImage(
                         image: AssetImage('assets/NIH_Logo.png'))),
@@ -375,11 +379,11 @@ class _DoctorRxList extends State<DoctorRxList> {
             ],
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Container(
           height: 25,
-          color: Color(0xFF106ac2),
-          child: Center(
+          color: const Color(0xFF106ac2),
+          child: const Center(
             child: CustomText(
               text: 'Main Road, Trivandrum-690001',
               color: Colors.white,
@@ -492,7 +496,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        image: DecorationImage(
+                        image: const DecorationImage(
                             image: AssetImage('assets/foxcare_lite_logo.png'))),
                   ),
                 ],
@@ -502,20 +506,20 @@ class _DoctorRxList extends State<DoctorRxList> {
                   CustomText(
                     text: 'Dept : General Medicine',
                     size: screenWidth * .015,
-                    color: Color(0xFF106ac2),
+                    color: const Color(0xFF106ac2),
                   ),
                   SizedBox(width: screenWidth * 0.08),
                   CustomText(
                     text: 'Counter A',
                     size: screenWidth * .015,
-                    color: Color(0xFF106ac2),
+                    color: const Color(0xFF106ac2),
                   ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.008),
               CustomDataTable(
                 headerColor: Colors.white,
-                headerBackgroundColor: Color(0xFF106ac2),
+                headerBackgroundColor: const Color(0xFF106ac2),
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
