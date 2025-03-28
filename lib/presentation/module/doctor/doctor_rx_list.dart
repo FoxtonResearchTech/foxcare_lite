@@ -9,9 +9,11 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utilities/colors.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'ip_patients_details.dart';
 
 class DoctorRxList extends StatefulWidget {
@@ -22,6 +24,8 @@ class DoctorRxList extends StatefulWidget {
 }
 
 class _DoctorRxList extends State<DoctorRxList> {
+  TextEditingController _opNumber = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
   int selectedIndex = 1;
   int hoveredIndex = -1;
   String getDayWithSuffix(int day) {
@@ -59,9 +63,9 @@ class _DoctorRxList extends State<DoctorRxList> {
   void initState() {
     super.initState();
     fetchData();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      fetchData();
-    });
+    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   fetchData();
+    // });
   }
 
   @override
@@ -70,17 +74,25 @@ class _DoctorRxList extends State<DoctorRxList> {
     super.dispose();
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .where('opNumber', isGreaterThan: '')
-          .get();
+      Query query = FirebaseFirestore.instance.collection('patients');
+
+      if (opNumber != null) {
+        query = query.where('opNumber', isEqualTo: opNumber);
+      } else if (phoneNumber != null) {
+        query = query.where(Filter.or(
+          Filter('phone1', isEqualTo: phoneNumber),
+          Filter('phone2', isEqualTo: phoneNumber),
+        ));
+      }
+      final QuerySnapshot snapshot = await query.get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in patientSnapshot.docs) {
+      for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('opNumber')) continue;
 
         String tokenNo = '';
         try {
@@ -516,7 +528,42 @@ class _DoctorRxList extends State<DoctorRxList> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.008),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    hintText: 'OP Number',
+                    width: screenWidth * 0.15,
+                    controller: _opNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(opNumber: _opNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  CustomTextField(
+                    hintText: 'Phone Number',
+                    width: screenWidth * 0.15,
+                    controller: _phoneNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(phoneNumber: _phoneNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
                 headerColor: Colors.white,
                 headerBackgroundColor: const Color(0xFF106ac2),

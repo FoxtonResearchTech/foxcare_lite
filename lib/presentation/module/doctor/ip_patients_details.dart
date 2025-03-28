@@ -7,9 +7,11 @@ import 'package:foxcare_lite/presentation/module/reception/patient_registration.
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../doctor/ip_prescription.dart';
 import 'doctor_rx_list.dart';
 
@@ -19,6 +21,8 @@ class IpPatientsDetails extends StatefulWidget {
 }
 
 class _IpPatientsDetails extends State<IpPatientsDetails> {
+  TextEditingController _ipNumber = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
   int hoveredIndex = -1;
   String getDayWithSuffix(int day) {
     if (day >= 11 && day <= 13) {
@@ -58,9 +62,9 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   void initState() {
     super.initState();
     fetchData();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      fetchData();
-    });
+    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   fetchData();
+    // });
   }
 
   @override
@@ -124,18 +128,25 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
     }
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .where('ipNumber', isGreaterThan: '')
-          .get();
+      Query query = FirebaseFirestore.instance.collection('patients');
 
+      if (ipNumber != null) {
+        query = query.where('ipNumber', isEqualTo: ipNumber);
+      } else if (phoneNumber != null) {
+        query = query.where(Filter.or(
+          Filter('phone1', isEqualTo: phoneNumber),
+          Filter('phone2', isEqualTo: phoneNumber),
+        ));
+      }
+
+      final QuerySnapshot snapshot = await query.get();
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in patientSnapshot.docs) {
+      for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-
+        if (!data.containsKey('ipNumber')) continue;
         String tokenNo = '';
         bool hasIpPrescription = false;
 
@@ -287,7 +298,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                 padding: EdgeInsets.only(
                   left: screenWidth * 0.03,
                   right: screenWidth * 0.03,
-                  bottom: screenWidth * 0.33,
+                  bottom: screenWidth * 0.01,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -335,7 +346,42 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                         ),
                       ],
                     ),
-                    SizedBox(height: screenHeight * 0.008),
+                    SizedBox(height: screenHeight * 0.04),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CustomTextField(
+                          hintText: 'IP Number',
+                          width: screenWidth * 0.15,
+                          controller: _ipNumber,
+                        ),
+                        SizedBox(width: screenHeight * 0.02),
+                        CustomButton(
+                          label: 'Search',
+                          onPressed: () {
+                            fetchData(ipNumber: _ipNumber.text);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
+                        SizedBox(width: screenHeight * 0.05),
+                        CustomTextField(
+                          hintText: 'Phone Number',
+                          width: screenWidth * 0.15,
+                          controller: _phoneNumber,
+                        ),
+                        SizedBox(width: screenHeight * 0.02),
+                        CustomButton(
+                          label: 'Search',
+                          onPressed: () {
+                            fetchData(phoneNumber: _phoneNumber.text);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.04),
                     CustomDataTable(
                       headerColor: Colors.white,
                       headerBackgroundColor: Color(0xFF106ac2),
