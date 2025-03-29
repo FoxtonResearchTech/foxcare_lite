@@ -83,7 +83,6 @@ class _PatientReport extends State<PatientReport> {
 
   Future<void> submitData() async {
     try {
-      // Reference to the patient's Firestore document
       final patientRef = FirebaseFirestore.instance
           .collection('patients')
           .doc(widget.patientID);
@@ -126,7 +125,7 @@ class _PatientReport extends State<PatientReport> {
     double paidAmount = double.tryParse(paidController.text) ?? 0.0;
     double balance = totalAmount - paidAmount;
 
-    balanceController.text = balance.toStringAsFixed(2); // Update balance field
+    balanceController.text = balance.toStringAsFixed(2);
   }
 
   @override

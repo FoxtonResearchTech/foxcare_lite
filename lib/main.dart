@@ -5,7 +5,11 @@ import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
 import 'package:foxcare_lite/presentation/module/lab/lab_accounts.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase_still_pending.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admission_collection.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
@@ -37,7 +41,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: DoctorDashboard(),
+      home: HospitalDirectPurchaseStillPending(),
     );
   }
 }

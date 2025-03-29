@@ -8,6 +8,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
 class AddProduct extends StatefulWidget {
   const AddProduct({super.key});
@@ -40,10 +41,8 @@ class _AddProduct extends State<AddProduct> {
 
   void fetchRecentProducts() async {
     try {
-      // Get the date 30 days ago
       DateTime thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
 
-      // Fetch all products from Firestore (filtering done later)
       QuerySnapshot<Map<String, dynamic>> stockSnapshot =
           await FirebaseFirestore.instance
               .collection('stock')
@@ -56,17 +55,14 @@ class _AddProduct extends State<AddProduct> {
       for (var doc in stockSnapshot.docs) {
         final data = doc.data();
 
-        // Convert productAddedDate (String) to DateTime
         DateTime? addedDate;
         try {
-          addedDate = DateTime.parse(
-              data['productAddedDate']); // Convert String to DateTime
+          addedDate = DateTime.parse(data['productAddedDate']);
         } catch (e) {
           print("Invalid date format: ${data['productAddedDate']}");
-          continue; // Skip invalid date entries
+          continue;
         }
 
-        // Check if the product was added within the last 30 days
         if (addedDate.isAfter(thirtyDaysAgo)) {
           fetchedData.add({
             'Product Name': data['productName'],
@@ -125,17 +121,11 @@ class _AddProduct extends State<AddProduct> {
           .doc()
           .set(data);
       clearFields();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Product Added successfully"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      CustomSnackBar(context,
+          message: 'Product Added Successfully', backgroundColor: Colors.green);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Failed To Add Product"),
-        backgroundColor: Colors.red,
-      ));
+      CustomSnackBar(context,
+          message: 'Failed to Add Product', backgroundColor: Colors.red);
     }
   }
 
