@@ -8,6 +8,7 @@ import 'package:foxcare_lite/presentation/module/lab/lab_accounts.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase_still_pending.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admission_collection.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: HospitalDirectPurchaseStillPending(),
+      home: IpAdmit(),
     );
   }
 }
