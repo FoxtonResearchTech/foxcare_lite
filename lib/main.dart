@@ -13,6 +13,10 @@ import 'package:foxcare_lite/presentation/module/pharmacy/reports/party_wise_sta
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';
+import 'presentation/module/management/doctor/add_schedule.dart';
+import 'presentation/module/management/doctor/doctor_view-schedule_manager.dart';
+import 'presentation/module/reception/doctor_schedule.dart';
+import 'presentation/module/reception/doctor_schedule_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +35,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: DoctorRxList(),
+      home: DoctorScheduleViewManager(),
     );
   }
 }
