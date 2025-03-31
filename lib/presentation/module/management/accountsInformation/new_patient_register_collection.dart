@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
+import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,24 @@ class _NewPatientRegisterCollection
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
+  int hoveredIndex = -1;
+  String getDayWithSuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return '${day}th';
+    }
+    switch (day % 10) {
+      case 1:
+        return '${day}st';
+      case 2:
+        return '${day}nd';
+      case 3:
+        return '${day}rd';
+      default:
+        return '${day}th';
+    }
+  }
 
+  DateTime now = DateTime.now();
   final List<String> headers = [
     'OP No',
     'Name',
@@ -95,53 +113,12 @@ class _NewPatientRegisterCollection
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: CustomText(
-                      text: 'Payment Details',
-                      size: 24,
-                    ),
-                    content: Container(
-                      width: 250,
-                      height: 150,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                              text: 'OP Number : ${data['opNumber'] ?? 'N/A'}'),
-                          CustomText(
-                              text:
-                                  'Name : ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'),
-                          CustomText(text: 'City : ${data['city'] ?? 'N/A'}'),
-                          SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CustomText(text: 'Repayable Amount :$balance')
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () async {},
-                        child: CustomText(
-                          text: 'Pay',
-                          color: AppColors.secondaryColor,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Close',
-                          color: AppColors.secondaryColor,
-                        ),
-                      ),
-                    ],
-                  );
+                  return PaymentDialog(
+                      patientID: data['opNumber'],
+                      firstName: data['firstName'],
+                      lastName: data['lastName'],
+                      city: data['city'],
+                      balance: balance.toString());
                 },
               );
             },
@@ -274,7 +251,7 @@ class _NewPatientRegisterCollection
             ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(left: 16, right: 16),
               child: dashboard(),
             ),
           ),
@@ -285,146 +262,323 @@ class _NewPatientRegisterCollection
 
   // Drawer content reused for both web and mobile
   Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
+    String formattedTime = DateFormat('h:mm a').format(now);
+    String formattedDate =
+        '${getDayWithSuffix(now.day)} ${DateFormat('MMMM').format(now)}';
+    String formattedYear = DateFormat('y').format(now);
+    return Column(
       children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
+        Expanded(
+          child: ListView(
+            children: [
+              Container(
+                height: 225,
+                child: DrawerHeader(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                    ),
+                  ),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Hi',
+                              size: 25,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                        const Row(
+                          children: [
+                            SizedBox(
+                              width: 10,
+                            ),
+                            CustomText(
+                              text: 'Dr.Ramesh',
+                              size: 30,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                        const CustomText(
+                          text: 'MBBS,MD(General Medicine)',
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                        Row(
+                          children: [
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Container(
+                              width: 200,
+                              height: 25,
+                              color: Colors.white,
+                              child: Center(
+                                  child: CustomText(
+                                text: 'General Medicine',
+                                color: AppColors.blue,
+                              )),
+                            )
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const SizedBox(width: 10),
+                            CustomText(
+                              text: '$formattedTime  ',
+                              size: 30,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 5),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: formattedDate,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                                CustomText(
+                                  text: formattedYear,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      ]),
+                ),
+              ),
+              buildDrawerItem(
+                  0, 'New Patients Register Collection', () {}, Iconsax.mask),
+              Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(1, 'OP Ticket Collection', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => OpTicketCollection()));
+              }, Iconsax.receipt),
+              Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(2, 'IP Admission Collection', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => IpAdmissionCollection()));
+              }, Iconsax.add_circle),
+              Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(3, 'Pharmacy Collection', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PharmacyTotalSales()));
+              }, Iconsax.square),
+              Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(4, 'Hospital Direct Purchase', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => HospitalDirectPurchase()));
+              }, Iconsax.status),
+              Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(5, 'Hospital Direct Purchase Pending Still', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            HospitalDirectPurchaseStillPending()));
+              }, Iconsax.hospital),
+              const Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(6, 'Other Expense', () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => OtherExpense()));
+              }, Iconsax.hospital),
+              const Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(7, 'Surgery | OT | ICU | Observation Collection',
+                  () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SurgeryOtIcuCollection()));
+              }, Iconsax.hospital),
+              const Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(8, 'Lab Collection', () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => LabCollection()));
+              }, Iconsax.hospital),
+              const Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(9, 'IP Admit', () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => IpAdmit()));
+              }, Iconsax.hospital),
+              const Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(10, 'IP Admit List', () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => IpAdmitList()));
+              }, Iconsax.hospital),
+              const Divider(
+                height: 5,
+                color: Colors.grey,
+              ),
+              buildDrawerItem(11, 'Back To Management Dashboard', () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ManagementDashboard()));
+              }, Iconsax.logout),
+            ],
           ),
-          child: Text(
-            'Accounts Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 45, right: 45),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 100,
+                height: 40,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/hospital_logo_demo.png'))),
+              ),
+              SizedBox(
+                width: 2.5,
+                height: 50,
+                child: Container(
+                  color: Colors.grey,
+                ),
+              ),
+              Container(
+                width: 100,
+                height: 50,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/NIH_Logo.png'))),
+              )
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          height: 25,
+          color: AppColors.blue,
+          child: const Center(
+            child: CustomText(
+              text: 'Main Road, Trivandrum-690001',
               color: Colors.white,
-              fontSize: 24,
             ),
           ),
         ),
-        buildDrawerItem(
-            0, 'New Patients Register Collection', () {}, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'OP Ticket Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => OpTicketCollection()));
-        }, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'IP Admission Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => IpAdmissionCollection()));
-        }, Iconsax.add_circle),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Pharmacy Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyTotalSales()));
-        }, Iconsax.square),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Hospital Direct Purchase', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => HospitalDirectPurchase()));
-        }, Iconsax.status),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(5, 'Hospital Direct Purchase Pending Still', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => HospitalDirectPurchaseStillPending()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(6, 'Other Expense', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => OtherExpense()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(7, 'Surgery | OT | ICU | Observation Collection', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => SurgeryOtIcuCollection()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(8, 'Lab Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => LabCollection()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(9, 'IP Admit', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => IpAdmit()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(10, 'IP Admit List', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => IpAdmitList()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(11, 'Back To Management Dashboard', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManagementDashboard()));
-        }, Iconsax.logout),
       ],
     );
   }
 
-  // Helper method to build drawer items with the ability to highlight the selected item
   Widget buildDrawerItem(
       int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
+    return MouseRegion(
+      onEnter: (_) {
         setState(() {
-          selectedIndex = index; // Update the selected index
+          hoveredIndex = index;
         });
-        onTap();
       },
+      onExit: (_) {
+        setState(() {
+          hoveredIndex = -1;
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: selectedIndex == index
+              ? LinearGradient(
+                  colors: [
+                    AppColors.lightBlue,
+                    AppColors.blue,
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : (hoveredIndex == index
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    )
+                  : null),
+          color: selectedIndex == index || hoveredIndex == index
+              ? null
+              : Colors.transparent,
+        ),
+        child: ListTile(
+          selected: selectedIndex == index,
+          selectedTileColor: Colors.transparent,
+          leading: Icon(
+            icon,
+            color: selectedIndex == index
+                ? Colors.white
+                : (hoveredIndex == index ? Colors.white : AppColors.blue),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+                color: selectedIndex == index
+                    ? Colors.white
+                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
+                fontWeight: FontWeight.w700,
+                fontFamily: 'SanFrancisco'),
+          ),
+          onTap: () {
+            setState(() {
+              selectedIndex = index;
+            });
+            onTap();
+          },
+        ),
+      ),
     );
   }
 
@@ -439,7 +593,6 @@ class _NewPatientRegisterCollection
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
             left: screenWidth * 0.01,
             right: screenWidth * 0.01,
             bottom: screenWidth * 0.01,
@@ -448,14 +601,30 @@ class _NewPatientRegisterCollection
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomText(
-                    text: "New Patient Registration Collection ",
-                    size: screenHeight * 0.032,
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "New Patient Registration Collection ",
+                          size: screenWidth * .015,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.15,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
                   CustomTextField(
@@ -512,6 +681,8 @@ class _NewPatientRegisterCollection
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
                 tableData: tableData,
                 headers: headers,
               ),

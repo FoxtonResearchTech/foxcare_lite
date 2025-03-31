@@ -55,8 +55,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
   final TextEditingController _diagnosisSignsController =
       TextEditingController();
   final TextEditingController _symptomsController = TextEditingController();
-  final TextEditingController _patientHistoryController =
-      TextEditingController();
+  final TextEditingController _ipAdmissionTotalAmount = TextEditingController();
+  final TextEditingController _ipAdmissionCollected = TextEditingController();
   ScrollController _scrollController = ScrollController();
   ScrollController _scrollController1 = ScrollController();
   ScrollController _scrollController2 = ScrollController();
@@ -153,6 +153,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
             dateTime.minute.toString().padLeft(2, '0') +
             '-' +
             dateTime.second.toString().padLeft(2, '0'),
+        'ipAdmissionTotalAmount': _ipAdmissionTotalAmount.text,
+        'ipAdmissionCollected': _ipAdmissionCollected.text,
         'ipAdmission': {
           'roomType': selectedIPAdmissionValue,
           'roomNumber': selectedRoom
@@ -341,7 +343,27 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                 height: 35,
               ),
               Center(child: getAdmissionWidget()),
-
+              const SizedBox(
+                height: 30,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(width: screenWidth * 0.2),
+                  CustomTextField(
+                    hintText: 'IP Admission Amount',
+                    width: screenWidth * 0.13,
+                    controller: _ipAdmissionTotalAmount,
+                  ),
+                  SizedBox(width: screenWidth * 0.05),
+                  CustomTextField(
+                    hintText: 'Collected',
+                    width: screenWidth * 0.1,
+                    controller: _ipAdmissionCollected,
+                  ),
+                  SizedBox(width: screenWidth * 0.2),
+                ],
+              ),
               const SizedBox(
                 height: 35,
               ),

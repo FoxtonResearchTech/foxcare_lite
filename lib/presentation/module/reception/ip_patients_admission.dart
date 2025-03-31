@@ -102,61 +102,64 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           print('Error fetching token No for patient ${doc.id}: $e');
         }
 
-        fetchedData.add({
-          'Token NO': tokenNo,
-          'OP NO': data['opNumber'] ?? 'N/A',
-          'IP NO': data['ipNumber'] ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'Age': data['age'] ?? 'N/A',
-          'Place': data['state'] ?? 'N/A',
-          'Address': data['address1'] ?? 'N/A',
-          'PinCode': data['pincode'] ?? 'N/A',
-          'Status': data['status'] ?? 'N/A',
-          'Primary Info': data['otherComments'] ?? 'N/A',
-          'Action': TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReceptionIpPatient(
-                      patientID: data['opNumber'] ?? 'N/A',
-                      ipNumber: data['ipNumber'] ?? 'N/A',
-                      name:
-                          '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
-                              .trim(),
-                      age: data['age'] ?? 'N/A',
-                      place: data['state'] ?? 'N/A',
-                      address: data['address1'] ?? 'N/A',
-                      pincode: data['pincode'] ?? 'N/A',
-                      primaryInfo: data['otherComments'] ?? 'N/A',
-                      temperature: data['temperature'] ?? 'N/A',
-                      bloodPressure: data['bloodPressure'] ?? 'N/A',
-                      sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+        if (!hasIpPrescription) {
+          fetchedData.add({
+            'Token NO': tokenNo,
+            'OP NO': data['opNumber'] ?? 'N/A',
+            'IP NO': data['ipNumber'] ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'Age': data['age'] ?? 'N/A',
+            'Place': data['state'] ?? 'N/A',
+            'Address': data['address1'] ?? 'N/A',
+            'PinCode': data['pincode'] ?? 'N/A',
+            'Status': data['status'] ?? 'N/A',
+            'Primary Info': data['otherComments'] ?? 'N/A',
+            'Action': TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReceptionIpPatient(
+                        patientID: data['opNumber'] ?? 'N/A',
+                        ipNumber: data['ipNumber'] ?? 'N/A',
+                        name:
+                            '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
+                                .trim(),
+                        age: data['age'] ?? 'N/A',
+                        place: data['state'] ?? 'N/A',
+                        address: data['address1'] ?? 'N/A',
+                        pincode: data['pincode'] ?? 'N/A',
+                        primaryInfo: data['otherComments'] ?? 'N/A',
+                        temperature: data['temperature'] ?? 'N/A',
+                        bloodPressure: data['bloodPressure'] ?? 'N/A',
+                        sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+                      ),
                     ),
-                  ),
-                );
-              },
-              child: const CustomText(text: 'IP Rooms')),
-          'Abort': TextButton(
-              onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('patients')
-                      .doc(data['ipNumber'])
-                      .update({'status': 'aborted'});
-
-                  CustomSnackBar(context, message: 'Status updated to aborted');
-                } catch (e) {
-                  print(
-                      'Error updating status for patient ${data['patientID']}: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update status')),
                   );
-                }
-              },
-              child: const CustomText(text: 'Abort'))
-        });
+                },
+                child: const CustomText(text: 'IP Rooms')),
+            'Abort': TextButton(
+                onPressed: () async {
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('patients')
+                        .doc(data['ipNumber'])
+                        .update({'status': 'aborted'});
+
+                    CustomSnackBar(context,
+                        message: 'Status updated to aborted');
+                  } catch (e) {
+                    print(
+                        'Error updating status for patient ${data['patientID']}: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to update status')),
+                    );
+                  }
+                },
+                child: const CustomText(text: 'Abort'))
+          });
+        }
       }
 
       fetchedData.sort((a, b) {
@@ -207,7 +210,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
             child: SingleChildScrollView(
               child: Container(
                 padding: EdgeInsets.only(
-                  top: screenHeight * 0.01,
+                  top: screenHeight * 0.02,
                   left: screenWidth * 0.04,
                   right: screenWidth * 0.04,
                   bottom: screenWidth * 0.33,

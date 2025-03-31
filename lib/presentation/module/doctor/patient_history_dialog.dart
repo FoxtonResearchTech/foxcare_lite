@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
 import '../../../utilities/colors.dart';

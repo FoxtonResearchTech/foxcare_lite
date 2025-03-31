@@ -7,4 +7,6 @@ class AppColors {
   static Color button = const Color(0xFF5BC0DE);
   static Color textField = const Color(0xFF5BC0DE);
   static Color containerColor = const Color(0xFFBBE2ED);
+  static Color lightBlue = const Color(0xFF21b0d1);
+  static Color blue = const Color(0xFF106ac2);
 }

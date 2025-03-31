@@ -7,9 +7,12 @@ import 'package:foxcare_lite/presentation/module/reception/patient_registration.
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import '../../../utilities/colors.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../doctor/ip_prescription.dart';
 import 'doctor_rx_list.dart';
 
@@ -19,6 +22,8 @@ class IpPatientsDetails extends StatefulWidget {
 }
 
 class _IpPatientsDetails extends State<IpPatientsDetails> {
+  TextEditingController _ipNumber = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
   int hoveredIndex = -1;
   String getDayWithSuffix(int day) {
     if (day >= 11 && day <= 13) {
@@ -58,9 +63,9 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   void initState() {
     super.initState();
     fetchData();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      fetchData();
-    });
+    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   fetchData();
+    // });
   }
 
   @override
@@ -124,18 +129,25 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
     }
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .where('ipNumber', isGreaterThan: '')
-          .get();
+      Query query = FirebaseFirestore.instance.collection('patients');
 
+      if (ipNumber != null) {
+        query = query.where('ipNumber', isEqualTo: ipNumber);
+      } else if (phoneNumber != null) {
+        query = query.where(Filter.or(
+          Filter('phone1', isEqualTo: phoneNumber),
+          Filter('phone2', isEqualTo: phoneNumber),
+        ));
+      }
+
+      final QuerySnapshot snapshot = await query.get();
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in patientSnapshot.docs) {
+      for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-
+        if (!data.containsKey('ipNumber')) continue;
         String tokenNo = '';
         bool hasIpPrescription = false;
 
@@ -282,73 +294,13 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
               child: buildDrawerContent(), // Sidebar content
             ),
           Expanded(
-            child: SingleChildScrollView(
-              child: Container(
-                padding: EdgeInsets.only(
-                  left: screenWidth * 0.04,
-                  right: screenWidth * 0.04,
-                  bottom: screenWidth * 0.33,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          children: [
-                            CustomText(
-                              text: 'IP Prescription',
-                              size: screenWidth * .02,
-                            ),
-                            CustomText(
-                              text: 'Waiting Que',
-                              size: screenWidth * .01,
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: screenWidth * 0.15,
-                          height: screenWidth * 0.15,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.rectangle,
-                              borderRadius:
-                                  BorderRadius.circular(screenWidth * 0.05),
-                              image: DecorationImage(
-                                  image: AssetImage(
-                                      'assets/foxcare_lite_logo.png'))),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        CustomText(
-                          text: 'Dept : General Medicine',
-                          size: screenWidth * .015,
-                          color: Color(0xFF106ac2),
-                        ),
-                        SizedBox(width: screenWidth * 0.08),
-                        CustomText(
-                          text: 'Counter A',
-                          size: screenWidth * .015,
-                          color: Color(0xFF106ac2),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.008),
-                    CustomDataTable(
-                      headerColor: Colors.white,
-                      headerBackgroundColor: Color(0xFF106ac2),
-                      tableData: tableData1,
-                      headers: headers1,
-                      rowColorResolver: (row) {
-                        return row['Status'] == 'aborted'
-                            ? Colors.red.shade200
-                            : Colors.transparent;
-                      },
-                    ),
-                  ],
-                ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: dashboard()),
+                ],
               ),
             ),
           ),
@@ -373,8 +325,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xFF21b0d1),
-                        Color(0xFF106ac2),
+                        AppColors.lightBlue,
+                        AppColors.blue,
                       ],
                       begin: Alignment.bottomLeft,
                       end: Alignment.topRight,
@@ -479,9 +431,41 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 45, right: 45),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 100,
+                height: 40,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/hospital_logo_demo.png'))),
+              ),
+              SizedBox(
+                width: 2.5,
+                height: 50,
+                child: Container(
+                  color: Colors.grey,
+                ),
+              ),
+              Container(
+                width: 100,
+                height: 50,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/NIH_Logo.png'))),
+              )
+            ],
+          ),
+        ),
+        SizedBox(height: 10),
         Container(
           height: 25,
-          color: Color(0xFF106ac2),
+          color: AppColors.blue,
           child: Center(
             child: CustomText(
               text: 'Main Road, Trivandrum-690001',
@@ -509,14 +493,20 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
       child: Container(
         decoration: BoxDecoration(
           gradient: selectedIndex == index
-              ? const LinearGradient(
-                  colors: [Color(0xFF21b0d1), Color(0xFF106ac2)],
+              ? LinearGradient(
+                  colors: [
+                    AppColors.lightBlue,
+                    AppColors.blue,
+                  ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 )
               : (hoveredIndex == index
-                  ? const LinearGradient(
-                      colors: [Color(0xFF42c4e3), Color(0xFF21b0d1)],
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     )
@@ -532,18 +522,14 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             icon,
             color: selectedIndex == index
                 ? Colors.white
-                : (hoveredIndex == index
-                    ? Colors.white
-                    : const Color(0xFF106ac2)),
+                : (hoveredIndex == index ? Colors.white : AppColors.blue),
           ),
           title: Text(
             title,
             style: TextStyle(
                 color: selectedIndex == index
                     ? Colors.white
-                    : (hoveredIndex == index
-                        ? Colors.white
-                        : const Color(0xFF106ac2)),
+                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
                 fontWeight: FontWeight.w700,
                 fontFamily: 'SanFrancisco'),
           ),
@@ -553,6 +539,116 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             });
             onTap();
           },
+        ),
+      ),
+    );
+  }
+
+  Widget dashboard() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(
+            left: screenWidth * 0.03,
+            right: screenWidth * 0.03,
+            bottom: screenWidth * 0.01,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      CustomText(
+                        text: 'IP Prescription',
+                        size: screenWidth * .02,
+                      ),
+                      CustomText(
+                        text: 'Waiting Que',
+                        size: screenWidth * .01,
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.15,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Dept : General Medicine',
+                    size: screenWidth * .015,
+                    color: AppColors.blue,
+                  ),
+                  SizedBox(width: screenWidth * 0.08),
+                  CustomText(
+                    text: 'Counter A',
+                    size: screenWidth * .015,
+                    color: AppColors.blue,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    hintText: 'IP Number',
+                    width: screenWidth * 0.15,
+                    controller: _ipNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(ipNumber: _ipNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  CustomTextField(
+                    hintText: 'Phone Number',
+                    width: screenWidth * 0.15,
+                    controller: _phoneNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(phoneNumber: _phoneNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              CustomDataTable(
+                headerColor: Colors.white,
+                headerBackgroundColor: AppColors.blue,
+                tableData: tableData1,
+                headers: headers1,
+                rowColorResolver: (row) {
+                  return row['Status'] == 'aborted'
+                      ? Colors.red.shade200
+                      : Colors.transparent;
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

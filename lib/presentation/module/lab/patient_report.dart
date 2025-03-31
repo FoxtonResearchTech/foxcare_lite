@@ -83,7 +83,6 @@ class _PatientReport extends State<PatientReport> {
 
   Future<void> submitData() async {
     try {
-      // Reference to the patient's Firestore document
       final patientRef = FirebaseFirestore.instance
           .collection('patients')
           .doc(widget.patientID);
@@ -99,20 +98,17 @@ class _PatientReport extends State<PatientReport> {
         }
       }
 
-      // Update patient financial details
       await patientRef.set({
-        'totalAmount': totalAmountController.text,
-        'collected': paidController.text,
-        'balance': balanceController.text,
+        'labTotalAmount': totalAmountController.text,
+        'labCollected': paidController.text,
+        'labBalance': balanceController.text,
         'reportDate': _dateController.text,
       }, SetOptions(merge: true));
 
-      // Increment the submission counter in Firestore
       await patientRef.set({
         'reportNo': FieldValue.increment(1),
       }, SetOptions(merge: true));
 
-      // Show success message
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
           backgroundColor: AppColors.secondaryColor);
@@ -129,7 +125,7 @@ class _PatientReport extends State<PatientReport> {
     double paidAmount = double.tryParse(paidController.text) ?? 0.0;
     double balance = totalAmount - paidAmount;
 
-    balanceController.text = balance.toStringAsFixed(2); // Update balance field
+    balanceController.text = balance.toStringAsFixed(2);
   }
 
   @override

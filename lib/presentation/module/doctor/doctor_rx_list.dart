@@ -9,9 +9,11 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utilities/colors.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'ip_patients_details.dart';
 
 class DoctorRxList extends StatefulWidget {
@@ -22,6 +24,8 @@ class DoctorRxList extends StatefulWidget {
 }
 
 class _DoctorRxList extends State<DoctorRxList> {
+  TextEditingController _opNumber = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
   int selectedIndex = 1;
   int hoveredIndex = -1;
   String getDayWithSuffix(int day) {
@@ -59,9 +63,9 @@ class _DoctorRxList extends State<DoctorRxList> {
   void initState() {
     super.initState();
     fetchData();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      fetchData();
-    });
+    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   fetchData();
+    // });
   }
 
   @override
@@ -70,17 +74,25 @@ class _DoctorRxList extends State<DoctorRxList> {
     super.dispose();
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .where('opNumber', isGreaterThan: '')
-          .get();
+      Query query = FirebaseFirestore.instance.collection('patients');
+
+      if (opNumber != null) {
+        query = query.where('opNumber', isEqualTo: opNumber);
+      } else if (phoneNumber != null) {
+        query = query.where(Filter.or(
+          Filter('phone1', isEqualTo: phoneNumber),
+          Filter('phone2', isEqualTo: phoneNumber),
+        ));
+      }
+      final QuerySnapshot snapshot = await query.get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in patientSnapshot.docs) {
+      for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('opNumber')) continue;
 
         String tokenNo = '';
         try {
@@ -187,7 +199,7 @@ class _DoctorRxList extends State<DoctorRxList> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text('Doctor Dashboard'),
+              title: const Text('Doctor Dashboard'),
             )
           : null, // No AppBar for web view
       drawer: isMobile
@@ -201,7 +213,7 @@ class _DoctorRxList extends State<DoctorRxList> {
             Container(
               width: 300,
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: buildDrawerContent(),
             ),
           Expanded(
             child: Padding(
@@ -236,8 +248,8 @@ class _DoctorRxList extends State<DoctorRxList> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xFF21b0d1),
-                        Color(0xFF106ac2),
+                        AppColors.lightBlue,
+                        AppColors.blue,
                       ],
                       begin: Alignment.bottomLeft,
                       end: Alignment.topRight,
@@ -246,7 +258,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             CustomText(
@@ -256,7 +268,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                             ),
                           ],
                         ),
-                        Row(
+                        const Row(
                           children: [
                             SizedBox(
                               width: 10,
@@ -268,37 +280,37 @@ class _DoctorRxList extends State<DoctorRxList> {
                             ),
                           ],
                         ),
-                        CustomText(
+                        const CustomText(
                           text: 'MBBS,MD(General Medicine)',
                           size: 12,
                           color: Colors.white,
                         ),
                         Row(
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               width: 10,
                             ),
                             Container(
                               width: 200,
                               height: 25,
-                              child: Center(
+                              color: Colors.white,
+                              child: const Center(
                                   child: CustomText(
                                 text: 'General Medicine',
                                 color: Color(0xFF106ac2),
                               )),
-                              color: Colors.white,
                             )
                           ],
                         ),
                         Row(
                           children: [
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             CustomText(
                               text: '$formattedTime  ',
                               size: 30,
                               color: Colors.white,
                             ),
-                            SizedBox(width: 5),
+                            const SizedBox(width: 5),
                             Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
@@ -320,34 +332,70 @@ class _DoctorRxList extends State<DoctorRxList> {
                 ),
               ),
               buildDrawerItem(0, 'Home', () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => DoctorDashboard()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DoctorDashboard()));
               }, Iconsax.mask),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(1, ' OP Patient', () {}, Iconsax.receipt),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(2, 'IP Patients', () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => IpPatientsDetails()));
               }, Iconsax.receipt),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(3, 'Pharmacy Stocks', () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => PharmacyStocks()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PharmacyStocks()));
               }, Iconsax.add_circle),
-              Divider(height: 5, color: Colors.white),
+              const Divider(height: 5, color: Colors.white),
               buildDrawerItem(4, 'Logout', () {
                 // Handle logout action
               }, Iconsax.logout),
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 45, right: 45),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 100,
+                height: 40,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/hospital_logo_demo.png'))),
+              ),
+              SizedBox(
+                width: 2.5,
+                height: 50,
+                child: Container(
+                  color: Colors.grey,
+                ),
+              ),
+              Container(
+                width: 100,
+                height: 50,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                        image: AssetImage('assets/NIH_Logo.png'))),
+              )
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
         Container(
           height: 25,
-          color: Color(0xFF106ac2),
-          child: Center(
+          color: AppColors.blue,
+          child: const Center(
             child: CustomText(
               text: 'Main Road, Trivandrum-690001',
               color: Colors.white,
@@ -374,14 +422,20 @@ class _DoctorRxList extends State<DoctorRxList> {
       child: Container(
         decoration: BoxDecoration(
           gradient: selectedIndex == index
-              ? const LinearGradient(
-                  colors: [Color(0xFF21b0d1), Color(0xFF106ac2)],
+              ? LinearGradient(
+                  colors: [
+                    AppColors.lightBlue,
+                    AppColors.blue,
+                  ],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 )
               : (hoveredIndex == index
-                  ? const LinearGradient(
-                      colors: [Color(0xFF42c4e3), Color(0xFF21b0d1)],
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.lightBlue,
+                        AppColors.blue,
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     )
@@ -397,18 +451,14 @@ class _DoctorRxList extends State<DoctorRxList> {
             icon,
             color: selectedIndex == index
                 ? Colors.white
-                : (hoveredIndex == index
-                    ? Colors.white
-                    : const Color(0xFF106ac2)),
+                : (hoveredIndex == index ? Colors.white : AppColors.blue),
           ),
           title: Text(
             title,
             style: TextStyle(
                 color: selectedIndex == index
                     ? Colors.white
-                    : (hoveredIndex == index
-                        ? Colors.white
-                        : const Color(0xFF106ac2)),
+                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
                 fontWeight: FontWeight.w700,
                 fontFamily: 'SanFrancisco'),
           ),
@@ -460,7 +510,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        image: DecorationImage(
+                        image: const DecorationImage(
                             image: AssetImage('assets/foxcare_lite_logo.png'))),
                   ),
                 ],
@@ -470,20 +520,55 @@ class _DoctorRxList extends State<DoctorRxList> {
                   CustomText(
                     text: 'Dept : General Medicine',
                     size: screenWidth * .015,
-                    color: Color(0xFF106ac2),
+                    color: AppColors.blue,
                   ),
                   SizedBox(width: screenWidth * 0.08),
                   CustomText(
                     text: 'Counter A',
                     size: screenWidth * .015,
-                    color: Color(0xFF106ac2),
+                    color: AppColors.blue,
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.008),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    hintText: 'OP Number',
+                    width: screenWidth * 0.15,
+                    controller: _opNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(opNumber: _opNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  CustomTextField(
+                    hintText: 'Phone Number',
+                    width: screenWidth * 0.15,
+                    controller: _phoneNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(phoneNumber: _phoneNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
                 headerColor: Colors.white,
-                headerBackgroundColor: Color(0xFF106ac2),
+                headerBackgroundColor: const Color(0xFF106ac2),
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
