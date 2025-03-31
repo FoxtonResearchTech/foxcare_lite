@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import '../../colors.dart';
 import '../snackBar/snakbar.dart';
 import '../text/primary_text.dart';
-import '../textField/primary_textField.dart';
 
-class PaymentDialog extends StatefulWidget {
+class IpAdmitPaymentDialog extends StatefulWidget {
   final String? billNo;
   final String? partyName;
   final String? patientID;
@@ -14,11 +13,9 @@ class PaymentDialog extends StatefulWidget {
   final String? lastName;
   final String? city;
   final String? balance;
-  final String? totalAmount;
   final String? docId;
-  final bool? timeLine;
-  final Future<void> Function()? fetchData;
-  PaymentDialog({
+
+  IpAdmitPaymentDialog({
     this.patientID = '',
     this.firstName,
     this.lastName,
@@ -28,19 +25,15 @@ class PaymentDialog extends StatefulWidget {
     this.partyName,
     super.key,
     this.docId,
-    this.timeLine = false,
-    this.totalAmount,
-    this.fetchData,
   });
 
   @override
-  State<PaymentDialog> createState() => _PaymentDialogState();
+  State<IpAdmitPaymentDialog> createState() => _IpAdmitPaymentDialog();
 }
 
-class _PaymentDialogState extends State<PaymentDialog> {
+class _IpAdmitPaymentDialog extends State<IpAdmitPaymentDialog> {
   TextEditingController collected = TextEditingController();
   TextEditingController balance = TextEditingController();
-  ScrollController _scrollController = ScrollController();
 
   String _selectedPaymentMethod = '';
   bool isNotPatient = false;
@@ -54,25 +47,6 @@ class _PaymentDialogState extends State<PaymentDialog> {
   }
 
   final dateTime = DateTime.now();
-
-  List<Map<String, dynamic>> payments = [];
-
-  IconData getPaymentIcon(String method) {
-    switch (method) {
-      case "UPI":
-        return Icons.qr_code;
-      case "Credit Card":
-        return Icons.credit_card;
-      case "Debit Card":
-        return Icons.credit_card_sharp;
-      case "Net Banking":
-        return Icons.account_balance;
-      case "Cash":
-        return Icons.money;
-      default:
-        return Icons.help_outline;
-    }
-  }
 
   Future<void> addPaymentAmount(String docID) async {
     try {
@@ -102,88 +76,11 @@ class _PaymentDialogState extends State<PaymentDialog> {
     }
   }
 
-  Future<void> updateBalance(String docID, double amountPaid) async {
-    if (docID.isEmpty) return;
-
-    try {
-      DocumentReference patientDoc = FirebaseFirestore.instance
-          .collection('patients')
-          .doc(docID)
-          .collection('ipAdmissionPayments')
-          .doc('payments');
-
-      DocumentSnapshot snapshot = await patientDoc.get();
-
-      if (!snapshot.exists) {
-        print("Payment document does not exist");
-        return;
-      }
-
-      double currentBalance = double.tryParse(widget.balance ?? '0.00') ?? 0.0;
-      double newBalance = currentBalance - amountPaid;
-
-      double currentCollected = double.tryParse(
-              snapshot["ipAdmissionCollected"]?.toString() ?? '0.00') ??
-          0.0;
-      double newCollected = currentCollected + amountPaid;
-
-      await patientDoc.update({
-        "ipAdmissionBalance": newBalance.toStringAsFixed(2),
-        "ipAdmissionCollected": newCollected.toStringAsFixed(2),
-      });
-
-      setState(() {
-        balance.text = '₹ ${newBalance.toStringAsFixed(2)}';
-      });
-
-      print("Balance and Collected amount updated successfully");
-    } catch (e) {
-      print("Error updating balance and collected amount: $e");
-    }
-  }
-
-  Future<void> fetchPayments() async {
-    if (widget.docId == null || widget.docId!.isEmpty) return;
-
-    try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.docId)
-          .collection('ipAdmissionPayments')
-          .get();
-
-      List<Map<String, dynamic>> tempPayments = [];
-      for (var doc in querySnapshot.docs) {
-        if (doc.id == "payments") {
-          print("Skipping document: payment");
-          continue;
-        }
-
-        print("Fetched document: ${doc.id}");
-
-        tempPayments.add({
-          "date": doc["payedDate"] ?? "No Date",
-          "method": doc["paymentMode"] ?? "Unknown",
-          "paidAmount": doc["payedAmount"] ?? "₹0",
-        });
-      }
-
-      setState(() {
-        payments = tempPayments;
-      });
-
-      print("Final payment list: $payments");
-    } catch (error) {
-      print("Error fetching payments: $error");
-    }
-  }
-
   @override
   void initState() {
-    super.initState();
     checkPayer();
     balance.text = '₹ ${widget.balance ?? '0.00'}';
-    fetchPayments();
+    super.initState();
   }
 
   @override
@@ -237,22 +134,6 @@ class _PaymentDialogState extends State<PaymentDialog> {
                       width: screenWidth * 0.08)
                 ],
               ),
-              SizedBox(height: screenHeight * 0.015),
-              if (widget.timeLine == true)
-                Center(
-                  child: SizedBox(
-                    height: screenHeight * 0.12,
-                    width: screenWidth * 0.75,
-                    child: Scrollbar(
-                      controller: _scrollController,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        controller: _scrollController,
-                        child: _buildPaymentTimeline(),
-                      ),
-                    ),
-                  ),
-                ),
               SizedBox(height: screenHeight * 0.015),
               CustomText(
                 text: 'Select Payment Method:',
@@ -323,14 +204,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () async {
-            if (widget.timeLine == true) {
-              await addPaymentAmount(widget.docId.toString());
-              await updateBalance(widget.docId.toString(),
-                  double.parse(balance.text.replaceAll('₹ ', '')));
-              widget.fetchData!();
-            } else {
-              await addPaymentAmount(widget.docId.toString());
-            }
+            addPaymentAmount(widget.docId.toString());
           },
           child: CustomText(
             text: 'Pay',
@@ -350,45 +224,5 @@ class _PaymentDialogState extends State<PaymentDialog> {
         ),
       ],
     );
-  }
-
-  Widget _buildPaymentTimeline() {
-    return payments.isEmpty
-        ? const Center(child: CustomText(text: "No Payments Found"))
-        : SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: payments.map((payment) {
-                return Row(
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.blue,
-                          child: Icon(
-                            getPaymentIcon(payment["method"]),
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        CustomText(text: payment["date"]),
-                        CustomText(
-                          text: payment["paidAmount"],
-                        ),
-                      ],
-                    ),
-                    if (payment != payments.last)
-                      Container(
-                        width: 40,
-                        height: 5,
-                        color: Colors.grey,
-                      ),
-                  ],
-                );
-              }).toList(),
-            ),
-          );
   }
 }

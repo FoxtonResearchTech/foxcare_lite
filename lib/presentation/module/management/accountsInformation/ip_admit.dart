@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
+import 'package:foxcare_lite/utilities/widgets/payment/ip_admit_payment_dialog.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -30,6 +31,8 @@ class IpAdmit extends StatefulWidget {
 }
 
 class _IpAdmit extends State<IpAdmit> {
+  final dateTime = DateTime.now();
+
   int selectedIndex = 9;
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
@@ -126,7 +129,6 @@ class _IpAdmit extends State<IpAdmit> {
         });
         return;
       }
-
       List<Map<String, dynamic>> fetchedData = [];
 
       for (var doc in snapshot.docs) {
@@ -216,11 +218,16 @@ class _IpAdmit extends State<IpAdmit> {
                         context: context,
                         builder: (BuildContext context) {
                           return PaymentDialog(
-                              patientID: data['opNumber'],
-                              firstName: data['firstName'],
-                              lastName: data['lastName'],
-                              city: data['city'],
-                              balance: balance.toString());
+                            timeLine: true,
+                            patientID: data['opNumber'],
+                            firstName: data['firstName'],
+                            lastName: data['lastName'],
+                            city: data['city'],
+                            docId: doc.id,
+                            totalAmount: ipAdmissionCollectedStr,
+                            balance: balance.toString(),
+                            fetchData: fetchData,
+                          );
                         },
                       );
                     },
@@ -263,6 +270,18 @@ class _IpAdmit extends State<IpAdmit> {
                                 onPressed: () {
                                   addPaymentAmount(doc.id);
                                   fetchData(ipNumber: data['ipNumber']);
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return IpAdmitPaymentDialog(
+                                          patientID: data['ipNumber'],
+                                          firstName: data['firstName'],
+                                          lastName: data['lastName'],
+                                          city: data['city'],
+                                          balance: collected.text,
+                                          docId: doc.id,
+                                        );
+                                      });
                                 },
                                 child: CustomText(
                                   text: 'Submit ',
