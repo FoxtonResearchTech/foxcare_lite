@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
 import '../../colors.dart';
 import '../snackBar/snakbar.dart';
 import '../text/primary_text.dart';
@@ -40,7 +39,7 @@ class PaymentDialog extends StatefulWidget {
 class _PaymentDialogState extends State<PaymentDialog> {
   TextEditingController collected = TextEditingController();
   TextEditingController balance = TextEditingController();
-  ScrollController _scrollController = ScrollController();
+  ScrollController _scrollController1 = ScrollController();
 
   String _selectedPaymentMethod = '';
   bool isNotPatient = false;
@@ -244,10 +243,10 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     height: screenHeight * 0.12,
                     width: screenWidth * 0.75,
                     child: Scrollbar(
-                      controller: _scrollController,
+                      controller: _scrollController1,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        controller: _scrollController,
+                        controller: _scrollController1,
                         child: _buildPaymentTimeline(),
                       ),
                     ),

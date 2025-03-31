@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/payment/ip_admit_additional_amount.dart';
 import '../../../../utilities/widgets/payment/payment_dialog.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
@@ -71,7 +72,8 @@ class _IpAdmit extends State<IpAdmit> {
     'Total Amount',
     'Collected',
     'Balance',
-    'Pay'
+    'Pay',
+    'Add Amount',
   ];
   List<Map<String, dynamic>> tableData = [];
 
@@ -96,8 +98,28 @@ class _IpAdmit extends State<IpAdmit> {
           .collection('ipAdmissionPayments')
           .doc('payments')
           .set(data);
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(docID)
+          .collection('ipAdmissionPayments')
+          .doc('payments')
+          .collection('additionalAmount')
+          .doc()
+          .set({
+        'additionalAmount': amount.text,
+        'reason': 'Initial Amount',
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'time': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
       CustomSnackBar(context,
-          message: 'Fees Added Successfully', backgroundColor: Colors.green);
+          message: 'Additional Fees Added Successfully',
+          backgroundColor: Colors.green);
     } catch (e) {
       CustomSnackBar(context,
           message: 'Failed to Add Fees', backgroundColor: Colors.red);
@@ -305,7 +327,20 @@ class _IpAdmit extends State<IpAdmit> {
                       );
                     },
                     child: CustomText(text: 'Add Payment'),
-                  )
+                  ),
+            'Add Amount': TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return IpAdmitAdditionalAmount(
+                      docID: doc.id,
+                    );
+                  },
+                );
+              },
+              child: CustomText(text: 'Add'),
+            ),
           });
         }
       }
