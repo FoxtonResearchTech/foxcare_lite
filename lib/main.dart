@@ -22,6 +22,7 @@ import 'package:foxcare_lite/presentation/module/reception/ip_patients_admission
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';
+import 'presentation/module/management/doctor/monthly_doctor_schedule.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: IpAdmit(),
+      home: DoctorMonthlySchedule(),
     );
   }
 }
