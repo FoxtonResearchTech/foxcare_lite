@@ -148,10 +148,18 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ),
                 ),
               ),
-              ...List.generate(widget.menuItems.length, (index) {
-                final item = widget.menuItems[index];
-                return buildDrawerItem(
-                    index, item.title, item.icon, item.onTap);
+              ...List.generate(widget.menuItems.length * 2 - 1, (i) {
+                if (i.isEven) {
+                  final index = i ~/ 2;
+                  final item = widget.menuItems[index];
+                  return buildDrawerItem(
+                      index, item.title, item.icon, item.onTap);
+                } else {
+                  return const Divider(
+                    height: 5,
+                    color: Colors.grey,
+                  );
+                }
               }),
             ],
           ),
