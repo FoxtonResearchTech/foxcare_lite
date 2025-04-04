@@ -334,7 +334,9 @@ class _IpAdmit extends State<IpAdmit> {
                   context: context,
                   builder: (BuildContext context) {
                     return IpAdmitAdditionalAmount(
-                      docID: doc.id,
+                      docId: doc.id,
+                      fetchData: fetchData,
+                      timeLine: true,
                     );
                   },
                 );

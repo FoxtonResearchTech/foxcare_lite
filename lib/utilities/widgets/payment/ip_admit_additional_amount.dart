@@ -7,10 +7,12 @@ import '../text/primary_text.dart';
 import '../textField/primary_textField.dart';
 
 class IpAdmitAdditionalAmount extends StatefulWidget {
-  final String? docID;
+  final String? docId;
   final Future<void> Function()? fetchData;
+  final bool? timeLine;
 
-  IpAdmitAdditionalAmount({this.docID, super.key, this.fetchData});
+  IpAdmitAdditionalAmount(
+      {this.docId, super.key, this.fetchData, this.timeLine});
 
   @override
   State<IpAdmitAdditionalAmount> createState() =>
@@ -20,7 +22,56 @@ class IpAdmitAdditionalAmount extends StatefulWidget {
 class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   TextEditingController additionalAmount = TextEditingController();
   TextEditingController reasonForAdditionalAmount = TextEditingController();
+
+  ScrollController _scrollController1 = ScrollController();
+
   final dateTime = DateTime.now();
+  List<Map<String, dynamic>> amountTimeline = [];
+
+  Future<void> fetchAmountTimeline() async {
+    if (widget.docId == null || widget.docId!.isEmpty) return;
+
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.docId)
+          .collection('ipAdmissionPayments')
+          .doc('payments')
+          .collection('additionalAmount')
+          .get();
+
+      List<Map<String, dynamic>> tempAmountTimeline = [];
+      for (var doc in querySnapshot.docs) {
+        if (doc.id == "payments") {
+          print("Skipping document: payment");
+          continue;
+        }
+
+        print("Fetched document: ${doc.id}");
+
+        tempAmountTimeline.add({
+          "time": doc["time"] ?? "00:00",
+          "date": doc["date"] ?? "1970-01-01", // default to epoch if missing
+          "reason": doc["reason"] ?? "Unknown",
+          "amount": doc["additionalAmount"] ?? "₹0",
+        });
+      }
+
+      tempAmountTimeline.sort((a, b) {
+        DateTime dateTimeA = DateTime.parse("${a["date"]} ${a["time"]}");
+        DateTime dateTimeB = DateTime.parse("${b["date"]} ${b["time"]}");
+        return dateTimeB.compareTo(dateTimeA);
+      });
+
+      setState(() {
+        amountTimeline = tempAmountTimeline;
+      });
+
+      print("Final sorted payment list: $amountTimeline");
+    } catch (error) {
+      print("Error fetching payments: $error");
+    }
+  }
 
   Future<void> additionalPaymentAmount(String docID) async {
     try {
@@ -67,32 +118,57 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   }
 
   @override
+  void initState() {
+    fetchAmountTimeline();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
       title: Text('Add Payment Amount'),
       content: Container(
-        width: 300,
-        height: 250,
+        width: screenWidth * 0.25,
+        height: screenHeight * 0.4,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             CustomTextField(
               controller: additionalAmount,
               hintText: 'Amount',
-              width: 250,
+              width: screenWidth * 0.18,
             ),
             CustomTextField(
               controller: reasonForAdditionalAmount,
               hintText: 'Reason',
-              width: 250,
+              width: screenWidth * 0.18,
             ),
+            SizedBox(height: screenHeight * 0.010),
+            if (widget.timeLine == true)
+              Center(
+                child: SizedBox(
+                  height: screenHeight * 0.175,
+                  width: screenWidth * 0.75,
+                  child: Scrollbar(
+                    controller: _scrollController1,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      controller: _scrollController1,
+                      child: _buildPaymentTimeline(),
+                    ),
+                  ),
+                ),
+              ),
+            SizedBox(height: screenHeight * 0.010),
           ],
         ),
       ),
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            additionalPaymentAmount(widget.docID.toString());
+            additionalPaymentAmount(widget.docId.toString());
             widget.fetchData!();
           },
           child: CustomText(
@@ -113,5 +189,50 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
         ),
       ],
     );
+  }
+
+  Widget _buildPaymentTimeline() {
+    return amountTimeline.isEmpty
+        ? const Center(child: CustomText(text: "No Additional Amount Found"))
+        : SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: amountTimeline.map((amount) {
+                return Row(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.blue,
+                          child: Icon(
+                            Icons.money,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        CustomText(text: amount["date"]),
+                        CustomText(
+                          text: '₹' + amount["amount"],
+                        ),
+                        Expanded(
+                          child: CustomText(
+                            text: amount["reason"],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (amount != amountTimeline.last)
+                      Container(
+                        width: 40,
+                        height: 5,
+                        color: Colors.grey,
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
+          );
   }
 }

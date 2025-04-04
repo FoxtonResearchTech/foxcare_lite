@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/presentation/module/doctor/pharmacy_stocks.dart';
+import 'package:foxcare_lite/utilities/widgets/drawer/doctor/doctor_module_drawer.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
@@ -17,22 +18,6 @@ class DoctorDashboard extends StatefulWidget {
 
 class _DoctorDashboardState extends State<DoctorDashboard> {
   int selectedIndex = 0;
-  int hoveredIndex = -1;
-  String getDayWithSuffix(int day) {
-    if (day >= 11 && day <= 13) {
-      return '${day}th';
-    }
-    switch (day % 10) {
-      case 1:
-        return '${day}st';
-      case 2:
-        return '${day}nd';
-      case 3:
-        return '${day}rd';
-      default:
-        return '${day}th';
-    }
-  }
 
   DateTime now = DateTime.now();
 
@@ -69,7 +54,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       'tokenNumber': '24',
       'actionFilled': false,
     },
-    // Add more rows here if needed
   ];
 
   @override
@@ -85,7 +69,14 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: DoctorModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -94,7 +85,14 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: DoctorModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ), // Sidebar always open for web view
             ),
           Expanded(
             child: Padding(
@@ -114,244 +112,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     );
   }
 
-  Widget buildDrawerContent() {
-    String formattedTime = DateFormat('h:mm a').format(now);
-    String formattedDate =
-        '${getDayWithSuffix(now.day)} ${DateFormat('MMMM').format(now)}';
-    String formattedYear = DateFormat('y').format(now);
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            children: [
-              Container(
-                height: 225,
-                child: DrawerHeader(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.lightBlue,
-                        AppColors.blue,
-                      ],
-                      begin: Alignment.bottomLeft,
-                      end: Alignment.topRight,
-                    ),
-                  ),
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            CustomText(
-                              text: 'Hi',
-                              size: 25,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 10,
-                            ),
-                            CustomText(
-                              text: 'Dr.Ramesh',
-                              size: 30,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                        CustomText(
-                          text: 'MBBS,MD(General Medicine)',
-                          size: 12,
-                          color: Colors.white,
-                        ),
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Container(
-                              width: 200,
-                              height: 25,
-                              child: Center(
-                                  child: CustomText(
-                                text: 'General Medicine',
-                                color: Color(0xFF106ac2),
-                              )),
-                              color: Colors.white,
-                            )
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            SizedBox(width: 10),
-                            CustomText(
-                              text: '$formattedTime  ',
-                              size: 30,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 5),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                CustomText(
-                                  text: formattedDate,
-                                  size: 15,
-                                  color: Colors.white,
-                                ),
-                                CustomText(
-                                  text: formattedYear,
-                                  size: 15,
-                                  color: Colors.white,
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
-                      ]),
-                ),
-              ),
-              buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
-              Divider(height: 5, color: Colors.white),
-              buildDrawerItem(1, ' OP Patient', () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => DoctorRxList()));
-              }, Iconsax.receipt),
-              Divider(height: 5, color: Colors.white),
-              buildDrawerItem(2, 'IP Patients', () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => IpPatientsDetails()));
-              }, Iconsax.receipt),
-              Divider(height: 5, color: Colors.white),
-              buildDrawerItem(3, 'Pharmacy Stocks', () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => PharmacyStocks()));
-              }, Iconsax.add_circle),
-              Divider(height: 5, color: Colors.white),
-              buildDrawerItem(4, 'Logout', () {
-                // Handle logout action
-              }, Iconsax.logout),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 45, right: 45),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 100,
-                height: 40,
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    image: DecorationImage(
-                        image: AssetImage('assets/hospital_logo_demo.png'))),
-              ),
-              SizedBox(
-                width: 2.5,
-                height: 50,
-                child: Container(
-                  color: Colors.grey,
-                ),
-              ),
-              Container(
-                width: 100,
-                height: 50,
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    image: DecorationImage(
-                        image: AssetImage('assets/NIH_Logo.png'))),
-              )
-            ],
-          ),
-        ),
-        SizedBox(height: 10),
-        Container(
-          height: 25,
-          color: AppColors.blue,
-          child: Center(
-            child: CustomText(
-              text: 'Main Road, Trivandrum-690001',
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return MouseRegion(
-      onEnter: (_) {
-        setState(() {
-          hoveredIndex = index;
-        });
-      },
-      onExit: (_) {
-        setState(() {
-          hoveredIndex = -1;
-        });
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: selectedIndex == index
-              ? LinearGradient(
-                  colors: [
-                    AppColors.lightBlue,
-                    AppColors.blue,
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : (hoveredIndex == index
-                  ? LinearGradient(
-                      colors: [
-                        AppColors.lightBlue,
-                        AppColors.blue,
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    )
-                  : null),
-          color: selectedIndex == index || hoveredIndex == index
-              ? null
-              : Colors.transparent,
-        ),
-        child: ListTile(
-          selected: selectedIndex == index,
-          selectedTileColor: Colors.transparent,
-          leading: Icon(
-            icon,
-            color: selectedIndex == index
-                ? Colors.white
-                : (hoveredIndex == index ? Colors.white : AppColors.blue),
-          ),
-          title: Text(
-            title,
-            style: TextStyle(
-                color: selectedIndex == index
-                    ? Colors.white
-                    : (hoveredIndex == index ? Colors.white : AppColors.blue),
-                fontWeight: FontWeight.w700,
-                fontFamily: 'SanFrancisco'),
-          ),
-          onTap: () {
-            setState(() {
-              selectedIndex = index;
-            });
-            onTap();
-          },
-        ),
-      ),
-    );
-  }
-
-  // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
