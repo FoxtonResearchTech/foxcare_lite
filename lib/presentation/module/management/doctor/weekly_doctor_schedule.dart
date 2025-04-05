@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
+import '../../../../utilities/widgets/text/primary_text.dart';
+
 class DoctorWeeklySchedule extends StatefulWidget {
   @override
   _DoctorWeeklyScheduleState createState() => _DoctorWeeklyScheduleState();
@@ -7,15 +10,31 @@ class DoctorWeeklySchedule extends StatefulWidget {
 
 class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
   final List<String> days = [
-    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
   ];
 
   final List<String> doctors = [
-    "Dr. John Doe", "Dr. Smith", "Dr. Emily", "Dr. Kevin", "Dr. Lisa", "Dr. Raj"
+    "Dr. John Doe",
+    "Dr. Smith",
+    "Dr. Emily",
+    "Dr. Kevin",
+    "Dr. Lisa",
+    "Dr. Raj"
   ];
 
   final List<String> specializations = [
-    "Cardiologist", "Dermatologist", "Neurologist", "Pediatrician", "ENT", "Orthopedic"
+    "Cardiologist",
+    "Dermatologist",
+    "Neurologist",
+    "Pediatrician",
+    "ENT",
+    "Orthopedic"
   ];
 
   Map<String, List<String>> selectedDoctors = {};
@@ -23,32 +42,109 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
   Map<String, Map<String, String?>> opTimeIn = {};
   Map<String, Map<String, String?>> opTimeOut = {};
 
+  int selectedIndex = 6;
+
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isMobile = screenWidth < 600;
+
     return Scaffold(
-      backgroundColor: Colors.blue[50],
-      appBar: AppBar(
-        title: Text("Doctor Weekly Schedule", style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-        ),
+      appBar: isMobile
+          ? AppBar(
+              title: const CustomText(
+                text: 'General Information',
+              ),
+            )
+          : null, // No AppBar for web view
+      drawer: isMobile
+          ? Drawer(
+              child: ManagementGeneralInformationDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+            )
+          : null, // No drawer for web view (permanently open)
+      body: Row(
+        children: [
+          if (!isMobile)
+            Container(
+              width: 300, // Fixed width for the sidebar
+              color: Colors.blue.shade100,
+              child: ManagementGeneralInformationDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+            ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: dashboard(),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget dashboard() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
       body: Padding(
         padding: EdgeInsets.all(12),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.4,
-          ),
-          itemCount: days.length,
-          itemBuilder: (context, index) {
-            return _buildScheduleCard(days[index]);
-          },
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: screenWidth * 0.07),
+                  child: Column(
+                    children: [
+                      CustomText(
+                        text: "Doctor Weekly Schedule ",
+                        size: screenWidth * .015,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: screenWidth * 0.15,
+                  height: screenWidth * 0.15,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                          image: AssetImage('assets/foxcare_lite_logo.png'))),
+                ),
+              ],
+            ),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.4,
+                ),
+                itemCount: days.length,
+                itemBuilder: (context, index) {
+                  return _buildScheduleCard(days[index]);
+                },
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: Container(
@@ -61,7 +157,11 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
             );
           },
           backgroundColor: Colors.blue,
-          label: Text("Save", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+          label: Text("Save",
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
           icon: Icon(Icons.save, size: 28, color: Colors.white),
           elevation: 10,
         ),
@@ -84,29 +184,36 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
               Center(
                 child: Text(
                   day,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue[900]),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[900]),
                 ),
               ),
               SizedBox(height: 8),
-
               _buildMultiSelectDoctor(day),
               SizedBox(height: 6),
-
               if ((selectedDoctors[day] ?? []).isNotEmpty)
                 ...selectedDoctors[day]!.map((doctor) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Divider(),
-                      Text(doctor, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[800])),
+                      Text(doctor,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[800])),
                       SizedBox(height: 4),
                       _buildSpecializationSelector(day, doctor),
                       SizedBox(height: 6),
                       Text("Specializations:"),
                       Wrap(
                         spacing: 4,
-                        children: (doctorSpecializations[day]?[doctor] ?? []).map((spec) {
-                          return Chip(label: Text(spec), backgroundColor: Colors.blue[100]);
+                        children: (doctorSpecializations[day]?[doctor] ?? [])
+                            .map((spec) {
+                          return Chip(
+                              label: Text(spec),
+                              backgroundColor: Colors.blue[100]);
                         }).toList(),
                       ),
                       SizedBox(height: 6),
@@ -115,13 +222,17 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                         children: [
                           Column(
                             children: [
-                              Text("Time In", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Time In",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, true),
                             ],
                           ),
                           Column(
                             children: [
-                              Text("Time Out", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Time Out",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, false),
                             ],
                           ),
@@ -132,13 +243,17 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                         children: [
                           Column(
                             children: [
-                              Text("Time In", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Time In",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, true),
                             ],
                           ),
                           Column(
                             children: [
-                              Text("Time Out", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Time Out",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, false),
                             ],
                           ),
@@ -191,8 +306,12 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
-                ElevatedButton(onPressed: () => Navigator.pop(context, tempSelected), child: Text("OK")),
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text("Cancel")),
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context, tempSelected),
+                    child: Text("OK")),
               ],
             );
           },
@@ -218,7 +337,9 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         backgroundColor: Colors.blue[100],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text("Doctor(s)", style: TextStyle(color: Colors.blue[900], fontWeight: FontWeight.bold)),
+      child: Text("Doctor(s)",
+          style:
+              TextStyle(color: Colors.blue[900], fontWeight: FontWeight.bold)),
     );
   }
 
@@ -228,7 +349,8 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         final selected = await showDialog<List<String>>(
           context: context,
           builder: (context) {
-            List<String> tempSelected = List.from(doctorSpecializations[day]?[doctor] ?? []);
+            List<String> tempSelected =
+                List.from(doctorSpecializations[day]?[doctor] ?? []);
             return AlertDialog(
               title: Text("Select Specialization(s) for $doctor"),
               content: SingleChildScrollView(
@@ -255,8 +377,12 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
-                ElevatedButton(onPressed: () => Navigator.pop(context, tempSelected), child: Text("OK")),
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text("Cancel")),
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context, tempSelected),
+                    child: Text("OK")),
               ],
             );
           },
@@ -273,14 +399,16 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         backgroundColor: Colors.blue[50],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: Text("Specialization(s)", style: TextStyle(color: Colors.blue[900])),
+      child:
+          Text("Specialization(s)", style: TextStyle(color: Colors.blue[900])),
     );
   }
 
   Widget _buildTimeInput(String day, String doctor, bool isTimeIn) {
     return GestureDetector(
       onTap: () async {
-        final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+        final time = await showTimePicker(
+            context: context, initialTime: TimeOfDay.now());
         if (time != null) {
           final formatted = time.format(context);
           setState(() {
@@ -303,7 +431,8 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
           isTimeIn
               ? (opTimeIn[day]?[doctor] ?? "--:--")
               : (opTimeOut[day]?[doctor] ?? "--:--"),
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[900]),
+          style:
+              TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[900]),
         ),
       ),
     );

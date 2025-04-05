@@ -91,22 +91,12 @@ class _ManagementGeneralInformationDrawer
             },
           ),
           DrawerMenuItem(
-            title: 'Add Doctor Schedule',
+            title: 'Doctor Daily Schedule',
             icon: Iconsax.hospital,
             onTap: () {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => AddDoctorSchedule()),
-              );
-            },
-          ),
-          DrawerMenuItem(
-            title: 'Doctor Monthly Schedule',
-            icon: Iconsax.hospital,
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => MonthlyDoctorSchedule()),
               );
             },
           ),
@@ -117,6 +107,16 @@ class _ManagementGeneralInformationDrawer
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => DoctorWeeklySchedule()),
+              );
+            },
+          ),
+          DrawerMenuItem(
+            title: 'Doctor Monthly Schedule',
+            icon: Iconsax.hospital,
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => MonthlyDoctorSchedule()),
               );
             },
           ),

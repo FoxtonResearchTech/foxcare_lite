@@ -115,7 +115,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "IP Admission ",
+                          text: "Doctor Daily Schedule ",
                           size: screenWidth * .015,
                         ),
                       ],
