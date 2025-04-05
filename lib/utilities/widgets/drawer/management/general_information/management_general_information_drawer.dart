@@ -106,7 +106,7 @@ class _ManagementGeneralInformationDrawer
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => DoctorMonthlySchedule()),
+                MaterialPageRoute(builder: (_) => MonthlyDoctorSchedule()),
               );
             },
           ),
