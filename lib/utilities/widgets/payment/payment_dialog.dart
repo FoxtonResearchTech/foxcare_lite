@@ -161,11 +161,17 @@ class _PaymentDialogState extends State<PaymentDialog> {
         print("Fetched document: ${doc.id}");
 
         tempPayments.add({
+          "time": doc["payedTime"] ?? "00:00",
           "date": doc["payedDate"] ?? "No Date",
           "method": doc["paymentMode"] ?? "Unknown",
           "paidAmount": doc["payedAmount"] ?? "₹0",
         });
       }
+      tempPayments.sort((a, b) {
+        DateTime dateTimeA = DateTime.parse("${a["date"]} ${a["time"]}");
+        DateTime dateTimeB = DateTime.parse("${b["date"]} ${b["time"]}");
+        return dateTimeB.compareTo(dateTimeA);
+      });
 
       setState(() {
         payments = tempPayments;
