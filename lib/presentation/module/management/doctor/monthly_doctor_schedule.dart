@@ -241,7 +241,7 @@ class _DoctorMonthlyScheduleState extends State<DoctorMonthlySchedule> {
                   crossAxisCount: 3,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
-                  childAspectRatio: 1.5,
+                  childAspectRatio: 1,
                 ),
                 itemCount: selectedDates.length,
                 itemBuilder: (context, index) {
