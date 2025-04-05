@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
-import '../../../../utilities/widgets/text/primary_text.dart';
-
 class DoctorWeeklySchedule extends StatefulWidget {
   @override
   _DoctorWeeklyScheduleState createState() => _DoctorWeeklyScheduleState();
@@ -30,7 +27,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     "Neurologist",
     "Pediatrician"
   ];
-  int selectedIndex = 6;
 
   Map<String, String?> selectedDoctor = {};
   Map<String, String?> selectedSpecialization = {};
@@ -39,105 +35,31 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    bool isMobile = screenWidth < 600;
-
     return Scaffold(
-      appBar: isMobile
-          ? AppBar(
-              title: const CustomText(
-                text: 'General Information',
-              ),
-            )
-          : null, // No AppBar for web view
-      drawer: isMobile
-          ? Drawer(
-              child: ManagementGeneralInformationDrawer(
-                selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-              ),
-            )
-          : null, // No drawer for web view (permanently open)
-      body: Row(
-        children: [
-          if (!isMobile)
-            Container(
-              width: 300, // Fixed width for the sidebar
-              color: Colors.blue.shade100,
-              child: ManagementGeneralInformationDrawer(
-                selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: dashboard(),
-            ),
-          ),
-        ],
+      backgroundColor: Colors.blue[50],
+      appBar: AppBar(
+        title: Text("Doctor Weekly Schedule",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
       ),
-    );
-  }
-
-  Widget dashboard() {
-    double screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Scaffold(
       body: Padding(
         padding: EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.07),
-                  child: Column(
-                    children: [
-                      CustomText(
-                        text: "Weekly Doctor Schedule",
-                        size: screenWidth * .015,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                          image: AssetImage('assets/foxcare_lite_logo.png'))),
-                ),
-              ],
-            ),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.5,
-                ),
-                itemCount: days.length,
-                itemBuilder: (context, index) {
-                  return _buildScheduleCard(days[index]);
-                },
-              ),
-            ),
-          ],
+        child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.5,
+          ),
+          itemCount: days.length,
+          itemBuilder: (context, index) {
+            return _buildScheduleCard(days[index]);
+          },
         ),
       ),
       floatingActionButton: Container(
