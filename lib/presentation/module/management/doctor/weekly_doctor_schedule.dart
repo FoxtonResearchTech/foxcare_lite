@@ -9,6 +9,8 @@ class DoctorWeeklySchedule extends StatefulWidget {
 }
 
 class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
+  int selectedIndex = 6;
+
   final List<String> days = [
     "Monday",
     "Tuesday",
@@ -30,7 +32,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     "Neurologist",
     "Pediatrician"
   ];
-  int selectedIndex = 6;
 
   Map<String, String?> selectedDoctor = {};
   Map<String, String?> selectedSpecialization = {};
@@ -94,7 +95,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
 
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             Row(
@@ -125,7 +126,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
             ),
             Expanded(
               child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
@@ -146,18 +147,19 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         child: FloatingActionButton.extended(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Schedule Saved Successfully!")),
+              const SnackBar(content: Text("Schedule Saved Successfully!")),
             );
           },
           backgroundColor: Colors.blue,
-          label: Text(
+          label: const Text(
             "Save",
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.white), // Larger font
           ),
-          icon: Icon(Icons.save, size: 28, color: Colors.white), // Larger icon
+          icon: const Icon(Icons.save,
+              size: 28, color: Colors.white), // Larger icon
           elevation: 10, // Slightly raised for better effect
         ),
       ),
@@ -171,7 +173,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       elevation: 6,
       shadowColor: Colors.blue.withOpacity(0.3),
       child: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -182,7 +184,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                   fontWeight: FontWeight.bold,
                   color: Colors.blue[900]),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             // Doctor Dropdown with Reduced Width
             _buildDropdown(day, "Doctor", doctors, selectedDoctor, (value) {
@@ -191,7 +193,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
               });
             }, width: 250),
 
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
 
             // Specialization Dropdown with Reduced Width
             _buildDropdown(
@@ -202,7 +204,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
               });
             }, width: 250),
 
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             // OP Time In & Out Row
             Row(
@@ -215,7 +217,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.blue[900])),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     _buildTimeInput(day, true), // Time In Button
                   ],
                 ),
@@ -226,14 +228,14 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.blue[900])),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     _buildTimeInput(day, false), // Time Out Button
                   ],
                 ),
               ],
             ),
 
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -244,7 +246,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.blue[900])),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     _buildTimeInput(day, true), // Time In Button
                   ],
                 ),
@@ -255,14 +257,14 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.blue[900])),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     _buildTimeInput(day, false), // Time Out Button
                   ],
                 ),
               ],
             ),
 
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -274,7 +276,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       {double width = 150}) {
     return Container(
       width: width, // Reduced dropdown width
-      padding: EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: Colors.blue[50],
         borderRadius: BorderRadius.circular(10),
@@ -323,7 +325,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       },
       child: Container(
         width: 70, // Slightly increased for better tap area
-        padding: EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: Colors.blue[100],
           borderRadius: BorderRadius.circular(8),

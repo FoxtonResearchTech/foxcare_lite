@@ -15,8 +15,6 @@ class DoctorMonthlySchedule extends StatefulWidget {
 }
 
 class _DoctorMonthlyScheduleState extends State<DoctorMonthlySchedule> {
-  int selectedIndex = 5;
-
   final List<String> doctors = [
     "Dr. John Doe",
     "Dr. Smith",
@@ -52,6 +50,8 @@ class _DoctorMonthlyScheduleState extends State<DoctorMonthlySchedule> {
     }
   }
 
+  int selectedIndex = 5;
+
   @override
   Widget build(BuildContext context) {
     // Get the screen width using MediaQuery
@@ -75,7 +75,7 @@ class _DoctorMonthlyScheduleState extends State<DoctorMonthlySchedule> {
                     selectedIndex = index;
                   });
                 },
-              ), // Drawer minimized for mobile
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -91,7 +91,7 @@ class _DoctorMonthlyScheduleState extends State<DoctorMonthlySchedule> {
                     selectedIndex = index;
                   });
                 },
-              ), // Sidebar always open for web view
+              ),
             ),
           Expanded(
             child: Padding(
@@ -122,7 +122,7 @@ class _DoctorMonthlyScheduleState extends State<DoctorMonthlySchedule> {
                   child: Column(
                     children: [
                       CustomText(
-                        text: "Monthly Doctor Schedule",
+                        text: "Doctor Monthly Schedule",
                         size: screenWidth * .015,
                       ),
                     ],
