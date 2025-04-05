@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_admission_status.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
@@ -185,7 +187,14 @@ class _GeneralInformationIpAdmission
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementGeneralInformationDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -194,7 +203,14 @@ class _GeneralInformationIpAdmission
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementGeneralInformationDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ), // Sidebar always open for web view
             ),
           Expanded(
             child: Padding(
@@ -207,107 +223,6 @@ class _GeneralInformationIpAdmission
     );
   }
 
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'General Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'OP Ticket Generation', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => GeneralInformationOpTicket()));
-        }, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'IP Admission', () {}, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'Admission Status', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => GeneralInformationAdmissionStatus()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Doctor Visit  Schedule', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      GeneralInformationDoctorVisitSchedule()));
-        }, Iconsax.add_circle),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Doctor Visit  Schedule Edit', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      GeneralInformationEditDoctorVisitSchedule()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(5, 'Back To Management Dashboard', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManagementDashboard()));
-        }, Iconsax.backward),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
-    );
-  }
-
-  // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
@@ -326,7 +241,35 @@ class _GeneralInformationIpAdmission
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "IP Admission ",
+                          size: screenWidth * .015,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.15,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                ],
+              ),
               CustomDataTable(
+                headerColor: Colors.white,
+                headerBackgroundColor: AppColors.blue,
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {

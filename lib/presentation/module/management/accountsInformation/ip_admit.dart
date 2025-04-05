@@ -448,9 +448,9 @@ class _IpAdmit extends State<IpAdmit> {
                     selectedIndex = index;
                   });
                 },
-              ), // Drawer minimized for mobile
+              ),
             )
-          : null, // No drawer for web view (permanently open)
+          : null,
       body: Row(
         children: [
           if (!isMobile)
@@ -464,7 +464,7 @@ class _IpAdmit extends State<IpAdmit> {
                     selectedIndex = index;
                   });
                 },
-              ), // Sidebar always open for web view
+              ),
             ),
           Expanded(
             child: Padding(
