@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
 
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
-import '../generalInformation/general_information_admission_status.dart';
-import '../generalInformation/general_information_edit_doctor_visit_schedule.dart';
-import '../generalInformation/general_information_ip_admission.dart';
-import '../generalInformation/general_information_op_Ticket.dart';
-import '../management_dashboard.dart';
 
 class DoctorMonthlySchedule extends StatefulWidget {
   @override
