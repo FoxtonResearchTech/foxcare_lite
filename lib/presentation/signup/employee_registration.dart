@@ -143,7 +143,7 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
               'phone2': phone2Controller.text,
               'gender': selectedSex,
               'dob': dobController.text,
-              'position': positionSelectedValue,
+              'roles': positionSelectedValue,
               'specialization': selectedSpecialization,
               'address': {
                 'permanent': {

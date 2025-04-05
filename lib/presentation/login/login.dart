@@ -291,7 +291,7 @@ class _LoginFormState extends State<LoginForm> {
 
       Map<String, dynamic> employeeData =
           employeeDoc.data() as Map<String, dynamic>;
-      String? position = employeeData['position'];
+      String? position = employeeData['roles'];
 
       if (position == null || position.isEmpty) {
         showMessage('Position information is missing.');
