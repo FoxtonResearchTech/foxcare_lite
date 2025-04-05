@@ -44,10 +44,10 @@ class CustomTextField extends StatelessWidget {
           contentPadding: EdgeInsets.symmetric(
               vertical: verticalSize, horizontal: horizontalSize),
           labelText: hintText,
-          hintStyle: TextStyle(
+          hintStyle: const TextStyle(
             fontFamily: 'Poppins',
           ),
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontFamily: 'Poppins',
           ),
           floatingLabelStyle:
@@ -60,7 +60,7 @@ class CustomTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.lightBlue, width: 1),
+            borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
             borderRadius: BorderRadius.circular(10),
           ),
           suffixIcon: icon != null

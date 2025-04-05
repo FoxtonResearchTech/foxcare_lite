@@ -21,6 +21,8 @@ class EmployeeRegistration extends StatefulWidget {
 class _EmployeeRegistrationState extends State<EmployeeRegistration> {
   String? positionSelectedValue;
   String? relationSelectedValue;
+  String? selectedSpecialization;
+
   String? selectedSex;
 
   // Controllers for employee details
@@ -87,6 +89,13 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
     tempPinCodeController.clear();
   }
 
+  bool isDoc = false;
+  void isDoctor(String value) {
+    setState(() {
+      isDoc = value == 'Doctor';
+    });
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -134,6 +143,8 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
               'phone2': phone2Controller.text,
               'gender': selectedSex,
               'dob': dobController.text,
+              'position': positionSelectedValue,
+              'specialization': selectedSpecialization,
               'address': {
                 'permanent': {
                   'lane1': lane1Controller.text,
@@ -173,18 +184,6 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
             .then((value) => debugPrint('Employee added successfully'))
             .catchError(
                 (error) => debugPrint('Failed to add employee: $error'));
-
-        // Create a subcollection for roles inside the employee document
-        await firestore
-            .collection('employees')
-            .doc(docId)
-            .collection('roles')
-            .add({
-              'position': positionSelectedValue,
-              'assignedAt': FieldValue.serverTimestamp(),
-            })
-            .then((value) => debugPrint('Role added successfully'))
-            .catchError((error) => debugPrint('Failed to add role: $error'));
       }
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => LoginScreen()));
@@ -256,6 +255,7 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                         onChanged: (value) {
                           setState(() {
                             positionSelectedValue = value!;
+                            isDoctor(positionSelectedValue!);
                           });
                         },
                       ),
@@ -267,6 +267,34 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                       ),
                     ],
                   ),
+                  SizedBox(height: screenHeight * 0.02),
+
+                  if (isDoc)
+                    Row(
+                      children: [
+                        CustomDropdown(
+                          label: 'Specialization',
+                          items: const [
+                            'General Physician',
+                            'Pediatrician',
+                            'Cardiologist',
+                            'Dermatologist',
+                            'Neurologist',
+                            'Orthopedic Surgeon',
+                            'ENT Specialist',
+                            'Gynecologist',
+                            'Ophthalmologist',
+                            'Psychiatrist',
+                          ],
+                          selectedItem: selectedSpecialization,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedSpecialization = value!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
