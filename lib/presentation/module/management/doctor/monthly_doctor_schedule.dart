@@ -12,7 +12,7 @@ class MonthlyDoctorSchedule extends StatefulWidget {
 
 class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
   List<Map<String, dynamic>> schedules = [];
-  int selectedIndex = 5;
+  int selectedIndex = 6;
 
   List<Map<String, String>> doctorList = [
     {"name": "Dr. Aisha Khan", "specialization": "Cardiologist"},

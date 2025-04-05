@@ -42,7 +42,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
   Map<String, Map<String, String?>> opTimeIn = {};
   Map<String, Map<String, String?>> opTimeOut = {};
 
-  int selectedIndex = 6;
+  int selectedIndex = 5;
 
   @override
   Widget build(BuildContext context) {
