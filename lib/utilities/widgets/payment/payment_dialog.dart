@@ -333,8 +333,6 @@ class _PaymentDialogState extends State<PaymentDialog> {
               await updateBalance(widget.docId.toString(),
                   double.parse(balance.text.replaceAll('₹ ', '')));
               widget.fetchData!();
-            } else {
-              await addPaymentAmount(widget.docId.toString());
             }
           },
           child: CustomText(

@@ -123,7 +123,6 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
       final firestore = FirebaseFirestore.instance;
 
       if (positionSelectedValue != null) {
-        // Use the user ID as the document ID
         String docId = userCredential.user!.uid;
 
         // Create the employee document

@@ -12,6 +12,7 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../management_dashboard.dart';
@@ -28,8 +29,7 @@ class IpAdmitList extends StatefulWidget {
 }
 
 class _IpAdmitList extends State<IpAdmitList> {
-  // To store the index of the selected drawer item
-  int selectedIndex = 10;
+  int selectedIndex = 9;
   final List<String> headers = [
     'OP NO',
     'IP NO',
@@ -66,7 +66,14 @@ class _IpAdmitList extends State<IpAdmitList> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementAccountsDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -75,7 +82,14 @@ class _IpAdmitList extends State<IpAdmitList> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementAccountsDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
@@ -88,153 +102,6 @@ class _IpAdmitList extends State<IpAdmitList> {
     );
   }
 
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Accounts Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'New Patients Register Collection', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NewPatientRegisterCollection()));
-        }, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'OP Ticket Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => OpTicketCollection()));
-        }, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'IP Admission Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => IpAdmissionCollection()));
-        }, Iconsax.add_circle),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Pharmacy Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyTotalSales()));
-        }, Iconsax.square),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Hospital Direct Purchase', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => HospitalDirectPurchase()));
-        }, Iconsax.status),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(5, 'Hospital Direct Purchase Pending Still', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => HospitalDirectPurchaseStillPending()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(6, 'Other Expense', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => OtherExpense()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(7, 'Surgery | OT | ICU | Observation Collection', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => SurgeryOtIcuCollection()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(8, 'Lab Collection', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => LabCollection()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(9, 'IP Admit', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => IpAdmit()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(10, 'IP Admit List', () {}, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(11, 'Back To Management Dashboard', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManagementDashboard()));
-        }, Iconsax.logout),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
-    );
-  }
-
-  // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
