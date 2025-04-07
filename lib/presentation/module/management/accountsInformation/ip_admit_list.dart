@@ -1,25 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
-import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_register_patient.dart';
-import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
-import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
-import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
+import 'package:foxcare_lite/utilities/widgets/payment/ip_admit_payment_dialog.dart';
 
-import '../../../../../utilities/widgets/text/primary_text.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
-import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
+import '../../../../utilities/widgets/payment/ip_admit_additional_amount.dart';
+import '../../../../utilities/widgets/payment/payment_dialog.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
+import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../management_dashboard.dart';
 import 'hospital_direct_purchase.dart';
 import 'hospital_direct_purchase_still_pending.dart';
+
 import 'ip_admission_collection.dart';
+import 'ip_admit_list.dart';
 import 'lab_collection.dart';
+import 'new_patient_register_collection.dart';
 import 'op_ticket_collection.dart';
 import 'other_expense.dart';
 
@@ -29,30 +33,289 @@ class IpAdmitList extends StatefulWidget {
 }
 
 class _IpAdmitList extends State<IpAdmitList> {
+  final dateTime = DateTime.now();
+
   int selectedIndex = 9;
+  TextEditingController _dateController = TextEditingController();
+  TextEditingController _fromDateController = TextEditingController();
+  TextEditingController _toDateController = TextEditingController();
+  TextEditingController _ipNumber = TextEditingController();
+
+  TextEditingController amount = TextEditingController();
+  TextEditingController collected = TextEditingController();
+  TextEditingController balanceAmount = TextEditingController();
+
+  DateTime now = DateTime.now();
   final List<String> headers = [
-    'OP NO',
-    'IP NO',
+    'OP Ticket',
+    'IP No',
+    'IP Admission Date',
     'Name',
     'City',
-    'Admit Date',
-    'Discharge Date',
+    'Doctor Name',
     'Total Amount',
+    'Collected',
+    'Balance',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'OP NO': '',
-      'IP NO': '',
-      'Name': '',
-      'City': '',
-      'Admit Date': '',
-      'Discharge Date': '',
-      'Total Amount': '',
+  List<Map<String, dynamic>> tableData = [];
+
+  void _updateBalance() {
+    double totalAmount = double.tryParse(amount.text) ?? 0.0;
+    double paidAmount = double.tryParse(collected.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    balanceAmount.text = balance.toStringAsFixed(2);
+  }
+
+  Future<void> addPaymentAmount(String docID) async {
+    try {
+      Map<String, dynamic> data = {
+        'ipAdmissionTotalAmount': amount.text,
+        'ipAdmissionCollected': collected.text,
+        'ipAdmissionBalance': balanceAmount.text,
+      };
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(docID)
+          .collection('ipAdmissionPayments')
+          .doc('payments')
+          .set(data);
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(docID)
+          .collection('ipAdmissionPayments')
+          .doc('payments')
+          .collection('additionalAmount')
+          .doc()
+          .set({
+        'additionalAmount': amount.text,
+        'reason': 'Initial Amount',
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'time': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
+      CustomSnackBar(context,
+          message: 'Additional Fees Added Successfully',
+          backgroundColor: Colors.green);
+    } catch (e) {
+      CustomSnackBar(context,
+          message: 'Failed to Add Fees', backgroundColor: Colors.red);
     }
-  ];
+  }
+
+  Future<void> fetchData(
+      {String? ipNumber,
+      String? singleDate,
+      String? fromDate,
+      String? toDate}) async {
+    try {
+      Query query = FirebaseFirestore.instance.collection('patients');
+      if (ipNumber != null) {
+        query = query.where('ipNumber', isEqualTo: ipNumber);
+      } else if (singleDate != null) {
+        query = query.where('date', isEqualTo: singleDate);
+      } else if (fromDate != null && toDate != null) {
+        query = query
+            .where('date', isGreaterThanOrEqualTo: fromDate)
+            .where('date', isLessThanOrEqualTo: toDate);
+      }
+      final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+        return;
+      }
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('ipNumber')) continue;
+
+        String tokenNo = '';
+        bool hasIpPrescription = false;
+        bool hasIpPayment = false;
+
+        try {
+          final tokenSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('tokens')
+              .doc('currentToken')
+              .get();
+
+          if (tokenSnapshot.exists) {
+            final tokenData = tokenSnapshot.data();
+            if (tokenData != null && tokenData['tokenNumber'] != null) {
+              tokenNo = tokenData['tokenNumber'].toString();
+            }
+          }
+          final ipPrescriptionSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('ipPrescription')
+              .get();
+
+          if (ipPrescriptionSnapshot.docs.isNotEmpty) {
+            hasIpPrescription = true;
+          }
+        } catch (e) {
+          print('Error fetching token No for patient ${doc.id}: $e');
+        }
+
+        if (hasIpPrescription) {
+          final ipAdmissionSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('ipAdmissionPayments')
+              .get();
+
+          if (ipAdmissionSnapshot.docs.isNotEmpty) {
+            hasIpPayment = true;
+          }
+
+          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('ipAdmissionPayments')
+              .doc('payments')
+              .get();
+
+          Map<String, dynamic>? detailsData = detailsDoc.exists
+              ? detailsDoc.data() as Map<String, dynamic>?
+              : null;
+          String ipAdmissionTotalAmountStr =
+              detailsData?['ipAdmissionTotalAmount'] ?? '0';
+          String ipAdmissionCollectedStr =
+              detailsData?['ipAdmissionCollected'] ?? '0';
+          String ipAdmissionDate = detailsData?['date'] ?? 'N/A';
+
+          double ipAdmissionTotalAmount =
+              double.tryParse(ipAdmissionTotalAmountStr) ?? 0;
+          double ipAdmissionCollected =
+              double.tryParse(ipAdmissionCollectedStr) ?? 0;
+
+          double balance = ipAdmissionTotalAmount - ipAdmissionCollected;
+
+          fetchedData.add({
+            'OP Ticket': tokenNo,
+            'IP No': data['ipNumber']?.toString() ?? 'N/A',
+            'IP Admission Date': ipAdmissionDate,
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'City': data['city']?.toString() ?? 'N/A',
+            'Doctor Name': data['doctorName']?.toString() ?? 'N/A',
+            'Total Amount': ipAdmissionTotalAmountStr,
+            'Collected': ipAdmissionCollectedStr,
+            'Balance': balance,
+          });
+        }
+      }
+
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['OP Ticket'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['OP Ticket'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+
+      setState(() {
+        tableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  int _totalAmountCollected() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Total Amount'];
+        if (value == null) return sum;
+        if (value is String) {
+          value = int.tryParse(value) ?? 0;
+        }
+        return sum + (value as int);
+      },
+    );
+  }
+
+  int _totalCollected() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Collected'];
+        if (value == null) return sum;
+        if (value is String) {
+          value = int.tryParse(value) ?? 0;
+        }
+        return sum + (value as int);
+      },
+    );
+  }
+
+  int _totalBalance() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Balance'];
+        if (value == null) return sum;
+        if (value is String) {
+          value = double.tryParse(value) ?? 0.0;
+        }
+        if (value is double) {
+          value = value.toInt();
+        }
+        return sum + (value as int);
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    _totalAmountCollected();
+    _totalCollected();
+    _totalBalance();
+    amount.addListener(_updateBalance);
+    collected.addListener(_updateBalance);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _dateController.dispose();
+    _toDateController.dispose();
+    _fromDateController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
@@ -75,7 +338,7 @@ class _IpAdmitList extends State<IpAdmitList> {
                 },
               ),
             )
-          : null, // No drawer for web view (permanently open)
+          : null,
       body: Row(
         children: [
           if (!isMobile)
@@ -93,7 +356,7 @@ class _IpAdmitList extends State<IpAdmitList> {
             ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(left: 16, right: 16),
               child: dashboard(),
             ),
           ),
@@ -112,7 +375,6 @@ class _IpAdmitList extends State<IpAdmitList> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
             left: screenWidth * 0.01,
             right: screenWidth * 0.01,
             bottom: screenWidth * 0.01,
@@ -120,16 +382,66 @@ class _IpAdmitList extends State<IpAdmitList> {
           child: Column(
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "IP Admit List",
+                          size: screenWidth * .015,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.15,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   CustomTextField(
+                    hintText: 'IP Number',
+                    width: screenWidth * 0.15,
+                    controller: _ipNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(ipNumber: _ipNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.05),
+              Row(
+                children: [
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _dateController),
                     icon: Icon(Icons.date_range),
+                    controller: _dateController,
                     hintText: 'Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(singleDate: _dateController.text);
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),
@@ -137,27 +449,42 @@ class _IpAdmitList extends State<IpAdmitList> {
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    onTap: () => _selectDate(context, _fromDateController),
                     icon: Icon(Icons.date_range),
+                    controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    onTap: () => _selectDate(context, _toDateController),
                     icon: Icon(Icons.date_range),
+                    controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(
+                        fromDate: _fromDateController.text,
+                        toDate: _toDateController.text,
+                      );
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.05),
+              const Row(
+                children: [CustomText(text: 'Collection Report Of Date')],
+              ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
                 tableData: tableData,
                 headers: headers,
               ),
@@ -178,15 +505,15 @@ class _IpAdmitList extends State<IpAdmitList> {
                     ),
                     SizedBox(width: screenWidth * 0.086),
                     CustomText(
-                      text: '',
+                      text: '${_totalAmountCollected()}',
                     ),
                     SizedBox(width: screenWidth * 0.08),
                     CustomText(
-                      text: '',
+                      text: '${_totalCollected()}',
                     ),
                     SizedBox(width: screenWidth * 0.083),
                     CustomText(
-                      text: '',
+                      text: '${_totalBalance()}',
                     ),
                   ],
                 ),
