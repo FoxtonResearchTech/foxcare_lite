@@ -614,7 +614,6 @@ class _RxPrescription extends State<RxPrescription> {
                           builder: (BuildContext context) {
                             return StatefulBuilder(
                               builder: (context, setState) {
-                                // ✅ Ensures setState works inside dialog
                                 return AlertDialog(
                                   title: Text('Add Medicines'),
                                   content: SizedBox(

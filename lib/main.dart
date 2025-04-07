@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/module/dental/dental_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
@@ -12,6 +13,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_admission_status.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
@@ -22,6 +24,7 @@ import 'package:foxcare_lite/presentation/module/reception/ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/reception/ip_patients_admission.dart';
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
+import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'firebase_options.dart';
 import 'presentation/module/management/doctor/monthly_doctor_schedule.dart';
 
@@ -44,7 +47,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: GeneralInformationAdmissionStatus(),
+      home: OtherExpense(),
     );
   }
 }

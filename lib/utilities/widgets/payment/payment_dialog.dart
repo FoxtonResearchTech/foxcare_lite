@@ -16,6 +16,8 @@ class PaymentDialog extends StatefulWidget {
   final String? totalAmount;
   final String? docId;
   final bool? timeLine;
+  final bool? initialPayment;
+  final String? initialBalance;
   final Future<void> Function()? fetchData;
   PaymentDialog({
     this.patientID = '',
@@ -30,6 +32,8 @@ class PaymentDialog extends StatefulWidget {
     this.timeLine = false,
     this.totalAmount,
     this.fetchData,
+    this.initialPayment = false,
+    this.initialBalance,
   });
 
   @override
@@ -225,7 +229,9 @@ class _PaymentDialogState extends State<PaymentDialog> {
                   text: 'City: ${widget.city ?? 'N/A'}',
                   size: screenWidth * 0.010),
               CustomText(
-                  text: 'Balance: ${widget.balance ?? '0.00'}',
+                  text: widget.initialPayment == true
+                      ? 'Balance: ${widget.initialBalance ?? '0.00'}'
+                      : 'Balance: ${widget.balance ?? '0.00'}',
                   size: screenWidth * 0.010),
               SizedBox(height: screenHeight * 0.015),
               Row(
@@ -333,8 +339,6 @@ class _PaymentDialogState extends State<PaymentDialog> {
               await updateBalance(widget.docId.toString(),
                   double.parse(balance.text.replaceAll('₹ ', '')));
               widget.fetchData!();
-            } else {
-              await addPaymentAmount(widget.docId.toString());
             }
           },
           child: CustomText(

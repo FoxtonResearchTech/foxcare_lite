@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
@@ -21,56 +22,79 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: LayoutBuilder(
-      builder: (context, constraints) {
-        double screenWidth = MediaQuery.of(context).size.width;
-        double screenHeight = MediaQuery.of(context).size.height;
-        if (constraints.maxWidth > 600) {
-          // Web or large screen: horizontal split
-          return Row(
-            children: [
-              // Left side: Login form
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(150, 0, 0, 0),
-                  child: LoginForm(),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: CustomImage(
-                    path: AppImages.logo,
-                    width: screenWidth * 0.25,
-                    height: screenHeight * 0.35,
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'bg_img.jpg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              double screenWidth = MediaQuery.of(context).size.width;
+              double screenHeight = MediaQuery.of(context).size.height;
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: screenHeight * 0.28),
+                      child: Center(
+                        child: Container(
+                          child: Column(
+                            children: [
+                              Image.asset(
+                                AppImages.logo,
+                                width: screenWidth * 0.25,
+                                height: screenHeight * 0.25,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.14),
+                                child: Center(
+                                  child: Row(
+                                    children: [
+                                      Image.asset(
+                                        'assets/hospital_logo_demo.png',
+                                        width: screenWidth * 0.1,
+                                        height: screenHeight * 0.1,
+                                      ),
+                                      Container(
+                                          width: 2.5,
+                                          height: 50,
+                                          color: Colors.grey),
+                                      Image.asset(
+                                        'assets/NIH_Logo.png',
+                                        width: screenWidth * 0.1,
+                                        height: screenHeight * 0.1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          );
-        } else {
-          // Mobile: vertical split
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top half: Logo
-              const Expanded(
-                child: Center(
-                  child: CustomImage(path: AppImages.logo),
-                ),
-              ),
-              // Bottom half: Login form
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  child: LoginForm(),
-                ),
-              ),
-            ],
-          );
-        }
-      },
-    ));
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                      child: LoginForm(),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -80,6 +104,8 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
+  bool showPassword = false;
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -92,32 +118,146 @@ class _LoginFormState extends State<LoginForm> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const CustomText(
-          text: 'Welcome back!',
-        ),
-        const CustomText(
-          text: 'Enter your credentials to access your account',
-        ),
-        SizedBox(height: screenHeight * 0.03),
-        CustomTextField(
-          controller: _emailController,
-          hintText: 'Enter your email',
-          width: screenWidth * 0.4,
+        CustomText(
+          text: 'Welcome back !',
+          size: screenWidth * 0.0225,
+          color: AppColors.lightBlue,
         ),
         SizedBox(height: screenHeight * 0.03),
-        CustomTextField(
-          hintText: 'Enter Password',
-          obscureText: true,
-          controller: _passwordController,
-          width: screenWidth * 0.4,
+        CustomText(
+          text: 'User Email',
+          size: screenWidth * 0.0125,
+          color: AppColors.lightBlue,
         ),
-        SizedBox(height: screenHeight * 0.03),
-        Center(
-          child: CustomButton(
-            label: "Login",
-            onPressed: _login,
-            width: screenWidth * 0.1,
+        SizedBox(
+          width: screenWidth * 0.25,
+          child: TextField(
+            controller: _emailController,
+            obscureText: false,
+            style: TextStyle(
+              color: AppColors.lightBlue,
+              fontFamily: 'Poppins',
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              hintStyle: TextStyle(
+                color: AppColors.lightBlue,
+                fontFamily: 'Poppins',
+              ),
+              labelStyle: TextStyle(
+                color: AppColors.lightBlue,
+                fontFamily: 'Poppins',
+              ),
+              floatingLabelStyle:
+                  TextStyle(fontFamily: 'Poppins', color: AppColors.lightBlue),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              fillColor: AppColors.blue,
+              focusColor: AppColors.blue,
+              filled: true,
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppColors.lightBlue, width: 2.0),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
           ),
+        ),
+        SizedBox(height: screenHeight * 0.03),
+        CustomText(
+          text: 'Password',
+          size: screenWidth * 0.0125,
+          color: AppColors.lightBlue,
+        ),
+        SizedBox(
+          width: screenWidth * 0.25,
+          child: TextField(
+            controller: _passwordController,
+            obscureText: !showPassword,
+            style: TextStyle(
+              color: AppColors.lightBlue,
+              fontFamily: 'Poppins',
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              hintStyle: TextStyle(
+                color: AppColors.lightBlue,
+                fontFamily: 'Poppins',
+              ),
+              labelStyle: TextStyle(
+                color: AppColors.lightBlue,
+                fontFamily: 'Poppins',
+              ),
+              floatingLabelStyle:
+                  TextStyle(fontFamily: 'Poppins', color: AppColors.lightBlue),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              fillColor: AppColors.blue,
+              focusColor: AppColors.blue,
+              filled: true,
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppColors.lightBlue, width: 2.0),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.03),
+        Row(
+          children: [
+            Checkbox(
+              checkColor: Colors.white,
+              activeColor: AppColors.lightBlue,
+              side: BorderSide(color: AppColors.lightBlue, width: 2),
+              value: showPassword,
+              onChanged: (value) {
+                setState(() {
+                  showPassword = value!;
+                });
+              },
+            ),
+            CustomText(
+              text: "Show Password",
+              color: AppColors.lightBlue,
+            ), // Optional label
+          ],
+        ),
+        SizedBox(height: screenHeight * 0.03),
+        Row(
+          children: [
+            SizedBox(width: screenWidth * 0.09),
+            SizedBox(
+              height: screenHeight * 0.05,
+              width: screenWidth * 0.08,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.blue,
+                  padding: const EdgeInsets.all(0), // Keep padding minimal
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(20), // Set borderRadius to 12
+                  ),
+                ),
+                onPressed: _login,
+                child: Text(
+                  'Login',
+                  style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+              ),
+            ),
+          ],
         )
       ],
     );
@@ -133,35 +273,31 @@ class _LoginFormState extends State<LoginForm> {
     }
 
     try {
-      // Step 1: Authenticate user with FirebaseAuth
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      QuerySnapshot roleSnapshot = await FirebaseFirestore.instance
+      DocumentSnapshot employeeDoc = await FirebaseFirestore.instance
           .collection('employees')
           .doc(userCredential.user!.uid)
-          .collection('roles')
           .get();
 
-      if (roleSnapshot.docs.isEmpty) {
-        showMessage('Role not found for the user.');
+      if (!employeeDoc.exists) {
+        showMessage('User not found in employees collection.');
         return;
       }
 
-      // Assuming only one role is assigned per user
-      Map<String, dynamic> roleData =
-          roleSnapshot.docs.first.data() as Map<String, dynamic>;
-      String? position = roleData['position'];
+      Map<String, dynamic> employeeData =
+          employeeDoc.data() as Map<String, dynamic>;
+      String? position = employeeData['roles'];
 
       if (position == null || position.isEmpty) {
         showMessage('Position information is missing.');
         return;
       }
 
-      // Step 3: Navigate based on position
       switch (position) {
         case 'Pharmacist':
           Navigator.push(
