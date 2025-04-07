@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/doctor/add_schedule.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-
+import 'package:intl/intl.dart';
+import 'package:foxcare_lite/presentation/module/management/doctor/add_schedule.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
@@ -13,63 +15,42 @@ class DoctorScheduleViewManager extends StatefulWidget {
 
 class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
   int selectedIndex = 3;
+  List<Map<String, dynamic>> doctors = [];
 
-  final List<Map<String, String>> doctorSchedules = [
-    {
-      'doctor': 'Dr. Smith',
-      'specification': 'Cardiologist',
-      'counter': '1',
-      'opTime': '09:00 AM',
-      'outTime': '01:00 PM'
-    },
-    {
-      'doctor': 'Dr. John',
-      'specification': 'Dentist',
-      'counter': '2',
-      'opTime': '10:00 AM',
-      'outTime': '02:00 PM'
-    },
-    {
-      'doctor': 'Dr. Rose',
-      'specification': 'Neurologist',
-      'counter': '3',
-      'opTime': '11:00 AM',
-      'outTime': '03:00 PM'
-    },
-  ];
+  final String formattedDate = DateFormat('d MMMM, y').format(DateTime.now());
 
-  final List<Map<String, String>> doctors = [
-    {
-      'name': 'Dr. John Doe',
-      'designation': 'Cardiologist',
-      'time': '10:00 AM - 4:00 PM'
-    },
-    {
-      'name': 'Dr. Emily Smith',
-      'designation': 'Dentist',
-      'time': '11:00 AM - 5:00 PM'
-    },
-    {
-      'name': 'Dr. Rahul Sharma',
-      'designation': 'Neurologist',
-      'time': '9:00 AM - 3:00 PM'
-    },
-    {
-      'name': 'Dr. Sarah Lee',
-      'designation': 'Pediatrician',
-      'time': '1:00 PM - 7:00 PM'
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchDoctorSchedules();
+  }
 
-  final List<String> days = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday'
-  ];
+  Future<void> fetchDoctorSchedules() async {
+    try {
+      final QuerySnapshot snapshot =
+      await FirebaseFirestore.instance.collection('doctorSchedulesDaily').get();
+
+      final List<Map<String, dynamic>> fetchedDoctors = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {
+          'doctor': data['doctor'] ?? 'Unknown',
+          'counter': data['counter'] ?? '0',
+          'specialization': data['specialization'] ?? 'Unknown',
+          'morningOpIn': data['morningOpIn'] ?? 'N/A',
+          'morningOpOut': data['morningOpOut'] ?? 'N/A',
+          'eveningOpIn': data['eveningOpIn'] ?? 'N/A',
+          'eveningOpOut': data['eveningOpOut'] ?? 'N/A',
+          'date': data['date'] ?? 'N/A',
+        };
+      }).toList();
+
+      setState(() {
+        doctors = fetchedDoctors;
+      });
+    } catch (e) {
+      print('Error fetching doctor schedules: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,28 +60,26 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: const CustomText(
-                text: 'General Information',
-              ),
-            )
-          : null, // No AppBar for web view
+        title: const CustomText(text: 'General Information'),
+      )
+          : null,
       drawer: isMobile
           ? Drawer(
-              child: ManagementGeneralInformationDrawer(
-                selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-              ),
-            )
-          : null, // No drawer for web view (permanently open)
+        child: ManagementGeneralInformationDrawer(
+          selectedIndex: selectedIndex,
+          onItemSelected: (index) {
+            setState(() {
+              selectedIndex = index;
+            });
+          },
+        ),
+      )
+          : null,
       body: Row(
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300,
               color: Colors.blue.shade100,
               child: ManagementGeneralInformationDrawer(
                 selectedIndex: selectedIndex,
@@ -124,7 +103,6 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
 
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Padding(
@@ -152,23 +130,32 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                     width: screenWidth * 0.15,
                     height: screenWidth * 0.15,
                     decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        image: const DecorationImage(
-                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
               const Text(
                 "Today's Doctor Schedule",
                 style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87),
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
+              const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF42A5F5), Color(0xFF1E88E5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
                     BoxShadow(
@@ -178,28 +165,48 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                     ),
                   ],
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: const Row(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.calendar_today, color: Colors.white, size: 24),
-                    SizedBox(width: 8),
+                    const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                    const SizedBox(width: 8),
                     Text(
-                      "26 May, 2025",
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                      formattedDate,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int crossAxisCount = constraints.maxWidth < 600
-                      ? 1
-                      : (constraints.maxWidth < 900 ? 2 : 4);
+                  int crossAxisCount = 4;
+                  final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+// Filter doctors for today
+                  final todayDoctors = doctors.where((doctor) {
+                    final dateStr = doctor['date'];
+                    if (dateStr == null) return false;
+
+                    try {
+                      final doctorDate = DateFormat('yyyy-MM-dd').format(DateTime.parse(dateStr));
+                      return doctorDate == today;
+                    } catch (e) {
+                      return false;
+                    }
+                  }).toList();
+
+// Show message if no data
+                  if (todayDoctors.isEmpty) {
+                    return  Center(
+                      child: Lottie.asset("assets/no_data.json",height: 500,width: 500),
+                    );
+                  }
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -208,91 +215,122 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 16.0,
                       mainAxisSpacing: 16.0,
-                      childAspectRatio: 0.7,
+                      childAspectRatio: 0.6,
                     ),
-                    itemBuilder: (context, index) {
-                      final doctor = doctors[index];
-                      return Card(
-                        elevation: 12,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.0)),
-                        child: Container(
-                          decoration: BoxDecoration(
+                      itemBuilder: (context, index) {
+                        final doctor = doctors[index];
+
+
+                        return Card(
+                          elevation: 12,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.0),
-                            gradient: const LinearGradient(
-                              colors: [
-                                Colors.blueAccent,
-                                Colors.lightBlueAccent
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16.0),
+                              gradient: const LinearGradient(
+                                colors: [Colors.blueAccent, Colors.lightBlueAccent],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: Colors.white,
+                                    child: Text(
+                                      doctor['counter'],
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24.0),
+                                  Text(
+                                    doctor['doctor'],
+                                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12.0),
+                                  Text(
+                                    doctor['specialization'],
+                                    style: const TextStyle(fontSize: 18, color: Colors.white70),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12.0),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          child: Text(
+                                            doctor['morningOpIn'],
+                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          child: Text(
+                                            doctor['morningOpOut'],
+                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          child: Text(
+                                            doctor['eveningOpIn'],
+                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          child: Text(
+                                            doctor['eveningOpOut'],
+                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const CircleAvatar(
-                                  radius: 60,
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    "5",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 25),
-                                  ),
-                                ),
-                                const SizedBox(height: 24.0),
-                                Text(
-                                  doctor['name']!,
-                                  style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12.0),
-                                Text(
-                                  doctor['designation']!,
-                                  style: const TextStyle(
-                                      fontSize: 18, color: Colors.white70),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12.0),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    doctor['time']!,
-                                    style: const TextStyle(
-                                        fontSize: 16, color: Colors.white),
-                                  ),
-                                ),
-                                const SizedBox(height: 12.0),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    doctor['time']!,
-                                    style: const TextStyle(
-                                        fontSize: 16, color: Colors.white),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                        );
+                      }
+
                   );
                 },
               ),
@@ -312,9 +350,9 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
             label: 'Daily Schedule',
             onTap: () {
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const AddDoctorSchedule()));
+                context,
+                MaterialPageRoute(builder: (context) => const AddDoctorSchedule()),
+              );
             },
           ),
           SpeedDialChild(
@@ -323,7 +361,8 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
             label: 'Weekly Schedule',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Weekly Schedule Selected')));
+                const SnackBar(content: Text('Weekly Schedule Selected')),
+              );
             },
           ),
           SpeedDialChild(
@@ -332,7 +371,8 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
             label: 'Monthly Schedule',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Monthly Schedule Selected')));
+                const SnackBar(content: Text('Monthly Schedule Selected')),
+              );
             },
           ),
         ],

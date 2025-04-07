@@ -238,7 +238,7 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
               ),
               child: Column(
                 children: [
-                  const CustomText(text: 'Pharmacist Details'),
+                  const CustomText(text: 'Employee Registration'),
                   SizedBox(height: screenHeight * 0.05),
                   Row(
                     children: [

@@ -147,18 +147,24 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                fixedSize: const Size.fromHeight(56), // Set only height, let width adapt
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               onPressed: _selectDate,
               icon: const Icon(Icons.date_range),
-              label: const Text("Select Date to Add Doctor"),
+              label: const Text(
+                "Select Date to Add Doctor",
+                style: TextStyle(fontSize: 16),
+              ),
             ),
+
+
+
             const SizedBox(height: 16),
             Expanded(
               child: schedules.isEmpty
@@ -173,7 +179,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                         crossAxisCount: isWide ? 2 : 1,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
-                        childAspectRatio: isWide ? 1.4 : 0.95,
+                        childAspectRatio: 1,
                       ),
                       itemCount: schedules.length,
                       itemBuilder: (context, index) {
@@ -204,7 +210,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
-                                        color: Colors.deepPurple,
+                                        color: Colors.blue,
                                       ),
                                     ),
                                     IconButton(
