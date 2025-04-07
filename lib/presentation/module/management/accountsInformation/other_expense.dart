@@ -155,7 +155,7 @@ class _OtherExpense extends State<OtherExpense> {
                       billNo: data['billNo'],
                       partyName: data['partyName'],
                       city: data['city'],
-                      balance: collected.toString(),
+                      balance: balance.toString(),
                     );
                   });
             },
@@ -577,10 +577,12 @@ class _OtherExpense extends State<OtherExpense> {
                                       context: context,
                                       builder: (BuildContext context) {
                                         return PaymentDialog(
+                                          initialBalance: balanceAmount.text,
+                                          initialPayment: true,
                                           billNo: billNo.text,
                                           partyName: fromParty.text,
                                           city: city.text,
-                                          balance: balanceAmount.text,
+                                          balance: collected.text,
                                         );
                                       });
                                 },
