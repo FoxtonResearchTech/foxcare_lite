@@ -15,9 +15,9 @@ class doctorSchedule extends StatefulWidget {
   State<doctorSchedule> createState() => _doctorScheduleState();
 }
 
-int selectedIndex = 6;
-
 class _doctorScheduleState extends State<doctorSchedule> {
+  int selectedIndex = 6;
+
   @override
   Widget build(BuildContext context) {
     // Get the screen width using MediaQuery
