@@ -28,6 +28,7 @@ import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.d
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'firebase_options.dart';
 import 'presentation/module/management/doctor/monthly_doctor_schedule.dart';
+import 'presentation/module/management/doctor/weekly_doctor_schedule.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: ReceptionDashboard(),
+      home: MonthlyDoctorSchedule(),
     );
   }
 }
