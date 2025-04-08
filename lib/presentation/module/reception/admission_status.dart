@@ -7,6 +7,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import 'admission_status.dart';
 import 'doctor_schedule.dart';
 import 'ip_admission.dart';
@@ -126,7 +127,14 @@ class _AdmissionStatus extends State<AdmissionStatus> {
           : null,
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ReceptionDrawer(
+                selectedIndex: selectedIndex1,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No AppBar for web view
       body: Row(
@@ -135,11 +143,18 @@ class _AdmissionStatus extends State<AdmissionStatus> {
             Container(
               width: 300, // Sidebar width for larger screens
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar content
+              child: ReceptionDrawer(
+                selectedIndex: selectedIndex1,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(10.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth > 600) {
@@ -156,117 +171,6 @@ class _AdmissionStatus extends State<AdmissionStatus> {
     );
   }
 
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Reception',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        // Drawer items here
-        buildDrawerItem(0, 'Patient Registration', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => PatientRegistration()),
-          );
-        }, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'OP Ticket', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => OpTicketPage()),
-          );
-        }, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'IP Admission', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => IpAdmissionPage()),
-          );
-        }, Iconsax.add_circle),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'OP Counters', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => OpCounters()),
-          );
-        }, Iconsax.square),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Admission Status', () {}, Iconsax.status),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(5, 'Doctor Visit Schedule', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => doctorSchedule()),
-          );
-        }, Iconsax.hospital),
-
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(6, 'Ip Patients Admission', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
-          );
-        }, Icons.approval),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(7, 'Logout', () {
-          // Handle logout action
-        }, Iconsax.logout),
-      ],
-    );
-  }
-
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex1 == index,
-      selectedTileColor: Colors.blueAccent.shade100,
-      // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex1 == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex1 == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex1 = index; // Update the selected index
-        });
-        onTap();
-      },
-    );
-  }
-
   Widget buildThreeColumnForm() {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
@@ -278,12 +182,31 @@ class _AdmissionStatus extends State<AdmissionStatus> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          CustomText(
-            text: 'Admission Status',
-            size: 24,
-          ),
-          SizedBox(
-            height: 30,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: screenWidth * 0.02),
+                child: Column(
+                  children: [
+                    CustomText(
+                      text: "Admission Status",
+                      size: screenWidth * 0.03,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: screenWidth * 0.15,
+                height: screenWidth * 0.15,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                    image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'))),
+              ),
+            ],
           ),
           Row(
             children: [

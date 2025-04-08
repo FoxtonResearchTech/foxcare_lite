@@ -1,43 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
-import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 
-import '../../../utilities/images.dart';
-import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
-import '../../../utilities/widgets/text/primary_text.dart';
-import 'admission_status.dart';
-import 'doctor_schedule.dart';
-import 'ip_admission.dart';
-import 'ip_patients_admission.dart';
-import 'op_counters.dart';
-import 'op_ticket.dart';
+import '../../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 
-class ReceptionDashboard extends StatefulWidget {
+class ReceptionAccounts extends StatefulWidget {
+  const ReceptionAccounts({super.key});
+
   @override
-  State<ReceptionDashboard> createState() => _ReceptionDashboardState();
+  State<ReceptionAccounts> createState() => _ReceptionAccounts();
 }
 
-class _ReceptionDashboardState extends State<ReceptionDashboard> {
-  int selectedIndex = 0;
+class _ReceptionAccounts extends State<ReceptionAccounts> {
+  int selectedIndex = 6;
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text(
+              title: const Text(
                 'Reception Dashboard',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                ),
+                style: TextStyle(fontFamily: 'SanFrancisco'),
               ),
             )
-          : null, // No AppBar for web view
+          : null,
       drawer: isMobile
           ? Drawer(
               child: ReceptionDrawer(
@@ -54,7 +43,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300,
               color: Colors.blue.shade100,
               child: ReceptionDrawer(
                 selectedIndex: selectedIndex,
@@ -66,7 +55,9 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
               ),
             ),
           Expanded(
-            child: dashboard(),
+            child: SingleChildScrollView(
+              child: dashboard(),
+            ),
           ),
         ],
       ),
@@ -93,11 +84,11 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.03),
+                  padding: EdgeInsets.only(top: screenWidth * 0.07),
                   child: Column(
                     children: [
                       CustomText(
-                        text: "Dashboard",
+                        text: "Accounts",
                         size: screenWidth * 0.03,
                       ),
                     ],
@@ -114,6 +105,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
                 ),
               ],
             ),
+            const CustomText(text: 'Work In Progress 🚧'),
           ],
         ),
       ),

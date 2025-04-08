@@ -222,7 +222,7 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: AppColors.secondaryColor,
+        backgroundColor: AppColors.blue,
       ),
       body: SingleChildScrollView(
         child: Column(

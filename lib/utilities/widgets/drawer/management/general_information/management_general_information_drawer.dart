@@ -53,7 +53,7 @@ class _ManagementGeneralInformationDrawer
     return CustomDrawer(
         selectedIndex: widget.selectedIndex,
         onItemSelected: widget.onItemSelected,
-        doctorName: "Dr. Ramesh",
+        name: "Dr. Ramesh",
         degree: "MBBS, MD (General Medicine)",
         department: "General Medicine",
         menuItems: [

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
@@ -17,7 +18,7 @@ class OpTicketPage extends StatefulWidget {
 
 class _OpTicketPageState extends State<OpTicketPage> {
   final dateTime = DateTime.timestamp();
-  int selectedIndex = 1;
+  int selectedIndex = 2;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController counter = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
@@ -244,7 +245,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
           : null,
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ReceptionDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No AppBar for web view
       body: Row(
@@ -253,11 +261,18 @@ class _OpTicketPageState extends State<OpTicketPage> {
             Container(
               width: 300, // Sidebar width for larger screens
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar content
+              child: ReceptionDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(0.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth > 600) {
@@ -274,230 +289,157 @@ class _OpTicketPageState extends State<OpTicketPage> {
     );
   }
 
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        const DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Reception',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        // Drawer items here
-        buildDrawerItem(0, 'Patient Registration', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => PatientRegistration()),
-          );
-        }, Iconsax.mask),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'OP Ticket', () {}, Iconsax.receipt),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'IP Admission', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => IpAdmissionPage()),
-          );
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'OP Counters', () {}, Iconsax.square),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Admission Status', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AdmissionStatus()),
-          );
-        }, Iconsax.status),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(5, 'Doctor Visit Schedule', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => doctorSchedule()),
-          );
-        }, Iconsax.hospital),
-
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(6, 'Ip Patients Admission', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => IpPatientsAdmission()),
-          );
-        }, Icons.approval),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(7, 'Logout', () {
-          // Handle logout action
-        }, Iconsax.logout),
-      ],
-    );
-  }
-
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
-    );
-  }
-
   Widget buildThreeColumnForm() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Padding(
-      padding: const EdgeInsets.all(40.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const CustomText(
-            text: 'Patient Search',
-            size: 25,
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const CustomText(
-                text: 'Enter OP Number            :',
-                size: 18,
-              ),
-              const SizedBox(
-                width: 25,
-              ),
-              SizedBox(
-                width: 250,
-                child: CustomTextField(
-                  hintText: 'OP Number',
-                  controller: searchOpNumber,
-                  width: null,
-                ),
-              ),
-              const SizedBox(width: 20),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const CustomText(
-                text: 'Enter Phone Number      :',
-                size: 18,
-              ),
-              const SizedBox(width: 25),
-              SizedBox(
-                width: 250,
-                child: CustomTextField(
-                  controller: searchPhoneNumber,
-                  hintText: 'Phone Number',
-                  width: null,
-                ),
-              ),
-              const SizedBox(width: 20),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(width: 200),
-              CustomButton(
-                width: 125,
-                height: 35,
-                label: 'Search',
-                onPressed: () async {
-                  // Fetch patients based on OP number and phone number
-                  final searchResultsFetched = await searchPatients(
-                    searchOpNumber.text,
-                    searchPhoneNumber.text,
-                  );
-                  setState(() {
-                    searchResults =
-                        searchResultsFetched; // Update searchResults
-                    isSearchPerformed = true; // Show the table after search
-                  });
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          if (isSearchPerformed) ...[
-            const Text('Search Results: ',
-                style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
-            Center(
-              child: DataTable(
-                columnSpacing: 180,
-                columns: [
-                  const DataColumn(label: Text('OP Number')),
-                  const DataColumn(label: Text('Name')),
-                  const DataColumn(label: Text('Age')),
-                  const DataColumn(label: Text('Phone')),
-                  const DataColumn(label: Text('Address')),
-                ],
-                rows: searchResults.map((result) {
-                  return DataRow(
-                    selected: selectedPatient == result,
-                    onSelectChanged: (isSelected) {
-                      setState(() {
-                        selectedPatient = result;
-                      });
-                    },
-                    cells: [
-                      DataCell(Text(result['opNumber']!)),
-                      DataCell(Text(result['name']!)),
-                      DataCell(Text(result['age']!)),
-                      DataCell(Text(result['phone']!)),
-                      DataCell(Text(result['address']!)),
+      padding: const EdgeInsets.all(10.0),
+      child: Container(
+        height: screenHeight * 1.55,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: screenWidth * 0.01),
+                  child: Column(
+                    children: [
+                      CustomText(
+                        text: "Search Patient",
+                        size: screenWidth * 0.025,
+                      ),
                     ],
-                  );
-                }).toList(),
+                  ),
+                ),
+                Container(
+                  width: screenWidth * 0.15,
+                  height: screenWidth * 0.15,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                          image: AssetImage('assets/foxcare_lite_logo.png'))),
+                ),
+              ],
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                  left: screenWidth * 0.08, right: screenWidth * 0.08),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const CustomText(
+                        text: 'Enter OP Number            :',
+                        size: 18,
+                      ),
+                      const SizedBox(
+                        width: 25,
+                      ),
+                      SizedBox(
+                        width: 250,
+                        child: CustomTextField(
+                          hintText: '',
+                          controller: searchOpNumber,
+                          width: null,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const CustomText(
+                        text: 'Enter Phone Number      : ',
+                        size: 18,
+                      ),
+                      const SizedBox(width: 25),
+                      SizedBox(
+                        width: 250,
+                        child: CustomTextField(
+                          controller: searchPhoneNumber,
+                          hintText: '',
+                          width: null,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 200),
+                      CustomButton(
+                        width: 125,
+                        height: 35,
+                        label: 'Search',
+                        onPressed: () async {
+                          final searchResultsFetched = await searchPatients(
+                            searchOpNumber.text,
+                            searchPhoneNumber.text,
+                          );
+                          setState(() {
+                            searchResults =
+                                searchResultsFetched; // Update searchResults
+                            isSearchPerformed =
+                                true; // Show the table after search
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 30),
-            if (selectedPatient != null) buildPatientDetailsForm(),
+            const SizedBox(height: 40),
+            if (isSearchPerformed) ...[
+              const Text('Search Results: ',
+                  style: TextStyle(
+                      fontFamily: 'SanFrancisco',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+              Center(
+                child: DataTable(
+                  columnSpacing: 180,
+                  columns: [
+                    const DataColumn(label: Text('OP Number')),
+                    const DataColumn(label: Text('Name')),
+                    const DataColumn(label: Text('Age')),
+                    const DataColumn(label: Text('Phone')),
+                    const DataColumn(label: Text('Address')),
+                  ],
+                  rows: searchResults.map((result) {
+                    return DataRow(
+                      selected: selectedPatient == result,
+                      onSelectChanged: (isSelected) {
+                        setState(() {
+                          selectedPatient = result;
+                        });
+                      },
+                      cells: [
+                        DataCell(Text(result['opNumber']!)),
+                        DataCell(Text(result['name']!)),
+                        DataCell(Text(result['age']!)),
+                        DataCell(Text(result['phone']!)),
+                        DataCell(Text(result['address']!)),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 30),
+              if (selectedPatient != null) buildPatientDetailsForm(),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -626,111 +568,120 @@ class _OpTicketPageState extends State<OpTicketPage> {
           const SizedBox(
             height: 20,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                width: 100,
-                child: Text(
-                  'OP Number : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                  ),
+          Container(
+            padding: EdgeInsets.only(left: 200),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      width: 100,
+                      child: Text(
+                        'OP Number : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: CustomText(
+                        text: "${selectedPatient?['opNumber']}",
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const SizedBox(
+                      width: 80,
+                      child: Text(
+                        'Name : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: CustomText(text: "${selectedPatient?['name']}"),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomText(
-                  text: "${selectedPatient?['opNumber']}",
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      width: 100,
+                      child: Text(
+                        'AGE : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: CustomText(text: "${selectedPatient?['age']}"),
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const SizedBox(
+                      width: 80,
+                      child: Text(
+                        'Phone : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: CustomText(text: "${selectedPatient?['phone']}"),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                width: 80,
-                child: Text(
-                  'Name : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                  ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      width: 100,
+                      child: Text(
+                        'Address : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: CustomText(text: "${selectedPatient?['address']}"),
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const SizedBox(
+                      width: 80,
+                      child: Text(
+                        'Last OP Date : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child:
+                          CustomText(text: "${selectedPatient?['lastOpDate']}"),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomText(text: "${selectedPatient?['name']}"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                width: 100,
-                child: Text(
-                  'AGE : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomText(text: "${selectedPatient?['age']}"),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                width: 80,
-                child: Text(
-                  'Phone : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomText(text: "${selectedPatient?['phone']}"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                width: 100,
-                child: Text(
-                  'Address : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomText(text: "${selectedPatient?['address']}"),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                width: 80,
-                child: Text(
-                  'Last OP Date : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: CustomText(text: "${selectedPatient?['lastOpDate']}"),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           const Text(
@@ -743,177 +694,187 @@ class _OpTicketPageState extends State<OpTicketPage> {
           const SizedBox(
             height: 20,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                  width: 70,
-                  child: Text(
-                    'Date : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
+          Container(
+            padding: EdgeInsets.only(left: 200),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                        width: 70,
+                        child: Text(
+                          'Date : ',
+                          style: TextStyle(
+                            fontFamily: 'SanFrancisco',
+                          ),
+                        )),
+                    CustomTextField(
+                      hintText: '',
+                      controller: TextEditingController(
+                          text: dateTime.year.toString() +
+                              '-' +
+                              dateTime.month.toString().padLeft(2, '0') +
+                              '-' +
+                              dateTime.day.toString().padLeft(2, '0')),
+                      width: 250,
                     ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: TextEditingController(
-                    text: dateTime.year.toString() +
-                        '-' +
-                        dateTime.month.toString().padLeft(2, '0') +
-                        '-' +
-                        dateTime.day.toString().padLeft(2, '0')),
-                width: 250,
-              ),
-              const SizedBox(
-                width: 30,
-              ),
-              const SizedBox(
-                width: 80,
-                child: Text(
-                  'Counter : ',
-                  style: TextStyle(
-                    fontFamily: 'SanFrancisco',
+                    const SizedBox(
+                      width: 30,
+                    ),
+                    const SizedBox(
+                      width: 80,
+                      child: Text(
+                        'Counter : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    CustomTextField(
+                      hintText: '',
+                      controller: counter,
+                      width: 250,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                        width: 80,
+                        child: Text(
+                          'Doctor : ',
+                          style: TextStyle(
+                            fontFamily: 'SanFrancisco',
+                          ),
+                        )),
+                    CustomTextField(
+                      hintText: '',
+                      controller: doctorName,
+                      width: 250,
+                    ),
+                    const SizedBox(
+                      width: 25,
+                    ),
+                    const SizedBox(
+                        width: 100,
+                        child: Text(
+                          'Blood Sugar : ',
+                          style: TextStyle(
+                            fontFamily: 'SanFrancisco',
+                          ),
+                        )),
+                    CustomTextField(
+                      hintText: '',
+                      controller: bloodSugarLevel,
+                      width: 250,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                        width: 80,
+                        child: Text(
+                          'BP : ',
+                          style: TextStyle(
+                            fontFamily: 'SanFrancisco',
+                          ),
+                        )),
+                    CustomTextField(
+                      hintText: '',
+                      controller: bloodPressure,
+                      width: 250,
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const SizedBox(
+                        width: 80,
+                        child: Text(
+                          'TEMP : ',
+                          style: TextStyle(
+                            fontFamily: 'SanFrancisco',
+                          ),
+                        )),
+                    CustomTextField(
+                      hintText: '',
+                      controller: temperature,
+                      width: 250,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                        width: 80,
+                        child: Text(
+                          'OP Ticket Amount : ',
+                          style: TextStyle(
+                            fontFamily: 'SanFrancisco',
+                          ),
+                        )),
+                    CustomTextField(
+                      hintText: '',
+                      controller: opTicketTotalAmount,
+                      width: 250,
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const SizedBox(
+                      width: 80,
+                      child: Text(
+                        'Collected : ',
+                        style: TextStyle(
+                          fontFamily: 'SanFrancisco',
+                        ),
+                      ),
+                    ),
+                    CustomTextField(
+                      hintText: '',
+                      controller: opTicketCollectedAmount,
+                      width: 250,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: 650,
+                  child: CustomTextField(
+                    hintText: 'Enter Other Comments',
+                    controller: otherComments,
+                    width: null,
                   ),
                 ),
-              ),
-              CustomTextField(
-                hintText: '',
-                controller: counter,
-                width: 250,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                  width: 80,
-                  child: Text(
-                    'Doctor : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(left: 70),
+                  child: SizedBox(
+                    width: 200,
+                    child: CustomButton(
+                      label: 'Generate',
+                      onPressed: () async {
+                        String? selectedPatientId =
+                            selectedPatient?['opNumber'];
+                        print(selectedPatientId);
+                        await incrementCounter();
+                        await _generateToken(selectedPatientId!);
+                      },
+                      width: null,
                     ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: doctorName,
-                width: 250,
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                  width: 100,
-                  child: Text(
-                    'Blood Sugar : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: bloodSugarLevel,
-                width: 250,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                  width: 80,
-                  child: Text(
-                    'BP : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: bloodPressure,
-                width: 250,
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                  width: 80,
-                  child: Text(
-                    'TEMP : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: temperature,
-                width: 250,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                  width: 80,
-                  child: Text(
-                    'OP Ticket Amount : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: opTicketTotalAmount,
-                width: 250,
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              const SizedBox(
-                  width: 80,
-                  child: Text(
-                    'Collected : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  )),
-              CustomTextField(
-                hintText: '',
-                controller: opTicketCollectedAmount,
-                width: 250,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: 600,
-            child: CustomTextField(
-              hintText: 'Enter Other Comments',
-              controller: otherComments,
-              width: null,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.only(left: 250),
-            child: SizedBox(
-              width: 200,
-              child: CustomButton(
-                label: 'Generate',
-                onPressed: () async {
-                  String? selectedPatientId = selectedPatient?['opNumber'];
-                  print(selectedPatientId);
-                  await incrementCounter();
-                  await _generateToken(selectedPatientId!);
-                },
-                width: null,
-              ),
-            ),
-          ),
+          )
         ],
       ),
     );
