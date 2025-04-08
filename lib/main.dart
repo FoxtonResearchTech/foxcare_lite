@@ -34,75 +34,75 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: AuthGate(),
+      home: LoginScreen(),
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data == null) {
-          return LoginScreen();
-        }
-
-        final uid = snapshot.data!.uid;
-
-        return FutureBuilder<DocumentSnapshot>(
-          future:
-              FirebaseFirestore.instance.collection('employees').doc(uid).get(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Scaffold(
-                body: Center(child: Text("User document not found.")),
-              );
-            }
-
-            final data = snapshot.data!.data() as Map<String, dynamic>;
-            final role = data['roles'];
-
-            if (UserSession.currentUser == null) {
-              UserSession.currentUser = UserModel.fromMap(data);
-            }
-
-            switch (role) {
-              case 'Management':
-                return ManagementDashboard();
-              case 'Pharmacist':
-                return const SalesChartScreen();
-              case 'Receptionist':
-                return ReceptionDashboard();
-              case 'Lab Assistance':
-                return const LabDashboard();
-              case 'X-Ray Technician':
-                return PatientRegistration();
-              case 'Doctor':
-                return const DoctorDashboard();
-              case 'Manager':
-                return const ManagerDashboard();
-              default:
-                return Scaffold(
-                  body: Center(child: Text("Unknown role: $role")),
-                );
-            }
-          },
-        );
-      },
-    );
-  }
-}
+// class AuthGate extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return StreamBuilder<User?>(
+//       stream: FirebaseAuth.instance.authStateChanges(),
+//       builder: (context, snapshot) {
+//         if (snapshot.connectionState == ConnectionState.waiting) {
+//           return const Scaffold(
+//             body: Center(child: CircularProgressIndicator()),
+//           );
+//         }
+//
+//         if (!snapshot.hasData || snapshot.data == null) {
+//           return LoginScreen();
+//         }
+//
+//         final uid = snapshot.data!.uid;
+//
+//         return FutureBuilder<DocumentSnapshot>(
+//           future:
+//               FirebaseFirestore.instance.collection('employees').doc(uid).get(),
+//           builder: (context, snapshot) {
+//             if (snapshot.connectionState == ConnectionState.waiting) {
+//               return const Scaffold(
+//                 body: Center(child: CircularProgressIndicator()),
+//               );
+//             }
+//
+//             if (!snapshot.hasData || !snapshot.data!.exists) {
+//               return const Scaffold(
+//                 body: Center(child: Text("User document not found.")),
+//               );
+//             }
+//
+//             final data = snapshot.data!.data() as Map<String, dynamic>;
+//             final role = data['roles'];
+//
+//             if (UserSession.currentUser == null) {
+//               UserSession.currentUser = UserModel.fromMap(data);
+//             }
+//
+//             switch (role) {
+//               case 'Management':
+//                 return ManagementDashboard();
+//               case 'Pharmacist':
+//                 return const SalesChartScreen();
+//               case 'Receptionist':
+//                 return ReceptionDashboard();
+//               case 'Lab Assistance':
+//                 return const LabDashboard();
+//               case 'X-Ray Technician':
+//                 return PatientRegistration();
+//               case 'Doctor':
+//                 return const DoctorDashboard();
+//               case 'Manager':
+//                 return const ManagerDashboard();
+//               default:
+//                 return Scaffold(
+//                   body: Center(child: Text("Unknown role: $role")),
+//                 );
+//             }
+//           },
+//         );
+//       },
+//     );
+//   }
+// }

@@ -53,10 +53,10 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    if (currentUser == null) {
-      return const Center(child: CircularProgressIndicator());
+    final user = UserSession.currentUser;
+    if (user == null) {
+      return Drawer(child: Center(child: CircularProgressIndicator()));
     }
-
     return CustomDrawer(
       selectedIndex: widget.selectedIndex,
       onItemSelected: widget.onItemSelected,

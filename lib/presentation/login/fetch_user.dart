@@ -2,12 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 Future<UserModel?> getUserDetails() async {
+  await Future.delayed(const Duration(milliseconds: 500));
   final currentUser = FirebaseAuth.instance.currentUser;
+  print("Auth user: $currentUser");
+
   if (currentUser != null) {
     final doc = await FirebaseFirestore.instance
         .collection('employees')
         .doc(currentUser.uid)
         .get();
+
+    print("Fetched document: ${doc.data()}");
+
     if (doc.exists) {
       return UserModel.fromMap(doc.data()!);
     }

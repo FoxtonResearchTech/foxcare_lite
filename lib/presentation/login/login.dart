@@ -15,6 +15,7 @@ import '../module/lab/dashboard.dart';
 import '../module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import '../module/reception/patient_registration.dart';
 import '../module/reception/reception_dashboard.dart';
+import 'fetch_user.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -226,7 +227,7 @@ class _LoginFormState extends State<LoginForm> {
 
         return;
       }
-
+      await UserSession.initUser();
       switch (position) {
         case 'Management':
           Navigator.push(
