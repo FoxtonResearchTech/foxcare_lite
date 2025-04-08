@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
@@ -19,30 +20,47 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     "Sunday"
   ];
 
-  final List<String> doctors = [
-    "Dr. John Doe",
-    "Dr. Smith",
-    "Dr. Emily",
-    "Dr. Kevin",
-    "Dr. Lisa",
-    "Dr. Raj"
-  ];
-
-  final List<String> specializations = [
-    "Cardiologist",
-    "Dermatologist",
-    "Neurologist",
-    "Pediatrician",
-    "ENT",
-    "Orthopedic"
-  ];
-
   Map<String, List<String>> selectedDoctors = {};
-  Map<String, Map<String, List<String>>> doctorSpecializations = {};
+  Map<String, String> doctorSpecializations = {};
   Map<String, Map<String, String?>> opTimeIn = {};
   Map<String, Map<String, String?>> opTimeOut = {};
-
+  Map<String, Map<String, String?>> opTimeInEvening = {};
+  Map<String, Map<String, String?>> opTimeOutEvening = {};
   int selectedIndex = 5;
+  List<String> doctors = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDoctors();
+  }
+
+  void fetchDoctors() async {
+    final snapshot =
+    await FirebaseFirestore.instance.collection('employees').get();
+
+    List<String> fetchedDoctors = [];
+
+    for (var doc in snapshot.docs) {
+      if (doc['roles'] == 'Doctor') {
+        final name = doc['firstName'];
+        final specialization = doc['specialization'] ?? 'Not Available';
+
+        if (!fetchedDoctors.contains(name)) {
+          fetchedDoctors.add(name);
+        }
+
+        doctorSpecializations[name] = specialization;
+      }
+    }
+
+    setState(() {
+      doctors = fetchedDoctors;
+    });
+
+    print("Doctors: $doctors");
+    print("Specializations: $doctorSpecializations");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,28 +70,28 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: const CustomText(
-                text: 'General Information',
-              ),
-            )
-          : null, // No AppBar for web view
+        title: const CustomText(
+          text: 'General Information',
+        ),
+      )
+          : null,
       drawer: isMobile
           ? Drawer(
-              child: ManagementGeneralInformationDrawer(
-                selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-              ),
-            )
-          : null, // No drawer for web view (permanently open)
+        child: ManagementGeneralInformationDrawer(
+          selectedIndex: selectedIndex,
+          onItemSelected: (index) {
+            setState(() {
+              selectedIndex = index;
+            });
+          },
+        ),
+      )
+          : null,
       body: Row(
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300,
               color: Colors.blue.shade100,
               child: ManagementGeneralInformationDrawer(
                 selectedIndex: selectedIndex,
@@ -97,7 +115,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
 
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Padding(
@@ -123,10 +140,12 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                   width: screenWidth * 0.15,
                   height: screenWidth * 0.15,
                   decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                          image: AssetImage('assets/foxcare_lite_logo.png'))),
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                    image: const DecorationImage(
+                      image: AssetImage('assets/foxcare_lite_logo.png'),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -147,25 +166,51 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
           ],
         ),
       ),
-      floatingActionButton: Container(
-        width: 200,
-        height: 60,
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Schedule Saved Successfully!")),
-            );
-          },
-          backgroundColor: Colors.blue,
-          label: Text("Save",
-              style: TextStyle(
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            width: 200,
+            height: 60,
+            margin: EdgeInsets.only(bottom: 12),
+            child: FloatingActionButton.extended(
+              onPressed: () => confirmAndDeleteCollection(context),
+              backgroundColor: Colors.red,
+              label: Text(
+                "Reset",
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          icon: Icon(Icons.save, size: 28, color: Colors.white),
-          elevation: 10,
-        ),
+                  color: Colors.white,
+                ),
+              ),
+              icon: Icon(Icons.delete, size: 28, color: Colors.white),
+              elevation: 10,
+            ),
+
+          ),
+          Container(
+            width: 200,
+            height: 60,
+            child: FloatingActionButton.extended(
+              onPressed: saveScheduleToFirestore,
+              backgroundColor: Colors.blue,
+              label: Text(
+                "Save",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              icon: Icon(Icons.save, size: 28, color: Colors.white),
+              elevation: 10,
+            ),
+          ),
+        ],
       ),
+
     );
   }
 
@@ -199,66 +244,51 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Divider(),
-                      Text(doctor,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue[800])),
+                      Text(
+                        doctor,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[800]),
+                      ),
                       SizedBox(height: 4),
-                      _buildSpecializationSelector(day, doctor),
-                      SizedBox(height: 6),
-                      Text("Specializations:"),
-                      Wrap(
-                        spacing: 4,
-                        children: (doctorSpecializations[day]?[doctor] ?? [])
-                            .map((spec) {
-                          return Chip(
-                              label: Text(spec),
-                              backgroundColor: Colors.blue[100]);
-                        }).toList(),
-                      ),
+                      _buildSpecializationDisplay(doctor),
                       SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             children: [
-                              Text("Time In",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Morning In", style: TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, true),
                             ],
                           ),
                           Column(
                             children: [
-                              Text("Time Out",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Morning Out", style: TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, false),
                             ],
                           ),
                         ],
                       ),
+                      SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             children: [
-                              Text("Time In",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              _buildTimeInput(day, doctor, true),
+                              Text("Evening In", style: TextStyle(fontWeight: FontWeight.bold)),
+                              _buildTimeInput(day, doctor, true, isEvening: true),
                             ],
                           ),
                           Column(
                             children: [
-                              Text("Time Out",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              _buildTimeInput(day, doctor, false),
+                              Text("Evening Out", style: TextStyle(fontWeight: FontWeight.bold)),
+                              _buildTimeInput(day, doctor, false, isEvening: true),
                             ],
                           ),
                         ],
                       ),
+
                     ],
                   );
                 }).toList(),
@@ -276,43 +306,101 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
           context: context,
           builder: (context) {
             List<String> tempSelected = List.from(selectedDoctors[day] ?? []);
-            return AlertDialog(
-              title: Text("Select Doctor(s)"),
-              content: Container(
-                width: double.minPositive,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: doctors.map((doc) {
-                      return StatefulBuilder(
-                        builder: (context, setStateDialog) {
-                          return CheckboxListTile(
-                            value: tempSelected.contains(doc),
-                            title: Text(doc),
-                            onChanged: (checked) {
-                              setStateDialog(() {
-                                if (checked == true) {
-                                  tempSelected.add(doc);
-                                } else {
-                                  tempSelected.remove(doc);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      );
-                    }).toList(),
+            String searchQuery = '';
+            List<String> filteredDoctors = List.from(doctors);
+
+            return StatefulBuilder(
+              builder: (context, setStateDialog) {
+                void filterDoctors(String query) {
+                  setStateDialog(() {
+                    searchQuery = query;
+                    filteredDoctors = doctors
+                        .where((doc) => doc.toLowerCase().contains(query.toLowerCase()))
+                        .toList();
+                  });
+                }
+
+                return AlertDialog(
+                  title: Text("Select Doctor(s)"),
+                  content: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: "Search Doctor",
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onChanged: filterDoctors,
+                        ),
+                        SizedBox(height: 10),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: filteredDoctors.map((doc) {
+                                return CheckboxListTile(
+                                  value: tempSelected.contains(doc),
+                                  title: Text(doc),
+                                  onChanged: (checked) {
+                                    setStateDialog(() {
+                                      if (checked == true) {
+                                        tempSelected.add(doc);
+                                      } else {
+                                        tempSelected.remove(doc);
+                                      }
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text("Cancel")),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(context, tempSelected),
-                    child: Text("OK")),
-              ],
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        textStyle: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      child: Text("Cancel"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, tempSelected),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, size: 20, color: Colors.white),
+                          SizedBox(width: 6),
+                          Text(
+                            "OK",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                );
+              },
             );
           },
         );
@@ -320,15 +408,16 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         if (selected != null) {
           setState(() {
             selectedDoctors[day] = selected;
+
             for (var doc in selected) {
-              doctorSpecializations[day] ??= {};
-              doctorSpecializations[day]![doc] ??= [];
-
               opTimeIn[day] ??= {};
-              opTimeIn[day]![doc] ??= null;
-
               opTimeOut[day] ??= {};
+              opTimeIn[day]![doc] ??= null;
               opTimeOut[day]![doc] ??= null;
+              opTimeInEvening[day] ??= {};
+              opTimeOutEvening[day] ??= {};
+              opTimeInEvening[day]![doc] ??= null;
+              opTimeOutEvening[day]![doc] ??= null;
             }
           });
         }
@@ -337,104 +426,170 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         backgroundColor: Colors.blue[100],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text("Doctor(s)",
-          style:
-              TextStyle(color: Colors.blue[900], fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _buildSpecializationSelector(String day, String doctor) {
-    return ElevatedButton(
-      onPressed: () async {
-        final selected = await showDialog<List<String>>(
-          context: context,
-          builder: (context) {
-            List<String> tempSelected =
-                List.from(doctorSpecializations[day]?[doctor] ?? []);
-            return AlertDialog(
-              title: Text("Select Specialization(s) for $doctor"),
-              content: SingleChildScrollView(
-                child: Column(
-                  children: specializations.map((spec) {
-                    return StatefulBuilder(
-                      builder: (context, setStateDialog) {
-                        return CheckboxListTile(
-                          value: tempSelected.contains(spec),
-                          title: Text(spec),
-                          onChanged: (checked) {
-                            setStateDialog(() {
-                              if (checked == true) {
-                                tempSelected.add(spec);
-                              } else {
-                                tempSelected.remove(spec);
-                              }
-                            });
-                          },
-                        );
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text("Cancel")),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(context, tempSelected),
-                    child: Text("OK")),
-              ],
-            );
-          },
-        );
-
-        if (selected != null) {
-          setState(() {
-            doctorSpecializations[day] ??= {};
-            doctorSpecializations[day]![doctor] = selected;
-          });
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue[50],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        "Doctor(s)",
+        style: TextStyle(
+          color: Colors.blue[900],
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      child:
-          Text("Specialization(s)", style: TextStyle(color: Colors.blue[900])),
     );
   }
 
-  Widget _buildTimeInput(String day, String doctor, bool isTimeIn) {
+
+
+  Widget _buildSpecializationDisplay(String doctor) {
+    final specialization = doctorSpecializations[doctor] ?? 'Not available';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.medical_services, color: Colors.blue),
+          SizedBox(width: 8),
+          Text(
+            '$specialization',
+            style: TextStyle(fontSize: 16, color: Colors.blue[900]),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildTimeInput(String day, String doctor, bool isTimeIn, {bool isEvening = false}) {
+    String _getTime() {
+      if (isEvening) {
+        return isTimeIn
+            ? (opTimeInEvening[day]?[doctor] ?? "--:--")
+            : (opTimeOutEvening[day]?[doctor] ?? "--:--");
+      } else {
+        return isTimeIn
+            ? (opTimeIn[day]?[doctor] ?? "--:--")
+            : (opTimeOut[day]?[doctor] ?? "--:--");
+      }
+    }
+
+    void _setTime(String formattedTime) {
+      setState(() {
+        if (isEvening) {
+          if (isTimeIn) {
+            opTimeInEvening[day]?[doctor] = formattedTime;
+          } else {
+            opTimeOutEvening[day]?[doctor] = formattedTime;
+          }
+        } else {
+          if (isTimeIn) {
+            opTimeIn[day]?[doctor] = formattedTime;
+          } else {
+            opTimeOut[day]?[doctor] = formattedTime;
+          }
+        }
+      });
+    }
+
     return GestureDetector(
       onTap: () async {
-        final time = await showTimePicker(
-            context: context, initialTime: TimeOfDay.now());
-        if (time != null) {
-          final formatted = time.format(context);
-          setState(() {
-            if (isTimeIn) {
-              opTimeIn[day]?[doctor] = formatted;
-            } else {
-              opTimeOut[day]?[doctor] = formatted;
-            }
-          });
+        final pickedTime = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (pickedTime != null) {
+          _setTime(pickedTime.format(context));
         }
       },
       child: Container(
-        margin: EdgeInsets.only(top: 6),
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        margin: const EdgeInsets.only(top: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.blue[100],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          isTimeIn
-              ? (opTimeIn[day]?[doctor] ?? "--:--")
-              : (opTimeOut[day]?[doctor] ?? "--:--"),
-          style:
-              TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[900]),
+          _getTime(),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.blue[900],
+          ),
         ),
       ),
     );
   }
+
+
+  void saveScheduleToFirestore() async {
+    final scheduleCollection = FirebaseFirestore.instance.collection('doctor_weekly_schedule');
+
+    try {
+      for (String day in selectedDoctors.keys) {
+        List<Map<String, dynamic>> doctorSchedules = [];
+
+        for (String doctor in selectedDoctors[day]!) {
+          Map<String, dynamic> schedule = {
+            'doctor': doctor,
+            'specialization': doctorSpecializations[doctor] ?? 'Not available',
+            'morning_in': opTimeIn[day]?[doctor] ?? '--:--',
+            'morning_out': opTimeOut[day]?[doctor] ?? '--:--',
+            'evening_in': opTimeInEvening[day]?[doctor] ?? '--:--',
+            'evening_out': opTimeOutEvening[day]?[doctor] ?? '--:--',
+          };
+          doctorSchedules.add(schedule);
+        }
+
+        await scheduleCollection.doc(day).set({
+          'day': day,
+          'schedules': doctorSchedules,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Schedule saved successfully!")),
+      );
+    } catch (e) {
+      print("Error saving schedule: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save schedule. Try again.")),
+      );
+    }
+  }
+
+  void confirmAndDeleteCollection(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Confirm Delete"),
+        content: Text("Are you sure you want to delete the entire schedule collection? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // Cancel
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), // Confirm
+            child: Text(
+              "Delete",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      deleteEntireCollection();
+    }
+  }
+  void deleteEntireCollection() async {
+    try {
+      final collectionRef = FirebaseFirestore.instance.collection('doctor_weekly_schedule');
+      final snapshot = await collectionRef.get();
+
+      for (DocumentSnapshot doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      print('Entire collection deleted successfully');
+    } catch (e) {
+      print('Error deleting collection: $e');
+    }
+  }
+
 }
