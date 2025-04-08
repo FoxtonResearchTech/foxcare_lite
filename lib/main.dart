@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';
@@ -34,75 +35,75 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: LoginScreen(),
+      home: AuthGate(),
     );
   }
 }
 
-// class AuthGate extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return StreamBuilder<User?>(
-//       stream: FirebaseAuth.instance.authStateChanges(),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting) {
-//           return const Scaffold(
-//             body: Center(child: CircularProgressIndicator()),
-//           );
-//         }
-//
-//         if (!snapshot.hasData || snapshot.data == null) {
-//           return LoginScreen();
-//         }
-//
-//         final uid = snapshot.data!.uid;
-//
-//         return FutureBuilder<DocumentSnapshot>(
-//           future:
-//               FirebaseFirestore.instance.collection('employees').doc(uid).get(),
-//           builder: (context, snapshot) {
-//             if (snapshot.connectionState == ConnectionState.waiting) {
-//               return const Scaffold(
-//                 body: Center(child: CircularProgressIndicator()),
-//               );
-//             }
-//
-//             if (!snapshot.hasData || !snapshot.data!.exists) {
-//               return const Scaffold(
-//                 body: Center(child: Text("User document not found.")),
-//               );
-//             }
-//
-//             final data = snapshot.data!.data() as Map<String, dynamic>;
-//             final role = data['roles'];
-//
-//             if (UserSession.currentUser == null) {
-//               UserSession.currentUser = UserModel.fromMap(data);
-//             }
-//
-//             switch (role) {
-//               case 'Management':
-//                 return ManagementDashboard();
-//               case 'Pharmacist':
-//                 return const SalesChartScreen();
-//               case 'Receptionist':
-//                 return ReceptionDashboard();
-//               case 'Lab Assistance':
-//                 return const LabDashboard();
-//               case 'X-Ray Technician':
-//                 return PatientRegistration();
-//               case 'Doctor':
-//                 return const DoctorDashboard();
-//               case 'Manager':
-//                 return const ManagerDashboard();
-//               default:
-//                 return Scaffold(
-//                   body: Center(child: Text("Unknown role: $role")),
-//                 );
-//             }
-//           },
-//         );
-//       },
-//     );
-//   }
-// }
+class AuthGate extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data == null) {
+          return LoginScreen();
+        }
+
+        final uid = snapshot.data!.uid;
+
+        return FutureBuilder<DocumentSnapshot>(
+          future:
+              FirebaseFirestore.instance.collection('employees').doc(uid).get(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Scaffold(
+                body: Center(child: Text("User document not found.")),
+              );
+            }
+
+            final data = snapshot.data!.data() as Map<String, dynamic>;
+            final role = data['roles'];
+
+            if (UserSession.currentUser == null) {
+              UserSession.currentUser = UserModel.fromMap(data);
+            }
+
+            switch (role) {
+              case 'Management':
+                return ManagementDashboard();
+              case 'Pharmacist':
+                return const SalesChartScreen();
+              case 'Receptionist':
+                return ReceptionDashboard();
+              case 'Lab Assistance':
+                return const LabDashboard();
+              case 'X-Ray Technician':
+                return PatientRegistration();
+              case 'Doctor':
+                return const DoctorDashboard();
+              case 'Manager':
+                return const ManagerDashboard();
+              default:
+                return Scaffold(
+                  body: Center(child: Text("Unknown role: $role")),
+                );
+            }
+          },
+        );
+      },
+    );
+  }
+}

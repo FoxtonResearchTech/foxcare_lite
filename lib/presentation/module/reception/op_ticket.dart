@@ -39,7 +39,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
-    incrementCounter();
+    Future.delayed(Duration(seconds: 1), () => incrementCounter);
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
