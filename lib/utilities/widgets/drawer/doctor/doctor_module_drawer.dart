@@ -23,6 +23,27 @@ class DoctorModuleDrawer extends StatefulWidget {
 }
 
 class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
+  void navigateWithTransition(BuildContext context, Widget page) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0); // Slide from right
+          const end = Offset.zero;
+          const curve = Curves.ease;
+
+          final tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomDrawer(
@@ -36,47 +57,34 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
             title: 'Home',
             icon: Iconsax.home,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => DoctorDashboard()),
-              );
+              navigateWithTransition(context, DoctorDashboard());
             },
           ),
           DrawerMenuItem(
             title: 'OP Patient',
             icon: Iconsax.receipt,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => DoctorRxList()),
-              );
+              navigateWithTransition(context, DoctorRxList());
             },
           ),
           DrawerMenuItem(
             title: 'IP Patients',
             icon: Iconsax.receipt,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => IpPatientsDetails()),
-              );
+              navigateWithTransition(context, IpPatientsDetails());
             },
           ),
           DrawerMenuItem(
             title: 'Pharmacy Stocks',
             icon: Iconsax.add_circle,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => PharmacyStocks()),
-              );
+              navigateWithTransition(context, PharmacyStocks());
             },
           ),
           DrawerMenuItem(
             title: 'Logout',
             icon: Iconsax.logout,
-            onTap: () {
-            },
+            onTap: () {},
           ),
         ]);
   }

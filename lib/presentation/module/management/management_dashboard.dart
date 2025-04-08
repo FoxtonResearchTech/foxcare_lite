@@ -23,7 +23,6 @@ class ManagementDashboard extends StatefulWidget {
 }
 
 class _ManagementDashboard extends State<ManagementDashboard> {
-  // To store the index of the selected drawer item
   int selectedIndex = 0;
 
   @override

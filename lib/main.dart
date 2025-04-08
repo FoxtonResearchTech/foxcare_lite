@@ -15,6 +15,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_admission_status.dart';
+import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: OtherExpense(),
+      home: ReceptionDashboard(),
     );
   }
 }

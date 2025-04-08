@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
@@ -299,6 +300,12 @@ class _LoginFormState extends State<LoginForm> {
       }
 
       switch (position) {
+        case 'Management':
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ManagementDashboard()),
+          );
+          break;
         case 'Pharmacist':
           Navigator.push(
             context,

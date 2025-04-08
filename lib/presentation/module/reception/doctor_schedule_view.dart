@@ -95,7 +95,6 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                   ],
                 ),
               ),
-
               LayoutBuilder(
                 builder: (context, constraints) {
                   int crossAxisCount = constraints.maxWidth < 600
@@ -207,7 +206,7 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
               ),
               const SizedBox(height: 16.0),
               SizedBox(
-                height:300,
+                height: 300,
                 child: ScrollConfiguration(
                   behavior: ScrollBehavior().copyWith(overscroll: false),
                   child: ListView.builder(
@@ -246,44 +245,53 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                               Expanded(
                                 child: SingleChildScrollView(
                                   child: Column(
-                                    children: List.generate(doctors.length, (docIndex) {
+                                    children: List.generate(doctors.length,
+                                        (docIndex) {
                                       final doctor = doctors[docIndex];
                                       return Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8),
                                         child: Container(
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: Colors.blueAccent.withOpacity(0.3),
+                                              color: Colors.blueAccent
+                                                  .withOpacity(0.3),
                                             ),
                                           ),
                                           child: Row(
                                             children: [
                                               CircleAvatar(
-                                                backgroundColor: Colors.blueAccent,
-                                                child:
-                                                Icon(Icons.person, color: Colors.white),
+                                                backgroundColor:
+                                                    Colors.blueAccent,
+                                                child: Icon(Icons.person,
+                                                    color: Colors.white),
                                               ),
                                               const SizedBox(width: 12),
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Text(doctor['name']!,
                                                         style: const TextStyle(
                                                             fontSize: 16,
-                                                            fontWeight: FontWeight.bold)),
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
                                                     Text(doctor['designation']!,
                                                         style: const TextStyle(
                                                             fontSize: 14,
-                                                            color: Colors.black54)),
+                                                            color: Colors
+                                                                .black54)),
                                                     Text(doctor['time']!,
                                                         style: const TextStyle(
                                                             fontSize: 14,
-                                                            color: Colors.blueAccent)),
+                                                            color: Colors
+                                                                .blueAccent)),
                                                   ],
                                                 ),
                                               ),
@@ -303,9 +311,6 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                   ),
                 ),
               ),
-
-
-
               const SizedBox(height: 16.0),
               Text(
                 "Monthly Visit Doctor Schedule",
@@ -359,7 +364,7 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                           CircleAvatar(
                             radius: 30,
                             backgroundColor: Colors.white,
-                            child:  Text(
+                            child: Text(
                               "Dec",
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -389,14 +394,16 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                           ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               doctor['time']!,
-                              style: TextStyle(fontSize: 14, color: Colors.white),
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.white),
                             ),
                           ),
                         ],
@@ -405,7 +412,6 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                   );
                 },
               )
-
             ],
           ),
         ),
