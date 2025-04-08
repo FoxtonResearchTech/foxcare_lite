@@ -243,6 +243,7 @@ class _EmployeeRegistrationState extends State<EmployeeRegistration> {
                       CustomDropdown(
                         label: 'Position',
                         items: const [
+                          'Management',
                           'Pharmacist',
                           'Receptionist',
                           'Doctor',

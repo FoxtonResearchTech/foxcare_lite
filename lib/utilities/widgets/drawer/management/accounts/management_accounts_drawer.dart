@@ -30,6 +30,27 @@ class ManagementAccountsDrawer extends StatefulWidget {
 }
 
 class _ManagementAccountsDrawer extends State<ManagementAccountsDrawer> {
+  void navigateWithTransition(BuildContext context, Widget page) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0); // Slide from right
+          const end = Offset.zero;
+          const curve = Curves.ease;
+
+          final tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomDrawer(
@@ -43,112 +64,78 @@ class _ManagementAccountsDrawer extends State<ManagementAccountsDrawer> {
             title: 'New Patients Register Collection',
             icon: Iconsax.home,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => NewPatientRegisterCollection()),
-              );
+              navigateWithTransition(context, NewPatientRegisterCollection());
             },
           ),
           DrawerMenuItem(
             title: 'OP Ticket Collection',
             icon: Iconsax.receipt,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => OpTicketCollection()),
-              );
+              navigateWithTransition(context, OpTicketCollection());
             },
           ),
           DrawerMenuItem(
             title: 'IP Admission Collection',
             icon: Iconsax.receipt,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => IpAdmissionCollection()),
-              );
+              navigateWithTransition(context, IpAdmissionCollection());
             },
           ),
           DrawerMenuItem(
             title: 'Pharmacy Collection',
             icon: Iconsax.add_circle,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => PharmacyTotalSales()),
-              );
+              navigateWithTransition(context, PharmacyTotalSales());
             },
           ),
           DrawerMenuItem(
             title: 'Hospital Direct Purchase',
             icon: Iconsax.hospital,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => HospitalDirectPurchase()),
-              );
+              navigateWithTransition(context, HospitalDirectPurchase());
             },
           ),
           DrawerMenuItem(
             title: 'Hospital Direct Purchase Still Pending',
             icon: Iconsax.hospital,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => HospitalDirectPurchaseStillPending()),
-              );
+              navigateWithTransition(
+                  context, HospitalDirectPurchaseStillPending());
             },
           ),
           DrawerMenuItem(
             title: 'Other Expense',
             icon: Icons.analytics_outlined,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => OtherExpense()),
-              );
+              navigateWithTransition(context, OtherExpense());
             },
           ),
           DrawerMenuItem(
             title: 'Lab Collection',
             icon: Iconsax.add_circle,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LabCollection()),
-              );
+              navigateWithTransition(context, LabCollection());
             },
           ),
           DrawerMenuItem(
             title: 'IP Admit',
             icon: Iconsax.add_circle,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => IpAdmit()),
-              );
+              navigateWithTransition(context, IpAdmit());
             },
           ),
           DrawerMenuItem(
             title: 'IP Admit List',
             icon: Iconsax.add_circle,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => IpAdmitList()),
-              );
+              navigateWithTransition(context, IpAdmitList());
             },
           ),
           DrawerMenuItem(
             title: 'Back To Management Dashboard',
             icon: Iconsax.back_square,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => ManagementDashboard()),
-              );
+              navigateWithTransition(context, ManagementDashboard());
             },
           ),
         ]);

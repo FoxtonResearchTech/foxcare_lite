@@ -27,6 +27,27 @@ class ManagementGeneralInformationDrawer extends StatefulWidget {
 
 class _ManagementGeneralInformationDrawer
     extends State<ManagementGeneralInformationDrawer> {
+  void navigateWithTransition(BuildContext context, Widget page) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0); // Slide from right
+          const end = Offset.zero;
+          const curve = Curves.ease;
+
+          final tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomDrawer(
@@ -40,82 +61,57 @@ class _ManagementGeneralInformationDrawer
             title: 'OP Ticket Generation',
             icon: Iconsax.home,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => GeneralInformationOpTicket()),
-              );
+              navigateWithTransition(context, GeneralInformationOpTicket());
             },
           ),
           DrawerMenuItem(
             title: 'IP Admission',
             icon: Iconsax.receipt,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => GeneralInformationIpAdmission()),
-              );
+              navigateWithTransition(context, GeneralInformationIpAdmission());
             },
           ),
           DrawerMenuItem(
             title: 'Admission Status',
             icon: Iconsax.receipt,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => GeneralInformationAdmissionStatus()),
-              );
+              navigateWithTransition(
+                  context, GeneralInformationAdmissionStatus());
             },
           ),
           DrawerMenuItem(
             title: 'Doctor Schedule View Manager',
             icon: Iconsax.add_circle,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => DoctorScheduleViewManager()),
-              );
+              navigateWithTransition(context, DoctorScheduleViewManager());
             },
           ),
           DrawerMenuItem(
             title: 'Doctor Daily Schedule',
             icon: Iconsax.hospital,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => AddDoctorSchedule()),
-              );
+              navigateWithTransition(context, AddDoctorSchedule());
             },
           ),
           DrawerMenuItem(
             title: 'Doctor Weekly Schedule',
             icon: Icons.analytics_outlined,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => DoctorWeeklySchedule()),
-              );
+              navigateWithTransition(context, DoctorWeeklySchedule());
             },
           ),
           DrawerMenuItem(
             title: 'Doctor Monthly Schedule',
             icon: Iconsax.hospital,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => MonthlyDoctorSchedule()),
-              );
+              navigateWithTransition(context, MonthlyDoctorSchedule());
             },
           ),
           DrawerMenuItem(
             title: 'Back To Management Dashboard',
             icon: Iconsax.back_square,
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => ManagementDashboard()),
-              );
+              navigateWithTransition(context, ManagementDashboard());
             },
           ),
         ]);

@@ -163,12 +163,11 @@ class _HospitalDirectPurchaseStillPending
     return tableData.fold<int>(
       0,
       (sum, entry) {
-        var value = entry['Amount'];
-        if (value == null) return sum;
-        if (value is String) {
-          value = int.tryParse(value) ?? 0;
-        }
-        return sum + (value as int);
+        final value = entry['Amount'];
+        final intValue = (value is num)
+            ? value.toInt()
+            : int.tryParse(value.toString()) ?? 0;
+        return sum + intValue;
       },
     );
   }
@@ -177,12 +176,11 @@ class _HospitalDirectPurchaseStillPending
     return tableData.fold<int>(
       0,
       (sum, entry) {
-        var value = entry['Collected'];
-        if (value == null) return sum;
-        if (value is String) {
-          value = int.tryParse(value) ?? 0;
-        }
-        return sum + (value as int);
+        final value = entry['Collected'];
+        final intValue = (value is num)
+            ? value.toInt()
+            : int.tryParse(value.toString()) ?? 0;
+        return sum + intValue;
       },
     );
   }
@@ -191,17 +189,11 @@ class _HospitalDirectPurchaseStillPending
     return tableData.fold<int>(
       0,
       (sum, entry) {
-        var value = entry['Balance'];
-        if (value == null) return sum;
-        // Convert string to double safely
-        if (value is String) {
-          value = double.tryParse(value) ?? 0.0;
-        }
-        // Ensure value is double before conversion to int
-        if (value is double) {
-          value = value.toInt();
-        }
-        return sum + (value as int);
+        final value = entry['Balance'];
+        final intValue = (value is num)
+            ? value.toInt()
+            : int.tryParse(value.toString()) ?? 0;
+        return sum + intValue;
       },
     );
   }
