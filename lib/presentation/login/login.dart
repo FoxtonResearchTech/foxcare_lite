@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
@@ -130,43 +131,10 @@ class _LoginFormState extends State<LoginForm> {
           size: screenWidth * 0.0125,
           color: AppColors.lightBlue,
         ),
-        SizedBox(
+        CustomTextField(
+          controller: _emailController,
+          hintText: '',
           width: screenWidth * 0.25,
-          child: TextField(
-            controller: _emailController,
-            obscureText: false,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Poppins',
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              hintStyle: TextStyle(
-                color: AppColors.lightBlue,
-                fontFamily: 'Poppins',
-              ),
-              labelStyle: TextStyle(
-                color: AppColors.lightBlue,
-                fontFamily: 'Poppins',
-              ),
-              floatingLabelStyle:
-                  TextStyle(fontFamily: 'Poppins', color: AppColors.lightBlue),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              fillColor: AppColors.blue,
-              focusColor: AppColors.blue,
-              filled: true,
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: AppColors.lightBlue, width: 2.0),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
         ),
         SizedBox(height: screenHeight * 0.03),
         CustomText(
@@ -174,43 +142,11 @@ class _LoginFormState extends State<LoginForm> {
           size: screenWidth * 0.0125,
           color: AppColors.lightBlue,
         ),
-        SizedBox(
+        CustomTextField(
+          controller: _passwordController,
+          obscureText: !showPassword,
+          hintText: '',
           width: screenWidth * 0.25,
-          child: TextField(
-            controller: _passwordController,
-            obscureText: !showPassword,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Poppins',
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              hintStyle: TextStyle(
-                color: AppColors.lightBlue,
-                fontFamily: 'Poppins',
-              ),
-              labelStyle: TextStyle(
-                color: AppColors.lightBlue,
-                fontFamily: 'Poppins',
-              ),
-              floatingLabelStyle:
-                  TextStyle(fontFamily: 'Poppins', color: AppColors.lightBlue),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              fillColor: AppColors.blue,
-              focusColor: AppColors.blue,
-              filled: true,
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: AppColors.lightBlue, width: 2.0),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
         ),
         SizedBox(height: screenHeight * 0.03),
         Row(
@@ -232,32 +168,16 @@ class _LoginFormState extends State<LoginForm> {
             ), // Optional label
           ],
         ),
-        SizedBox(height: screenHeight * 0.03),
+        SizedBox(height: screenHeight * 0.02),
         Row(
           children: [
             SizedBox(width: screenWidth * 0.09),
-            SizedBox(
+            CustomButton(
+              label: 'Login',
+              onPressed: _login,
+              width: screenWidth * 0.09,
               height: screenHeight * 0.05,
-              width: screenWidth * 0.08,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.blue,
-                  padding: const EdgeInsets.all(0), // Keep padding minimal
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(20), // Set borderRadius to 12
-                  ),
-                ),
-                onPressed: _login,
-                child: Text(
-                  'Login',
-                  style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            ),
+            )
           ],
         )
       ],
@@ -269,7 +189,9 @@ class _LoginFormState extends State<LoginForm> {
     String password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      showMessage('Email and Password cannot be empty.');
+      CustomSnackBar(context,
+          message: 'Email and Password cannot be empty.',
+          backgroundColor: Colors.red);
       return;
     }
 
@@ -286,7 +208,10 @@ class _LoginFormState extends State<LoginForm> {
           .get();
 
       if (!employeeDoc.exists) {
-        showMessage('User not found in employees collection.');
+        CustomSnackBar(context,
+            message: 'User not found in employees collection',
+            backgroundColor: Colors.red);
+
         return;
       }
 
@@ -295,7 +220,10 @@ class _LoginFormState extends State<LoginForm> {
       String? position = employeeData['roles'];
 
       if (position == null || position.isEmpty) {
-        showMessage('Position information is missing.');
+        CustomSnackBar(context,
+            message: 'Position information is missing.',
+            backgroundColor: Colors.red);
+
         return;
       }
 
@@ -343,18 +271,17 @@ class _LoginFormState extends State<LoginForm> {
           );
           break;
         default:
-          showMessage('Invalid position information.');
+          CustomSnackBar(context,
+              message: 'Invalid position information.',
+              backgroundColor: Colors.red);
       }
-
-      showMessage('Logged in as $position');
+      CustomSnackBar(context,
+          message: 'Logged in as $position', backgroundColor: Colors.green);
     } catch (e) {
-      showMessage('An error occurred: $e');
+      CustomSnackBar(context,
+          message: 'An error occurred: $e', backgroundColor: Colors.red);
+
       print('Error: $e');
     }
-  }
-
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

@@ -21,7 +21,7 @@ class CustomDrawer extends StatefulWidget {
   final Function(int index) onItemSelected;
   final List<DrawerMenuItem> menuItems;
 
-  final String doctorName;
+  final String name;
   final String degree;
   final String department;
 
@@ -30,7 +30,7 @@ class CustomDrawer extends StatefulWidget {
     required this.selectedIndex,
     required this.onItemSelected,
     required this.menuItems,
-    required this.doctorName,
+    required this.name,
     required this.degree,
     required this.department,
   }) : super(key: key);
@@ -94,7 +94,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         children: [
                           const SizedBox(width: 10),
                           CustomText(
-                            text: widget.doctorName,
+                            text: widget.name,
                             size: 30,
                             color: Colors.white,
                           ),

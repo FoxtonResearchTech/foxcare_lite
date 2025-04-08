@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
@@ -24,6 +26,7 @@ import 'package:foxcare_lite/presentation/module/pharmacy/reports/party_wise_sta
 import 'package:foxcare_lite/presentation/module/reception/ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/reception/ip_patients_admission.dart';
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
+import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'firebase_options.dart';
@@ -48,7 +51,65 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: ReceptionDashboard(),
+      home: AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data == null) {
+          return LoginScreen();
+        }
+
+        final uid = snapshot.data!.uid;
+
+        return FutureBuilder<DocumentSnapshot>(
+          future:
+              FirebaseFirestore.instance.collection('employees').doc(uid).get(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final data = snapshot.data!.data() as Map<String, dynamic>;
+            final role = data['roles'];
+
+            switch (role) {
+              case 'Management':
+                return ManagementDashboard();
+              case 'Pharmacist':
+                return SalesChartScreen();
+              case 'Receptionist':
+                return ReceptionDashboard();
+              case 'Lab Assistance':
+                return LabDashboard();
+              case 'X-Ray Technician':
+                return PatientRegistration();
+              case 'Doctor':
+                return DoctorDashboard();
+              case 'Manager':
+                return ManagerDashboard();
+              default:
+                return Scaffold(
+                  body: Center(child: Text("Unknown role")),
+                );
+            }
+          },
+        );
+      },
     );
   }
 }
