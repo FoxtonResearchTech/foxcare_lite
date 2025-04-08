@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
@@ -11,6 +14,13 @@ class AddDoctorSchedule extends StatefulWidget {
 }
 
 class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
+  @override
+  void initState() {
+    fetchDoctors();
+    // TODO: implement initState
+    super.initState();
+  }
+
   int selectedIndex = 4;
 
   String? selectedDoctor;
@@ -18,13 +28,16 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
   String? selectedCounter;
   TimeOfDay? opTime;
   TimeOfDay? outTime;
+  TimeOfDay? opTimeAfternoon;
+  TimeOfDay? outTimeAfternoon;
 
-  final List<String> doctors = ['Dr. Smith', 'Dr. John', 'Dr. Rose'];
+  List<String> doctors = [];
   final List<String> specifications = [
     'Cardiologist',
     'Dentist',
     'Neurologist'
   ];
+  String? selectedSpecialization;
   final List<String> counterValues =
       List.generate(11, (index) => index.toString());
 
@@ -43,6 +56,51 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       });
     }
   }
+
+  Future<void> _selectTimeAfternoon(BuildContext context, bool isOpTime) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isOpTime) {
+          opTimeAfternoon = picked;
+        } else {
+          outTimeAfternoon = picked;
+        }
+      });
+    }
+  }
+
+  Map<String, String> doctorSpecializations =
+      {}; // {doctorName: specialization}
+  void fetchDoctors() async {
+    final employeesSnapshot =
+        await FirebaseFirestore.instance.collection('employees').get();
+
+    for (var doc in employeesSnapshot.docs) {
+      if (doc['roles'] == 'Doctor') {
+        final doctorName = doc['firstName']; // adjust if needed
+        final specialization = doc['specialization']; // make sure field exists
+
+        if (!doctors.contains(doctorName)) {
+          setState(() {
+            doctors.add(doctorName);
+            doctorSpecializations[doctorName] = specialization;
+          });
+        }
+      }
+    }
+
+    Future.delayed(const Duration(milliseconds: 100), () {
+      print('Doctors: $doctors');
+      print('Specializations: $doctorSpecializations');
+    });
+  }
+
+  final TextEditingController specializationController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -142,121 +200,280 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
                 ),
               ),
               const SizedBox(height: 30),
-              DropdownButtonFormField<String>(
+
+// Inside your build method:
+              DropdownSearch<String>(
+                items: doctors,
+                selectedItem: selectedDoctor,
+                dropdownDecoratorProps: DropDownDecoratorProps(
+                  dropdownSearchDecoration: const InputDecoration(
+                    labelText: 'Select Doctor',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                popupProps: const PopupProps.menu(
+                  showSearchBox: true,
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    selectedDoctor = value;
+                    selectedSpecialization =
+                        doctorSpecializations[value!] ?? '';
+                    specializationController.text = selectedSpecialization!;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: specializationController,
+                readOnly: true,
                 decoration: const InputDecoration(
-                  labelText: 'Select Doctor',
+                  labelText: 'Specialization',
                   border: OutlineInputBorder(),
                 ),
-                value: selectedDoctor,
-                items: doctors.map((doctor) {
-                  return DropdownMenuItem<String>(
-                    value: doctor,
-                    child: Text(doctor, style: const TextStyle(fontSize: 18)),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => selectedDoctor = value),
               ),
               const SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Specification',
-                  border: OutlineInputBorder(),
-                ),
-                value: selectedSpecification,
-                items: specifications.map((spec) {
-                  return DropdownMenuItem<String>(
-                    value: spec,
-                    child: Text(spec, style: const TextStyle(fontSize: 18)),
-                  );
-                }).toList(),
-                onChanged: (value) =>
-                    setState(() => selectedSpecification = value),
+              Text(
+                'Morning OP',
+                style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
               ),
-              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ElevatedButton(
-                    onPressed: () => _selectTime(context, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 8),
+                        child: Text(
+                          'Time In',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      elevation: 10,
-                      shadowColor: Colors.greenAccent,
-                    ),
-                    child: Text(
-                        opTime == null
-                            ? 'Select OP Time In'
-                            : opTime!.format(context),
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.white)),
+                      SizedBox(
+                        width: 250, // ✅ Increased width
+                        child: InkWell(
+                          onTap: () => _selectTime(context, true),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.access_time,
+                                    color: Colors.white, size: 22),
+                                const SizedBox(width: 10),
+                                Text(
+                                  opTime == null
+                                      ? 'OP Time In'
+                                      : opTime!.format(context),
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () => _selectTime(context, false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 8),
+                        child: Text(
+                          'Time Out',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      elevation: 10,
-                      shadowColor: Colors.redAccent,
-                    ),
-                    child: Text(
-                        outTime == null
-                            ? 'Select OP Time Out'
-                            : outTime!.format(context),
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.white)),
+                      SizedBox(
+                        width: 250, // ✅ Increased width
+                        child: InkWell(
+                          onTap: () => _selectTime(context, false),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFE53935), Color(0xFFFF7043)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.access_time,
+                                    color: Colors.white, size: 22),
+                                const SizedBox(width: 10),
+                                Text(
+                                  outTime == null
+                                      ? 'OP Time Out'
+                                      : outTime!.format(context),
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 20),
+              Text(
+                'Evening OP',
+                style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ElevatedButton(
-                    onPressed: () => _selectTime(context, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 8),
+                        child: Text(
+                          'Time In',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      elevation: 10,
-                      shadowColor: Colors.greenAccent,
-                    ),
-                    child: Text(
-                        opTime == null
-                            ? 'Select OP Time In'
-                            : opTime!.format(context),
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.white)),
+                      SizedBox(
+                        width: 250, // ✅ Increased width
+                        child: InkWell(
+                          onTap: () => _selectTimeAfternoon(context, true),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.access_time,
+                                    color: Colors.white, size: 22),
+                                const SizedBox(width: 10),
+                                Text(
+                                  opTimeAfternoon == null
+                                      ? 'OP Time In'
+                                      : opTimeAfternoon!.format(context),
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () => _selectTime(context, false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 8),
+                        child: Text(
+                          'Time Out',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      elevation: 10,
-                      shadowColor: Colors.redAccent,
-                    ),
-                    child: Text(
-                        outTime == null
-                            ? 'Select OP Time Out'
-                            : outTime!.format(context),
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.white)),
+                      SizedBox(
+                        width: 250, // ✅ Increased width
+                        child: InkWell(
+                          onTap: () => _selectTimeAfternoon(context, false),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFE53935), Color(0xFFFF7043)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.access_time,
+                                    color: Colors.white, size: 22),
+                                const SizedBox(width: 10),
+                                Text(
+                                  outTimeAfternoon == null
+                                      ? 'OP Time Out'
+                                      : outTimeAfternoon!.format(context),
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -277,19 +494,40 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
               ),
               const SizedBox(height: 30),
               Center(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                 onTap: saveSchedule,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 250,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF42A5F5), Color(0xFF1E88E5)],
+                        // Blue gradient
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blueAccent.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    elevation: 10,
+                    child: const Center(
+                      child: Text(
+                        'Create Schedule',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: const Text('Create Schedule',
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ),
             ],
@@ -298,4 +536,66 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       ),
     );
   }
+  void saveSchedule() async {
+    if (selectedDoctor == null || opTime == null || outTime == null || selectedCounter == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields.')),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final today = DateFormat('yyyy-MM-dd').format(now); // '2025-04-07'
+
+    final scheduleData = {
+      'doctor': selectedDoctor,
+      'specialization': selectedSpecialization ?? '',
+      'morningOpIn': opTime!.format(context),
+      'morningOpOut': outTime!.format(context),
+      'eveningOpIn': opTimeAfternoon?.format(context) ?? '',
+      'eveningOpOut': outTimeAfternoon?.format(context) ?? '',
+      'counter': selectedCounter,
+      'createdAt': FieldValue.serverTimestamp(),
+      'date': today, // 🔥 Add date field
+    };
+
+    try {
+      final collection = FirebaseFirestore.instance.collection('doctorSchedulesDaily');
+
+      // Step 1: Check if all docs are from today
+      final snapshot = await collection.get();
+      bool hasOldData = snapshot.docs.any((doc) => doc['date'] != today);
+
+      // Step 2: If old data exists, delete all docs
+      if (hasOldData) {
+        for (var doc in snapshot.docs) {
+          await doc.reference.delete();
+        }
+      }
+
+      // Step 3: Add new schedule
+      await collection.add(scheduleData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Schedule added successfully!')),
+      );
+
+      setState(() {
+        selectedDoctor = null;
+        selectedSpecialization = null;
+        opTime = null;
+        outTime = null;
+        opTimeAfternoon = null;
+        outTimeAfternoon = null;
+        specializationController.clear();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: $e')),
+      );
+    }
+  }
+
+
+
 }
