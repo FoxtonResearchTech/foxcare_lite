@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'bg_img.jpg',
+              'assets/bg_img.jpg',
               fit: BoxFit.cover,
             ),
           ),
@@ -136,7 +136,7 @@ class _LoginFormState extends State<LoginForm> {
             controller: _emailController,
             obscureText: false,
             style: TextStyle(
-              color: AppColors.lightBlue,
+              color: Colors.white,
               fontFamily: 'Poppins',
             ),
             decoration: InputDecoration(
@@ -180,7 +180,7 @@ class _LoginFormState extends State<LoginForm> {
             controller: _passwordController,
             obscureText: !showPassword,
             style: TextStyle(
-              color: AppColors.lightBlue,
+              color: Colors.white,
               fontFamily: 'Poppins',
             ),
             decoration: InputDecoration(
