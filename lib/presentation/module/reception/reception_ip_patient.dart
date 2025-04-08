@@ -183,7 +183,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
-        backgroundColor: AppColors.secondaryColor,
+        backgroundColor: AppColors.appBar,
       ),
       body: SingleChildScrollView(
         child: Container(

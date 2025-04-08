@@ -66,7 +66,7 @@ class CustomTextField extends StatelessWidget {
             fontFamily: 'Poppins',
           ),
           floatingLabelStyle: TextStyle(
-            fontSize: 24,
+            fontSize: 18,
             fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
             foreground: Paint()

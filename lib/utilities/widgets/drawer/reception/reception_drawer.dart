@@ -28,22 +28,7 @@ class ReceptionDrawer extends StatefulWidget {
 }
 
 class _ReceptionDrawer extends State<ReceptionDrawer> {
-  UserModel? currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserDetails();
-  }
-
-  Future<void> _loadUserDetails() async {
-    final user = await getUserDetails();
-    if (mounted) {
-      setState(() {
-        currentUser = user;
-      });
-    }
-  }
+  final UserModel? currentUser = UserSession.currentUser;
 
   void navigateWithTransition(BuildContext context, Widget page) {
     Navigator.pushReplacement(
@@ -52,7 +37,7 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
         transitionDuration: const Duration(milliseconds: 300),
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0); // Slide from right
+          const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.ease;
 
@@ -133,6 +118,8 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
           icon: Iconsax.logout,
           onTap: () async {
             await FirebaseAuth.instance.signOut();
+            UserSession.clearUser();
+
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => LoginScreen()),

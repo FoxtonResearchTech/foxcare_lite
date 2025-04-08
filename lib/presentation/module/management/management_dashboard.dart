@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
 import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_register_patient.dart';
@@ -132,8 +134,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           height: 5,
           color: Colors.grey,
         ),
-        buildDrawerItem(6, 'Logout', () {
-          // Handle logout action
+        buildDrawerItem(6, 'Logout', () async {
+          await FirebaseAuth.instance.signOut();
         }, Iconsax.logout),
       ],
     );

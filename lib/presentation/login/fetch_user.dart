@@ -41,3 +41,15 @@ class UserModel {
     );
   }
 }
+
+class UserSession {
+  static UserModel? currentUser;
+
+  static Future<void> initUser() async {
+    currentUser ??= await getUserDetails();
+  }
+
+  static void clearUser() {
+    currentUser = null;
+  }
+}

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:foxcare_lite/presentation/login/fetch_user.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
@@ -15,10 +16,11 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await UserSession.initUser();
+
   runApp(
     const MyApp(),
   );
@@ -73,6 +75,10 @@ class AuthGate extends StatelessWidget {
 
             final data = snapshot.data!.data() as Map<String, dynamic>;
             final role = data['roles'];
+
+            if (UserSession.currentUser == null) {
+              UserSession.currentUser = UserModel.fromMap(data);
+            }
 
             switch (role) {
               case 'Management':
