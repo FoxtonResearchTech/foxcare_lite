@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../colors.dart';
 
-class CustomTextField extends StatelessWidget {
+class SecondaryTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final double? width;
@@ -9,12 +9,14 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final double horizontalSize;
   final FocusNode? focusNode;
-  final onChanged;
+  final Function(String)? onChanged;
   final GestureTapCallback? onTap;
   final TextEditingController? controller;
   final Icon? icon;
+  final bool showFilled;
+  final Color? textColor;
 
-  const CustomTextField({
+  const SecondaryTextField({
     super.key,
     required this.hintText,
     this.obscureText = false,
@@ -27,6 +29,8 @@ class CustomTextField extends StatelessWidget {
     this.focusNode,
     this.onChanged,
     this.onTap,
+    this.showFilled = true,
+    this.textColor = Colors.white,
   });
 
   @override
@@ -39,43 +43,69 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         obscureText: obscureText,
         readOnly: readOnly,
+        focusNode: focusNode,
+        style: TextStyle(
+          color: textColor,
+          fontFamily: 'Poppins',
+        ),
         decoration: InputDecoration(
-          isDense: true, // Reduces the overall height of the TextField
+          isDense: true,
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          alignLabelWithHint: true,
           contentPadding: EdgeInsets.symmetric(
-              vertical: verticalSize, horizontal: horizontalSize),
+            vertical: verticalSize,
+            horizontal: horizontalSize,
+          ),
           labelText: hintText,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
+            color: AppColors.lightBlue,
             fontFamily: 'Poppins',
           ),
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
+            color: Colors.white,
             fontFamily: 'Poppins',
           ),
-          floatingLabelStyle:
-              TextStyle(fontFamily: 'Poppins', color: AppColors.textField),
+          floatingLabelStyle: TextStyle(
+            fontSize: 18,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            foreground: Paint()
+              ..shader = const LinearGradient(
+                colors: <Color>[
+                  Colors.black, // top half
+                  Colors.grey, // bottom half
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+            height: 1.5,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           ),
+          filled: showFilled,
+          fillColor: AppColors.blue,
+          focusColor: AppColors.blue,
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.textField, width: 3.0),
+            borderSide: BorderSide(color: AppColors.lightBlue, width: 2.0),
             borderRadius: BorderRadius.circular(10),
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.textField, width: 2),
+            borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
             borderRadius: BorderRadius.circular(10),
           ),
           suffixIcon: icon != null
               ? GestureDetector(
                   onTap: onTap,
                   child: Row(
-                    mainAxisSize:
-                        MainAxisSize.min, // Ensures the icon does not expand
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       icon!,
                     ],
                   ),
                 )
               : null,
-          suffixIconColor: AppColors.textField,
+          suffixIconColor: AppColors.secondaryColor,
         ),
       ),
     );

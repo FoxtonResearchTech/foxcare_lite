@@ -10,6 +10,7 @@ import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 import '../../utilities/widgets/image/custom_image.dart';
 import '../../utilities/widgets/textField/primary_textField.dart';
+import '../../utilities/widgets/textField/secondary_text_field.dart';
 import '../module/doctor/doctor_dashboard.dart';
 import '../module/lab/dashboard.dart';
 import '../module/pharmacy/dashboard/pharmecy_dashboard.dart';
@@ -132,7 +133,7 @@ class _LoginFormState extends State<LoginForm> {
           size: screenWidth * 0.0125,
           color: AppColors.lightBlue,
         ),
-        CustomTextField(
+        SecondaryTextField(
           controller: _emailController,
           hintText: '',
           width: screenWidth * 0.25,
@@ -143,7 +144,7 @@ class _LoginFormState extends State<LoginForm> {
           size: screenWidth * 0.0125,
           color: AppColors.lightBlue,
         ),
-        CustomTextField(
+        SecondaryTextField(
           controller: _passwordController,
           obscureText: !showPassword,
           hintText: '',

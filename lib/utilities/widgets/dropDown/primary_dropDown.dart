@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../colors.dart';
 import '../text/primary_text.dart';
 
 class CustomDropdown extends StatelessWidget {
@@ -26,12 +27,12 @@ class CustomDropdown extends StatelessWidget {
       width: screenWidth * 0.25,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.lightBlue, width: 2),
+        border: Border.all(color: AppColors.blue, width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration.collapsed(
-          focusColor: Colors.lightBlue,
+          focusColor: AppColors.blue,
           hintText: label,
           hintStyle: const TextStyle(
             fontFamily: 'Poppins',
