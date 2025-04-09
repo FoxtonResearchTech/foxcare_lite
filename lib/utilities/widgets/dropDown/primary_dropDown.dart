@@ -7,15 +7,18 @@ class CustomDropdown extends StatelessWidget {
   final String label;
   final List<String> items;
   final String? selectedItem;
+  final Color? iconColor;
   final ValueChanged<String?> onChanged;
 
-  const CustomDropdown({
+  CustomDropdown({
     Key? key,
     required this.label,
     required this.items,
     this.selectedItem,
     required this.onChanged,
-  }) : super(key: key);
+    Color? iconColor,
+  })  : iconColor = iconColor ?? AppColors.blue,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +42,10 @@ class CustomDropdown extends StatelessWidget {
           ),
         ),
         value: selectedItem,
-        icon: const Icon(Icons.arrow_drop_down), // Drop-down icon
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: iconColor,
+        ), // Drop-down icon
         onChanged: onChanged,
         items: items.map((String item) {
           return DropdownMenuItem<String>(
