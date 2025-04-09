@@ -105,7 +105,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
                 ),
                 Container(
                   width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
                   decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(screenWidth * 0.05),

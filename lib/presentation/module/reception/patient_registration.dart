@@ -336,7 +336,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
             Container(
               width: screenWidth * 0.15,
-              height: screenWidth * 0.15,
+              height: screenWidth * 0.1,
               decoration: BoxDecoration(
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -346,183 +346,275 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           ],
         ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-                child: CustomTextField(
-              hintText: 'First Name',
-              controller: firstname,
-              width: null,
-            )),
-            const SizedBox(width: 20),
-            Expanded(
-                child: CustomTextField(
-              hintText: 'Middle Name',
-              controller: middlename,
-              width: null,
-            )),
-            const SizedBox(width: 20),
-            Expanded(
-                child: CustomTextField(
-              hintText: 'Last Name',
-              controller: lastname,
-              width: null,
-            )),
-          ],
-        ),
-        const SizedBox(height: 40),
-        Row(
-          children: [
-            const SizedBox(
-              width: 40,
-              child: Text(
-                'SEX :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                ),
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'First Name : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: firstname,
+                  width: screenWidth * 0.25,
+                )
+              ],
             ),
-            Expanded(
-              child: CustomDropdown(
-                label: 'Sex',
-                items: const ['Male', 'Female', 'Other'],
-                selectedItem: selectedSex,
-                onChanged: (value) {
-                  setState(() {
-                    selectedSex = value!;
-                  });
-                },
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Middle Name : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: middlename,
+                  width: screenWidth * 0.25,
+                )
+              ],
             ),
-            const SizedBox(width: 20),
-            const SizedBox(
-              width: 40,
-              child: Text(
-                'AGE :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                ),
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Last Name : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: lastname,
+                  width: screenWidth * 0.25,
+                )
+              ],
             ),
-            Expanded(
-              child: CustomTextField(
-                hintText: '',
-                controller: age,
-                width: null,
-              ),
-            ),
-            const SizedBox(width: 20),
-            const SizedBox(
-              width: 40,
-              child: Text(
-                'DOB :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                ),
-              ),
-            ),
-            Expanded(
-                child: CustomTextField(
-              hintText: '(YYYY-MM-DD)',
-              controller: dob,
-              width: null,
-            )),
-          ],
-        ),
-        const SizedBox(height: 40),
-        CustomTextField(
-          hintText: 'Address Line 1',
-          controller: address1,
-          width: null,
-        ),
-        const SizedBox(height: 30),
-        CustomTextField(
-          hintText: 'Address Line 2',
-          controller: address2,
-          width: null,
-        ),
-        const SizedBox(height: 40),
-        Row(
-          children: [
-            Expanded(
-                child: CustomTextField(
-              hintText: "Land Mark",
-              controller: landmark,
-              width: null,
-            )),
-            const SizedBox(width: 20),
-            Expanded(
-                child: CustomTextField(
-              hintText: "City",
-              controller: city,
-              width: null,
-            )),
-            const SizedBox(width: 20),
-            Expanded(
-                child: CustomTextField(
-              hintText: "State",
-              controller: state,
-              width: null,
-            )),
           ],
         ),
         const SizedBox(height: 20),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-                child: CustomTextField(
-              hintText: 'Pincode',
-              controller: pincode,
-              width: null,
-            )),
-            const SizedBox(width: 20),
-            Expanded(
-                child: CustomTextField(
-              hintText: 'Phone Number 1',
-              controller: phone1,
-              width: null,
-            )),
-            const SizedBox(width: 20),
-            Expanded(
-                child: CustomTextField(
-              hintText: 'Phone Number 2',
-              controller: phone2,
-              width: null,
-            )),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Sex : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomDropdown(
+                  label: '',
+                  items: const ['Male', 'Female', 'Other'],
+                  selectedItem: selectedSex,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSex = value!;
+                    });
+                  },
+                ),
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Age : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: age,
+                  width: screenWidth * 0.2,
+                )
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'DOB (YYYY-MM-DD) : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: dob,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
           ],
         ),
-        const SizedBox(height: 40),
-        Row(
+        const SizedBox(height: 20),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(
-              width: 100,
-              child: Text(
-                'BLOOD GROUP :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                ),
-              ),
-            ),
-            CustomDropdown(
-                label: 'Blood Group',
-                items: const ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
-                selectedItem: selectedBloodGroup,
-                onChanged: (value) {
-                  setState(() {
-                    selectedBloodGroup = value!;
-                  });
-                }),
-            SizedBox(width: screenWidth * 0.12),
+            CustomText(text: 'Address  Line 1: '),
+            SizedBox(height: screenHeight * 0.01),
             CustomTextField(
-              hintText: 'OP Amount',
-              width: screenWidth * 0.1,
-              controller: opAmount,
-            ),
-            SizedBox(width: screenWidth * 0.12),
-            CustomTextField(
-              hintText: 'Collected',
-              width: screenWidth * 0.1,
-              controller: opAmountCollected,
+              hintText: '',
+              controller: address1,
+              width: screenWidth * 0.8,
+              verticalSize: screenHeight * 0.025,
             )
+          ],
+        ),
+        const SizedBox(height: 20),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CustomText(text: 'Address  Line 2: '),
+            SizedBox(height: screenHeight * 0.01),
+            CustomTextField(
+              hintText: '',
+              controller: address2,
+              width: screenWidth * 0.8,
+              verticalSize: screenHeight * 0.025,
+            )
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Landmark : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: landmark,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'City : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: city,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'State : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: state,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Pincode : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: pincode,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Phone Number 1 : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: phone1,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Phone Number 2 : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: phone2,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'Blood Group : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomDropdown(
+                    label: '',
+                    items: const [
+                      'A+',
+                      'A-',
+                      'B+',
+                      'B-',
+                      'O+',
+                      'O-',
+                      'AB+',
+                      'AB-'
+                    ],
+                    selectedItem: selectedBloodGroup,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedBloodGroup = value!;
+                      });
+                    }),
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'OP Amount : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: opAmount,
+                  width: screenWidth * 0.2,
+                )
+              ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(text: 'OP Amount Collected : '),
+                SizedBox(height: screenHeight * 0.01),
+                CustomTextField(
+                  hintText: '',
+                  controller: opAmountCollected,
+                  width: screenWidth * 0.25,
+                )
+              ],
+            ),
           ],
         ),
         const SizedBox(height: 20),

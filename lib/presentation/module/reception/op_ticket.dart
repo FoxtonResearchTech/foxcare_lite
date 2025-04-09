@@ -39,7 +39,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 1), () => incrementCounter);
+    Future.delayed(Duration(milliseconds: 500), () => incrementCounter);
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -313,7 +313,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 ),
                 Container(
                   width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
                   decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(screenWidth * 0.05),

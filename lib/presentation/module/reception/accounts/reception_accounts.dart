@@ -84,7 +84,7 @@ class _ReceptionAccounts extends State<ReceptionAccounts> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.07),
+                  padding: EdgeInsets.only(top: screenWidth * 0.02),
                   child: Column(
                     children: [
                       CustomText(
@@ -96,7 +96,7 @@ class _ReceptionAccounts extends State<ReceptionAccounts> {
                 ),
                 Container(
                   width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
                   decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(screenWidth * 0.05),

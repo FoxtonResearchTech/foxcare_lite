@@ -250,7 +250,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                         ),
                         Container(
                           width: screenWidth * 0.15,
-                          height: screenWidth * 0.15,
+                          height: screenWidth * 0.14,
                           decoration: BoxDecoration(
                               shape: BoxShape.rectangle,
                               borderRadius:
