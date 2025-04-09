@@ -59,7 +59,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   Future<void> savePatientDetails() async {
     final patientID = generateNumericUid();
 
-    // Validate input
     if (firstname.text.isEmpty ||
         lastname.text.isEmpty ||
         selectedSex == null ||
@@ -70,7 +69,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       return;
     }
 
-    // Create patient data object
     Map<String, dynamic> patientData = {
       'opNumber': patientID,
       'firstName': firstname.text,
