@@ -2,23 +2,13 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
-import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
-import '../../../utilities/images.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
-import 'admission_status.dart';
-import 'doctor_schedule.dart';
-import 'ip_admission.dart';
-import 'ip_patients_admission.dart';
-import 'op_counters.dart';
-import 'op_ticket.dart';
 
 class ReceptionDashboard extends StatefulWidget {
   @override
@@ -165,7 +155,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       getNoOfOp();
       getNoOfNewPatients();
       getNoOFWaitingQue();

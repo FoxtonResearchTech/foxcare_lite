@@ -39,7 +39,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 500), () => incrementCounter);
+    Future.delayed(Duration(milliseconds: 500), () {});
+    incrementCounter();
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -72,7 +73,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
             dateTime.day.toString().padLeft(2, '0'),
       });
       await firestore.collection('patients').doc(selectedPatientId).update({
-        'date': dateTime.year.toString() +
+        'tokenDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
             '-' +
@@ -876,10 +877,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                         String? selectedPatientId =
                             selectedPatient?['opNumber'];
                         print(selectedPatientId);
-                        Future.delayed(Duration(milliseconds: 500), () async {
-                          await incrementCounter();
-                          await _generateToken(selectedPatientId!);
-                        });
+                        await incrementCounter();
+                        await _generateToken(selectedPatientId!);
                       },
                       width: null,
                     ),

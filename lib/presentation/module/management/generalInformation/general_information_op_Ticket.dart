@@ -79,7 +79,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
             dateTime.day.toString().padLeft(2, '0'),
       });
       await firestore.collection('patients').doc(selectedPatientId).update({
-        'date': dateTime.year.toString() +
+        'TokenDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
             '-' +
@@ -193,41 +193,40 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
 
   Future<void> incrementCounter() async {
     final docRef =
-        FirebaseFirestore.instance.collection('counters').doc(documentId);
+        FirebaseFirestore.instance.collection('counters').doc('counterDoc');
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
+    try {
+      final snapshot = await docRef.get();
 
-      if (snapshot.exists) {
-        // Get the current value and last reset timestamp
+      if (snapshot.exists && snapshot.data() != null) {
         int currentValue = snapshot.get('value') as int;
         Timestamp lastResetTimestamp = snapshot.get('lastReset') as Timestamp;
-
         DateTime lastReset = lastResetTimestamp.toDate();
-        print(lastReset);
 
-        // Check if it's time to reset
+        print("Last reset time: $lastReset");
+
         if (_shouldResetCounter(lastReset)) {
           print("Resetting the counter...");
-          // Reset the counter and update the last reset timestamp
-          transaction.update(docRef, {
+          await docRef.update({
             'value': 0,
             'lastReset': FieldValue.serverTimestamp(),
           });
         } else {
           print("Incrementing the counter...");
-          // Increment the counter
-          transaction.update(docRef, {'value': currentValue + 1});
+          await docRef.update({'value': currentValue + 1});
         }
       } else {
-        // Initialize the counter if it doesn't exist
         print("Initializing counter...");
-        transaction.set(docRef, {
+        await docRef.set({
           'value': 0,
           'lastReset': FieldValue.serverTimestamp(),
         });
       }
-    });
+    } catch (e, stackTrace) {
+      print("Error in incrementCounter: $e");
+      print(stackTrace);
+      showMessage("Failed to update counter: $e");
+    }
   }
 
   @override
