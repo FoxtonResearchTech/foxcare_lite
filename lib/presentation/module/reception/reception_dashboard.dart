@@ -20,8 +20,16 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   String? selectedStatus;
   Timer? _timer;
 
-  final headers = ['Counter 1', 'Counter 2', 'Counter 3'];
-  final List<Map<String, dynamic>> tableData = [{}];
+  final headers = [
+    'Counter',
+    'Doctor',
+    'Specialization',
+    'Morning OP In',
+    'Morning OP Out',
+    'Evening OP In',
+    'Evening OP Out',
+  ];
+  List<Map<String, dynamic>> tableData = [{}];
 
   final headers1 = [
     'OP Number',
@@ -152,6 +160,43 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     }
   }
 
+  Future<void> fetchCounterData() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
+          await FirebaseFirestore.instance
+              .collection('doctorSchedulesDaily')
+              .where('date', isEqualTo: today)
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in counterSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Counter': data['counter'],
+          'Doctor': data['doctor'],
+          'Specialization': data['specialization'],
+          'Morning OP In': data['morningOpIn'],
+          'Morning OP Out': data['morningOpOut'],
+          'Evening OP In': data['eveningOpIn'],
+          'Evening OP Out': data['eveningOpOut'],
+        });
+      }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Counter'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Counter'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+      setState(() {
+        tableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -159,6 +204,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       getNoOfOp();
       getNoOfNewPatients();
       getNoOFWaitingQue();
+      fetchCounterData();
     });
   }
 
