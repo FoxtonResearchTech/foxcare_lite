@@ -317,22 +317,22 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
                   title: 'No Of OP',
                   value: noOfOp.toString(),
                   icon: Icons.person,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
                 buildDashboardCard(
                   title: 'Waiting Queue',
                   value: noOfWaitingQueue.toString(),
                   icon: Icons.access_time,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
                 buildDashboardCard(
                   title: 'No Of New Patients',
                   value: noOfNewPatients.toString(),
                   icon: Icons.person_add_alt,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
               ],
             ),
@@ -382,16 +382,19 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     required String title,
     required String value,
     required IconData icon,
-    required double screenWidth,
-    required double screenHeight,
+    required double width,
+    required double height,
     Color? color,
   }) {
     color ??= AppColors.blue;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Container(
       padding: EdgeInsets.all(screenWidth * 0.01),
-      width: screenWidth * 0.15,
-      height: screenHeight * 0.15,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(16),
