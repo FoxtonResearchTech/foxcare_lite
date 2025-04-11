@@ -18,6 +18,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   int selectedIndex = 2;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
+  final TextEditingController specialization = TextEditingController();
   final TextEditingController bloodSugarLevel = TextEditingController();
   final TextEditingController temperature = TextEditingController();
   final TextEditingController bloodPressure = TextEditingController();
@@ -33,9 +34,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
   List<Map<String, String>> searchResults = [];
   Map<String, String>? selectedPatient;
   String? selectedCounter;
-  String? selectedDoctor;
-
-  List<String> doctorNames = [];
 
   int tokenNumber = 0;
   String lastSavedDate = '';
@@ -47,7 +45,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     incrementCounter();
   }
 
-  Future<void> fetchDoctors() async {
+  Future<void> fetchDoctorAndSpecialization() async {
     try {
       QuerySnapshot<Map<String, dynamic>> doctorsSnapshot =
           await FirebaseFirestore.instance
@@ -55,18 +53,21 @@ class _OpTicketPageState extends State<OpTicketPage> {
               .where('counter', isEqualTo: selectedCounter)
               .get();
 
-      setState(() {
-        doctorNames = doctorsSnapshot.docs
-            .map((doc) => doc['doctor'].toString())
-            .toList();
+      if (doctorsSnapshot.docs.isNotEmpty) {
+        final firstDoc = doctorsSnapshot.docs.first.data();
 
-        // distributorsDetails = {
-        //   for (var doc in distributorsSnapshot.docs)
-        //     doc['distributorName']: doc.data(),
-        // };
-      });
+        setState(() {
+          doctorName.text = firstDoc['doctor'] ?? '';
+          specialization.text = firstDoc['specialization'] ?? '';
+        });
+      } else {
+        setState(() {
+          doctorName.text = '';
+          specialization.text = '';
+        });
+      }
     } catch (e) {
-      print('Error fetching distributors: $e');
+      print('Error fetching doctors: $e');
     }
   }
 
@@ -106,7 +107,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
         'counter': selectedCounter,
-        'doctorName': selectedDoctor,
+        'doctorName': doctorName.text,
+        'specialization': specialization.text,
         'bloodPressure': bloodPressure.text,
         'bloodSugarLevel': bloodSugarLevel.text,
         'temperature': temperature.text,
@@ -724,7 +726,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
           const SizedBox(height: 20),
           Container(
             height: 200,
-            width: 1000,
+            width: 1200,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,7 +736,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   size: 24,
                 ),
                 Container(
-                  padding: EdgeInsets.only(left: 150),
+                  padding: EdgeInsets.only(left: 40),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -757,14 +759,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
                         size: 16,
                       ),
                       CustomDropdown(
-                        width: 0.08,
+                        width: 0.05,
                         label: '',
                         items: const ['1', '2', '3', '4', '5'],
                         onChanged: (value) {
                           setState(
                             () {
                               selectedCounter = value;
-                              fetchDoctors();
+                              fetchDoctorAndSpecialization();
                             },
                           );
                         },
@@ -773,18 +775,20 @@ class _OpTicketPageState extends State<OpTicketPage> {
                         text: 'Doctor : ',
                         size: 16,
                       ),
-                      CustomDropdown(
-                        width: 0.15,
-                        label: '',
-                        items: doctorNames,
-                        onChanged: (value) {
-                          setState(
-                            () {
-                              selectedDoctor = value;
-                            },
-                          );
-                        },
+                      CustomTextField(
+                        hintText: '',
+                        width: 200,
+                        controller: doctorName,
                       ),
+                      CustomText(
+                        text: 'Specialization : ',
+                        size: 16,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        width: 180,
+                        controller: specialization,
+                      )
                     ],
                   ),
                 ),
