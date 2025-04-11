@@ -47,6 +47,8 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       'Place': '',
       'Phone Number': '',
       'Status': CustomDropdown(
+          focusColor: Colors.white,
+          borderColor: Colors.white,
           label: '',
           items: ['Not Attending Call', 'Come Later', 'Others'],
           onChanged: (value) {}),
@@ -311,52 +313,26 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Container(
-                  padding: EdgeInsets.all(screenWidth * 0.005),
-                  width: screenWidth * 0.15,
-                  height: screenHeight * 0.15,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      CustomText(text: 'No Of OP'),
-                      Center(child: CustomText(text: noOfOp.toString()))
-                    ],
-                  ),
+                buildDashboardCard(
+                  title: 'No Of OP',
+                  value: noOfOp.toString(),
+                  icon: Icons.person,
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
                 ),
-                Container(
-                  padding: EdgeInsets.all(screenWidth * 0.005),
-                  width: screenWidth * 0.15,
-                  height: screenHeight * 0.15,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      CustomText(text: 'Waiting Queue'),
-                      Center(
-                          child: CustomText(text: noOfWaitingQueue.toString()))
-                    ],
-                  ),
+                buildDashboardCard(
+                  title: 'Waiting Queue',
+                  value: noOfWaitingQueue.toString(),
+                  icon: Icons.access_time,
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
                 ),
-                Container(
-                  padding: EdgeInsets.all(screenWidth * 0.005),
-                  width: screenWidth * 0.15,
-                  height: screenHeight * 0.15,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      CustomText(text: 'No Of New Patients'),
-                      Center(
-                          child: CustomText(text: noOfNewPatients.toString()))
-                    ],
-                  ),
+                buildDashboardCard(
+                  title: 'No Of New Patients',
+                  value: noOfNewPatients.toString(),
+                  icon: Icons.person_add_alt,
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
                 ),
               ],
             ),
@@ -398,6 +374,49 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget buildDashboardCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required double screenWidth,
+    required double screenHeight,
+    Color? color,
+  }) {
+    color ??= AppColors.blue;
+
+    return Container(
+      padding: EdgeInsets.all(screenWidth * 0.01),
+      width: screenWidth * 0.15,
+      height: screenHeight * 0.15,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(icon, size: screenWidth * 0.025, color: Colors.white),
+          CustomText(
+            text: title,
+            color: Colors.white,
+          ),
+          CustomText(
+            text: value,
+            color: Colors.white,
+          ),
+        ],
       ),
     );
   }

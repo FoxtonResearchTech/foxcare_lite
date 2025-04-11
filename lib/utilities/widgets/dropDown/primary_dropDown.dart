@@ -8,6 +8,9 @@ class CustomDropdown extends StatelessWidget {
   final List<String> items;
   final String? selectedItem;
   final Color? iconColor;
+  final Color? borderColor;
+  final Color? focusColor;
+
   final ValueChanged<String?> onChanged;
 
   CustomDropdown({
@@ -17,7 +20,11 @@ class CustomDropdown extends StatelessWidget {
     this.selectedItem,
     required this.onChanged,
     Color? iconColor,
+    Color? borderColor,
+    Color? focusColor,
   })  : iconColor = iconColor ?? AppColors.blue,
+        borderColor = borderColor ?? AppColors.blue,
+        focusColor = focusColor ?? AppColors.blue,
         super(key: key);
 
   @override
@@ -30,12 +37,12 @@ class CustomDropdown extends StatelessWidget {
       width: screenWidth * 0.25,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.blue, width: 2),
+        border: Border.all(color: borderColor!, width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration.collapsed(
-          focusColor: AppColors.blue,
+          focusColor: focusColor,
           hintText: label,
           hintStyle: const TextStyle(
             fontFamily: 'Poppins',
