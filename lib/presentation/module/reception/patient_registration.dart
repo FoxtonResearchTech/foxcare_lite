@@ -352,6 +352,10 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
+
+
+
                 CustomText(text: 'First Name : '),
                 SizedBox(height: screenHeight * 0.01),
                 CustomTextField(

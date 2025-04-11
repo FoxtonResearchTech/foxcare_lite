@@ -13,6 +13,7 @@ import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_das
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
+import 'package:foxcare_lite/test/test.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
-      home: AuthGate(),
+      home: ChatScreen(),
     );
   }
 }
