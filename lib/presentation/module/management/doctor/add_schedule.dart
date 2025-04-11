@@ -39,7 +39,8 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
   ];
   String? selectedSpecialization;
   final List<String> counterValues =
-      List.generate(11, (index) => index.toString());
+  List.generate(5, (index) => (index + 1).toString());
+
 
   Future<void> _selectTime(BuildContext context, bool isOpTime) async {
     final TimeOfDay? picked = await showTimePicker(
