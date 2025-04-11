@@ -39,7 +39,7 @@ class _DoctorRxList extends State<DoctorRxList> {
     'Place',
     'Primary Info',
     'Action',
-    'Abort',
+    'Abscond',
   ];
   List<Map<String, dynamic>> tableData1 = [];
   Timer? _timer;
@@ -141,13 +141,13 @@ class _DoctorRxList extends State<DoctorRxList> {
                 );
               },
               child: const CustomText(text: 'Open')),
-          'Abort': TextButton(
+          'Abscond': TextButton(
               onPressed: () async {
                 try {
                   await FirebaseFirestore.instance
                       .collection('patients')
                       .doc(data['opNumber'])
-                      .update({'status': 'aborted'});
+                      .update({'status': 'abscond'});
 
                   CustomSnackBar(context, message: 'Status updated to aborted');
                 } catch (e) {

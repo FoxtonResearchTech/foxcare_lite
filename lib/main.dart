@@ -10,7 +10,6 @@ import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'firebase_options.dart';

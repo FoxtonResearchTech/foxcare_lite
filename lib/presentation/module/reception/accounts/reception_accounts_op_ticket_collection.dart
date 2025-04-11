@@ -1,24 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
-import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
-import '../../../../utilities/widgets/payment/payment_dialog.dart';
+import '../../../../utilities/widgets/drawer/reception/accounts/reception_accounts_drawer.dart';
+import '../../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
-import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 
-class OpTicketCollection extends StatefulWidget {
+class ReceptionAccountsOpTicketCollection extends StatefulWidget {
+  const ReceptionAccountsOpTicketCollection({super.key});
+
   @override
-  State<OpTicketCollection> createState() => _OpTicketCollection();
+  State<ReceptionAccountsOpTicketCollection> createState() =>
+      _ReceptionAccountsOpTicketCollection();
 }
 
-class _OpTicketCollection extends State<OpTicketCollection> {
-  // To store the index of the selected drawer item
+class _ReceptionAccountsOpTicketCollection
+    extends State<ReceptionAccountsOpTicketCollection> {
   int selectedIndex = 1;
+
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
@@ -34,7 +37,6 @@ class _OpTicketCollection extends State<OpTicketCollection> {
     'Total Amount',
     'Collected',
     'Balance',
-    'Pay'
   ];
   List<Map<String, dynamic>> tableData = [];
 
@@ -106,22 +108,6 @@ class _OpTicketCollection extends State<OpTicketCollection> {
           'Total Amount': data['opTicketTotalAmount']?.toString() ?? '0',
           'Collected': data['opTicketCollectedAmount']?.toString() ?? '0',
           'Balance': balance,
-          'Pay': TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return PaymentDialog(
-                      patientID: data['opNumber'],
-                      firstName: data['firstName'],
-                      lastName: data['lastName'],
-                      city: data['city'],
-                      balance: balance.toString());
-                },
-              );
-            },
-            child: CustomText(text: 'Pay'),
-          ),
         });
       }
 
@@ -222,21 +208,21 @@ class _OpTicketCollection extends State<OpTicketCollection> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
-                text: 'Accounts Information',
+              title: const Text(
+                'Reception Dashboard',
+                style: TextStyle(fontFamily: 'SanFrancisco'),
               ),
             )
-          : null, // No AppBar for web view
+          : null,
       drawer: isMobile
           ? Drawer(
-              child: ManagementAccountsDrawer(
+              child: ReceptionAccountsDrawer(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -245,14 +231,14 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                 },
               ),
             )
-          : null, // No drawer for web view (permanently open)
+          : null,
       body: Row(
         children: [
           if (!isMobile)
             Container(
-              width: 300, // Fixed width for the sidebar
+              width: 300,
               color: Colors.blue.shade100,
-              child: ManagementAccountsDrawer(
+              child: ReceptionAccountsDrawer(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -262,8 +248,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
               ),
             ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16),
+            child: SingleChildScrollView(
               child: dashboard(),
             ),
           ),
@@ -274,139 +259,139 @@ class _OpTicketCollection extends State<OpTicketCollection> {
 
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    double screenHeight = MediaQuery.of(context).size.height;
 
-    bool isMobile = screenWidth < 600;
-
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.only(
-            left: screenWidth * 0.01,
-            right: screenWidth * 0.01,
-            bottom: screenWidth * 0.01,
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "OP Ticket Collection ",
-                          size: screenWidth * .015,
-                        ),
-                      ],
+    return SingleChildScrollView(
+      child: Container(
+        height: screenHeight,
+        padding: EdgeInsets.only(
+          left: screenWidth * 0.01,
+          right: screenWidth * 0.01,
+          bottom: screenWidth * 0.01,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: screenWidth * 0.02),
+                  child: Column(
+                    children: [
+                      CustomText(
+                        text: "OP Ticket Collection",
+                        size: screenWidth * 0.03,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                    image: const DecorationImage(
+                      image: AssetImage('assets/foxcare_lite_logo.png'),
                     ),
                   ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        image: const DecorationImage(
-                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                CustomTextField(
+                  onTap: () => _selectDate(context, _dateController),
+                  icon: Icon(Icons.date_range),
+                  controller: _dateController,
+                  hintText: 'Date',
+                  width: screenWidth * 0.15,
+                ),
+                SizedBox(width: screenHeight * 0.02),
+                CustomButton(
+                  label: 'Search',
+                  onPressed: () {
+                    fetchData(singleDate: _dateController.text);
+                  },
+                  width: screenWidth * 0.08,
+                  height: screenWidth * 0.02,
+                ),
+                SizedBox(width: screenHeight * 0.02),
+                CustomText(text: 'OR'),
+                SizedBox(width: screenHeight * 0.02),
+                CustomTextField(
+                  onTap: () => _selectDate(context, _fromDateController),
+                  icon: Icon(Icons.date_range),
+                  controller: _fromDateController,
+                  hintText: 'From Date',
+                  width: screenWidth * 0.15,
+                ),
+                SizedBox(width: screenHeight * 0.02),
+                CustomTextField(
+                  onTap: () => _selectDate(context, _toDateController),
+                  icon: Icon(Icons.date_range),
+                  controller: _toDateController,
+                  hintText: 'To Date',
+                  width: screenWidth * 0.15,
+                ),
+                SizedBox(width: screenHeight * 0.02),
+                CustomButton(
+                  label: 'Search',
+                  onPressed: () {
+                    fetchData(
+                      fromDate: _fromDateController.text,
+                      toDate: _toDateController.text,
+                    );
+                  },
+                  width: screenWidth * 0.08,
+                  height: screenWidth * 0.02,
+                ),
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.05),
+            const Row(
+              children: [CustomText(text: 'Collection Report')],
+            ),
+            SizedBox(height: screenHeight * 0.04),
+            CustomDataTable(
+              headerBackgroundColor: AppColors.blue,
+              headerColor: Colors.white,
+              tableData: tableData,
+              headers: headers,
+            ),
+            Container(
+              width: screenWidth,
+              height: screenHeight * 0.030,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.black,
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(width: screenWidth * 0.38),
+                  CustomText(
+                    text: 'Total : ',
+                  ),
+                  SizedBox(width: screenWidth * 0.086),
+                  CustomText(
+                    text: '${_totalAmountCollected()}',
+                  ),
+                  SizedBox(width: screenWidth * 0.08),
+                  CustomText(
+                    text: '${_totalCollected()}',
+                  ),
+                  SizedBox(width: screenWidth * 0.083),
+                  CustomText(
+                    text: '${_totalBalance()}',
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(singleDate: _dateController.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
-                    onTap: () => _selectDate(context, _fromDateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _fromDateController,
-                    hintText: 'From Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
-                    onTap: () => _selectDate(context, _toDateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _toDateController,
-                    hintText: 'To Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.05),
-              const Row(
-                children: [CustomText(text: 'Collection Report Of Date')],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
-                headerBackgroundColor: AppColors.blue,
-                headerColor: Colors.white,
-                tableData: tableData,
-                headers: headers,
-              ),
-              Container(
-                width: screenWidth,
-                height: screenHeight * 0.030,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(width: screenWidth * 0.38),
-                    CustomText(
-                      text: 'Total : ',
-                    ),
-                    SizedBox(width: screenWidth * 0.086),
-                    CustomText(
-                      text: '${_totalAmountCollected()}',
-                    ),
-                    SizedBox(width: screenWidth * 0.08),
-                    CustomText(
-                      text: '${_totalCollected()}',
-                    ),
-                    SizedBox(width: screenWidth * 0.083),
-                    CustomText(
-                      text: '${_totalBalance()}',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

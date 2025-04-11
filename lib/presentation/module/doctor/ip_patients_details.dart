@@ -36,7 +36,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
     'Place',
     'Primary Info',
     'Action',
-    'Abort',
+    'Abscond',
   ];
   List<Map<String, dynamic>> tableData1 = [];
   Timer? _timer;
@@ -213,13 +213,13 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                     );
                   },
                   child: const CustomText(text: 'Create')),
-          'Abort': TextButton(
+          'Abscond': TextButton(
               onPressed: () async {
                 try {
                   await FirebaseFirestore.instance
                       .collection('patients')
                       .doc(data['ipNumber'])
-                      .update({'status': 'aborted'});
+                      .update({'status': 'abscond'});
 
                   CustomSnackBar(context, message: 'Status updated to aborted');
                 } catch (e) {

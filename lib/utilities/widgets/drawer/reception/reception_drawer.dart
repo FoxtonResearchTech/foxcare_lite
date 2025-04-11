@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/reception/accounts/reception_accounts.dart';
+import 'package:foxcare_lite/presentation/module/reception/accounts/reception_accounts_new_patient_registration_collection.dart';
 import 'package:foxcare_lite/presentation/module/reception/admission_status.dart';
 import 'package:foxcare_lite/presentation/module/reception/doctor_schedule_view.dart';
 import 'package:foxcare_lite/presentation/module/reception/ip_admission.dart';
@@ -108,9 +108,10 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
         ),
         DrawerMenuItem(
           title: 'Accounts',
-          icon: Icons.account_balance,
+          icon: Icons.account_balance_outlined,
           onTap: () {
-            navigateWithTransition(context, ReceptionAccounts());
+            navigateWithTransition(
+                context, ReceptionAccountsNewPatientRegistrationCollection());
           },
         ),
         DrawerMenuItem(

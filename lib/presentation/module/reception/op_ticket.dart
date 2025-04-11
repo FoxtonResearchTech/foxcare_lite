@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'dart:io';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -16,7 +17,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
   final dateTime = DateTime.timestamp();
   int selectedIndex = 2;
   final TextEditingController tokenDate = TextEditingController();
-  final TextEditingController counter = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
   final TextEditingController bloodSugarLevel = TextEditingController();
   final TextEditingController temperature = TextEditingController();
@@ -32,6 +32,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
   bool isSearchPerformed = false;
   List<Map<String, String>> searchResults = [];
   Map<String, String>? selectedPatient;
+  String? selectedCounter;
+  String? selectedDoctor;
+
+  List<String> doctorNames = [];
 
   int tokenNumber = 0;
   String lastSavedDate = '';
@@ -41,6 +45,29 @@ class _OpTicketPageState extends State<OpTicketPage> {
     super.initState();
     Future.delayed(Duration(milliseconds: 500), () {});
     incrementCounter();
+  }
+
+  Future<void> fetchDoctors() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> doctorsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('doctorSchedulesDaily')
+              .where('counter', isEqualTo: selectedCounter)
+              .get();
+
+      setState(() {
+        doctorNames = doctorsSnapshot.docs
+            .map((doc) => doc['doctor'].toString())
+            .toList();
+
+        // distributorsDetails = {
+        //   for (var doc in distributorsSnapshot.docs)
+        //     doc['distributorName']: doc.data(),
+        // };
+      });
+    } catch (e) {
+      print('Error fetching distributors: $e');
+    }
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -78,8 +105,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
             dateTime.month.toString().padLeft(2, '0') +
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
-        'counter': counter.text,
-        'doctorName': doctorName.text,
+        'counter': selectedCounter,
+        'doctorName': selectedDoctor,
         'bloodPressure': bloodPressure.text,
         'bloodSugarLevel': bloodSugarLevel.text,
         'temperature': temperature.text,
@@ -229,7 +256,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
     searchOpNumber.dispose();
     searchPhoneNumber.dispose();
     tokenDate.dispose();
-    counter.dispose();
     doctorName.dispose();
     bloodSugarLevel.dispose();
     temperature.dispose();
@@ -307,7 +333,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Container(
-        height: screenHeight * 1.55,
+        height: screenHeight * 1.75,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,197 +722,195 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Token Information :',
-            style: TextStyle(
-                fontFamily: 'SanFrancisco',
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
           Container(
-            padding: EdgeInsets.only(left: 200),
+            height: 200,
+            width: 1000,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                        width: 70,
-                        child: Text(
-                          'Date : ',
-                          style: TextStyle(
-                            fontFamily: 'SanFrancisco',
-                          ),
-                        )),
-                    CustomTextField(
-                      hintText: '',
-                      controller: TextEditingController(
-                          text: dateTime.year.toString() +
-                              '-' +
-                              dateTime.month.toString().padLeft(2, '0') +
-                              '-' +
-                              dateTime.day.toString().padLeft(2, '0')),
-                      width: 250,
-                    ),
-                    const SizedBox(
-                      width: 30,
-                    ),
-                    const SizedBox(
-                      width: 80,
-                      child: Text(
-                        'Counter : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
+                CustomText(
+                  text: 'Token Infomation',
+                  size: 24,
+                ),
+                Container(
+                  padding: EdgeInsets.only(left: 150),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomText(
+                        text: 'Date : ',
+                        size: 16,
                       ),
-                    ),
-                    CustomTextField(
-                      hintText: '',
-                      controller: counter,
-                      width: 250,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                        width: 80,
-                        child: Text(
-                          'Doctor : ',
-                          style: TextStyle(
-                            fontFamily: 'SanFrancisco',
-                          ),
-                        )),
-                    CustomTextField(
-                      hintText: '',
-                      controller: doctorName,
-                      width: 250,
-                    ),
-                    const SizedBox(
-                      width: 25,
-                    ),
-                    const SizedBox(
-                        width: 100,
-                        child: Text(
-                          'Blood Sugar : ',
-                          style: TextStyle(
-                            fontFamily: 'SanFrancisco',
-                          ),
-                        )),
-                    CustomTextField(
-                      hintText: '',
-                      controller: bloodSugarLevel,
-                      width: 250,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                        width: 80,
-                        child: Text(
-                          'BP : ',
-                          style: TextStyle(
-                            fontFamily: 'SanFrancisco',
-                          ),
-                        )),
-                    CustomTextField(
-                      hintText: '',
-                      controller: bloodPressure,
-                      width: 250,
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    const SizedBox(
-                        width: 80,
-                        child: Text(
-                          'TEMP : ',
-                          style: TextStyle(
-                            fontFamily: 'SanFrancisco',
-                          ),
-                        )),
-                    CustomTextField(
-                      hintText: '',
-                      controller: temperature,
-                      width: 250,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                        width: 80,
-                        child: Text(
-                          'OP Ticket Amount : ',
-                          style: TextStyle(
-                            fontFamily: 'SanFrancisco',
-                          ),
-                        )),
-                    CustomTextField(
-                      hintText: '',
-                      controller: opTicketTotalAmount,
-                      width: 250,
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    const SizedBox(
-                      width: 80,
-                      child: Text(
-                        'Collected : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
+                      CustomTextField(
+                        hintText: '',
+                        controller: TextEditingController(
+                            text: dateTime.year.toString() +
+                                '-' +
+                                dateTime.month.toString().padLeft(2, '0') +
+                                '-' +
+                                dateTime.day.toString().padLeft(2, '0')),
+                        width: 150,
                       ),
-                    ),
-                    CustomTextField(
-                      hintText: '',
-                      controller: opTicketCollectedAmount,
-                      width: 250,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: 650,
-                  child: CustomTextField(
-                    hintText: 'Enter Other Comments',
-                    controller: otherComments,
-                    width: null,
+                      CustomText(
+                        text: 'Counter : ',
+                        size: 16,
+                      ),
+                      CustomDropdown(
+                        width: 0.08,
+                        label: '',
+                        items: const ['1', '2', '3', '4', '5'],
+                        onChanged: (value) {
+                          setState(
+                            () {
+                              selectedCounter = value;
+                              fetchDoctors();
+                            },
+                          );
+                        },
+                      ),
+                      CustomText(
+                        text: 'Doctor : ',
+                        size: 16,
+                      ),
+                      CustomDropdown(
+                        width: 0.15,
+                        label: '',
+                        items: doctorNames,
+                        onChanged: (value) {
+                          setState(
+                            () {
+                              selectedDoctor = value;
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.only(left: 70),
-                  child: SizedBox(
-                    width: 200,
-                    child: CustomButton(
-                      label: 'Generate',
-                      onPressed: () async {
-                        String? selectedPatientId =
-                            selectedPatient?['opNumber'];
-                        print(selectedPatientId);
-                        await incrementCounter();
-                        await _generateToken(selectedPatientId!);
-                      },
-                      width: null,
-                    ),
+                Container(
+                  padding: EdgeInsets.only(left: 150),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomText(
+                        text: 'OP Ticket Amount : ',
+                        size: 16,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        controller: opTicketTotalAmount,
+                        width: 250,
+                      ),
+                      CustomText(
+                        text: 'Collected : ',
+                        size: 16,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        controller: opTicketCollectedAmount,
+                        width: 250,
+                      ),
+                    ],
                   ),
-                ),
+                )
               ],
             ),
-          )
+          ),
+          SizedBox(
+            height: 75,
+          ),
+          Container(
+            height: 200,
+            width: 1100,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(
+                  text: 'General Information',
+                  size: 24,
+                ),
+                Container(
+                  padding: EdgeInsets.only(left: 100),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomText(
+                        text: 'Temperature : ',
+                        size: 16,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        controller: temperature,
+                        width: 175,
+                      ),
+                      CustomText(
+                        text: 'Blood Pressure : ',
+                        size: 16,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        controller: bloodPressure,
+                        width: 175,
+                      ),
+                      CustomText(
+                        text: 'Blood Sugar : ',
+                        size: 16,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        controller: bloodSugarLevel,
+                        width: 175,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  padding: EdgeInsets.only(left: 100),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Other Comments : '),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      CustomTextField(
+                        hintText: '',
+                        width: 800,
+                        verticalSize: 30,
+                      ),
+                      SizedBox(
+                        width: 20,
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 75,
+          ),
+          Row(
+            children: [
+              SizedBox(width: 425),
+              CustomButton(
+                label: 'Generate',
+                onPressed: () async {
+                  String? selectedPatientId = selectedPatient?['opNumber'];
+                  print(selectedPatientId);
+                  await incrementCounter();
+                  await _generateToken(selectedPatientId!);
+                },
+                width: 200,
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/total_room_update.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
@@ -270,8 +271,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             // Set a fixed height for each room box
                             decoration: BoxDecoration(
                               color: roomStatus[index]
-                                  ? Colors.green[200]
-                                  : Colors.grey,
+                                  ? AppColors.blue
+                                  : AppColors.lightBlue,
                               // Red for booked, green for available
                               borderRadius: BorderRadius.circular(2),
                               //border: Border.all(color: Colors.black, width: 1),
@@ -353,8 +354,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             // Set a fixed height for each room box
                             decoration: BoxDecoration(
                               color: wardStatus[index]
-                                  ? Colors.green[200]
-                                  : Colors.grey,
+                                  ? AppColors.blue
+                                  : AppColors.lightBlue,
                               // Red for booked, green for available
                               borderRadius: BorderRadius.circular(2),
                               //border: Border.all(color: Colors.black, width: 1),
@@ -433,8 +434,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             // Set a fixed height for each room box
                             decoration: BoxDecoration(
                               color: viproomStatus[index]
-                                  ? Colors.green[200]
-                                  : Colors.grey,
+                                  ? AppColors.blue
+                                  : AppColors.lightBlue,
                               // Red for booked, green for available
                               borderRadius: BorderRadius.circular(2),
                               //border: Border.all(color: Colors.black, width: 1),
@@ -516,8 +517,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             // Set a fixed height for each room box
                             decoration: BoxDecoration(
                               color: ICUStatus[index]
-                                  ? Colors.green[200]
-                                  : Colors.grey,
+                                  ? AppColors.blue
+                                  : AppColors.lightBlue,
                               // Red for booked, green for available
                               borderRadius: BorderRadius.circular(2),
                               //border: Border.all(color: Colors.black, width: 1),
@@ -629,8 +630,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: roomStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
@@ -702,8 +703,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: wardStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
@@ -772,8 +773,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: viproomStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
@@ -845,8 +846,8 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: ICUStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),

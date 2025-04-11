@@ -10,6 +10,8 @@ class CustomDropdown extends StatelessWidget {
   final Color? iconColor;
   final Color? borderColor;
   final Color? focusColor;
+  final double? width;
+  final double? height;
 
   final ValueChanged<String?> onChanged;
 
@@ -22,9 +24,13 @@ class CustomDropdown extends StatelessWidget {
     Color? iconColor,
     Color? borderColor,
     Color? focusColor,
+    double? width,
+    double? height,
   })  : iconColor = iconColor ?? AppColors.blue,
         borderColor = borderColor ?? AppColors.blue,
         focusColor = focusColor ?? AppColors.blue,
+        width = width ?? 0.25,
+        height = height ?? 0.05,
         super(key: key);
 
   @override
@@ -33,8 +39,8 @@ class CustomDropdown extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
-      height: screenHeight * 0.05,
-      width: screenWidth * 0.25,
+      height: screenHeight * height!,
+      width: screenWidth * width!,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         border: Border.all(color: borderColor!, width: 2),

@@ -34,22 +34,6 @@ class _NewPatientRegisterCollection
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
-  int hoveredIndex = -1;
-  String getDayWithSuffix(int day) {
-    if (day >= 11 && day <= 13) {
-      return '${day}th';
-    }
-    switch (day % 10) {
-      case 1:
-        return '${day}st';
-      case 2:
-        return '${day}nd';
-      case 3:
-        return '${day}rd';
-      default:
-        return '${day}th';
-    }
-  }
 
   DateTime now = DateTime.now();
   final List<String> headers = [

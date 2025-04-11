@@ -77,7 +77,6 @@ class _GeneralInformationAdmissionStatus
         bool hasOpNumber =
             data.containsKey('opNumber') && data['opNumber'] != null;
 
-        // Fetch 'details' document inside 'ipPrescription' subcollection
         DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
             .collection('patients')
             .doc(doc.id)

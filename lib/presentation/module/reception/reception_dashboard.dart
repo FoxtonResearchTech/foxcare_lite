@@ -20,8 +20,8 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   String? selectedStatus;
   Timer? _timer;
 
-  final headers = [
-    'Counter',
+  final counterOneHeaders = [
+    'Counter 1',
     'Doctor',
     'Specialization',
     'Morning OP In',
@@ -29,7 +29,47 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     'Evening OP In',
     'Evening OP Out',
   ];
-  List<Map<String, dynamic>> tableData = [{}];
+  List<Map<String, dynamic>> counterOneTableData = [{}];
+  final counterTwoHeaders = [
+    'Counter 2',
+    'Doctor',
+    'Specialization',
+    'Morning OP In',
+    'Morning OP Out',
+    'Evening OP In',
+    'Evening OP Out',
+  ];
+  List<Map<String, dynamic>> counterTwoTableData = [{}];
+  final counterThreeHeaders = [
+    'Counter 3',
+    'Doctor',
+    'Specialization',
+    'Morning OP In',
+    'Morning OP Out',
+    'Evening OP In',
+    'Evening OP Out',
+  ];
+  List<Map<String, dynamic>> counterThreeTableData = [{}];
+  final counterFourHeaders = [
+    'Counter 4',
+    'Doctor',
+    'Specialization',
+    'Morning OP In',
+    'Morning OP Out',
+    'Evening OP In',
+    'Evening OP Out',
+  ];
+  List<Map<String, dynamic>> counterFourTableData = [{}];
+  final counterFiveHeaders = [
+    'Counter 5',
+    'Doctor',
+    'Specialization',
+    'Morning OP In',
+    'Morning OP Out',
+    'Evening OP In',
+    'Evening OP Out',
+  ];
+  List<Map<String, dynamic>> counterFiveTableData = [{}];
 
   final headers1 = [
     'OP Number',
@@ -39,21 +79,9 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     'Phone Number',
     'Status',
   ];
-  final List<Map<String, dynamic>> tableData1 = [
-    {
-      'OP Number': '',
-      'Token': '',
-      'Name': '',
-      'Place': '',
-      'Phone Number': '',
-      'Status': CustomDropdown(
-          focusColor: Colors.white,
-          borderColor: Colors.white,
-          label: '',
-          items: ['Not Attending Call', 'Come Later', 'Others'],
-          onChanged: (value) {}),
-    }
-  ];
+  List<Map<String, dynamic>> tableData1 = [{}];
+
+  List<bool> _visibleTables = [false, false, false, false, false];
 
   int noOfNewPatients = 0;
   int noOfWaitingQueue = 0;
@@ -162,7 +190,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     }
   }
 
-  Future<void> fetchCounterData() async {
+  Future<void> fetchCounterOneData() async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     try {
@@ -170,6 +198,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
           await FirebaseFirestore.instance
               .collection('doctorSchedulesDaily')
               .where('date', isEqualTo: today)
+              .where('counter', isEqualTo: '1')
               .get();
 
       List<Map<String, dynamic>> fetchedData = [];
@@ -177,7 +206,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       for (var doc in counterSnapshot.docs) {
         final data = doc.data();
         fetchedData.add({
-          'Counter': data['counter'],
+          'Counter 1': data['counter'],
           'Doctor': data['doctor'],
           'Specialization': data['specialization'],
           'Morning OP In': data['morningOpIn'],
@@ -192,10 +221,227 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
         return tokenA.compareTo(tokenB);
       });
       setState(() {
-        tableData = fetchedData;
+        counterOneTableData = fetchedData;
       });
     } catch (e) {
       print('Error fetching data: $e');
+    }
+  }
+
+  Future<void> fetchCounterTwoData() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
+          await FirebaseFirestore.instance
+              .collection('doctorSchedulesDaily')
+              .where('date', isEqualTo: today)
+              .where('counter', isEqualTo: '2')
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in counterSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Counter 2': data['counter'],
+          'Doctor': data['doctor'],
+          'Specialization': data['specialization'],
+          'Morning OP In': data['morningOpIn'],
+          'Morning OP Out': data['morningOpOut'],
+          'Evening OP In': data['eveningOpIn'],
+          'Evening OP Out': data['eveningOpOut'],
+        });
+      }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Counter'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Counter'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+      setState(() {
+        counterTwoTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<void> fetchCounterThreeData() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
+          await FirebaseFirestore.instance
+              .collection('doctorSchedulesDaily')
+              .where('date', isEqualTo: today)
+              .where('counter', isEqualTo: '3')
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in counterSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Counter 3': data['counter'],
+          'Doctor': data['doctor'],
+          'Specialization': data['specialization'],
+          'Morning OP In': data['morningOpIn'],
+          'Morning OP Out': data['morningOpOut'],
+          'Evening OP In': data['eveningOpIn'],
+          'Evening OP Out': data['eveningOpOut'],
+        });
+      }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Counter'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Counter'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+      setState(() {
+        counterThreeTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<void> fetchCounterFourData() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
+          await FirebaseFirestore.instance
+              .collection('doctorSchedulesDaily')
+              .where('date', isEqualTo: today)
+              .where('counter', isEqualTo: '4')
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in counterSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Counter 4': data['counter'],
+          'Doctor': data['doctor'],
+          'Specialization': data['specialization'],
+          'Morning OP In': data['morningOpIn'],
+          'Morning OP Out': data['morningOpOut'],
+          'Evening OP In': data['eveningOpIn'],
+          'Evening OP Out': data['eveningOpOut'],
+        });
+      }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Counter'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Counter'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+      setState(() {
+        counterFourTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<void> fetchCounterFiveData() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
+          await FirebaseFirestore.instance
+              .collection('doctorSchedulesDaily')
+              .where('date', isEqualTo: today)
+              .where('counter', isEqualTo: '5')
+              .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in counterSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Counter 5': data['counter'],
+          'Doctor': data['doctor'],
+          'Specialization': data['specialization'],
+          'Morning OP In': data['morningOpIn'],
+          'Morning OP Out': data['morningOpOut'],
+          'Evening OP In': data['eveningOpIn'],
+          'Evening OP Out': data['eveningOpOut'],
+        });
+      }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Counter'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Counter'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+      setState(() {
+        counterFiveTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<int> getMissingOp() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      final QuerySnapshot snapshot = await fireStore
+          .collection('patients')
+          .where('opAdmissionDate', isEqualTo: today)
+          .where('status', isEqualTo: 'abscond')
+          .get();
+
+      int missingCount = 0;
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(doc.id)
+            .collection('tokens')
+            .doc('currentToken')
+            .get();
+
+        Map<String, dynamic>? detailsData = detailsDoc.exists
+            ? detailsDoc.data() as Map<String, dynamic>?
+            : null;
+
+        if (!data.containsKey('Medication') &&
+            !data.containsKey('Examination')) {
+          fetchedData.add({
+            'OP Number': data['opNumber'] ?? 'N/A',
+            'Token': detailsData?['tokenNumber'] ?? 'N/A',
+            'Name': data['name'] ?? 'N/A',
+            'Place': data['place'] ?? 'N/A',
+            'Phone Number': data['phoneNumber'] ?? 'N/A',
+            'Status': CustomDropdown(
+                focusColor: Colors.white,
+                borderColor: Colors.white,
+                label: '',
+                items: ['Not Attending Call', 'Come Later', 'Others'],
+                onChanged: (value) {}),
+          });
+        }
+      }
+
+      setState(() {
+        tableData1 = fetchedData;
+      });
+
+      return missingCount;
+    } catch (e) {
+      print('Error fetching documents: $e');
+      return 0;
+    }
+  }
+
+  void _showTablesWithDelay() async {
+    for (int i = 0; i < _visibleTables.length; i++) {
+      await Future.delayed(Duration(milliseconds: 250));
+      setState(() {
+        _visibleTables[i] = true;
+      });
     }
   }
 
@@ -206,7 +452,14 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       getNoOfOp();
       getNoOfNewPatients();
       getNoOFWaitingQue();
-      fetchCounterData();
+      getMissingOp();
+
+      fetchCounterOneData();
+      fetchCounterTwoData();
+      fetchCounterThreeData();
+      fetchCounterFourData();
+      fetchCounterFiveData();
+      _showTablesWithDelay();
     });
   }
 
@@ -336,22 +589,65 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
                 ),
               ],
             ),
-            SizedBox(height: screenHeight * 0.045),
+            SizedBox(height: screenHeight * 0.05),
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CustomText(
-                  text: 'OP Waiting Queue',
-                  size: screenWidth * 0.013,
+                Row(
+                  children: [
+                    CustomText(
+                      text: 'OP Waiting Queue',
+                      size: screenWidth * 0.013,
+                    ),
+                  ],
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                CustomDataTable(
-                  headerColor: Colors.white,
-                  headerBackgroundColor: AppColors.blue,
-                  headers: headers,
-                  tableData: tableData,
-                )
+                if (counterOneTableData.isNotEmpty && _visibleTables[0]) ...[
+                  CustomDataTable(
+                    headerColor: Colors.white,
+                    headerBackgroundColor: AppColors.blue,
+                    headers: counterOneHeaders,
+                    tableData: counterOneTableData,
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                ],
+                if (counterTwoTableData.isNotEmpty && _visibleTables[1]) ...[
+                  CustomDataTable(
+                    headerColor: Colors.white,
+                    headerBackgroundColor: AppColors.blue,
+                    headers: counterTwoHeaders,
+                    tableData: counterTwoTableData,
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                ],
+                if (counterThreeTableData.isNotEmpty && _visibleTables[2]) ...[
+                  CustomDataTable(
+                    headerColor: Colors.white,
+                    headerBackgroundColor: AppColors.blue,
+                    headers: counterThreeHeaders,
+                    tableData: counterThreeTableData,
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                ],
+                if (counterFourTableData.isNotEmpty && _visibleTables[3]) ...[
+                  CustomDataTable(
+                    headerColor: Colors.white,
+                    headerBackgroundColor: AppColors.blue,
+                    headers: counterFourHeaders,
+                    tableData: counterFourTableData,
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                ],
+                if (counterFiveTableData.isNotEmpty && _visibleTables[4]) ...[
+                  CustomDataTable(
+                    headerColor: Colors.white,
+                    headerBackgroundColor: AppColors.blue,
+                    headers: counterFiveHeaders,
+                    tableData: counterFiveTableData,
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                ],
               ],
             ),
             SizedBox(height: screenHeight * 0.045),
