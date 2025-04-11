@@ -7,15 +7,25 @@ class CustomDropdown extends StatelessWidget {
   final String label;
   final List<String> items;
   final String? selectedItem;
+  final Color? iconColor;
+  final Color? borderColor;
+  final Color? focusColor;
+
   final ValueChanged<String?> onChanged;
 
-  const CustomDropdown({
+  CustomDropdown({
     Key? key,
     required this.label,
     required this.items,
     this.selectedItem,
     required this.onChanged,
-  }) : super(key: key);
+    Color? iconColor,
+    Color? borderColor,
+    Color? focusColor,
+  })  : iconColor = iconColor ?? AppColors.blue,
+        borderColor = borderColor ?? AppColors.blue,
+        focusColor = focusColor ?? AppColors.blue,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,19 +37,22 @@ class CustomDropdown extends StatelessWidget {
       width: screenWidth * 0.25,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.blue, width: 2),
+        border: Border.all(color: borderColor!, width: 2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration.collapsed(
-          focusColor: AppColors.blue,
+          focusColor: focusColor,
           hintText: label,
           hintStyle: const TextStyle(
             fontFamily: 'Poppins',
           ),
         ),
         value: selectedItem,
-        icon: const Icon(Icons.arrow_drop_down), // Drop-down icon
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: iconColor,
+        ), // Drop-down icon
         onChanged: onChanged,
         items: items.map((String item) {
           return DropdownMenuItem<String>(

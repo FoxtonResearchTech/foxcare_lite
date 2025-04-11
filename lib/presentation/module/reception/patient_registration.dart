@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/secondary_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/secondary_text_field.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:pdf/pdf.dart';
 import '../../../utilities/colors.dart';
@@ -57,7 +59,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   Future<void> savePatientDetails() async {
     final patientID = generateNumericUid();
 
-    // Validate input
     if (firstname.text.isEmpty ||
         lastname.text.isEmpty ||
         selectedSex == null ||
@@ -68,7 +69,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       return;
     }
 
-    // Create patient data object
     Map<String, dynamic> patientData = {
       'opNumber': patientID,
       'firstName': firstname.text,
@@ -358,7 +358,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
                 CustomText(text: 'First Name : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: firstname,
                   width: screenWidth * 0.25,
@@ -371,7 +371,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Middle Name : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: middlename,
                   width: screenWidth * 0.25,
@@ -384,7 +384,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Last Name : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: lastname,
                   width: screenWidth * 0.25,
@@ -403,8 +403,9 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Sex : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomDropdown(
-                  label: '',
+                SecondaryDropdown(
+                  width: screenWidth * 0.25,
+                  hintText: '',
                   items: const ['Male', 'Female', 'Other'],
                   selectedItem: selectedSex,
                   onChanged: (value) {
@@ -421,7 +422,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Age : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: age,
                   width: screenWidth * 0.2,
@@ -434,7 +435,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'DOB (YYYY-MM-DD) : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: dob,
                   width: screenWidth * 0.25,
@@ -450,7 +451,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           children: [
             CustomText(text: 'Address  Line 1: '),
             SizedBox(height: screenHeight * 0.01),
-            CustomTextField(
+            SecondaryTextField(
               hintText: '',
               controller: address1,
               width: screenWidth * 0.8,
@@ -465,7 +466,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           children: [
             CustomText(text: 'Address  Line 2: '),
             SizedBox(height: screenHeight * 0.01),
-            CustomTextField(
+            SecondaryTextField(
               hintText: '',
               controller: address2,
               width: screenWidth * 0.8,
@@ -483,7 +484,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Landmark : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: landmark,
                   width: screenWidth * 0.25,
@@ -496,7 +497,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'City : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: city,
                   width: screenWidth * 0.25,
@@ -509,7 +510,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'State : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: state,
                   width: screenWidth * 0.25,
@@ -528,7 +529,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Pincode : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: pincode,
                   width: screenWidth * 0.25,
@@ -541,7 +542,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Phone Number 1 : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: phone1,
                   width: screenWidth * 0.25,
@@ -554,7 +555,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Phone Number 2 : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: phone2,
                   width: screenWidth * 0.25,
@@ -573,24 +574,26 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'Blood Group : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomDropdown(
-                    label: '',
-                    items: const [
-                      'A+',
-                      'A-',
-                      'B+',
-                      'B-',
-                      'O+',
-                      'O-',
-                      'AB+',
-                      'AB-'
-                    ],
-                    selectedItem: selectedBloodGroup,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedBloodGroup = value!;
-                      });
-                    }),
+                SecondaryDropdown(
+                  hintText: '',
+                  width: screenWidth * 0.25,
+                  items: const [
+                    'A+',
+                    'A-',
+                    'B+',
+                    'B-',
+                    'O+',
+                    'O-',
+                    'AB+',
+                    'AB-'
+                  ],
+                  selectedItem: selectedBloodGroup,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedBloodGroup = value!;
+                    });
+                  },
+                ),
               ],
             ),
             Column(
@@ -599,7 +602,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'OP Amount : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: opAmount,
                   width: screenWidth * 0.2,
@@ -612,7 +615,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               children: [
                 CustomText(text: 'OP Amount Collected : '),
                 SizedBox(height: screenHeight * 0.01),
-                CustomTextField(
+                SecondaryTextField(
                   hintText: '',
                   controller: opAmountCollected,
                   width: screenWidth * 0.25,
@@ -621,7 +624,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 45),
         Center(
           child: SizedBox(
               width: 400,

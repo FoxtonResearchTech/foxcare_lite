@@ -12,8 +12,6 @@ Future<UserModel?> getUserDetails() async {
         .doc(currentUser.uid)
         .get();
 
-    print("Fetched document: ${doc.data()}");
-
     if (doc.exists) {
       return UserModel.fromMap(doc.data()!);
     }

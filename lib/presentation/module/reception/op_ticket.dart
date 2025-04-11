@@ -39,7 +39,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 500), () => incrementCounter);
+    Future.delayed(Duration(milliseconds: 500), () {});
+    incrementCounter();
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -72,7 +73,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
             dateTime.day.toString().padLeft(2, '0'),
       });
       await firestore.collection('patients').doc(selectedPatientId).update({
-        'date': dateTime.year.toString() +
+        'tokenDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
             '-' +
@@ -116,6 +117,44 @@ class _OpTicketPageState extends State<OpTicketPage> {
       showMessage('Token saved: $storedTokenValue');
     } catch (e) {
       showMessage('Failed to save token: $e');
+    }
+  }
+
+  Future<void> incrementCounter() async {
+    final docRef =
+        FirebaseFirestore.instance.collection('counters').doc('counterDoc');
+
+    try {
+      final snapshot = await docRef.get();
+
+      if (snapshot.exists && snapshot.data() != null) {
+        int currentValue = snapshot.get('value') as int;
+        Timestamp lastResetTimestamp = snapshot.get('lastReset') as Timestamp;
+        DateTime lastReset = lastResetTimestamp.toDate();
+
+        print("Last reset time: $lastReset");
+
+        if (_shouldResetCounter(lastReset)) {
+          print("Resetting the counter...");
+          await docRef.update({
+            'value': 0,
+            'lastReset': FieldValue.serverTimestamp(),
+          });
+        } else {
+          print("Incrementing the counter...");
+          await docRef.update({'value': currentValue + 1});
+        }
+      } else {
+        print("Initializing counter...");
+        await docRef.set({
+          'value': 0,
+          'lastReset': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e, stackTrace) {
+      print("Error in incrementCounter: $e");
+      print(stackTrace);
+      showMessage("Failed to update counter: $e");
     }
   }
 
@@ -184,43 +223,20 @@ class _OpTicketPageState extends State<OpTicketPage> {
         now.day != lastReset.day;
   }
 
-  Future<void> incrementCounter() async {
-    final docRef =
-        FirebaseFirestore.instance.collection('counters').doc(documentId);
-
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-
-      if (snapshot.exists) {
-        // Get the current value and last reset timestamp
-        int currentValue = snapshot.get('value') as int;
-        Timestamp lastResetTimestamp = snapshot.get('lastReset') as Timestamp;
-
-        DateTime lastReset = lastResetTimestamp.toDate();
-        print(lastReset);
-
-        // Check if it's time to reset
-        if (_shouldResetCounter(lastReset)) {
-          print("Resetting the counter...");
-          // Reset the counter and update the last reset timestamp
-          transaction.update(docRef, {
-            'value': 0,
-            'lastReset': FieldValue.serverTimestamp(),
-          });
-        } else {
-          print("Incrementing the counter...");
-          // Increment the counter
-          transaction.update(docRef, {'value': currentValue + 1});
-        }
-      } else {
-        // Initialize the counter if it doesn't exist
-        print("Initializing counter...");
-        transaction.set(docRef, {
-          'value': 0,
-          'lastReset': FieldValue.serverTimestamp(),
-        });
-      }
-    });
+  @override
+  void dispose() {
+    super.dispose();
+    searchOpNumber.dispose();
+    searchPhoneNumber.dispose();
+    tokenDate.dispose();
+    counter.dispose();
+    doctorName.dispose();
+    bloodSugarLevel.dispose();
+    temperature.dispose();
+    bloodPressure.dispose();
+    otherComments.dispose();
+    opTicketTotalAmount.dispose();
+    opTicketCollectedAmount.dispose();
   }
 
   @override
