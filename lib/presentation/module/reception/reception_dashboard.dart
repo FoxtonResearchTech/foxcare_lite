@@ -51,35 +51,11 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   ];
   List<Map<String, dynamic>> tableData1 = [{}];
 
-  List<bool> _visibleTables = [false, false, false, false, false];
-
   int noOfNewPatients = 0;
   int noOfWaitingQueue = 0;
   int noOfOp = 0;
 
-  void normalizeTableDataLength() {
-    int maxLength = [
-      counterOneTableData.length,
-      counterTwoTableData.length,
-      counterThreeTableData.length,
-      counterFourTableData.length,
-      counterFiveTableData.length,
-    ].reduce((a, b) => a > b ? a : b);
-
-    _normalizeListLength(counterOneTableData, maxLength);
-    _normalizeListLength(counterTwoTableData, maxLength);
-    _normalizeListLength(counterThreeTableData, maxLength);
-    _normalizeListLength(counterFourTableData, maxLength);
-    _normalizeListLength(counterFiveTableData, maxLength);
-  }
-
-  void _normalizeListLength(List<Map<String, dynamic>> list, int maxLength) {
-    while (list.length < maxLength) {
-      list.add({
-        'Counter': 'No Patient Found Today',
-      });
-    }
-  }
+  List<bool> _visibleTables = [false, false, false, false, false];
 
   Future<int> getNoOfOp() async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
@@ -184,204 +160,34 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     }
   }
 
-  Future<void> fetchCounterOneData() async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  void normalizeTableDataLength() {
+    int maxLength = [
+      counterOneTableData.length,
+      counterTwoTableData.length,
+      counterThreeTableData.length,
+      counterFourTableData.length,
+      counterFiveTableData.length,
+    ].reduce((a, b) => a > b ? a : b);
 
-    try {
-      List<Map<String, dynamic>> fetchedData = [];
+    _normalizeListLength(counterOneTableData, maxLength);
+    _normalizeListLength(counterTwoTableData, maxLength);
+    _normalizeListLength(counterThreeTableData, maxLength);
+    _normalizeListLength(counterFourTableData, maxLength);
+    _normalizeListLength(counterFiveTableData, maxLength);
+  }
 
-      // 1. Fetch doctor data
-      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
-          await FirebaseFirestore.instance
-              .collection('doctorSchedulesDaily')
-              .where('date', isEqualTo: today)
-              .where('counter', isEqualTo: '1')
-              .get();
-
-      if (counterSnapshot.docs.isNotEmpty) {
-        for (var doc in counterSnapshot.docs) {
-          final data = doc.data();
-          String combined =
-              'Doctor: ${data['doctor'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
-          fetchedData.add({
-            'Counter 1': combined,
-            'Token': 'N/A',
-          });
-        }
-      } else {
-        fetchedData.add({
-          'Counter 1': 'No doctor data available for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      // 2. Fetch patients and their token numbers
-      QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('patients')
-              .where('tokenDate', isEqualTo: today)
-              .where('counter', isEqualTo: "1")
-              .get();
-
-      List<Map<String, dynamic>> tokenData = [];
-
-      if (patientsSnapshot.docs.isNotEmpty) {
-        for (var doc in patientsSnapshot.docs) {
-          final data = doc.data();
-
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
-
-          if (detailsData != null &&
-              !data.containsKey('Medication') &&
-              !data.containsKey('Examination')) {
-            String token = detailsData['tokenNumber']?.toString() ?? 'N/A';
-
-            // Only add numeric tokens
-            if (token != 'N/A') {
-              tokenData.add({
-                'tokenNumber': int.tryParse(token) ?? 0,
-                'display': {
-                  'Counter 1': 'Token: $token',
-                  'Doctor': 'N/A',
-                },
-              });
-            }
-          }
-        }
-
-        // 3. Sort by tokenNumber
-        tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
-
-        // 4. Add sorted data to fetchedData
-        for (var item in tokenData) {
-          fetchedData.add(item['display']);
-        }
-      } else {
-        fetchedData.add({
-          'Counter 1': 'No patients found for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      // 5. Update state
-      setState(() {
-        counterOneTableData = fetchedData;
-        normalizeTableDataLength();
+  void _normalizeListLength(List<Map<String, dynamic>> list, int maxLength) {
+    while (list.length < maxLength) {
+      list.add({
+        'Counter': 'No Patient Found Today',
       });
-    } catch (e) {
-      print('Error fetching data: $e');
     }
   }
 
-  Future<void> fetchCounterTwoData() async {
+  Future<void> fetchCounterData(int i) async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    try {
-      List<Map<String, dynamic>> fetchedData = [];
-
-      // 1. Fetch doctor data
-      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
-          await FirebaseFirestore.instance
-              .collection('doctorSchedulesDaily')
-              .where('date', isEqualTo: today)
-              .where('counter', isEqualTo: '2')
-              .get();
-
-      if (counterSnapshot.docs.isNotEmpty) {
-        for (var doc in counterSnapshot.docs) {
-          final data = doc.data();
-          String combined =
-              'Doctor: ${data['doctor'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
-          fetchedData.add({
-            'Counter 2': combined,
-            'Token': 'N/A',
-          });
-        }
-      } else {
-        fetchedData.add({
-          'Counter 2': 'No doctor data available for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      // 2. Fetch patients and their token numbers
-      QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('patients')
-              .where('tokenDate', isEqualTo: today)
-              .where('counter', isEqualTo: "2")
-              .get();
-
-      List<Map<String, dynamic>> tokenData = [];
-
-      if (patientsSnapshot.docs.isNotEmpty) {
-        for (var doc in patientsSnapshot.docs) {
-          final data = doc.data();
-
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
-
-          if (detailsData != null &&
-              !data.containsKey('Medication') &&
-              !data.containsKey('Examination')) {
-            String token = detailsData['tokenNumber']?.toString() ?? 'N/A';
-
-            // Only add numeric tokens
-            if (token != 'N/A') {
-              tokenData.add({
-                'tokenNumber': int.tryParse(token) ?? 0,
-                'display': {
-                  'Counter 2': 'Token: $token',
-                  'Doctor': 'N/A',
-                },
-              });
-            }
-          }
-        }
-
-        // 3. Sort by tokenNumber
-        tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
-
-        // 4. Add sorted data to fetchedData
-        for (var item in tokenData) {
-          fetchedData.add(item['display']);
-        }
-      } else {
-        fetchedData.add({
-          'Counter 2': 'No patients found for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      // 5. Update state
-      setState(() {
-        counterTwoTableData = fetchedData;
-        normalizeTableDataLength();
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
-    }
-  }
-
-  Future<void> fetchCounterThreeData() async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final String counterString = i.toString();
+    final String counterKey = 'Counter $i';
 
     try {
       List<Map<String, dynamic>> fetchedData = [];
@@ -390,7 +196,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
           await FirebaseFirestore.instance
               .collection('doctorSchedulesDaily')
               .where('date', isEqualTo: today)
-              .where('counter', isEqualTo: '3')
+              .where('counter', isEqualTo: counterString)
               .get();
 
       if (counterSnapshot.docs.isNotEmpty) {
@@ -399,13 +205,13 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
           String combined =
               'Doctor: ${data['doctor'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
           fetchedData.add({
-            'Counter 3': combined,
+            counterKey: combined,
             'Token': 'N/A',
           });
         }
       } else {
         fetchedData.add({
-          'Counter 3': 'No doctor data available for today.',
+          counterKey: 'No doctor data available for today.',
           'Token': 'N/A',
         });
       }
@@ -414,7 +220,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
           await FirebaseFirestore.instance
               .collection('patients')
               .where('tokenDate', isEqualTo: today)
-              .where('counter', isEqualTo: "3")
+              .where('counter', isEqualTo: counterString)
               .get();
 
       List<Map<String, dynamic>> tokenData = [];
@@ -443,7 +249,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
               tokenData.add({
                 'tokenNumber': int.tryParse(token) ?? 0,
                 'display': {
-                  'Counter 3': 'Token: $token',
+                  counterKey: 'Token: $token',
                   'Doctor': 'N/A',
                 },
               });
@@ -458,202 +264,33 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
         }
       } else {
         fetchedData.add({
-          'Counter 3': 'No patients found for today.',
+          counterKey: 'No patients found for today.',
           'Token': 'N/A',
         });
       }
 
       setState(() {
-        counterThreeTableData = fetchedData;
+        switch (i) {
+          case 1:
+            counterOneTableData = fetchedData;
+            break;
+          case 2:
+            counterTwoTableData = fetchedData;
+            break;
+          case 3:
+            counterThreeTableData = fetchedData;
+            break;
+          case 4:
+            counterFourTableData = fetchedData;
+            break;
+          case 5:
+            counterFiveTableData = fetchedData;
+            break;
+        }
         normalizeTableDataLength();
       });
     } catch (e) {
-      print('Error fetching data: $e');
-    }
-  }
-
-  Future<void> fetchCounterFourData() async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    try {
-      List<Map<String, dynamic>> fetchedData = [];
-
-      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
-          await FirebaseFirestore.instance
-              .collection('doctorSchedulesDaily')
-              .where('date', isEqualTo: today)
-              .where('counter', isEqualTo: '4')
-              .get();
-
-      if (counterSnapshot.docs.isNotEmpty) {
-        for (var doc in counterSnapshot.docs) {
-          final data = doc.data();
-          String combined =
-              'Doctor: ${data['doctor'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
-          fetchedData.add({
-            'Counter 4': combined,
-            'Token': 'N/A',
-          });
-        }
-      } else {
-        fetchedData.add({
-          'Counter 4': 'No doctor data available for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('patients')
-              .where('tokenDate', isEqualTo: today)
-              .where('counter', isEqualTo: "4")
-              .get();
-
-      List<Map<String, dynamic>> tokenData = [];
-
-      if (patientsSnapshot.docs.isNotEmpty) {
-        for (var doc in patientsSnapshot.docs) {
-          final data = doc.data();
-
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
-
-          if (detailsData != null &&
-              !data.containsKey('Medication') &&
-              !data.containsKey('Examination')) {
-            String token = detailsData['tokenNumber']?.toString() ?? 'N/A';
-
-            if (token != 'N/A') {
-              tokenData.add({
-                'tokenNumber': int.tryParse(token) ?? 0,
-                'display': {
-                  'Counter 4': 'Token: $token',
-                  'Doctor': 'N/A',
-                },
-              });
-            }
-          }
-        }
-
-        tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
-
-        for (var item in tokenData) {
-          fetchedData.add(item['display']);
-        }
-      } else {
-        fetchedData.add({
-          'Counter 4': 'No patients found for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      setState(() {
-        counterFourTableData = fetchedData;
-        normalizeTableDataLength();
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
-    }
-  }
-
-  Future<void> fetchCounterFiveData() async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    try {
-      List<Map<String, dynamic>> fetchedData = [];
-
-      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
-          await FirebaseFirestore.instance
-              .collection('doctorSchedulesDaily')
-              .where('date', isEqualTo: today)
-              .where('counter', isEqualTo: '5')
-              .get();
-
-      if (counterSnapshot.docs.isNotEmpty) {
-        for (var doc in counterSnapshot.docs) {
-          final data = doc.data();
-          String combined =
-              'Doctor: ${data['doctor'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
-          fetchedData.add({
-            'Counter 5': combined,
-            'Token': 'N/A',
-          });
-        }
-      } else {
-        fetchedData.add({
-          'Counter 5': 'No doctor data available for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('patients')
-              .where('tokenDate', isEqualTo: today)
-              .where('counter', isEqualTo: "5")
-              .get();
-
-      List<Map<String, dynamic>> tokenData = [];
-
-      if (patientsSnapshot.docs.isNotEmpty) {
-        for (var doc in patientsSnapshot.docs) {
-          final data = doc.data();
-
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
-
-          if (detailsData != null &&
-              !data.containsKey('Medication') &&
-              !data.containsKey('Examination')) {
-            String token = detailsData['tokenNumber']?.toString() ?? 'N/A';
-
-            // Only add numeric tokens
-            if (token != 'N/A') {
-              tokenData.add({
-                'tokenNumber': int.tryParse(token) ?? 0,
-                'display': {
-                  'Counter 5': 'Token: $token',
-                  'Doctor': 'N/A',
-                },
-              });
-            }
-          }
-        }
-
-        tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
-
-        for (var item in tokenData) {
-          fetchedData.add(item['display']);
-        }
-      } else {
-        fetchedData.add({
-          'Counter 5': 'No patients found for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      setState(() {
-        counterFiveTableData = fetchedData;
-        normalizeTableDataLength();
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching data for Counter $i: $e');
     }
   }
 
@@ -730,12 +367,11 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       getNoOfNewPatients();
       getNoOFWaitingQue();
       getMissingOp();
-
-      fetchCounterOneData();
-      fetchCounterTwoData();
-      fetchCounterThreeData();
-      fetchCounterFourData();
-      fetchCounterFiveData();
+      fetchCounterData(1);
+      fetchCounterData(2);
+      fetchCounterData(3);
+      fetchCounterData(4);
+      fetchCounterData(5);
       _showTablesWithDelay();
     });
   }

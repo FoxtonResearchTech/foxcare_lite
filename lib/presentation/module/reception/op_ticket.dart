@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -46,10 +47,13 @@ class _OpTicketPageState extends State<OpTicketPage> {
   }
 
   Future<void> fetchDoctorAndSpecialization() async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
     try {
       QuerySnapshot<Map<String, dynamic>> doctorsSnapshot =
           await FirebaseFirestore.instance
               .collection('doctorSchedulesDaily')
+              .where('date', isEqualTo: today)
               .where('counter', isEqualTo: selectedCounter)
               .get();
 
