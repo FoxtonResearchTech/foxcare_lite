@@ -78,12 +78,14 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       {}; // {doctorName: specialization}
   void fetchDoctors() async {
     final employeesSnapshot =
-        await FirebaseFirestore.instance.collection('employees').get();
+    await FirebaseFirestore.instance.collection('employees').get();
 
     for (var doc in employeesSnapshot.docs) {
       if (doc['roles'] == 'Doctor') {
-        final doctorName = doc['firstName']; // adjust if needed
-        final specialization = doc['specialization']; // make sure field exists
+        final firstName = doc['firstName'] ?? '';
+        final lastName = doc['lastName'] ?? '';
+        final doctorName = '$firstName $lastName';
+        final specialization = doc['specialization'] ?? '';
 
         if (!doctors.contains(doctorName)) {
           setState(() {
@@ -99,6 +101,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       print('Specializations: $doctorSpecializations');
     });
   }
+
 
   final TextEditingController specializationController =
       TextEditingController();
