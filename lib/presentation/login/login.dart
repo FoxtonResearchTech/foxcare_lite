@@ -8,8 +8,7 @@ import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
-import '../../utilities/widgets/image/custom_image.dart';
-import '../../utilities/widgets/textField/primary_textField.dart';
+
 import '../../utilities/widgets/textField/secondary_text_field.dart';
 import '../module/doctor/doctor_dashboard.dart';
 import '../module/lab/dashboard.dart';
@@ -228,6 +227,9 @@ class _LoginFormState extends State<LoginForm> {
 
         return;
       }
+      final firstName = employeeData['firstName'] ?? '';
+      final lastName = employeeData['lastName'] ?? '';
+      final name = '$firstName $lastName'.trim();
       await UserSession.initUser();
       switch (position) {
         case 'Management':

@@ -75,6 +75,9 @@ class AuthGate extends StatelessWidget {
 
             final data = snapshot.data!.data() as Map<String, dynamic>;
             final role = data['roles'];
+            final firstName = data['firstName'] ?? '';
+            final lastName = data['lastName'] ?? '';
+            final name = '$firstName $lastName'.trim();
 
             if (UserSession.currentUser == null) {
               UserSession.currentUser = UserModel.fromMap(data);

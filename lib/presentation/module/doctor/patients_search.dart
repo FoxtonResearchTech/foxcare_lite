@@ -14,7 +14,8 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../doctor/patient_history_dialog.dart';
 
 class PatientsSearch extends StatefulWidget {
-  const PatientsSearch({super.key});
+  final String doctorName;
+  const PatientsSearch({super.key, required this.doctorName});
 
   @override
   State<PatientsSearch> createState() => _PatientsSearch();
@@ -57,7 +58,9 @@ class _PatientsSearch extends State<PatientsSearch> {
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      Query query = FirebaseFirestore.instance
+          .collection('patients')
+          .where('doctorName', isEqualTo: widget.doctorName);
 
       if (opNumber != null) {
         query = query.where('opNumber', isEqualTo: opNumber);

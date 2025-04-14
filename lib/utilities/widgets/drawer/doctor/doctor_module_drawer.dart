@@ -112,7 +112,11 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
             title: 'Patients Search',
             icon: Iconsax.search_favorite,
             onTap: () {
-              navigateWithTransition(context, PatientsSearch());
+              navigateWithTransition(
+                  context,
+                  PatientsSearch(
+                    doctorName: currentUser!.name,
+                  ));
             },
           ),
           DrawerMenuItem(
