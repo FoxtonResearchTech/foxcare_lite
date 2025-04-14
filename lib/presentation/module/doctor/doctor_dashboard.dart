@@ -53,7 +53,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     try {
       final QuerySnapshot patientSnapshot = await fireStore
           .collection('patients')
-          .where('doctor', isEqualTo: widget.doctorName)
+          .where('doctorName', isEqualTo: widget.doctorName)
           .get();
 
       for (var doc in patientSnapshot.docs) {
@@ -103,7 +103,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('patients')
-          .where('doctor', isEqualTo: widget.doctorName)
+          .where('doctorName', isEqualTo: widget.doctorName)
           .where('opAdmissionDate', isEqualTo: today)
           .get();
 
@@ -125,7 +125,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('patients')
-          .where('doctor', isEqualTo: widget.doctorName)
+          .where('doctorName', isEqualTo: widget.doctorName)
           .where('opAdmissionDate', isEqualTo: today)
           .get();
 
@@ -250,7 +250,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('patients')
-          .where('doctor', isEqualTo: widget.doctorName)
+          .where('doctorName', isEqualTo: widget.doctorName)
           .where('opAdmissionDate', isEqualTo: today)
           .get();
 
