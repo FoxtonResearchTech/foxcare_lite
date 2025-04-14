@@ -92,7 +92,7 @@ class AuthGate extends StatelessWidget {
               case 'X-Ray Technician':
                 return PatientRegistration();
               case 'Doctor':
-                return const DoctorDashboard();
+                return DoctorDashboard();
               case 'Manager':
                 return const ManagerDashboard();
               default:

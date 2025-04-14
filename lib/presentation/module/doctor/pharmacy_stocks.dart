@@ -41,6 +41,7 @@ class _PharmacyStocks extends State<PharmacyStocks> {
   final List<String> headers = [
     'Product Name',
     'HSN Code',
+    'Quantity',
     'Category',
     'Company',
     'Composition',
@@ -92,6 +93,7 @@ class _PharmacyStocks extends State<PharmacyStocks> {
         fetchedData.add({
           'Product Name': data['productName'],
           'HSN Code': data['hsnCode'],
+          'Quantity': data['quantity'],
           'Category': data['category'],
           'Company': data['companyName'],
           'Composition': data['composition'],

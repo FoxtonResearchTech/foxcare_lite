@@ -68,14 +68,23 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
             title: 'Home',
             icon: Iconsax.home,
             onTap: () {
-              navigateWithTransition(context, DoctorDashboard());
+              navigateWithTransition(
+                  context,
+                  DoctorDashboard(
+                    doctorName: currentUser!.name,
+                  ));
             },
           ),
           DrawerMenuItem(
             title: 'OP Tickets',
             icon: Iconsax.receipt,
             onTap: () {
-              navigateWithTransition(context, DoctorRxList());
+              navigateWithTransition(
+                context,
+                DoctorRxList(
+                  doctorName: currentUser!.name,
+                ),
+              );
             },
           ),
           DrawerMenuItem(

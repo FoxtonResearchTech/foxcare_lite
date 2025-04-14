@@ -275,17 +275,17 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              roomStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   roomStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              roomStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   roomStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );
@@ -438,17 +438,17 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              viproomStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   viproomStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              viproomStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   viproomStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );
@@ -521,17 +521,17 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              ICUStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   ICUStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              ICUStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   ICUStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );

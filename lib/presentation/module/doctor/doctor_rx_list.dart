@@ -18,7 +18,8 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'ip_patients_details.dart';
 
 class DoctorRxList extends StatefulWidget {
-  const DoctorRxList({super.key});
+  final String doctorName;
+  const DoctorRxList({super.key, required this.doctorName});
 
   @override
   State<DoctorRxList> createState() => _DoctorRxList();
@@ -47,6 +48,7 @@ class _DoctorRxList extends State<DoctorRxList> {
   @override
   void initState() {
     super.initState();
+    print(widget.doctorName);
     fetchData();
     // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
     //   fetchData();
@@ -61,7 +63,9 @@ class _DoctorRxList extends State<DoctorRxList> {
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      Query query = FirebaseFirestore.instance
+          .collection('patients')
+          .where('doctorName', isEqualTo: widget.doctorName);
 
       if (opNumber != null) {
         query = query.where('opNumber', isEqualTo: opNumber);
