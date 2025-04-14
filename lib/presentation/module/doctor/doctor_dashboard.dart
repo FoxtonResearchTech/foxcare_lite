@@ -23,9 +23,9 @@ class _DoctorDashboard extends State<DoctorDashboard> {
   String? selectedStatus;
   Timer? _timer;
 
-  final counterOneHeaders = ['Counter 1'];
+  final counterHeaders = ['Counter'];
 
-  List<Map<String, dynamic>> counterOneTableData = [{}];
+  List<Map<String, dynamic>> counterTableData = [{}];
 
   final headers1 = [
     'OP Number',
@@ -33,6 +33,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     'Name',
     'Place',
     'Phone Number',
+    'Examinations',
     'Status',
   ];
   List<Map<String, dynamic>> tableData1 = [{}];
@@ -169,13 +170,13 @@ class _DoctorDashboard extends State<DoctorDashboard> {
           String combined =
               'Doctor: ${data['firstName'] + ' ' + data['lastName'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
           fetchedData.add({
-            'Counter 1': combined,
+            'Counter': combined,
             'Token': 'N/A',
           });
         }
       } else {
         fetchedData.add({
-          'Counter 1': 'No doctor data available for today.',
+          'Counter': 'Currently No Patients in Queue.',
           'Token': 'N/A',
         });
       }
@@ -183,9 +184,8 @@ class _DoctorDashboard extends State<DoctorDashboard> {
       QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
           await FirebaseFirestore.instance
               .collection('patients')
-              .where('doctor', isEqualTo: widget.doctorName)
+              .where('doctorName', isEqualTo: widget.doctorName)
               .where('tokenDate', isEqualTo: today)
-              .where('counter', isEqualTo: "1")
               .get();
 
       List<Map<String, dynamic>> tokenData = [];
@@ -214,7 +214,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
               tokenData.add({
                 'tokenNumber': int.tryParse(token) ?? 0,
                 'display': {
-                  'Counter 1': 'Token: $token',
+                  'Counter': 'Token: $token',
                   'Doctor': 'N/A',
                 },
               });
@@ -236,14 +236,14 @@ class _DoctorDashboard extends State<DoctorDashboard> {
 
       // 5. Update state
       setState(() {
-        counterOneTableData = fetchedData;
+        counterTableData = fetchedData;
       });
     } catch (e) {
       print('Error fetching data: $e');
     }
   }
 
-  Future<int> getMissingOp() async {
+  Future<int> getLabOp() async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
@@ -252,7 +252,6 @@ class _DoctorDashboard extends State<DoctorDashboard> {
           .collection('patients')
           .where('doctor', isEqualTo: widget.doctorName)
           .where('opAdmissionDate', isEqualTo: today)
-          .where('status', isEqualTo: 'abscond')
           .get();
 
       int missingCount = 0;
@@ -271,14 +270,14 @@ class _DoctorDashboard extends State<DoctorDashboard> {
             ? detailsDoc.data() as Map<String, dynamic>?
             : null;
 
-        if (!data.containsKey('Medication') &&
-            !data.containsKey('Examination')) {
+        if (data.containsKey('Examination')) {
           fetchedData.add({
             'OP Number': data['opNumber'] ?? 'N/A',
             'Token': detailsData?['tokenNumber'] ?? 'N/A',
             'Name': data['name'] ?? 'N/A',
             'Place': data['place'] ?? 'N/A',
             'Phone Number': data['phoneNumber'] ?? 'N/A',
+            'Examinations': data['Examination'],
             'Status': CustomDropdown(
                 focusColor: Colors.white,
                 borderColor: Colors.white,
@@ -316,7 +315,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
       getNoOfOp();
       getNoOfNewPatients();
       getNoOFWaitingQue();
-      getMissingOp();
+      getLabOp();
       fetchCounterOneData();
       _showTablesWithDelay();
     });
@@ -464,15 +463,14 @@ class _DoctorDashboard extends State<DoctorDashboard> {
                 SingleChildScrollView(
                   child: Row(
                     children: [
-                      if (counterOneTableData.isNotEmpty &&
-                          _visibleTables[0]) ...[
+                      if (counterTableData.isNotEmpty && _visibleTables[0]) ...[
                         Expanded(
                           child: SecondaryDataTable(
                             totalWidth: 100,
                             headerColor: Colors.white,
                             headerBackgroundColor: AppColors.blue,
-                            headers: counterOneHeaders,
-                            tableData: counterOneTableData,
+                            headers: counterHeaders,
+                            tableData: counterTableData,
                           ),
                         ),
                       ],
@@ -487,7 +485,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomText(
-                  text: 'Missing OP',
+                  text: 'Lab OP',
                   size: screenWidth * 0.013,
                 ),
                 SizedBox(height: screenHeight * 0.03),
