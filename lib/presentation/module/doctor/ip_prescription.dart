@@ -375,7 +375,7 @@ class _IpPrescription extends State<IpPrescription> {
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
-        backgroundColor: AppColors.secondaryColor,
+        backgroundColor: AppColors.blue,
       ),
       body: SingleChildScrollView(
         child: Container(

@@ -133,6 +133,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         if (!data.containsKey('ipNumber')) continue;
+        if (!data.containsKey('tokenDate')) continue;
+
         String tokenNo = '';
         bool hasIpPrescription = false;
 
@@ -325,16 +327,18 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(
                         text: 'IP Prescription',
-                        size: screenWidth * .02,
+                        size: screenWidth * .04,
                       ),
                       CustomText(
                         text: 'Waiting Que',
-                        size: screenWidth * .01,
+                        size: screenWidth * .02,
                       ),
                     ],
                   ),
@@ -344,7 +348,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        image: DecorationImage(
+                        image: const DecorationImage(
                             image: AssetImage('assets/foxcare_lite_logo.png'))),
                   ),
                 ],

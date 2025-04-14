@@ -1,8 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/doctor/doctor_room_availability_check.dart';
+import 'package:foxcare_lite/presentation/module/doctor/patients_search.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../presentation/login/fetch_user.dart';
+import '../../../../presentation/login/login.dart';
 import '../../../../presentation/module/doctor/doctor_rx_list.dart';
 import '../../../../presentation/module/doctor/ip_patients_details.dart';
 import '../../../../presentation/module/doctor/pharmacy_stocks.dart';
@@ -23,6 +28,8 @@ class DoctorModuleDrawer extends StatefulWidget {
 }
 
 class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
+  final UserModel? currentUser = UserSession.currentUser;
+
   void navigateWithTransition(BuildContext context, Widget page) {
     Navigator.pushReplacement(
       context,
@@ -46,12 +53,16 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final user = UserSession.currentUser;
+    if (user == null) {
+      return Drawer(child: Center(child: CircularProgressIndicator()));
+    }
     return CustomDrawer(
         selectedIndex: widget.selectedIndex,
         onItemSelected: widget.onItemSelected,
-        name: "Dr. Ramesh",
-        degree: "MBBS, MD (General Medicine)",
-        department: "General Medicine",
+        name: currentUser!.name,
+        degree: currentUser!.degree,
+        department: 'Doctor',
         menuItems: [
           DrawerMenuItem(
             title: 'Home',
@@ -61,30 +72,53 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
             },
           ),
           DrawerMenuItem(
-            title: 'OP Patient',
+            title: 'OP Tickets',
             icon: Iconsax.receipt,
             onTap: () {
               navigateWithTransition(context, DoctorRxList());
             },
           ),
           DrawerMenuItem(
-            title: 'IP Patients',
+            title: 'IP Tickets',
             icon: Iconsax.receipt,
             onTap: () {
               navigateWithTransition(context, IpPatientsDetails());
             },
           ),
           DrawerMenuItem(
-            title: 'Pharmacy Stocks',
+            title: 'Medications',
             icon: Iconsax.add_circle,
             onTap: () {
               navigateWithTransition(context, PharmacyStocks());
             },
           ),
           DrawerMenuItem(
+            title: 'Room Availability',
+            icon: Icons.room_preferences_outlined,
+            onTap: () {
+              navigateWithTransition(context, DoctorRoomAvailabilityCheck());
+            },
+          ),
+          DrawerMenuItem(
+            title: 'Patients Search',
+            icon: Iconsax.search_favorite,
+            onTap: () {
+              navigateWithTransition(context, PatientsSearch());
+            },
+          ),
+          DrawerMenuItem(
             title: 'Logout',
             icon: Iconsax.logout,
-            onTap: () {},
+            onTap: () async {
+              await FirebaseAuth.instance.signOut();
+              UserSession.clearUser();
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => LoginScreen()),
+                (route) => false,
+              );
+            },
           ),
         ]);
   }

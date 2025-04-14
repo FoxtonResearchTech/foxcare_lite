@@ -78,6 +78,7 @@ class _DoctorRxList extends State<DoctorRxList> {
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         if (!data.containsKey('opNumber')) continue;
+        if (!data.containsKey('tokenDate')) continue;
 
         String tokenNo = '';
         try {
