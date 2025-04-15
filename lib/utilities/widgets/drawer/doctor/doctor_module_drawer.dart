@@ -91,7 +91,11 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
             title: 'IP Tickets',
             icon: Iconsax.receipt,
             onTap: () {
-              navigateWithTransition(context, IpPatientsDetails());
+              navigateWithTransition(
+                  context,
+                  IpPatientsDetails(
+                    doctorName: currentUser!.name,
+                  ));
             },
           ),
           DrawerMenuItem(

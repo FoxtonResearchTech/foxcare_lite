@@ -18,6 +18,10 @@ import '../doctor/ip_prescription.dart';
 import 'doctor_rx_list.dart';
 
 class IpPatientsDetails extends StatefulWidget {
+  final String doctorName;
+  const IpPatientsDetails({Key? key, required this.doctorName})
+      : super(key: key);
+
   @override
   State<IpPatientsDetails> createState() => _IpPatientsDetails();
 }
@@ -210,6 +214,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                           firstName: data['firstName'],
                           lastName: data['lastName'],
                           dob: data['dob'],
+                          doctorName: widget.doctorName,
+                          date: data['tokenDate'],
                         ),
                       ),
                     );

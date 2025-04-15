@@ -1,22 +1,26 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
-import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../utilities/widgets/table/editable_drop_down_table.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
 class RxPrescription extends StatefulWidget {
   final String patientID;
   final String ipNumber;
+  final String doctorName;
   final String name;
   final String age;
+  final String date;
   final String place;
   final String address;
   final String pincode;
@@ -50,7 +54,9 @@ class RxPrescription extends StatefulWidget {
       required this.bloodGroup,
       required this.firstName,
       required this.lastName,
-      required this.dob});
+      required this.dob,
+      required this.date,
+      required this.doctorName});
 
   @override
   State<RxPrescription> createState() => _RxPrescription();
@@ -67,6 +73,9 @@ class _RxPrescription extends State<RxPrescription> {
   final TextEditingController _symptomsController = TextEditingController();
   final TextEditingController _patientHistoryController =
       TextEditingController();
+
+  final TextEditingController _appointmentTime = TextEditingController();
+  final TextEditingController _appointmentDate = TextEditingController();
 
   int selectedIndex = 1;
   String? selectedValue;
@@ -168,25 +177,40 @@ class _RxPrescription extends State<RxPrescription> {
   String _searchQuery = '';
   String _searchMedicine = '';
 
+  bool isLoading = false;
   bool _isSwitched = false;
   bool isMed = false;
+  bool isInvestigation = false;
+  bool isAppointment = false;
   bool isLabTest = false;
   List<String> medicineNames = [];
   List<String> _filteredMedicine = [];
   List<String> _selectedMedicine = [];
 
+  final List<String> medicineHeaders = [
+    'SL No',
+    'Medicine Name',
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'Night',
+    'Dosage',
+  ];
+  List<Map<String, dynamic>> medicineTableData = [];
+
   @override
   void initState() {
     super.initState();
+    loadPrescriptionDraft(widget.patientID);
     _filteredItems = _allItems;
     _filteredMedicine = medicineNames;
-
     fetchMedicine();
   }
 
   @override
   void dispose() {
     super.dispose();
+    savePrescriptionDraft(widget.patientID);
     _temperatureController.dispose();
     _bloodPressureController.dispose();
     _sugarLevelController.dispose();
@@ -230,6 +254,8 @@ class _RxPrescription extends State<RxPrescription> {
     setState(() {
       isMed = value == 'Medication';
       isLabTest = value == 'Examination';
+      isInvestigation = value == 'Investigation';
+      isAppointment = value == 'Appointment';
     });
   }
 
@@ -259,6 +285,12 @@ class _RxPrescription extends State<RxPrescription> {
       CustomSnackBar(context,
           message: 'Patients Marked as OP',
           backgroundColor: AppColors.secondaryColor);
+    }
+  }
+
+  void _updateSerialNumbers() {
+    for (int i = 0; i < medicineTableData.length; i++) {
+      medicineTableData[i]['SL No'] = i + 1;
     }
   }
 
@@ -294,20 +326,6 @@ class _RxPrescription extends State<RxPrescription> {
     });
   }
 
-  void _addSelectedItem(String item) {
-    if (!_selectedItems.contains(item)) {
-      setState(() {
-        _selectedItems.add(item);
-      });
-    }
-  }
-
-  void _removeSelectedItem(String item) {
-    setState(() {
-      _selectedItems.remove(item);
-    });
-  }
-
   void showPatientHistoryDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -336,6 +354,9 @@ class _RxPrescription extends State<RxPrescription> {
         'Medication': _selectedMedicine,
         'Examination': _selectedItems,
         'proceedTo': selectedValue,
+        'appointmentDate': _appointmentDate.text,
+        'appointmentTime': _appointmentTime.text,
+        'prescribedMedicines': medicineTableData,
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
           'bloodPressure': _bloodPressureController.text,
@@ -348,7 +369,7 @@ class _RxPrescription extends State<RxPrescription> {
           'patientHistory': _patientHistoryController.text,
         },
       }, SetOptions(merge: true));
-
+      clearPrescriptionDraft(widget.patientID);
       CustomSnackBar(context,
           message: 'Details saved successfully!',
           backgroundColor: Colors.green);
@@ -356,6 +377,103 @@ class _RxPrescription extends State<RxPrescription> {
       CustomSnackBar(context,
           message: 'Failed to save: $e', backgroundColor: Colors.red);
     }
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  Future<void> _selectTime(
+      BuildContext context, TextEditingController controller) async {
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      final now = DateTime.now();
+      final formattedTime = DateFormat('hh:mm a').format(
+        DateTime(
+            now.year, now.month, now.day, pickedTime.hour, pickedTime.minute),
+      );
+      setState(() {
+        controller.text = formattedTime;
+      });
+    }
+  }
+
+  Future<void> savePrescriptionDraft(String opNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    Map<String, dynamic> draftData = {
+      'Medication': _selectedMedicine,
+      'Examination': _selectedItems,
+      'proceedTo': selectedValue,
+      'appointmentDate': _appointmentDate.text,
+      'appointmentTime': _appointmentTime.text,
+      'prescribedMedicines': medicineTableData,
+      'basicDiagnosis': {
+        'temperature': _temperatureController.text,
+        'bloodPressure': _bloodPressureController.text,
+        'sugarLevel': _sugarLevelController.text,
+      },
+      'investigationTests': {
+        'notes': _notesController.text,
+        'diagnosisSigns': _diagnosisSignsController.text,
+        'symptoms': _symptomsController.text,
+        'patientHistory': _patientHistoryController.text,
+      },
+    };
+
+    await prefs.setString('rxDraft_$opNumber', jsonEncode(draftData));
+  }
+
+  Future<void> loadPrescriptionDraft(String opNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonData = prefs.getString('rxDraft_$opNumber');
+
+    if (jsonData != null) {
+      final data = jsonDecode(jsonData);
+
+      setState(() {
+        _selectedMedicine = List<String>.from(data['Medication'] ?? []);
+        _selectedItems = List<String>.from(data['Examination'] ?? []);
+        selectedValue = data['proceedTo'] ?? '';
+        _appointmentDate.text = data['appointmentDate'] ?? '';
+        _appointmentTime.text = data['appointmentTime'] ?? '';
+        medicineTableData =
+            List<Map<String, dynamic>>.from(data['prescribedMedicines'] ?? []);
+
+        final basic = data['basicDiagnosis'] ?? {};
+        _temperatureController.text = basic['temperature'] ?? '';
+        _bloodPressureController.text = basic['bloodPressure'] ?? '';
+        _sugarLevelController.text = basic['sugarLevel'] ?? '';
+
+        final investigation = data['investigationTests'] ?? {};
+        _notesController.text = investigation['notes'] ?? '';
+        _diagnosisSignsController.text = investigation['diagnosisSigns'] ?? '';
+        _symptomsController.text = investigation['symptoms'] ?? '';
+        _patientHistoryController.text = investigation['patientHistory'] ?? '';
+      });
+    }
+  }
+
+  Future<void> clearPrescriptionDraft(String opNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('rxDraft_$opNumber');
   }
 
   @override
@@ -377,7 +495,7 @@ class _RxPrescription extends State<RxPrescription> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.05,
-            left: screenWidth * 0.08,
+            left: screenWidth * 0.11,
             right: screenWidth * 0.08,
             bottom: screenWidth * 0.05,
           ),
@@ -387,7 +505,7 @@ class _RxPrescription extends State<RxPrescription> {
               Row(
                 children: [
                   CustomText(
-                    text: 'Dr. Kathiresan',
+                    text: 'Dr. ${widget.doctorName}',
                     size: screenWidth * 0.02,
                   ),
                   SizedBox(width: screenWidth * 0.47),
@@ -406,74 +524,69 @@ class _RxPrescription extends State<RxPrescription> {
                 height: 35,
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                      child: CustomTextField(
+                  CustomTextField(
                     readOnly: true,
                     controller: TextEditingController(text: widget.patientID),
                     hintText: 'OP Number',
                     obscureText: false,
-                    width: screenWidth * 0.05,
-                  )),
-                  const SizedBox(width: 100),
-                  Expanded(
-                      child: CustomTextField(
+                    width: screenWidth * 0.46,
+                  ),
+                  CustomTextField(
+                    controller: TextEditingController(text: widget.date),
                     hintText: 'Date',
                     readOnly: true,
                     obscureText: false,
-                    width: screenWidth * 0.05,
-                  )),
+                    width: screenWidth * 0.3,
+                  ),
+                  const SizedBox(width: 0.0),
                 ],
               ),
               const SizedBox(height: 26),
 
               // Row 2: Full Name and Age
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                      flex: 2,
-                      child: CustomTextField(
-                        controller: TextEditingController(text: widget.name),
-                        hintText: 'Full Name',
-                        obscureText: false,
-                        readOnly: true,
-                        width: screenWidth * 0.05,
-                      )),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: CustomTextField(
+                  CustomTextField(
+                    controller: TextEditingController(text: widget.name),
+                    hintText: 'Full Name',
+                    obscureText: false,
+                    readOnly: true,
+                    width: screenWidth * 0.46,
+                  ),
+                  CustomTextField(
                     controller: TextEditingController(text: widget.age),
                     hintText: 'Age',
                     obscureText: false,
                     readOnly: true,
-                    width: screenWidth * 0.05,
-                  )),
+                    width: screenWidth * 0.3,
+                  ),
+                  const SizedBox(width: 0.0),
                 ],
               ),
               const SizedBox(height: 26),
-
               // Row 3: Address and Pincode
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                      flex: 2,
-                      child: CustomTextField(
-                        controller: TextEditingController(text: widget.address),
-                        hintText: 'Address',
-                        readOnly: true,
-                        obscureText: false,
-                        width: screenWidth * 0.05,
-                      )),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: CustomTextField(
+                  CustomTextField(
+                    controller: TextEditingController(text: widget.address),
+                    hintText: 'Address',
+                    readOnly: true,
+                    obscureText: false,
+                    width: screenWidth * 0.46,
+                    verticalSize: screenWidth * 0.01,
+                  ),
+                  CustomTextField(
                     controller: TextEditingController(text: widget.pincode),
                     hintText: 'Pincode',
                     readOnly: true,
                     obscureText: false,
-                    width: screenWidth * 0.05,
-                  )),
+                    width: screenWidth * 0.3,
+                  ),
+                  const SizedBox(width: 0.0),
                 ],
               ),
               const SizedBox(height: 26),
@@ -560,28 +673,6 @@ class _RxPrescription extends State<RxPrescription> {
               const SizedBox(
                 height: 35,
               ),
-              const Text(
-                'Investigation Tests :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-
-              CustomTextField(
-                controller: _notesController,
-                hintText: 'Enter notes',
-                width: screenWidth * 0.8,
-                verticalSize: screenWidth * 0.03,
-              ),
-              const SizedBox(
-                height: 35,
-              ),
 
               Row(
                 children: [
@@ -589,7 +680,7 @@ class _RxPrescription extends State<RxPrescription> {
                     width: 250,
                     child: CustomDropdown(
                       label: 'Proceed To',
-                      items: [
+                      items: const [
                         'Medication',
                         'Examination',
                         'Appointment',
@@ -605,6 +696,87 @@ class _RxPrescription extends State<RxPrescription> {
                     ),
                   ),
                   SizedBox(width: screenWidth * 0.05),
+                  if (isAppointment)
+                    CustomButton(
+                      label: 'Choose Next Appointment Date and Time',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return StatefulBuilder(
+                              builder: (context, setState) {
+                                return AlertDialog(
+                                  title: CustomText(
+                                    text: 'Choose Next Appointment',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  content: SizedBox(
+                                    width: screenWidth * 0.3,
+                                    height: screenHeight * 0.2,
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(height: screenHeight * 0.1),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              CustomTextField(
+                                                onTap: () => _selectDate(
+                                                    context, _appointmentDate),
+                                                hintText: 'Select Date ',
+                                                width: screenWidth * 0.1,
+                                                controller: _appointmentDate,
+                                                icon: const Icon(
+                                                    Icons.date_range_outlined),
+                                              ),
+                                              CustomTextField(
+                                                onTap: () => _selectTime(
+                                                    context, _appointmentTime),
+                                                hintText: 'Select Time ',
+                                                width: screenWidth * 0.1,
+                                                controller: _appointmentTime,
+                                                icon: const Icon(Icons
+                                                    .access_time_filled_outlined),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: CustomText(
+                                        text: 'OK',
+                                        color: AppColors.blue,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        _appointmentDate.clear();
+                                        _appointmentTime.clear();
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: CustomText(
+                                        text: 'Cancel',
+                                        color: AppColors.blue,
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                      width: screenWidth * 0.2,
+                      height: screenHeight * 0.05,
+                    ),
                   if (isMed)
                     CustomButton(
                       label: 'Add Medicines',
@@ -615,10 +787,13 @@ class _RxPrescription extends State<RxPrescription> {
                             return StatefulBuilder(
                               builder: (context, setState) {
                                 return AlertDialog(
-                                  title: Text('Add Medicines'),
+                                  title: CustomText(
+                                    text: 'Add Medicines',
+                                    size: screenWidth * 0.013,
+                                  ),
                                   content: SizedBox(
                                     width: screenWidth * 0.5,
-                                    height: screenHeight * 0.5,
+                                    height: screenHeight * 0.8,
                                     child: SingleChildScrollView(
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -639,9 +814,13 @@ class _RxPrescription extends State<RxPrescription> {
                                                           color: Colors.white),
                                                       onDeleted: () {
                                                         setState(() {
-                                                          // ✅ Updates UI inside dialog
                                                           _selectedMedicine
                                                               .remove(item);
+                                                          medicineTableData
+                                                              .removeWhere((row) =>
+                                                                  row['Medicine Name'] ==
+                                                                  item);
+                                                          _updateSerialNumbers();
                                                         });
                                                       },
                                                     ))
@@ -674,7 +853,7 @@ class _RxPrescription extends State<RxPrescription> {
                                           // ListView inside a SizedBox with fixed height
                                           SizedBox(
                                             height: screenHeight *
-                                                0.3, // Adjust height as needed
+                                                0.2, // Adjust height as needed
                                             child: ListView.builder(
                                               itemCount:
                                                   _filteredMedicine.length,
@@ -683,12 +862,33 @@ class _RxPrescription extends State<RxPrescription> {
                                                     _filteredMedicine[index];
                                                 return ListTile(
                                                   title: Text(item),
-                                                  onTap: () {
+                                                  onTap: () async {
                                                     if (!_selectedMedicine
                                                         .contains(item)) {
                                                       setState(() {
                                                         _selectedMedicine
                                                             .add(item);
+                                                        isLoading = true;
+                                                      });
+                                                      await Future.delayed(
+                                                          const Duration(
+                                                              milliseconds:
+                                                                  250));
+
+                                                      setState(() {
+                                                        medicineTableData.add({
+                                                          'SL No':
+                                                              medicineTableData
+                                                                      .length +
+                                                                  1,
+                                                          'Medicine Name': item,
+                                                          'Morning': '',
+                                                          'Afternoon': '',
+                                                          'Evening': '',
+                                                          'Night': '',
+                                                          'Dosage': '',
+                                                        });
+                                                        isLoading = false;
                                                       });
                                                     }
                                                   },
@@ -696,6 +896,74 @@ class _RxPrescription extends State<RxPrescription> {
                                               },
                                             ),
                                           ),
+                                          if (medicineTableData.isNotEmpty) ...[
+                                            isLoading
+                                                ? CircularProgressIndicator()
+                                                : Column(
+                                                    children: [
+                                                      EditableDropDownTable(
+                                                        headerColor:
+                                                            Colors.white,
+                                                        headerBackgroundColor:
+                                                            AppColors.blue,
+                                                        editableColumns: const [
+                                                          'Morning',
+                                                          'Afternoon',
+                                                          'Evening',
+                                                          'Night',
+                                                          'Dosage'
+                                                        ], // Editable columns
+                                                        dropdownValues: const {
+                                                          'Morning': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                          'Afternoon': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                          'Evening': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                          'Night': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                        },
+                                                        onValueChanged:
+                                                            (rowIndex, header,
+                                                                value) async {
+                                                          if (header ==
+                                                                  'Dosage' &&
+                                                              rowIndex <
+                                                                  medicineTableData
+                                                                      .length) {
+                                                            setState(() {
+                                                              medicineTableData[
+                                                                      rowIndex][
+                                                                  header] = value;
+                                                            });
+                                                          }
+                                                        },
+                                                        headers:
+                                                            medicineHeaders,
+                                                        tableData:
+                                                            medicineTableData,
+                                                      ),
+                                                    ],
+                                                  ),
+                                          ] else
+                                            const Text(
+                                                "Invalid or incomplete medicine data")
                                         ],
                                       ),
                                     ),
@@ -779,17 +1047,46 @@ class _RxPrescription extends State<RxPrescription> {
                       ),
                     )
                   : SizedBox(),
+              if (isInvestigation)
+                Container(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          CustomText(
+                            text: 'Investigation Tests :',
+                            size: screenWidth * 0.011,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        children: [
+                          CustomTextField(
+                            controller: _notesController,
+                            hintText: 'Enter notes',
+                            width: screenWidth * 0.8,
+                            verticalSize: screenWidth * 0.03,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(
+                height: 20,
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Prescribed By : Dr Kathiresan ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                      color: Colors.black,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  SizedBox(
+                    width: screenWidth * 0.2,
+                  ),
+                  CustomText(
+                    text: 'Prescribed By : Dr. ${widget.doctorName}',
+                    size: screenWidth * 0.018,
                   ),
                   SizedBox(
                     width: 200,
@@ -798,6 +1095,9 @@ class _RxPrescription extends State<RxPrescription> {
                       onPressed: () {},
                       width: screenWidth * 0.5,
                     ),
+                  ),
+                  SizedBox(
+                    width: screenWidth * 0.2,
                   ),
                 ],
               ),
