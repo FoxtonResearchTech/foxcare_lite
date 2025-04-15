@@ -8,9 +8,11 @@ import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/table/editable_drop_down_table.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
 class IpPrescription extends StatefulWidget {
@@ -71,6 +73,9 @@ class _IpPrescription extends State<IpPrescription> {
   final TextEditingController _symptomsController = TextEditingController();
   final TextEditingController _patientHistoryController =
       TextEditingController();
+
+  final TextEditingController _appointmentTime = TextEditingController();
+  final TextEditingController _appointmentDate = TextEditingController();
 
   int selectedIndex = 1;
   String? selectedValue;
@@ -172,13 +177,28 @@ class _IpPrescription extends State<IpPrescription> {
   List<String> _selectedItems = [];
 
   String _searchQuery = '';
+  bool isLoading = false;
+
   bool _isSwitched = false;
+  bool isInvestigation = false;
+  bool isAppointment = false;
   bool isMed = false;
   bool isLabTest = false;
   List<String> medicineNames = [];
   List<String> _filteredMedicine = [];
   List<String> _selectedMedicine = [];
   String _searchMedicine = '';
+
+  final List<String> medicineHeaders = [
+    'SL No',
+    'Medicine Name',
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'Night',
+    'Dosage',
+  ];
+  List<Map<String, dynamic>> medicineTableData = [];
 
   @override
   void initState() {
@@ -235,7 +255,15 @@ class _IpPrescription extends State<IpPrescription> {
     setState(() {
       isMed = value == 'Medication';
       isLabTest = value == 'Examination';
+      isInvestigation = value == 'Investigation';
+      isAppointment = value == 'Appointment';
     });
+  }
+
+  void _updateSerialNumbers() {
+    for (int i = 0; i < medicineTableData.length; i++) {
+      medicineTableData[i]['SL No'] = i + 1;
+    }
   }
 
   Future<void> _onToggle(bool value) async {
@@ -340,6 +368,9 @@ class _IpPrescription extends State<IpPrescription> {
         'Examination': _selectedItems,
         'proceedTo': selectedValue,
         'ipAdmission': selectedIPAdmissionValue,
+        'appointmentDate': _appointmentDate.text,
+        'appointmentTime': _appointmentTime.text,
+        'prescribedMedicines': medicineTableData,
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
           'bloodPressure': _bloodPressureController.text,
@@ -359,6 +390,42 @@ class _IpPrescription extends State<IpPrescription> {
     } catch (e) {
       CustomSnackBar(context,
           message: 'Failed to save: $e', backgroundColor: Colors.red);
+    }
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  Future<void> _selectTime(
+      BuildContext context, TextEditingController controller) async {
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      final now = DateTime.now();
+      final formattedTime = DateFormat('hh:mm a').format(
+        DateTime(
+            now.year, now.month, now.day, pickedTime.hour, pickedTime.minute),
+      );
+      setState(() {
+        controller.text = formattedTime;
+      });
     }
   }
 
@@ -565,28 +632,6 @@ class _IpPrescription extends State<IpPrescription> {
               const SizedBox(
                 height: 35,
               ),
-              const Text(
-                'Investigation Tests :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-
-              CustomTextField(
-                controller: _notesController,
-                hintText: 'Enter notes',
-                width: screenWidth * 0.9,
-                verticalSize: screenWidth * 0.03,
-              ),
-              const SizedBox(
-                height: 35,
-              ),
               Row(
                 children: [
                   SizedBox(
@@ -609,6 +654,87 @@ class _IpPrescription extends State<IpPrescription> {
                     ),
                   ),
                   SizedBox(width: screenWidth * 0.05),
+                  if (isAppointment)
+                    CustomButton(
+                      label: 'Choose Next Appointment Date and Time',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return StatefulBuilder(
+                              builder: (context, setState) {
+                                return AlertDialog(
+                                  title: CustomText(
+                                    text: 'Choose Next Appointment',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  content: SizedBox(
+                                    width: screenWidth * 0.3,
+                                    height: screenHeight * 0.2,
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(height: screenHeight * 0.1),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              CustomTextField(
+                                                onTap: () => _selectDate(
+                                                    context, _appointmentDate),
+                                                hintText: 'Select Date ',
+                                                width: screenWidth * 0.1,
+                                                controller: _appointmentDate,
+                                                icon: const Icon(
+                                                    Icons.date_range_outlined),
+                                              ),
+                                              CustomTextField(
+                                                onTap: () => _selectTime(
+                                                    context, _appointmentTime),
+                                                hintText: 'Select Time ',
+                                                width: screenWidth * 0.1,
+                                                controller: _appointmentTime,
+                                                icon: const Icon(Icons
+                                                    .access_time_filled_outlined),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: CustomText(
+                                        text: 'OK',
+                                        color: AppColors.blue,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        _appointmentDate.clear();
+                                        _appointmentTime.clear();
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: CustomText(
+                                        text: 'Cancel',
+                                        color: AppColors.blue,
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                      width: screenWidth * 0.2,
+                      height: screenHeight * 0.05,
+                    ),
                   if (isMed)
                     CustomButton(
                       label: 'Add Medicines',
@@ -618,12 +744,14 @@ class _IpPrescription extends State<IpPrescription> {
                           builder: (BuildContext context) {
                             return StatefulBuilder(
                               builder: (context, setState) {
-                                // ✅ Ensures setState works inside dialog
                                 return AlertDialog(
-                                  title: Text('Add Medicines'),
+                                  title: CustomText(
+                                    text: 'Add Medicines',
+                                    size: screenWidth * 0.013,
+                                  ),
                                   content: SizedBox(
                                     width: screenWidth * 0.5,
-                                    height: screenHeight * 0.5,
+                                    height: screenHeight * 0.8,
                                     child: SingleChildScrollView(
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -644,9 +772,13 @@ class _IpPrescription extends State<IpPrescription> {
                                                           color: Colors.white),
                                                       onDeleted: () {
                                                         setState(() {
-                                                          // ✅ Updates UI inside dialog
                                                           _selectedMedicine
                                                               .remove(item);
+                                                          medicineTableData
+                                                              .removeWhere((row) =>
+                                                                  row['Medicine Name'] ==
+                                                                  item);
+                                                          _updateSerialNumbers();
                                                         });
                                                       },
                                                     ))
@@ -679,7 +811,7 @@ class _IpPrescription extends State<IpPrescription> {
                                           // ListView inside a SizedBox with fixed height
                                           SizedBox(
                                             height: screenHeight *
-                                                0.3, // Adjust height as needed
+                                                0.2, // Adjust height as needed
                                             child: ListView.builder(
                                               itemCount:
                                                   _filteredMedicine.length,
@@ -688,12 +820,33 @@ class _IpPrescription extends State<IpPrescription> {
                                                     _filteredMedicine[index];
                                                 return ListTile(
                                                   title: Text(item),
-                                                  onTap: () {
+                                                  onTap: () async {
                                                     if (!_selectedMedicine
                                                         .contains(item)) {
                                                       setState(() {
                                                         _selectedMedicine
                                                             .add(item);
+                                                        isLoading = true;
+                                                      });
+                                                      await Future.delayed(
+                                                          const Duration(
+                                                              milliseconds:
+                                                                  250));
+
+                                                      setState(() {
+                                                        medicineTableData.add({
+                                                          'SL No':
+                                                              medicineTableData
+                                                                      .length +
+                                                                  1,
+                                                          'Medicine Name': item,
+                                                          'Morning': '',
+                                                          'Afternoon': '',
+                                                          'Evening': '',
+                                                          'Night': '',
+                                                          'Dosage': '',
+                                                        });
+                                                        isLoading = false;
                                                       });
                                                     }
                                                   },
@@ -701,6 +854,74 @@ class _IpPrescription extends State<IpPrescription> {
                                               },
                                             ),
                                           ),
+                                          if (medicineTableData.isNotEmpty) ...[
+                                            isLoading
+                                                ? CircularProgressIndicator()
+                                                : Column(
+                                                    children: [
+                                                      EditableDropDownTable(
+                                                        headerColor:
+                                                            Colors.white,
+                                                        headerBackgroundColor:
+                                                            AppColors.blue,
+                                                        editableColumns: const [
+                                                          'Morning',
+                                                          'Afternoon',
+                                                          'Evening',
+                                                          'Night',
+                                                          'Dosage'
+                                                        ], // Editable columns
+                                                        dropdownValues: const {
+                                                          'Morning': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                          'Afternoon': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                          'Evening': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                          'Night': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml'
+                                                          ],
+                                                        },
+                                                        onValueChanged:
+                                                            (rowIndex, header,
+                                                                value) async {
+                                                          if (header ==
+                                                                  'Dosage' &&
+                                                              rowIndex <
+                                                                  medicineTableData
+                                                                      .length) {
+                                                            setState(() {
+                                                              medicineTableData[
+                                                                      rowIndex][
+                                                                  header] = value;
+                                                            });
+                                                          }
+                                                        },
+                                                        headers:
+                                                            medicineHeaders,
+                                                        tableData:
+                                                            medicineTableData,
+                                                      ),
+                                                    ],
+                                                  ),
+                                          ] else
+                                            const Text(
+                                                "Invalid or incomplete medicine data")
                                         ],
                                       ),
                                     ),
@@ -784,6 +1005,37 @@ class _IpPrescription extends State<IpPrescription> {
                       ),
                     )
                   : SizedBox(),
+              if (isInvestigation)
+                Container(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          CustomText(
+                            text: 'Investigation Tests :',
+                            size: screenWidth * 0.011,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        children: [
+                          CustomTextField(
+                            controller: _notesController,
+                            hintText: 'Enter notes',
+                            width: screenWidth * 0.8,
+                            verticalSize: screenWidth * 0.03,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(
+                height: 20,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

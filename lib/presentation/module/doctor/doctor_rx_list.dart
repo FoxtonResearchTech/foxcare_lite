@@ -126,6 +126,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                       name:
                           '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
                               .trim(),
+                      date: data['tokenDate'],
                       age: data['age'] ?? 'N/A',
                       place: data['state'] ?? 'N/A',
                       address: data['address1'] ?? 'N/A',
