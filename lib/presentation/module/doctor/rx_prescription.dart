@@ -194,7 +194,7 @@ class _RxPrescription extends State<RxPrescription> {
     'Afternoon',
     'Evening',
     'Night',
-    'Dosage',
+    'Duration',
   ];
   List<Map<String, dynamic>> medicineTableData = [];
 
@@ -354,8 +354,6 @@ class _RxPrescription extends State<RxPrescription> {
         'Medication': _selectedMedicine,
         'Examination': _selectedItems,
         'proceedTo': selectedValue,
-        'appointmentDate': _appointmentDate.text,
-        'appointmentTime': _appointmentTime.text,
         'prescribedMedicines': medicineTableData,
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
@@ -369,7 +367,16 @@ class _RxPrescription extends State<RxPrescription> {
           'patientHistory': _patientHistoryController.text,
         },
       }, SetOptions(merge: true));
-      clearPrescriptionDraft(widget.patientID);
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .collection('appointments')
+          .doc('appointment')
+          .set({
+        'appointmentDate': _appointmentDate.text,
+        'appointmentTime': _appointmentTime.text,
+      }, SetOptions(merge: true));
+      await clearPrescriptionDraft(widget.patientID);
       CustomSnackBar(context,
           message: 'Details saved successfully!',
           backgroundColor: Colors.green);
@@ -886,7 +893,7 @@ class _RxPrescription extends State<RxPrescription> {
                                                           'Afternoon': '',
                                                           'Evening': '',
                                                           'Night': '',
-                                                          'Dosage': '',
+                                                          'Duration': '',
                                                         });
                                                         isLoading = false;
                                                       });
@@ -911,7 +918,7 @@ class _RxPrescription extends State<RxPrescription> {
                                                           'Afternoon',
                                                           'Evening',
                                                           'Night',
-                                                          'Dosage'
+                                                          'Duration'
                                                         ], // Editable columns
                                                         dropdownValues: const {
                                                           'Morning': [
@@ -943,7 +950,7 @@ class _RxPrescription extends State<RxPrescription> {
                                                             (rowIndex, header,
                                                                 value) async {
                                                           if (header ==
-                                                                  'Dosage' &&
+                                                                  'Duration' &&
                                                               rowIndex <
                                                                   medicineTableData
                                                                       .length) {

@@ -202,7 +202,7 @@ class _IpPrescription extends State<IpPrescription> {
     'Afternoon',
     'Evening',
     'Night',
-    'Dosage',
+    'Duration',
   ];
   List<Map<String, dynamic>> medicineTableData = [];
 
@@ -392,6 +392,15 @@ class _IpPrescription extends State<IpPrescription> {
           'symptoms': _symptomsController.text,
           'patientHistory': _patientHistoryController.text,
         },
+      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.ipNumber)
+          .collection('appointments')
+          .doc('appointment')
+          .set({
+        'appointmentDate': _appointmentDate.text,
+        'appointmentTime': _appointmentTime.text,
       }, SetOptions(merge: true));
       clearPrescriptionDraft(widget.ipNumber);
       CustomSnackBar(context,
@@ -905,7 +914,7 @@ class _IpPrescription extends State<IpPrescription> {
                                                           'Afternoon': '',
                                                           'Evening': '',
                                                           'Night': '',
-                                                          'Dosage': '',
+                                                          'Duration': '',
                                                         });
                                                         isLoading = false;
                                                       });
@@ -930,7 +939,7 @@ class _IpPrescription extends State<IpPrescription> {
                                                           'Afternoon',
                                                           'Evening',
                                                           'Night',
-                                                          'Dosage'
+                                                          'Duration'
                                                         ], // Editable columns
                                                         dropdownValues: const {
                                                           'Morning': [
@@ -962,7 +971,7 @@ class _IpPrescription extends State<IpPrescription> {
                                                             (rowIndex, header,
                                                                 value) async {
                                                           if (header ==
-                                                                  'Dosage' &&
+                                                                  'Duration' &&
                                                               rowIndex <
                                                                   medicineTableData
                                                                       .length) {
