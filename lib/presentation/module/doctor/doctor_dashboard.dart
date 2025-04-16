@@ -10,6 +10,7 @@ import 'package:foxcare_lite/utilities/widgets/table/secondary_data_table.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../login/fetch_user.dart';
 
 class DoctorDashboard extends StatefulWidget {
   final String? doctorName;
@@ -19,6 +20,8 @@ class DoctorDashboard extends StatefulWidget {
 }
 
 class _DoctorDashboard extends State<DoctorDashboard> {
+  final UserModel? currentUser = UserSession.currentUser;
+
   int selectedIndex = 0;
   String? selectedStatus;
   Timer? _timer;
@@ -152,34 +155,44 @@ class _DoctorDashboard extends State<DoctorDashboard> {
   }
 
   Future<void> fetchCounterOneData() async {
+    final user = UserSession.currentUser;
+
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     try {
       List<Map<String, dynamic>> fetchedData = [];
-
       QuerySnapshot<Map<String, dynamic>> counterSnapshot =
           await FirebaseFirestore.instance
               .collection('employees')
               .where('roles', isEqualTo: 'Doctor')
-              .where('firstName' + 'lastName', isEqualTo: widget.doctorName)
               .get();
 
-      if (counterSnapshot.docs.isNotEmpty) {
-        for (var doc in counterSnapshot.docs) {
-          final data = doc.data();
+      bool doctorFound = false;
+
+      for (var doc in counterSnapshot.docs) {
+        final data = doc.data();
+        final String fullName = '${data['firstName']} ${data['lastName']}';
+
+        if (fullName == currentUser!.name) {
+          doctorFound = true;
+
           String combined =
-              'Doctor: ${data['firstName'] + ' ' + data['lastName'] ?? 'N/A'} | Specialization: ${data['specialization'] ?? 'N/A'}';
+              'Doctor: $fullName | Specialization: ${data['specialization'] ?? 'N/A'}';
           fetchedData.add({
             'Counter': combined,
             'Token': 'N/A',
           });
+          break;
         }
-      } else {
+      }
+
+      if (!doctorFound) {
         fetchedData.add({
           'Counter': 'Currently No Patients in Queue.',
           'Token': 'N/A',
         });
       }
+      print("Doctor Name Used: ${widget.doctorName}");
 
       QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
           await FirebaseFirestore.instance
@@ -234,7 +247,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
         });
       }
 
-      // 5. Update state
+      // Step 3: Update UI
       setState(() {
         counterTableData = fetchedData;
       });
@@ -311,7 +324,8 @@ class _DoctorDashboard extends State<DoctorDashboard> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       getNoOfOp();
       getNoOfNewPatients();
       getNoOFWaitingQue();

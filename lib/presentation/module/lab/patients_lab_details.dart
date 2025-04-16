@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/patient_report.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
@@ -24,7 +27,9 @@ class PatientsLabDetails extends StatefulWidget {
 }
 
 class _PatientsLabDetails extends State<PatientsLabDetails> {
-  int selectedIndex = 4;
+  final TextEditingController opNumberSearch = TextEditingController();
+  final TextEditingController phoneNumberSearch = TextEditingController();
+  int selectedIndex = 1;
   final List<String> headers1 = [
     'Token NO',
     'OP NO',
@@ -42,9 +47,9 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
   void initState() {
     super.initState();
     fetchData();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      fetchData();
-    });
+    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   fetchData();
+    // });
   }
 
   @override
@@ -53,22 +58,38 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
     super.dispose();
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? patientID, String? phoneNumber}) async {
     try {
-      // Query to fetch patients with non-empty Medications field
       final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
           .collection('patients')
-          .where('Examination',
-              isNotEqualTo: null) // Ensures Medications exists
-          .where('Examination',
-              isNotEqualTo: '') // Ensures Medications is not empty
+          .where('Examination', isNotEqualTo: null)
+          .where('Examination', isNotEqualTo: '')
           .get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        if (data['Examination'] == null ||
+            (data['Examination'] as List).isEmpty) {
+          continue;
+        }
 
+        // Manual filtering logic
+        if (patientID != null && patientID.isNotEmpty) {
+          if ((data['opNumber'] ?? '') != patientID) {
+            continue;
+          }
+        }
+
+        if (phoneNumber != null && phoneNumber.isNotEmpty) {
+          if ((data['phone1'] ?? '') != phoneNumber &&
+              (data['phone2'] ?? '') != phoneNumber) {
+            continue;
+          }
+        }
+
+        // Fetch token as before
         String tokenNo = '';
         try {
           final tokenSnapshot = await FirebaseFirestore.instance
@@ -151,6 +172,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
         });
       }
 
+      // Sort by token number
       fetchedData.sort((a, b) {
         int tokenA = int.tryParse(a['Token NO']) ?? 0;
         int tokenB = int.tryParse(b['Token NO']) ?? 0;
@@ -179,7 +201,14 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: LabModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -188,7 +217,14 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: LabModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
@@ -198,80 +234,6 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Laboratory',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Dashboard', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabDashboard()),
-          );
-        }, Iconsax.mask),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(1, 'Test Queue', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabTestQueue()),
-          );
-        }, Iconsax.receipt),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(2, 'Accounts', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabAccounts()),
-          );
-        }, Iconsax.add_circle),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(3, 'Report search', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => ReportsSearch()),
-          );
-        }, Iconsax.search_favorite),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(
-            4, 'Patient Lab Details', () {}, Iconsax.search_favorite),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(5, 'Logout', () {}, Iconsax.logout),
-      ],
-    );
-  }
-
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon,
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: selectedIndex == index ? Colors.blue : Colors.black54,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
     );
   }
 
@@ -289,8 +251,69 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           ),
           child: Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Patients Lab Test",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  SizedBox(width: screenHeight * 0.1),
+                  CustomTextField(
+                    controller: opNumberSearch,
+                    hintText: 'OP Number',
+                    width: screenWidth * 0.1,
+                  ),
+                  CustomTextField(
+                    controller: phoneNumberSearch,
+                    hintText: 'Mobile Number',
+                    width: screenWidth * 0.1,
+                  ),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () async {
+                      final opNumber = opNumberSearch.text.trim();
+                      final phone = phoneNumberSearch.text.trim();
+
+                      await fetchData(
+                        patientID: opNumber.isNotEmpty ? opNumber : null,
+                        phoneNumber: phone.isNotEmpty ? phone : null,
+                      );
+                    },
+                    width: screenWidth * 0.1,
+                    height: screenHeight * 0.045,
+                  ),
+                  SizedBox(width: screenHeight * 0.1),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {

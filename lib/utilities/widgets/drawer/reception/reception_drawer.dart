@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/reception/accounts/reception_accounts_new_patient_registration_collection.dart';
 import 'package:foxcare_lite/presentation/module/reception/admission_status.dart';
+import 'package:foxcare_lite/presentation/module/reception/book_appointments.dart';
 import 'package:foxcare_lite/presentation/module/reception/doctor_schedule_view.dart';
 import 'package:foxcare_lite/presentation/module/reception/ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
@@ -104,6 +105,13 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
           icon: Iconsax.add_circle,
           onTap: () {
             navigateWithTransition(context, DoctorScheduleView());
+          },
+        ),
+        DrawerMenuItem(
+          title: 'Appointments',
+          icon: Icons.book_online_outlined,
+          onTap: () {
+            navigateWithTransition(context, BookAppointments());
           },
         ),
         DrawerMenuItem(

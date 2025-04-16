@@ -4,7 +4,9 @@ import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
 import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
@@ -165,7 +167,14 @@ class _ReportsSearch extends State<ReportsSearch> {
           : null,
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(),
+              child: LabModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null,
       body: Row(
@@ -174,85 +183,23 @@ class _ReportsSearch extends State<ReportsSearch> {
             Container(
               width: 300,
               color: Colors.blue.shade100,
-              child: buildDrawerContent(),
+              child: LabModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
-          Expanded(child: dashboard()),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: dashboard(),
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Laboratory',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Dashboard', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabDashboard()),
-          );
-        }, Iconsax.mask),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(1, 'Test Queue', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabTestQueue()),
-          );
-        }, Iconsax.receipt),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(2, 'Accounts', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabAccounts()),
-          );
-        }, Iconsax.add_circle),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(3, 'Report search', () {}, Iconsax.search_favorite),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(4, 'Patient Lab Details', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => PatientsLabDetails()),
-          );
-        }, Iconsax.search_favorite),
-        Divider(height: 5, color: Colors.grey),
-        buildDrawerItem(5, 'Logout', () {
-          // Handle logout action
-        }, Iconsax.logout),
-      ],
-    );
-  }
-
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor: Colors.blueAccent.shade100,
-      leading: Icon(
-        icon,
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: selectedIndex == index ? Colors.blue : Colors.black54,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index;
-        });
-        onTap();
-      },
     );
   }
 
@@ -265,12 +212,40 @@ class _ReportsSearch extends State<ReportsSearch> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.01,
-            left: screenWidth * 0.01,
-            right: screenWidth * 0.01,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
             bottom: screenWidth * 0.01,
           ),
           child: Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Reports",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
@@ -343,6 +318,8 @@ class _ReportsSearch extends State<ReportsSearch> {
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
                 tableData: tableData,
                 headers: headers,
               ),

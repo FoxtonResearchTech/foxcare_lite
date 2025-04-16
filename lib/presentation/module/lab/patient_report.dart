@@ -155,7 +155,7 @@ class _PatientReport extends State<PatientReport> {
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
-        backgroundColor: AppColors.secondaryColor,
+        backgroundColor: AppColors.blue,
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -269,6 +269,8 @@ class _PatientReport extends State<PatientReport> {
                 editableColumns: ['Values'],
                 tableData: tableData1,
                 headers: headers1,
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
                 onValueChanged: (rowIndex, header, value) async {
                   if (header == 'Values') {
                     setState(() {

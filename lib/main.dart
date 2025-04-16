@@ -12,6 +12,7 @@ import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart'
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
+import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
       home: AuthGate(),
