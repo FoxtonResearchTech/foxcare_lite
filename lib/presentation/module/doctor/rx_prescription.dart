@@ -1076,32 +1076,6 @@ class _RxPrescription extends State<RxPrescription> {
                   ),
                 ),
               const SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    width: screenWidth * 0.2,
-                  ),
-                  CustomText(
-                    text: 'Prescribed By : Dr. ${widget.doctorName}',
-                    size: screenWidth * 0.018,
-                  ),
-                  SizedBox(
-                    width: 200,
-                    child: CustomButton(
-                      label: 'Change',
-                      onPressed: () {},
-                      width: screenWidth * 0.5,
-                    ),
-                  ),
-                  SizedBox(
-                    width: screenWidth * 0.2,
-                  ),
-                ],
-              ),
-              const SizedBox(
                 height: 35,
               ),
               Center(
