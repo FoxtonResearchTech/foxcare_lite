@@ -13,6 +13,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../../presentation/login/fetch_user.dart';
 import '../../custom_drawer.dart';
 
 class ManagementAccountsDrawer extends StatefulWidget {
@@ -30,6 +31,8 @@ class ManagementAccountsDrawer extends StatefulWidget {
 }
 
 class _ManagementAccountsDrawer extends State<ManagementAccountsDrawer> {
+  final UserModel? currentUser = UserSession.currentUser;
+
   void navigateWithTransition(BuildContext context, Widget page) {
     Navigator.pushReplacement(
       context,
@@ -53,12 +56,16 @@ class _ManagementAccountsDrawer extends State<ManagementAccountsDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final user = UserSession.currentUser;
+    if (user == null) {
+      return Drawer(child: Center(child: CircularProgressIndicator()));
+    }
     return CustomDrawer(
         selectedIndex: widget.selectedIndex,
         onItemSelected: widget.onItemSelected,
-        name: "Dr. Ramesh",
-        degree: "MBBS, MD (General Medicine)",
-        department: "General Medicine",
+        name: currentUser!.name,
+        degree: currentUser!.degree,
+        department: "Management",
         menuItems: [
           DrawerMenuItem(
             title: 'New Patients Register Collection',

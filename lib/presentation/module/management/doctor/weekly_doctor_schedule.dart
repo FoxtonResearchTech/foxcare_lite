@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
@@ -26,7 +27,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
   Map<String, Map<String, String?>> opTimeOut = {};
   Map<String, Map<String, String?>> opTimeInEvening = {};
   Map<String, Map<String, String?>> opTimeOutEvening = {};
-  int selectedIndex = 5;
+  int selectedIndex = 2;
   List<String> doctors = [];
 
   @override
@@ -37,7 +38,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
 
   void fetchDoctors() async {
     final snapshot =
-    await FirebaseFirestore.instance.collection('employees').get();
+        await FirebaseFirestore.instance.collection('employees').get();
 
     List<String> fetchedDoctors = [];
 
@@ -70,22 +71,22 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-        title: const CustomText(
-          text: 'General Information',
-        ),
-      )
+              title: const CustomText(
+                text: 'General Information',
+              ),
+            )
           : null,
       drawer: isMobile
           ? Drawer(
-        child: ManagementGeneralInformationDrawer(
-          selectedIndex: selectedIndex,
-          onItemSelected: (index) {
-            setState(() {
-              selectedIndex = index;
-            });
-          },
-        ),
-      )
+              child: ManagementDoctorSchedule(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+            )
           : null,
       body: Row(
         children: [
@@ -93,7 +94,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
             Container(
               width: 300,
               color: Colors.blue.shade100,
-              child: ManagementGeneralInformationDrawer(
+              child: ManagementDoctorSchedule(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -188,7 +189,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
               icon: Icon(Icons.delete, size: 28, color: Colors.white),
               elevation: 10,
             ),
-
           ),
           Container(
             width: 200,
@@ -210,7 +210,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
           ),
         ],
       ),
-
     );
   }
 
@@ -258,13 +257,17 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                         children: [
                           Column(
                             children: [
-                              Text("Morning In", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Morning In",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, true),
                             ],
                           ),
                           Column(
                             children: [
-                              Text("Morning Out", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("Morning Out",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               _buildTimeInput(day, doctor, false),
                             ],
                           ),
@@ -276,19 +279,24 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                         children: [
                           Column(
                             children: [
-                              Text("Evening In", style: TextStyle(fontWeight: FontWeight.bold)),
-                              _buildTimeInput(day, doctor, true, isEvening: true),
+                              Text("Evening In",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              _buildTimeInput(day, doctor, true,
+                                  isEvening: true),
                             ],
                           ),
                           Column(
                             children: [
-                              Text("Evening Out", style: TextStyle(fontWeight: FontWeight.bold)),
-                              _buildTimeInput(day, doctor, false, isEvening: true),
+                              Text("Evening Out",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              _buildTimeInput(day, doctor, false,
+                                  isEvening: true),
                             ],
                           ),
                         ],
                       ),
-
                     ],
                   );
                 }).toList(),
@@ -315,7 +323,8 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                   setStateDialog(() {
                     searchQuery = query;
                     filteredDoctors = doctors
-                        .where((doc) => doc.toLowerCase().contains(query.toLowerCase()))
+                        .where((doc) =>
+                            doc.toLowerCase().contains(query.toLowerCase()))
                         .toList();
                   });
                 }
@@ -376,7 +385,8 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                       onPressed: () => Navigator.pop(context, tempSelected),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -398,7 +408,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                       ),
                     ),
                   ],
-
                 );
               },
             );
@@ -436,8 +445,6 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     );
   }
 
-
-
   Widget _buildSpecializationDisplay(String doctor) {
     final specialization = doctorSpecializations[doctor] ?? 'Not available';
     return Padding(
@@ -454,7 +461,9 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       ),
     );
   }
-  Widget _buildTimeInput(String day, String doctor, bool isTimeIn, {bool isEvening = false}) {
+
+  Widget _buildTimeInput(String day, String doctor, bool isTimeIn,
+      {bool isEvening = false}) {
     String _getTime() {
       if (isEvening) {
         return isTimeIn
@@ -513,9 +522,9 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     );
   }
 
-
   void saveScheduleToFirestore() async {
-    final scheduleCollection = FirebaseFirestore.instance.collection('doctor_weekly_schedule');
+    final scheduleCollection =
+        FirebaseFirestore.instance.collection('doctor_weekly_schedule');
 
     try {
       for (String day in selectedDoctors.keys) {
@@ -556,7 +565,8 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Confirm Delete"),
-        content: Text("Are you sure you want to delete the entire schedule collection? This action cannot be undone."),
+        content: Text(
+            "Are you sure you want to delete the entire schedule collection? This action cannot be undone."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false), // Cancel
@@ -577,9 +587,11 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       deleteEntireCollection();
     }
   }
+
   void deleteEntireCollection() async {
     try {
-      final collectionRef = FirebaseFirestore.instance.collection('doctor_weekly_schedule');
+      final collectionRef =
+          FirebaseFirestore.instance.collection('doctor_weekly_schedule');
       final snapshot = await collectionRef.get();
 
       for (DocumentSnapshot doc in snapshot.docs) {
@@ -591,5 +603,4 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       print('Error deleting collection: $e');
     }
   }
-
 }

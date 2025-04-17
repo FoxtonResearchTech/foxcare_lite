@@ -7,27 +7,27 @@ import 'package:foxcare_lite/presentation/module/management/generalInformation/g
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
+import 'package:foxcare_lite/presentation/module/management/user/edit_delete_user_account.dart';
+import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../../presentation/login/fetch_user.dart';
 import '../../custom_drawer.dart';
 
-class ManagementGeneralInformationDrawer extends StatefulWidget {
+class UserInformationDrawer extends StatefulWidget {
   final int selectedIndex;
   final Function(int index) onItemSelected;
 
-  const ManagementGeneralInformationDrawer({
+  const UserInformationDrawer({
     Key? key,
     required this.selectedIndex,
     required this.onItemSelected,
   }) : super(key: key);
 
   @override
-  _ManagementGeneralInformationDrawer createState() =>
-      _ManagementGeneralInformationDrawer();
+  _UserInformationDrawer createState() => _UserInformationDrawer();
 }
 
-class _ManagementGeneralInformationDrawer
-    extends State<ManagementGeneralInformationDrawer> {
+class _UserInformationDrawer extends State<UserInformationDrawer> {
   final UserModel? currentUser = UserSession.currentUser;
 
   void navigateWithTransition(BuildContext context, Widget page) {
@@ -65,25 +65,17 @@ class _ManagementGeneralInformationDrawer
         department: 'Management',
         menuItems: [
           DrawerMenuItem(
-            title: 'OP Ticket Generation',
-            icon: Iconsax.home,
+            title: 'User Account Creation',
+            icon: Iconsax.user,
             onTap: () {
-              navigateWithTransition(context, GeneralInformationOpTicket());
+              navigateWithTransition(context, UserAccountCreation());
             },
           ),
           DrawerMenuItem(
-            title: 'IP Admission',
-            icon: Iconsax.receipt,
+            title: 'Edit Delete User',
+            icon: Icons.change_circle_outlined,
             onTap: () {
-              navigateWithTransition(context, GeneralInformationIpAdmission());
-            },
-          ),
-          DrawerMenuItem(
-            title: 'Admission Status',
-            icon: Iconsax.receipt,
-            onTap: () {
-              navigateWithTransition(
-                  context, GeneralInformationAdmissionStatus());
+              navigateWithTransition(context, EditDeleteUserAccount());
             },
           ),
           DrawerMenuItem(

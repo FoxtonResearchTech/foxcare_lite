@@ -488,114 +488,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
     );
   }
 
-  Widget buildSingleColumnForm() {
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Patient Search: ',
-                style: TextStyle(
-                    fontFamily: 'SanFrancisco',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text('Enter OP Number: ',
-                    style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
-                SizedBox(
-                  width: 250,
-                  child: CustomTextField(
-                    hintText: 'OP Number',
-                    width: null,
-                  ),
-                ),
-                SizedBox(width: 20),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text('Enter Phone Number: ',
-                    style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
-                SizedBox(
-                  width: 250,
-                  child: CustomTextField(
-                    hintText: 'Phone Number',
-                    width: null,
-                  ),
-                ),
-                SizedBox(width: 20),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 250,
-                  child: CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      setState(() {
-                        isSearchPerformed = true; // Show the table after search
-                      });
-                    },
-                    width: null,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-            if (isSearchPerformed) ...[
-              const Text('Search Results: ',
-                  style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: [
-                    const DataColumn(label: Text('OP Number')),
-                    const DataColumn(label: Text('Name')),
-                    const DataColumn(label: Text('Age')),
-                    const DataColumn(label: Text('Phone')),
-                    const DataColumn(label: Text('Address')),
-                  ],
-                  rows: searchResults.map((result) {
-                    return DataRow(
-                      selected: selectedPatient == result,
-                      onSelectChanged: (isSelected) {
-                        setState(() {
-                          selectedPatient = result;
-                        });
-                      },
-                      cells: [
-                        DataCell(Text(result['opNumber']!)),
-                        DataCell(Text(result['name']!)),
-                        DataCell(Text(result['age']!)),
-                        DataCell(Text(result['phone']!)),
-                        DataCell(Text(result['address']!)),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 30),
-              if (selectedPatient != null) buildPatientDetailsForm(),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget buildPatientDetailsForm() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -920,6 +812,114 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildSingleColumnForm() {
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Patient Search: ',
+                style: TextStyle(
+                    fontFamily: 'SanFrancisco',
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('Enter OP Number: ',
+                    style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
+                SizedBox(
+                  width: 250,
+                  child: CustomTextField(
+                    hintText: 'OP Number',
+                    width: null,
+                  ),
+                ),
+                SizedBox(width: 20),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('Enter Phone Number: ',
+                    style: TextStyle(fontFamily: 'SanFrancisco', fontSize: 22)),
+                SizedBox(
+                  width: 250,
+                  child: CustomTextField(
+                    hintText: 'Phone Number',
+                    width: null,
+                  ),
+                ),
+                SizedBox(width: 20),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 250,
+                  child: CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      setState(() {
+                        isSearchPerformed = true; // Show the table after search
+                      });
+                    },
+                    width: null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            if (isSearchPerformed) ...[
+              const Text('Search Results: ',
+                  style: TextStyle(
+                      fontFamily: 'SanFrancisco',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: [
+                    const DataColumn(label: Text('OP Number')),
+                    const DataColumn(label: Text('Name')),
+                    const DataColumn(label: Text('Age')),
+                    const DataColumn(label: Text('Phone')),
+                    const DataColumn(label: Text('Address')),
+                  ],
+                  rows: searchResults.map((result) {
+                    return DataRow(
+                      selected: selectedPatient == result,
+                      onSelectChanged: (isSelected) {
+                        setState(() {
+                          selectedPatient = result;
+                        });
+                      },
+                      cells: [
+                        DataCell(Text(result['opNumber']!)),
+                        DataCell(Text(result['name']!)),
+                        DataCell(Text(result['age']!)),
+                        DataCell(Text(result['phone']!)),
+                        DataCell(Text(result['address']!)),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 30),
+              if (selectedPatient != null) buildPatientDetailsForm(),
+            ],
+          ],
+        ),
       ),
     );
   }

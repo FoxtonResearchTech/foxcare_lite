@@ -7,6 +7,7 @@ import 'package:foxcare_lite/presentation/module/management/wardRoomInformation/
 import 'package:iconsax/iconsax.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/drawer/management/ward_room_information/ward_room_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../generalInformation/general_information_admission_status.dart';
@@ -66,7 +67,7 @@ class _NewWardRooms extends State<NewWardRooms> {
         .update(data);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Room data updated successfully!')),
+      const SnackBar(content: Text('Room data updated successfully!')),
     );
   }
 
@@ -90,14 +91,21 @@ class _NewWardRooms extends State<NewWardRooms> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'Ward & Rooms Information',
               ),
             )
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: WardRoomDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -106,7 +114,14 @@ class _NewWardRooms extends State<NewWardRooms> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: WardRoomDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
@@ -116,80 +131,6 @@ class _NewWardRooms extends State<NewWardRooms> {
           ),
         ],
       ),
-    );
-  }
-
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Ward & Rooms Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Ward / Rooms', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => WardRooms()));
-        }, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'New Ward / Rooms', () {}, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'Delete Ward / Rooms', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => DeleteWardRooms()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Back To Management Dashboard', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManagementDashboard()));
-        }, Iconsax.backward),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
     );
   }
 
@@ -216,7 +157,7 @@ class _NewWardRooms extends State<NewWardRooms> {
                   children: [
                     Column(
                       children: [
-                        CustomText(text: "Rooms"),
+                        const CustomText(text: "Rooms"),
                         SizedBox(height: screenHeight * 0.01),
                         CustomTextField(
                             hintText: 'Enter Total Rooms',
@@ -232,7 +173,7 @@ class _NewWardRooms extends State<NewWardRooms> {
                     SizedBox(width: screenHeight * 0.05),
                     Column(
                       children: [
-                        CustomText(text: "Wards"),
+                        const CustomText(text: "Wards"),
                         SizedBox(height: screenHeight * 0.01),
                         CustomTextField(
                             hintText: 'Enter Total Wards',
@@ -252,7 +193,7 @@ class _NewWardRooms extends State<NewWardRooms> {
                   children: [
                     Column(
                       children: [
-                        CustomText(text: "VIP Rooms"),
+                        const CustomText(text: "VIP Rooms"),
                         SizedBox(height: screenHeight * 0.01),
                         CustomTextField(
                             hintText: 'Enter Total VIP Rooms',
@@ -268,7 +209,7 @@ class _NewWardRooms extends State<NewWardRooms> {
                     SizedBox(width: screenHeight * 0.04),
                     Column(
                       children: [
-                        CustomText(text: "ICU"),
+                        const CustomText(text: "ICU"),
                         SizedBox(height: screenHeight * 0.01),
                         CustomTextField(
                             hintText: 'Enter Total ICU Rooms',

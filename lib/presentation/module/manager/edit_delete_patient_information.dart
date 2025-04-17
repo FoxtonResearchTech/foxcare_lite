@@ -201,7 +201,7 @@ class _EditDeletePatientInformation
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
-        backgroundColor: AppColors.secondaryColor,
+        backgroundColor: AppColors.blue,
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -251,6 +251,8 @@ class _EditDeletePatientInformation
               CustomDataTable(
                 tableData: tableData1,
                 headers: headers1,
+                headerColor: Colors.white,
+                headerBackgroundColor: AppColors.blue,
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'
                       ? Colors.red.shade200

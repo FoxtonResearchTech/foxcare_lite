@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/lab/ip_patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/lab/lab_module_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
@@ -22,7 +25,7 @@ class _LabDashboard extends State<LabDashboard> {
   String? selectedStatus;
   Timer? _timer;
 
-  final headers1 = [
+  final opHeader = [
     'OP Number',
     'Token',
     'Name',
@@ -30,7 +33,17 @@ class _LabDashboard extends State<LabDashboard> {
     'Examination',
     'Phone Number',
   ];
-  List<Map<String, dynamic>> tableData1 = [{}];
+  List<Map<String, dynamic>> opTableData = [{}];
+
+  final ipHeader = [
+    'IP Number',
+    'Token',
+    'Name',
+    'Place',
+    'Examination',
+    'Phone Number',
+  ];
+  List<Map<String, dynamic>> ipTableData = [{}];
 
   int noOfPatientsTestCompleted = 0;
   int noOfPatientsTestInCompleted = 0;
@@ -166,76 +179,166 @@ class _LabDashboard extends State<LabDashboard> {
     }
   }
 
-  // Future<void> getWaitingLabTestPatients() async {
-  //   final FirebaseFirestore fireStore = FirebaseFirestore.instance;
-  //   final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-  //
-  //   try {
-  //     final QuerySnapshot snapshot = await fireStore
-  //         .collection('patients')
-  //         .where('labExaminationPrescribedDate', isEqualTo: today)
-  //         .get();
-  //
-  //     for (var doc in snapshot.docs) {
-  //       final data = doc.data() as Map<String, dynamic>;
-  //       if (!data.containsKey('labExaminationPrescribedDate')) continue;
-  //       if (!data.containsKey('opNumber')) continue;
-  //
-  //       final QuerySnapshot testSnapshot = await fireStore
-  //           .collection('patients')
-  //           .doc(doc.id)
-  //           .collection('tests')
-  //           .limit(1)
-  //           .get();
-  //
-  //       final bool hasTests = testSnapshot.docs.isNotEmpty;
-  //
-  //       if (!hasTests) {
-  //         List<Map<String, dynamic>> fetchedData = [];
-  //
-  //         for (var doc in snapshot.docs) {
-  //           final data = doc.data() as Map<String, dynamic>;
-  //           DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-  //               .collection('patients')
-  //               .doc(doc.id)
-  //               .collection('tokens')
-  //               .doc('currentToken')
-  //               .get();
-  //
-  //           Map<String, dynamic>? detailsData = detailsDoc.exists
-  //               ? detailsDoc.data() as Map<String, dynamic>?
-  //               : null;
-  //
-  //           {
-  //             fetchedData.add({
-  //               'OP Number': data['opNumber'] ?? 'N/A',
-  //               'Token': detailsData?['tokenNumber'] ?? 'N/A',
-  //               'Name': data['name'] ?? 'N/A',
-  //               'Place': data['place'] ?? 'N/A',
-  //               'Phone Number': data['phoneNumber'] ?? 'N/A',
-  //               'Examination': data['Examination'] ?? 'N/A',
-  //             });
-  //           }
-  //           setState(() {
-  //             tableData1 = fetchedData;
-  //           });
-  //         }
-  //       }
-  //     }
-  //   } catch (e) {
-  //     print('Error fetching documents: $e');
-  //   }
-  // }
+  Future<void> getWaitingLabTestOpPatients() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      final QuerySnapshot snapshot = await fireStore
+          .collection('patients')
+          .where('labExaminationPrescribedDate', isEqualTo: today)
+          .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+      int count = 0;
+
+      for (var doc in snapshot.docs) {
+        if (count >= 3) break;
+
+        final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('labExaminationPrescribedDate')) continue;
+        if (!data.containsKey('opNumber')) continue;
+
+        final QuerySnapshot testSnapshot = await fireStore
+            .collection('patients')
+            .doc(doc.id)
+            .collection('tests')
+            .limit(1)
+            .get();
+
+        final bool hasTests = testSnapshot.docs.isNotEmpty;
+
+        if (!hasTests) {
+          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('tokens')
+              .doc('currentToken')
+              .get();
+
+          Map<String, dynamic>? detailsData = detailsDoc.exists
+              ? detailsDoc.data() as Map<String, dynamic>?
+              : null;
+
+          fetchedData.add({
+            'OP Number': data['opNumber'] ?? 'N/A',
+            'Token': detailsData?['tokenNumber'] ?? 'N/A',
+            'Name':
+                "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim(),
+            'Place': data['city'] ?? 'N/A',
+            'Phone Number': data['phone1'] ?? 'N/A',
+            'Examination': data['Examination'] ?? 'N/A',
+          });
+
+          count++;
+        }
+      }
+
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Token'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+
+      setState(() {
+        opTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching documents: $e');
+    }
+  }
+
+  Future<void> getWaitingLabTestIpPatients() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      final QuerySnapshot patientSnapshot =
+          await fireStore.collection('patients').get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+      int count = 0;
+
+      for (var doc in patientSnapshot.docs) {
+        if (count >= 3) break;
+
+        final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('ipNumber')) continue;
+
+        final DocumentSnapshot detailsDoc = await fireStore
+            .collection('patients')
+            .doc(doc.id)
+            .collection('ipPrescription')
+            .doc('details')
+            .get();
+
+        if (!detailsDoc.exists) continue;
+
+        final detailsData = detailsDoc.data() as Map<String, dynamic>;
+
+        final prescribedDate = detailsData['labExaminationPrescribedDate'];
+        if (prescribedDate != today) continue;
+
+        final QuerySnapshot testSnapshot = await fireStore
+            .collection('patients')
+            .doc(doc.id)
+            .collection('tests')
+            .limit(1)
+            .get();
+
+        final bool hasTests = testSnapshot.docs.isNotEmpty;
+        if (hasTests) continue;
+
+        final DocumentSnapshot tokenDoc = await fireStore
+            .collection('patients')
+            .doc(doc.id)
+            .collection('tokens')
+            .doc('currentToken')
+            .get();
+
+        final tokenData =
+            tokenDoc.exists ? tokenDoc.data() as Map<String, dynamic> : null;
+
+        if (detailsData['Examination'] == null ||
+            (detailsData['Examination'] as List).isEmpty) {
+          continue;
+        }
+
+        fetchedData.add({
+          'IP Number': data['ipNumber'] ?? 'N/A',
+          'Token': tokenData?['tokenNumber'] ?? 'N/A',
+          'Name': "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim(),
+          'Place': data['city'] ?? 'N/A',
+          'Phone Number': data['phone1'] ?? 'N/A',
+          'Examination': detailsData['Examination'] ?? 'N/A',
+        });
+
+        count++;
+      }
+
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Token'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
+
+      setState(() {
+        ipTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching documents: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       getNoOfOp();
       getNoOfPatientsTestDone();
       getNoOFWaitingQue();
-
-      // getWaitingLabTestPatients();
+      getWaitingLabTestOpPatients();
+      getWaitingLabTestIpPatients();
     });
   }
 
@@ -339,7 +442,6 @@ class _LabDashboard extends State<LabDashboard> {
               ],
             ),
             SizedBox(height: screenHeight * 0.075),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -347,61 +449,104 @@ class _LabDashboard extends State<LabDashboard> {
                   title: 'No Of OP',
                   value: noOfOp.toString(),
                   icon: Icons.person,
-                  width: screenWidth * 0.2,
-                  height: screenHeight * 0.2,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
                 buildDashboardCard(
                   title: 'Waiting Queue',
                   value: noOfWaitingQueue.toString(),
                   icon: Icons.access_time,
-                  width: screenWidth * 0.2,
-                  height: screenHeight * 0.2,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.05),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
                 buildDashboardCard(
                   title: 'No Of Patients Test Completed',
                   value: noOfPatientsTestCompleted.toString(),
                   icon: Icons.done_all_outlined,
-                  width: screenWidth * 0.2,
-                  height: screenHeight * 0.2,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
                 buildDashboardCard(
                   title: 'No Of Patients Test InCompleted',
                   value: noOfPatientsTestInCompleted.toString(),
                   icon: Icons.incomplete_circle_outlined,
-                  width: screenWidth * 0.2,
-                  height: screenHeight * 0.2,
+                  width: screenWidth * 0.17,
+                  height: screenHeight * 0.17,
                 ),
               ],
             ),
-
             SizedBox(height: screenHeight * 0.05),
-            // Column(
-            //   mainAxisAlignment: MainAxisAlignment.start,
-            //   crossAxisAlignment: CrossAxisAlignment.start,
-            //   children: [
-            //     Row(
-            //       children: [
-            //         CustomText(
-            //           text: 'OP Waiting Queue',
-            //           size: screenWidth * 0.013,
-            //         ),
-            //       ],
-            //     ),
-            //     SizedBox(height: screenHeight * 0.03),
-            //     CustomDataTable(
-            //       headerColor: Colors.white,
-            //       headerBackgroundColor: AppColors.blue,
-            //       headers: headers1,
-            //       tableData: tableData1,
-            //     ),
-            //   ],
-            // ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CustomText(
+                      text: 'OP Waiting Queue',
+                      size: screenWidth * 0.013,
+                    ),
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.03),
+                CustomDataTable(
+                  headerColor: Colors.white,
+                  headerBackgroundColor: AppColors.blue,
+                  headers: opHeader,
+                  tableData: opTableData,
+                ),
+                SizedBox(height: screenHeight * 0.03),
+                Center(
+                  child: CustomButton(
+                    label: 'View More...',
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PatientsLabDetails()));
+                    },
+                    width: screenWidth * 0.1,
+                    height: screenHeight * 0.05,
+                  ),
+                )
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.05),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CustomText(
+                      text: 'IP Waiting Queue',
+                      size: screenWidth * 0.013,
+                    ),
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.03),
+                CustomDataTable(
+                  headerColor: Colors.white,
+                  headerBackgroundColor: AppColors.blue,
+                  headers: ipHeader,
+                  tableData: ipTableData,
+                ),
+                SizedBox(height: screenHeight * 0.03),
+                Center(
+                  child: CustomButton(
+                    label: 'View More...',
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => IpPatientsLabDetails()));
+                    },
+                    width: screenWidth * 0.1,
+                    height: screenHeight * 0.05,
+                  ),
+                )
+              ],
+            ),
           ],
         ),
       ),

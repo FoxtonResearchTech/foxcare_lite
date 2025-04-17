@@ -261,7 +261,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "Patients Lab Test",
+                          text: "OP Patients Lab Test",
                           size: screenWidth * 0.03,
                         ),
                       ],

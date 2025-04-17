@@ -3,6 +3,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
@@ -21,7 +22,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     super.initState();
   }
 
-  int selectedIndex = 4;
+  int selectedIndex = 1;
 
   String? selectedDoctor;
   String? selectedSpecification;
@@ -39,8 +40,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
   ];
   String? selectedSpecialization;
   final List<String> counterValues =
-  List.generate(5, (index) => (index + 1).toString());
-
+      List.generate(5, (index) => (index + 1).toString());
 
   Future<void> _selectTime(BuildContext context, bool isOpTime) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -78,7 +78,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       {}; // {doctorName: specialization}
   void fetchDoctors() async {
     final employeesSnapshot =
-    await FirebaseFirestore.instance.collection('employees').get();
+        await FirebaseFirestore.instance.collection('employees').get();
 
     for (var doc in employeesSnapshot.docs) {
       if (doc['roles'] == 'Doctor') {
@@ -102,7 +102,6 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     });
   }
 
-
   final TextEditingController specializationController =
       TextEditingController();
 
@@ -121,7 +120,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: ManagementGeneralInformationDrawer(
+              child: ManagementDoctorSchedule(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -137,7 +136,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: ManagementGeneralInformationDrawer(
+              child: ManagementDoctorSchedule(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -499,7 +498,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
               const SizedBox(height: 30),
               Center(
                 child: InkWell(
-                 onTap: saveSchedule,
+                  onTap: saveSchedule,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     width: 250,
@@ -540,8 +539,12 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       ),
     );
   }
+
   void saveSchedule() async {
-    if (selectedDoctor == null || opTime == null || outTime == null || selectedCounter == null) {
+    if (selectedDoctor == null ||
+        opTime == null ||
+        outTime == null ||
+        selectedCounter == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields.')),
       );
@@ -564,7 +567,8 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     };
 
     try {
-      final collection = FirebaseFirestore.instance.collection('doctorSchedulesDaily');
+      final collection =
+          FirebaseFirestore.instance.collection('doctorSchedulesDaily');
 
       // Step 1: Check if all docs are from today
       final snapshot = await collection.get();
@@ -599,7 +603,4 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       );
     }
   }
-
-
-
 }

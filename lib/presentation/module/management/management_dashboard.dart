@@ -7,6 +7,7 @@ import 'package:foxcare_lite/presentation/module/management/patientsInformation/
 import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
 import 'package:foxcare_lite/presentation/module/management/wardRoomInformation/ward_rooms.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
+import 'package:foxcare_lite/utilities/widgets/drawer/management/mangement_module_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -43,7 +44,14 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -52,7 +60,14 @@ class _ManagementDashboard extends State<ManagementDashboard> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
@@ -62,109 +77,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           ),
         ],
       ),
-    );
-  }
-
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Management',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Home', () {}, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'Patient Information', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ManagementRegisterPatient()));
-        }, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'General Operation', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => GeneralInformationOpTicket()));
-        }, Iconsax.add_circle),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Users', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => UserAccountCreation()));
-        }, Iconsax.square),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, ' Accounts', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NewPatientRegisterCollection()));
-        }, Iconsax.status),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(5, 'Ward / Room', () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => WardRooms()));
-        }, Iconsax.hospital),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(6, 'Logout', () async {
-          await FirebaseAuth.instance.signOut();
-        }, Iconsax.logout),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
     );
   }
 
@@ -186,7 +98,34 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           ),
           child: Column(
             children: [
-              SizedBox(height: screenHeight * 0.08),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Dashboard",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.08),
             ],
           ),

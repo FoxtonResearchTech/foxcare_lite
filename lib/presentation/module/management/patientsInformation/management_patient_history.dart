@@ -5,7 +5,9 @@ import 'package:foxcare_lite/presentation/module/management/management_dashboard
 
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/drawer/management/patient_information/management_patient_information.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
@@ -137,7 +139,14 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementPatientInformation(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -146,7 +155,14 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementPatientInformation(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
@@ -156,84 +172,6 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
           ),
         ],
       ),
-    );
-  }
-
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Patient Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Patient Registration', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ManagementRegisterPatient()));
-        }, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'Patient history', () {}, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'Patient List', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ManagementPatientsList()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Back To Management Dashboard', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManagementDashboard()));
-        }, Iconsax.backward),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
     );
   }
 
@@ -248,13 +186,38 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.03,
             left: screenWidth * 0.01,
             right: screenWidth * 0.01,
             bottom: screenWidth * 0.01,
           ),
           child: Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.02),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Patient History",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                ],
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -291,6 +254,8 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
               ),
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {

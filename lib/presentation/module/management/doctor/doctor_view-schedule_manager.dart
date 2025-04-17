@@ -4,6 +4,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:foxcare_lite/presentation/module/management/doctor/add_schedule.dart';
 import 'package:lottie/lottie.dart';
+import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
@@ -14,7 +15,7 @@ class DoctorScheduleViewManager extends StatefulWidget {
 }
 
 class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
-  int selectedIndex = 3;
+  int selectedIndex = 0;
   List<Map<String, dynamic>> doctors = [];
 
   final String formattedDate = DateFormat('d MMMM, y').format(DateTime.now());
@@ -27,10 +28,12 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
 
   Future<void> fetchDoctorSchedules() async {
     try {
-      final QuerySnapshot snapshot =
-      await FirebaseFirestore.instance.collection('doctorSchedulesDaily').get();
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('doctorSchedulesDaily')
+          .get();
 
-      final List<Map<String, dynamic>> fetchedDoctors = snapshot.docs.map((doc) {
+      final List<Map<String, dynamic>> fetchedDoctors =
+          snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return {
           'doctor': data['doctor'] ?? 'Unknown',
@@ -60,20 +63,20 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-        title: const CustomText(text: 'General Information'),
-      )
+              title: const CustomText(text: 'General Information'),
+            )
           : null,
       drawer: isMobile
           ? Drawer(
-        child: ManagementGeneralInformationDrawer(
-          selectedIndex: selectedIndex,
-          onItemSelected: (index) {
-            setState(() {
-              selectedIndex = index;
-            });
-          },
-        ),
-      )
+              child: ManagementDoctorSchedule(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+            )
           : null,
       body: Row(
         children: [
@@ -81,7 +84,7 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
             Container(
               width: 300,
               color: Colors.blue.shade100,
-              child: ManagementGeneralInformationDrawer(
+              child: ManagementDoctorSchedule(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -165,11 +168,13 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                    const Icon(Icons.calendar_today,
+                        color: Colors.white, size: 24),
                     const SizedBox(width: 8),
                     Text(
                       formattedDate,
@@ -194,7 +199,8 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                     if (dateStr == null) return false;
 
                     try {
-                      final doctorDate = DateFormat('yyyy-MM-dd').format(DateTime.parse(dateStr));
+                      final doctorDate = DateFormat('yyyy-MM-dd')
+                          .format(DateTime.parse(dateStr));
                       return doctorDate == today;
                     } catch (e) {
                       return false;
@@ -203,23 +209,23 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
 
 // Show message if no data
                   if (todayDoctors.isEmpty) {
-                    return  Center(
-                      child: Lottie.asset("assets/no_data.json",height: 500,width: 500),
+                    return Center(
+                      child: Lottie.asset("assets/no_data.json",
+                          height: 500, width: 500),
                     );
                   }
                   return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: doctors.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 16.0,
-                      mainAxisSpacing: 16.0,
-                      childAspectRatio: 0.6,
-                    ),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: doctors.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 16.0,
+                        mainAxisSpacing: 16.0,
+                        childAspectRatio: 0.6,
+                      ),
                       itemBuilder: (context, index) {
                         final doctor = doctors[index];
-
 
                         return Card(
                           elevation: 12,
@@ -230,7 +236,10 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16.0),
                               gradient: const LinearGradient(
-                                colors: [Colors.blueAccent, Colors.lightBlueAccent],
+                                colors: [
+                                  Colors.blueAccent,
+                                  Colors.lightBlueAccent
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
@@ -245,19 +254,25 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                                     backgroundColor: Colors.white,
                                     child: Text(
                                       doctor['counter'],
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 25),
                                     ),
                                   ),
                                   const SizedBox(height: 24.0),
                                   Text(
                                     doctor['doctor'],
-                                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                                    style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: 12.0),
                                   Text(
                                     doctor['specialization'],
-                                    style: const TextStyle(fontSize: 18, color: Colors.white70),
+                                    style: const TextStyle(
+                                        fontSize: 18, color: Colors.white70),
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: 12.0),
@@ -265,28 +280,38 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                                     children: [
                                       Expanded(
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.3),
-                                            borderRadius: BorderRadius.circular(16),
+                                            color:
+                                                Colors.white.withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: Text(
                                             doctor['morningOpIn'],
-                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 12.0),
                                       Expanded(
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.3),
-                                            borderRadius: BorderRadius.circular(16),
+                                            color:
+                                                Colors.white.withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: Text(
                                             doctor['morningOpOut'],
-                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white),
                                           ),
                                         ),
                                       ),
@@ -297,28 +322,38 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                                     children: [
                                       Expanded(
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.3),
-                                            borderRadius: BorderRadius.circular(16),
+                                            color:
+                                                Colors.white.withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: Text(
                                             doctor['eveningOpIn'],
-                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 12.0),
                                       Expanded(
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.3),
-                                            borderRadius: BorderRadius.circular(16),
+                                            color:
+                                                Colors.white.withOpacity(0.3),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: Text(
                                             doctor['eveningOpOut'],
-                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white),
                                           ),
                                         ),
                                       ),
@@ -329,9 +364,7 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                             ),
                           ),
                         );
-                      }
-
-                  );
+                      });
                 },
               ),
             ],
@@ -351,7 +384,8 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AddDoctorSchedule()),
+                MaterialPageRoute(
+                    builder: (context) => const AddDoctorSchedule()),
               );
             },
           ),

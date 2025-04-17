@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
@@ -14,7 +15,7 @@ class MonthlyDoctorSchedule extends StatefulWidget {
 
 class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
   List<Map<String, dynamic>> schedules = [];
-  int selectedIndex = 6;
+  int selectedIndex = 3;
 
   List<Map<String, String>> doctorList = [
     {"name": "Dr. Aisha Khan", "specialization": "Cardiologist"},
@@ -36,7 +37,6 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       });
     });
   }
-
 
   Future<void> _selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
@@ -63,6 +63,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       });
     }
   }
+
   Future<void> _selectTimeEvening(int index, String key) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -75,6 +76,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       });
     }
   }
+
   String? selectedDoctor;
   String specialization = '';
   @override
@@ -82,12 +84,13 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
     super.initState();
     fetchDoctors();
   }
+
   Map<String, List<String>> selectedDoctors = {};
   Map<String, String> doctorSpecializations = {};
   List<String> doctors = [];
   void fetchDoctors() async {
     final snapshot =
-    await FirebaseFirestore.instance.collection('employees').get();
+        await FirebaseFirestore.instance.collection('employees').get();
 
     List<String> fetchedDoctors = [];
 
@@ -111,6 +114,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
     print("Doctors: $doctors");
     print("Specializations: $doctorSpecializations");
   }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -126,7 +130,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: ManagementGeneralInformationDrawer(
+              child: ManagementDoctorSchedule(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -142,7 +146,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: ManagementGeneralInformationDrawer(
+              child: ManagementDoctorSchedule(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -203,7 +207,8 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                fixedSize: const Size.fromHeight(56), // Set only height, let width adapt
+                fixedSize: const Size.fromHeight(
+                    56), // Set only height, let width adapt
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -215,9 +220,6 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                 style: TextStyle(fontSize: 16),
               ),
             ),
-
-
-
             const SizedBox(height: 16),
             Expanded(
               child: schedules.isEmpty
@@ -228,197 +230,231 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                       ),
                     )
                   : GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isWide ? 2 : 1,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.3,
-                ),
-                itemCount: schedules.length,
-                itemBuilder: (context, index) {
-                  final schedule = schedules[index];
-                  String? selectedDoctor = schedule['doctor'];
-                  String specialization = selectedDoctor != null
-                      ? (doctorList.firstWhere(
-                        (doc) => doc['name'] == selectedDoctor,
-                    orElse: () => {'specialization': 'Not Available'},
-                  )['specialization'] ?? 'Not Available')
-                      : '';
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: isWide ? 2 : 1,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.3,
+                      ),
+                      itemCount: schedules.length,
+                      itemBuilder: (context, index) {
+                        final schedule = schedules[index];
+                        String? selectedDoctor = schedule['doctor'];
+                        String specialization = selectedDoctor != null
+                            ? (doctorList.firstWhere(
+                                  (doc) => doc['name'] == selectedDoctor,
+                                  orElse: () =>
+                                      {'specialization': 'Not Available'},
+                                )['specialization'] ??
+                                'Not Available')
+                            : '';
 
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 5,
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Date + Close button
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "📅 ${schedule['date'].toLocal().toString().split(' ')[0]}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.close, color: Colors.redAccent),
-                                onPressed: () {
-                                  setState(() {
-                                    schedules.removeAt(index);
-                                  });
-                                },
-                              )
-                            ],
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          const SizedBox(height: 12),
-
-                          // Doctor Dropdown
-                          DropdownSearch<String>(
-                            items: doctors,
-                            selectedItem: selectedDoctor,
-                            dropdownDecoratorProps: DropDownDecoratorProps(
-                              dropdownSearchDecoration: InputDecoration(
-                                labelText: "Select Doctor",
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                          elevation: 5,
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Date + Close button
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "📅 ${schedule['date'].toLocal().toString().split(' ')[0]}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.close,
+                                          color: Colors.redAccent),
+                                      onPressed: () {
+                                        setState(() {
+                                          schedules.removeAt(index);
+                                        });
+                                      },
+                                    )
+                                  ],
                                 ),
-                              ),
-                            ),
-                            popupProps: PopupProps.menu(
-                              showSearchBox: true,
-                              searchFieldProps: TextFieldProps(
-                                decoration: InputDecoration(
-                                  labelText: "Search Doctor",
-                                  prefixIcon: Icon(Icons.search),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                schedules[index]['doctorName'] = value;
-                                schedules[index]['specialization'] =
-                                    doctorSpecializations[value!] ?? 'Not Available';
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
+                                const SizedBox(height: 12),
 
-                          // Specialization Display
-                          TextField(
-                            controller: TextEditingController(
-                              text: schedule['specialization'] ?? "",
-                            ),
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              labelText: "Specialization",
-                              prefixIcon: const Icon(Icons.local_hospital),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Time Buttons Row
-                          // MORNING OP
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 8.0, left: 4),
-                                child: Text(
-                                  "Morning OP",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blueAccent,
-                                  ),
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // FROM MORNING
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => _selectTime(index, 'fromTimeMorning'),
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: _buildTimeCard("From", schedules[index]['fromTimeMorning'], context),
+                                // Doctor Dropdown
+                                DropdownSearch<String>(
+                                  items: doctors,
+                                  selectedItem: selectedDoctor,
+                                  dropdownDecoratorProps:
+                                      DropDownDecoratorProps(
+                                    dropdownSearchDecoration: InputDecoration(
+                                      labelText: "Select Doctor",
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
                                     ),
                                   ),
-                                  // TO MORNING
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => _selectTime(index, 'toTimeMorning'),
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: _buildTimeCard("To", schedules[index]['toTimeMorning'], context),
+                                  popupProps: PopupProps.menu(
+                                    showSearchBox: true,
+                                    searchFieldProps: TextFieldProps(
+                                      decoration: InputDecoration(
+                                        labelText: "Search Doctor",
+                                        prefixIcon: Icon(Icons.search),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      schedules[index]['doctorName'] = value;
+                                      schedules[index]['specialization'] =
+                                          doctorSpecializations[value!] ??
+                                              'Not Available';
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 12),
 
-                          const SizedBox(height: 12),
+                                // Specialization Display
+                                TextField(
+                                  controller: TextEditingController(
+                                    text: schedule['specialization'] ?? "",
+                                  ),
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    labelText: "Specialization",
+                                    prefixIcon:
+                                        const Icon(Icons.local_hospital),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Time Buttons Row
+                                // MORNING OP
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.only(bottom: 8.0, left: 4),
+                                      child: Text(
+                                        "Morning OP",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blueAccent,
+                                        ),
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // FROM MORNING
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => _selectTime(
+                                                index, 'fromTimeMorning'),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: _buildTimeCard(
+                                                "From",
+                                                schedules[index]
+                                                    ['fromTimeMorning'],
+                                                context),
+                                          ),
+                                        ),
+                                        // TO MORNING
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => _selectTime(
+                                                index, 'toTimeMorning'),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: _buildTimeCard(
+                                                "To",
+                                                schedules[index]
+                                                    ['toTimeMorning'],
+                                                context),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 12),
 
 // EVENING OP
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 8.0, left: 4),
-                                child: Text(
-                                  "Evening OP",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blueAccent,
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.only(bottom: 8.0, left: 4),
+                                      child: Text(
+                                        "Evening OP",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blueAccent,
+                                        ),
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // FROM EVENING
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => _selectTime(
+                                                index, 'fromTimeEvening'),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: _buildTimeCard(
+                                                "From",
+                                                schedules[index]
+                                                    ['fromTimeEvening'],
+                                                context),
+                                          ),
+                                        ),
+                                        // TO EVENING
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => _selectTime(
+                                                index, 'toTimeEvening'),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: _buildTimeCard(
+                                                "To",
+                                                schedules[index]
+                                                    ['toTimeEvening'],
+                                                context),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // FROM EVENING
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => _selectTime(index, 'fromTimeEvening'),
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: _buildTimeCard("From", schedules[index]['fromTimeEvening'], context),
-                                    ),
-                                  ),
-                                  // TO EVENING
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => _selectTime(index, 'toTimeEvening'),
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: _buildTimeCard("To", schedules[index]['toTimeEvening'], context),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              )
-              ,
             ),
           ],
         ),
@@ -449,10 +485,14 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                 onPressed: () => confirmAndDeleteCollection(context),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                icon: const Icon(Icons.delete_forever,color: Colors.white,),
+                icon: const Icon(
+                  Icons.delete_forever,
+                  color: Colors.white,
+                ),
                 label: const Text(
                   "Delete All",
-                  style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),
@@ -479,21 +519,23 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                 onPressed: _saveSchedules,
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                icon: const Icon(Icons.save_alt_rounded,color: Colors.white,),
+                icon: const Icon(
+                  Icons.save_alt_rounded,
+                  color: Colors.white,
+                ),
                 label: const Text(
                   "Save All",
-                  style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),
           ],
         ),
       ),
-
-
     );
-
   }
+
   Widget _buildTimeCard(String label, TimeOfDay time, BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
@@ -530,6 +572,7 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       ),
     );
   }
+
   void _saveSchedules() async {
     try {
       final firestore = FirebaseFirestore.instance;
@@ -563,7 +606,8 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Confirm Delete"),
-        content: Text("Are you sure you want to delete the entire schedule collection? This action cannot be undone."),
+        content: Text(
+            "Are you sure you want to delete the entire schedule collection? This action cannot be undone."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false), // Cancel
@@ -584,9 +628,11 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       deleteEntireCollection();
     }
   }
+
   void deleteEntireCollection() async {
     try {
-      final collectionRef = FirebaseFirestore.instance.collection('doctorSchedulesMonthly');
+      final collectionRef =
+          FirebaseFirestore.instance.collection('doctorSchedulesMonthly');
       final snapshot = await collectionRef.get();
 
       for (DocumentSnapshot doc in snapshot.docs) {

@@ -5,6 +5,7 @@ import 'package:foxcare_lite/presentation/module/management/wardRoomInformation/
 
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../utilities/widgets/drawer/management/ward_room_information/ward_room_drawer.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../generalInformation/general_information_admission_status.dart';
 import 'new_ward_rooms.dart';
@@ -34,7 +35,14 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: WardRoomDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -43,7 +51,14 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: WardRoomDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
