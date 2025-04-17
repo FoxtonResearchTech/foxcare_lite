@@ -134,8 +134,8 @@ class _BookAppointments extends State<BookAppointments> {
     try {
       QuerySnapshot<Map<String, dynamic>> doctorsSnapshot =
           await FirebaseFirestore.instance
-              .collection('doctorSchedulesDaily')
-              .where('date', isEqualTo: today)
+              .collection('employees')
+              .where('roles', isEqualTo: 'Doctor')
               .get();
 
       if (doctorsSnapshot.docs.isNotEmpty) {
@@ -144,7 +144,7 @@ class _BookAppointments extends State<BookAppointments> {
 
         for (var doc in doctorsSnapshot.docs) {
           final data = doc.data();
-          final doctor = data['doctor'] ?? '';
+          final doctor = data['firstName'] + ' ' + data['lastName'] ?? '';
           final spec = data['specialization'] ?? '';
 
           if (doctor.isNotEmpty) {
