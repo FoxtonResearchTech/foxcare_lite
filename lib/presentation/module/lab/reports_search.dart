@@ -21,7 +21,7 @@ class ReportsSearch extends StatefulWidget {
   State<ReportsSearch> createState() => _ReportsSearch();
 }
 
-int selectedIndex = 3;
+int selectedIndex = 4;
 
 class ReportRow {
   final String slNo;
@@ -95,16 +95,18 @@ class _ReportsSearch extends State<ReportsSearch> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-
+        if (!data.containsKey('reportNo')) continue;
+        if (!data.containsKey('reportDate')) continue;
+        if (!data.containsKey('opNumber')) continue;
         fetchedData.add({
           'Report Date': data['reportDate']?.toString() ?? 'N/A',
           'Report No': data['reportNo']?.toString() ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
           'OP Number': data['opNumber']?.toString() ?? 'N/A',
-          'Total Amount': data['totalAmount']?.toString() ?? '0',
-          'Collected': data['collected']?.toString() ?? '0',
-          'Balance': data['balance']?.toString() ?? '0',
+          'Total Amount': data['labTotalAmount']?.toString() ?? '0',
+          'Collected': data['labCollected']?.toString() ?? '0',
+          'Balance': data['labBalance']?.toString() ?? '0',
         });
       }
 

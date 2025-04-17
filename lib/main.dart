@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
       home: AuthGate(),
@@ -90,17 +90,17 @@ class AuthGate extends StatelessWidget {
               case 'Management':
                 return ManagementDashboard();
               case 'Pharmacist':
-                return const SalesChartScreen();
+                return SalesChartScreen();
               case 'Receptionist':
                 return ReceptionDashboard();
               case 'Lab Assistance':
-                return const LabDashboard();
+                return LabDashboard();
               case 'X-Ray Technician':
                 return PatientRegistration();
               case 'Doctor':
                 return DoctorDashboard();
               case 'Manager':
-                return const ManagerDashboard();
+                return ManagerDashboard();
               default:
                 return Scaffold(
                   body: Center(child: Text("Unknown role: $role")),

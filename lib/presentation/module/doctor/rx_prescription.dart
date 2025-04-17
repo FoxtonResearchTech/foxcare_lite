@@ -177,6 +177,8 @@ class _RxPrescription extends State<RxPrescription> {
   String _searchQuery = '';
   String _searchMedicine = '';
 
+  final dateTime = DateTime.timestamp();
+
   bool isLoading = false;
   bool _isSwitched = false;
   bool isMed = false;
@@ -347,10 +349,7 @@ class _RxPrescription extends State<RxPrescription> {
 
   Future<void> _savePrescriptionData() async {
     try {
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.patientID)
-          .set({
+      final Map<String, dynamic> patientData = {
         'Medication': _selectedMedicine,
         'Examination': _selectedItems,
         'proceedTo': selectedValue,
@@ -366,16 +365,41 @@ class _RxPrescription extends State<RxPrescription> {
           'symptoms': _symptomsController.text,
           'patientHistory': _patientHistoryController.text,
         },
-      }, SetOptions(merge: true));
+      };
+
+      if (_selectedMedicine.isNotEmpty) {
+        patientData['medicinePrescribedDate'] = dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0');
+      }
+      if (_selectedItems.isNotEmpty) {
+        patientData['labExaminationPrescribedDate'] = dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0');
+      }
+
       await FirebaseFirestore.instance
           .collection('patients')
           .doc(widget.patientID)
-          .collection('appointments')
-          .doc('appointment')
-          .set({
-        'appointmentDate': _appointmentDate.text,
-        'appointmentTime': _appointmentTime.text,
-      }, SetOptions(merge: true));
+          .set(patientData, SetOptions(merge: true));
+
+      if (_appointmentDate.text.isNotEmpty &&
+          _appointmentTime.text.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(widget.patientID)
+            .collection('appointments')
+            .doc('appointment')
+            .set({
+          'appointmentDate': _appointmentDate.text,
+          'appointmentTime': _appointmentTime.text,
+        }, SetOptions(merge: true));
+      }
+
       await clearPrescriptionDraft(widget.patientID);
       CustomSnackBar(context,
           message: 'Details saved successfully!',
@@ -428,7 +452,6 @@ class _RxPrescription extends State<RxPrescription> {
     Map<String, dynamic> draftData = {
       'Medication': _selectedMedicine,
       'Examination': _selectedItems,
-      'proceedTo': selectedValue,
       'appointmentDate': _appointmentDate.text,
       'appointmentTime': _appointmentTime.text,
       'prescribedMedicines': medicineTableData,
@@ -458,7 +481,6 @@ class _RxPrescription extends State<RxPrescription> {
       setState(() {
         _selectedMedicine = List<String>.from(data['Medication'] ?? []);
         _selectedItems = List<String>.from(data['Examination'] ?? []);
-        selectedValue = data['proceedTo'] ?? '';
         _appointmentDate.text = data['appointmentDate'] ?? '';
         _appointmentTime.text = data['appointmentTime'] ?? '';
         medicineTableData =
@@ -691,7 +713,7 @@ class _RxPrescription extends State<RxPrescription> {
                         'Medication',
                         'Examination',
                         'Appointment',
-                        'Investigation'
+                        'Investigation',
                       ],
                       selectedItem: selectedValue,
                       onChanged: (value) {

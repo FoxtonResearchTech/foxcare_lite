@@ -23,7 +23,7 @@ class LabAccounts extends StatefulWidget {
   State<LabAccounts> createState() => _LabAccountsState();
 }
 
-int selectedIndex = 2;
+int selectedIndex = 3;
 
 class _LabAccountsState extends State<LabAccounts> {
   TextEditingController _dateController = TextEditingController();
@@ -67,6 +67,9 @@ class _LabAccountsState extends State<LabAccounts> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('reportNo')) continue;
+        if (!data.containsKey('reportDate')) continue;
+        if (!data.containsKey('opNumber')) continue;
 
         fetchedData.add({
           'Report Date': data['reportDate']?.toString() ?? 'N/A',
@@ -74,9 +77,9 @@ class _LabAccountsState extends State<LabAccounts> {
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
           'OP Number': data['opNumber']?.toString() ?? 'N/A',
-          'Total Amount': data['totalAmount']?.toString() ?? '0',
-          'Collected': data['collected']?.toString() ?? '0',
-          'Balance': data['balance']?.toString() ?? '0',
+          'Total Amount': data['labTotalAmount']?.toString() ?? '0',
+          'Collected': data['labCollected']?.toString() ?? '0',
+          'Balance': data['labBalance']?.toString() ?? '0',
         });
       }
 
@@ -349,19 +352,19 @@ class _LabAccountsState extends State<LabAccounts> {
                 ),
                 child: Row(
                   children: [
-                    SizedBox(width: screenWidth * 0.38),
+                    SizedBox(width: screenWidth * 0.35),
                     CustomText(
                       text: 'Total : ',
                     ),
-                    SizedBox(width: screenWidth * 0.086),
+                    SizedBox(width: screenWidth * 0.06),
                     CustomText(
                       text: '${_totalAmountCollected()}',
                     ),
-                    SizedBox(width: screenWidth * 0.08),
+                    SizedBox(width: screenWidth * 0.075),
                     CustomText(
                       text: '${_totalCollected()}',
                     ),
-                    SizedBox(width: screenWidth * 0.083),
+                    SizedBox(width: screenWidth * 0.08),
                     CustomText(
                       text: '${_totalBalance()}',
                     ),

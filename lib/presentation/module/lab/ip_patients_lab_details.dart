@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/presentation/module/lab/ip_patient_report.dart';
 import 'package:foxcare_lite/presentation/module/lab/patient_report.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
@@ -19,20 +20,20 @@ import 'dashboard.dart';
 import 'lab_accounts.dart';
 import 'lab_testqueue.dart';
 
-class PatientsLabDetails extends StatefulWidget {
-  const PatientsLabDetails({super.key});
+class IpPatientsLabDetails extends StatefulWidget {
+  const IpPatientsLabDetails({super.key});
 
   @override
-  State<PatientsLabDetails> createState() => _PatientsLabDetails();
+  State<IpPatientsLabDetails> createState() => _IpPatientsLabDetails();
 }
 
-class _PatientsLabDetails extends State<PatientsLabDetails> {
-  final TextEditingController opNumberSearch = TextEditingController();
+class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
+  final TextEditingController ipNumberSearch = TextEditingController();
   final TextEditingController phoneNumberSearch = TextEditingController();
-  int selectedIndex = 1;
+  int selectedIndex = 2;
   final List<String> headers1 = [
     'Token NO',
-    'OP NO',
+    'IP NO',
     'Name',
     'Age',
     'Place',
@@ -70,15 +71,16 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
+        if (!data.containsKey('ipNumber')) continue;
 
         if (data['Examination'] == null ||
             (data['Examination'] as List).isEmpty) {
           continue;
         }
 
+        // Manual filtering logic
         if (patientID != null && patientID.isNotEmpty) {
-          if ((data['opNumber'] ?? '') != patientID) {
+          if ((data['ipNumber'] ?? '') != patientID) {
             continue;
           }
         }
@@ -112,7 +114,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 
         fetchedData.add({
           'Token NO': tokenNo,
-          'OP NO': data['opNumber'] ?? 'N/A',
+          'IP NO': data['ipNumber'] ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
           'Age': data['age'] ?? 'N/A',
@@ -126,8 +128,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PatientReport(
-                      patientID: data['opNumber'] ?? 'N/A',
+                    builder: (context) => IpPatientReport(
+                      patientID: data['ipNumber'] ?? 'N/A',
                       name:
                           '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
                               .trim(),
@@ -285,8 +287,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 children: [
                   SizedBox(width: screenHeight * 0.1),
                   CustomTextField(
-                    controller: opNumberSearch,
-                    hintText: 'OP Number',
+                    controller: ipNumberSearch,
+                    hintText: 'IP Number',
                     width: screenWidth * 0.1,
                   ),
                   CustomTextField(
@@ -297,11 +299,11 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   CustomButton(
                     label: 'Search',
                     onPressed: () async {
-                      final opNumber = opNumberSearch.text.trim();
+                      final ipNumber = ipNumberSearch.text.trim();
                       final phone = phoneNumberSearch.text.trim();
 
                       await fetchData(
-                        patientID: opNumber.isNotEmpty ? opNumber : null,
+                        patientID: ipNumber.isNotEmpty ? ipNumber : null,
                         phoneNumber: phone.isNotEmpty ? phone : null,
                       );
                     },

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +7,8 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timeline_tile/timeline_tile.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/table/editable_drop_down_table.dart';
@@ -358,28 +355,10 @@ class _IpPrescription extends State<IpPrescription> {
 
   Future<void> _savePrescriptionData() async {
     try {
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.ipNumber)
-          .collection('ipPrescription')
-          .doc('details')
-          .set({
-        'date': dateTime.year.toString() +
-            '-' +
-            dateTime.month.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.day.toString().padLeft(2, '0'),
-        'time': dateTime.hour.toString() +
-            '-' +
-            dateTime.minute.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.second.toString().padLeft(2, '0'),
+      final Map<String, dynamic> patientData = {
         'Medication': _selectedMedicine,
         'Examination': _selectedItems,
         'proceedTo': selectedValue,
-        'ipAdmission': selectedIPAdmissionValue,
-        'appointmentDate': _appointmentDate.text,
-        'appointmentTime': _appointmentTime.text,
         'prescribedMedicines': medicineTableData,
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
@@ -392,17 +371,44 @@ class _IpPrescription extends State<IpPrescription> {
           'symptoms': _symptomsController.text,
           'patientHistory': _patientHistoryController.text,
         },
-      }, SetOptions(merge: true));
+      };
+
+      if (_selectedMedicine.isNotEmpty) {
+        patientData['medicinePrescribedDate'] = dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0');
+      }
+      if (_selectedItems.isNotEmpty) {
+        patientData['labExaminationPrescribedDate'] = dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0');
+      }
+
       await FirebaseFirestore.instance
           .collection('patients')
           .doc(widget.ipNumber)
-          .collection('appointments')
-          .doc('appointment')
-          .set({
-        'appointmentDate': _appointmentDate.text,
-        'appointmentTime': _appointmentTime.text,
-      }, SetOptions(merge: true));
-      clearPrescriptionDraft(widget.ipNumber);
+          .collection('ipPrescription')
+          .doc('details')
+          .set(patientData, SetOptions(merge: true));
+
+      if (_appointmentDate.text.isNotEmpty &&
+          _appointmentTime.text.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(widget.patientID)
+            .collection('appointments')
+            .doc('appointment')
+            .set({
+          'appointmentDate': _appointmentDate.text,
+          'appointmentTime': _appointmentTime.text,
+        }, SetOptions(merge: true));
+      }
+
+      await clearPrescriptionDraft(widget.ipNumber);
       CustomSnackBar(context,
           message: 'Details saved successfully!',
           backgroundColor: Colors.green);
@@ -454,7 +460,6 @@ class _IpPrescription extends State<IpPrescription> {
     Map<String, dynamic> draftData = {
       'Medication': _selectedMedicine,
       'Examination': _selectedItems,
-      'proceedTo': selectedValue,
       'appointmentDate': _appointmentDate.text,
       'appointmentTime': _appointmentTime.text,
       'prescribedMedicines': medicineTableData,
@@ -484,7 +489,6 @@ class _IpPrescription extends State<IpPrescription> {
       setState(() {
         _selectedMedicine = List<String>.from(data['Medication'] ?? []);
         _selectedItems = List<String>.from(data['Examination'] ?? []);
-        selectedValue = data['proceedTo'] ?? '';
         _appointmentDate.text = data['appointmentDate'] ?? '';
         _appointmentTime.text = data['appointmentTime'] ?? '';
         medicineTableData =
@@ -708,11 +712,11 @@ class _IpPrescription extends State<IpPrescription> {
                     width: 250,
                     child: CustomDropdown(
                       label: 'Proceed To',
-                      items: [
+                      items: const [
                         'Medication',
                         'Examination',
                         'Appointment',
-                        'Investigation'
+                        'Investigation',
                       ],
                       selectedItem: selectedValue,
                       onChanged: (value) {

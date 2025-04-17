@@ -120,7 +120,10 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
 
   Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      Query query = FirebaseFirestore.instance
+          .collection('patients')
+          .where('doctorName', isEqualTo: widget.doctorName);
+      ;
 
       if (ipNumber != null) {
         query = query.where('ipNumber', isEqualTo: ipNumber);
