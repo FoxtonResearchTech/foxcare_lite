@@ -287,9 +287,9 @@ class _DoctorDashboard extends State<DoctorDashboard> {
           fetchedData.add({
             'OP Number': data['opNumber'] ?? 'N/A',
             'Token': detailsData?['tokenNumber'] ?? 'N/A',
-            'Name': data['name'] ?? 'N/A',
-            'Place': data['place'] ?? 'N/A',
-            'Phone Number': data['phoneNumber'] ?? 'N/A',
+            'Name': data['firstName'] + ' ' + data['lastName'] ?? 'N/A',
+            'Place': data['city'] ?? 'N/A',
+            'Phone Number': data['phone1'] ?? 'N/A',
             'Examinations': data['Examination'],
             'Status': CustomDropdown(
                 focusColor: Colors.white,
@@ -300,6 +300,11 @@ class _DoctorDashboard extends State<DoctorDashboard> {
           });
         }
       }
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['Token'].toString()) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
 
       setState(() {
         tableData1 = fetchedData;

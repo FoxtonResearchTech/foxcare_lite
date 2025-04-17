@@ -61,11 +61,8 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
   Future<void> fetchData({String? patientID, String? phoneNumber}) async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .where('Examination', isNotEqualTo: null)
-          .where('Examination', isNotEqualTo: '')
-          .get();
+      final QuerySnapshot patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
@@ -73,8 +70,19 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
         final data = doc.data() as Map<String, dynamic>;
         if (!data.containsKey('ipNumber')) continue;
 
-        if (data['Examination'] == null ||
-            (data['Examination'] as List).isEmpty) {
+        DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(doc.id)
+            .collection('ipPrescription')
+            .doc('details')
+            .get();
+
+        Map<String, dynamic>? detailsData = detailsDoc.exists
+            ? detailsDoc.data() as Map<String, dynamic>?
+            : null;
+
+        if (detailsData?['Examination'] == null ||
+            (detailsData?['Examination'] as List).isEmpty) {
           continue;
         }
 
@@ -122,7 +130,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
           'Address': data['address1'] ?? 'N/A',
           'PinCode': data['pincode'] ?? 'N/A',
           'Status': data['status'] ?? 'N/A',
-          'List of Tests': data['Examination'] ?? 'N/A',
+          'List of Tests': detailsData?['Examination'] ?? 'N/A',
           'Action': TextButton(
               onPressed: () {
                 Navigator.push(
@@ -137,7 +145,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                       sex: data['sex'] ?? 'N/A',
                       place: data['state'] ?? 'N/A',
                       dob: data['dob'] ?? 'N/A',
-                      medication: data['Examination'] ?? 'N/A',
+                      medication: detailsData?['Examination'] ?? 'N/A',
                       address: data['address1'] ?? 'N/A',
                       pincode: data['pincode'] ?? 'N/A',
                       primaryInfo: data['otherComments'] ?? 'N/A',
@@ -263,7 +271,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "Patients Lab Test",
+                          text: "IP Patients Lab Test",
                           size: screenWidth * 0.03,
                         ),
                       ],
