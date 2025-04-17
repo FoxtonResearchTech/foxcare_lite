@@ -715,7 +715,7 @@ class _IpPrescription extends State<IpPrescription> {
                       items: const [
                         'Medication',
                         'Examination',
-                        'Appointment',
+                        // 'Appointment',
                         'Investigation',
                       ],
                       selectedItem: selectedValue,
