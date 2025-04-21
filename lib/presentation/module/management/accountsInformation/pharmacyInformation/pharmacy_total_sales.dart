@@ -1,18 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_out_standing_bills.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_pending_sales_bills.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_purchase.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/pharmacy/management_pharmacy_accounts.dart';
 
-import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../../utilities/widgets/table/data_table.dart';
 import '../../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../../utilities/widgets/textField/primary_textField.dart';
-import '../new_patient_register_collection.dart';
 
 class PharmacyTotalSales extends StatefulWidget {
   @override
@@ -20,154 +16,193 @@ class PharmacyTotalSales extends StatefulWidget {
 }
 
 class _PharmacyTotalSales extends State<PharmacyTotalSales> {
-  // To store the index of the selected drawer item
+  TextEditingController date = TextEditingController();
+  TextEditingController fromDate = TextEditingController();
+  TextEditingController toDate = TextEditingController();
+
+  double totalAmount = 0.0;
+
   int selectedIndex = 0;
+
   String? chooseType;
   final List<String> headers = [
-    'Date',
     'Bill NO',
-    'OP NO',
-    'Name',
-    'Amount',
-    'Collected',
-    'OP Sales',
-    'IP Sales',
+    'Bill Date',
+    'Patient Name',
+    'OP NO / IP NO / Counter',
+    'Phone Number',
+    'Purchased Total',
+    'Purchased Tax',
+    'Purchased Gst',
+    'Purchased Total Gst',
+    'Purchased Grand Total',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'Date': '',
-      'Bill NO': '',
-      'OP NO': '',
-      'Name': '',
-      'Amount': '',
-      'Collected': '',
-      'OP Sales': '',
-      'IP Sales': '',
+  List<Map<String, dynamic>> tableData = [];
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
     }
-  ];
+  }
+
+  Future<void> fetchData({
+    String? date,
+    String? fromDate,
+    String? toDate,
+  }) async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      resetTotals();
+
+      List<String> collections = ['ipbilling', 'opbilling', 'countersales'];
+
+      List<QuerySnapshot> snapshots = await Future.wait(
+        collections.map((collection) {
+          Query query = firestore
+              .collection('pharmacy')
+              .doc('billing')
+              .collection(collection);
+
+          if (date != null) {
+            query = query.where('billDate', isEqualTo: date);
+          } else if (fromDate != null && toDate != null) {
+            query = query
+                .where('billDate', isGreaterThanOrEqualTo: fromDate)
+                .where('billDate', isLessThanOrEqualTo: toDate);
+          }
+          return query.get();
+        }),
+      );
+
+      List<Map<String, dynamic>> patientData = [];
+
+      for (var snapshot in snapshots) {
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          if (data.isNotEmpty) {
+            patientData.add({
+              'Bill NO': data['billNo'] ?? 'N/A',
+              'Patient Name': data['patientName'] ?? 'N/A',
+              'OP NO / IP NO / Counter':
+                  data['opNumber'] ?? data['ipNumber'] ?? 'Counter',
+              'Bill Date': data['billDate'] ?? 'N/A',
+              'Phone Number': data['phoneNumber'] ?? 'N/A',
+              'Purchased Total': data['totalAmount'] ?? 'N/A',
+              'Purchased Tax': data['taxAmount'] ?? 'N/A',
+              'Purchased Gst': data['gstAmount'] ?? 'N/A',
+              'Purchased Total Gst': data['totalGst'] ?? 'N/A',
+              'Purchased Grand Total': data['grandTotal'] ?? 'N/A',
+            });
+          }
+        }
+      }
+
+      if (patientData.isEmpty) {
+        setState(() {
+          tableData = [];
+          resetTotals();
+        });
+        return;
+      }
+
+      final firstEntry = patientData.first;
+      setState(() {
+        tableData = patientData;
+        calculateTotals();
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  void calculateTotals() {
+    totalAmount = tableData.fold(0.0, (sum, item) {
+      double amount =
+          double.tryParse(item['Purchased Grand Total']?.toString() ?? '0') ??
+              0;
+      return sum + amount;
+    });
+
+    totalAmount = double.parse(totalAmount.toStringAsFixed(2));
+  }
+
+  void resetTotals() {
+    totalAmount = 0.00;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  @override
+  void dispose() {
+    date.dispose();
+    fromDate.dispose();
+    toDate.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'Pharmacy Accounts Information',
               ),
             )
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementPharmacyAccounts(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
-          : null, // No drawer for web view (permanently open)
+          : null,
       body: Row(
         children: [
           if (!isMobile)
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementPharmacyAccounts(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(8),
               child: dashboard(),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Pharmacy Accounts Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Total Sales', () {}, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'Pending Sales Bill', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => PharmacyPendingSalesBills()));
-        }, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'OutStanding Bills', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => PharmacyOutStandingBills()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Purchase', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyPurchase()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Back To Accounts Information', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NewPatientRegisterCollection()));
-        }, Iconsax.backward),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
-  Widget buildDrawerItem(
-      int index, String title, VoidCallback onTap, IconData icon) {
-    return ListTile(
-      selected: selectedIndex == index,
-      selectedTileColor:
-          Colors.blueAccent.shade100, // Highlight color for the selected item
-      leading: Icon(
-        icon, // Replace with actual icons
-        color: selectedIndex == index ? Colors.blue : Colors.white,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-            fontFamily: 'SanFrancisco',
-            color: selectedIndex == index ? Colors.blue : Colors.black54,
-            fontWeight: FontWeight.w700),
-      ),
-      onTap: () {
-        setState(() {
-          selectedIndex = index; // Update the selected index
-        });
-        onTap();
-      },
     );
   }
 
@@ -182,7 +217,6 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
             left: screenWidth * 0.01,
             right: screenWidth * 0.01,
             bottom: screenWidth * 0.01,
@@ -190,32 +224,36 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
           child: Column(
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: screenWidth * 0.15,
-                    child: CustomDropdown(
-                      label: 'Types',
-                      items: ['All', 'Type 1', 'Type 2', 'Type 3'],
-                      onChanged: (value) {
-                        setState(() {
-                          chooseType = value!;
-                        });
-                      },
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Pharmacy Total Sales",
+                          size: screenWidth * .015,
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {},
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.15,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
                   CustomTextField(
+                    controller: date,
+                    onTap: () => _selectDate(context, date),
                     icon: Icon(Icons.date_range),
                     hintText: 'Date',
                     width: screenWidth * 0.15,
@@ -223,7 +261,9 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(date: date.text);
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),
@@ -231,12 +271,16 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    onTap: () => _selectDate(context, fromDate),
+                    controller: fromDate,
                     icon: Icon(Icons.date_range),
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
+                    onTap: () => _selectDate(context, toDate),
+                    controller: toDate,
                     icon: Icon(Icons.date_range),
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -244,7 +288,9 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {},
+                    onPressed: () {
+                      fetchData(fromDate: fromDate.text, toDate: toDate.text);
+                    },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),
@@ -254,8 +300,11 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
               CustomDataTable(
                 tableData: tableData,
                 headers: headers,
+                headerColor: Colors.white,
+                headerBackgroundColor: AppColors.blue,
               ),
               Container(
+                padding: EdgeInsets.only(right: screenWidth * 0.03),
                 width: screenWidth,
                 height: screenHeight * 0.030,
                 decoration: BoxDecoration(
@@ -265,22 +314,10 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   ),
                 ),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    SizedBox(width: screenWidth * 0.38),
                     CustomText(
-                      text: 'Total : ',
-                    ),
-                    SizedBox(width: screenWidth * 0.086),
-                    CustomText(
-                      text: '',
-                    ),
-                    SizedBox(width: screenWidth * 0.08),
-                    CustomText(
-                      text: '',
-                    ),
-                    SizedBox(width: screenWidth * 0.083),
-                    CustomText(
-                      text: '',
+                      text: 'Total :        $totalAmount',
                     ),
                   ],
                 ),

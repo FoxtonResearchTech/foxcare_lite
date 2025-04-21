@@ -8,6 +8,7 @@ import 'package:foxcare_lite/presentation/module/management/management_dashboard
 import 'package:iconsax/iconsax.dart';
 
 import '../../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../../utilities/widgets/drawer/management/accounts/pharmacy/management_pharmacy_accounts.dart';
 import '../../../../../utilities/widgets/table/data_table.dart';
 import '../../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../../utilities/widgets/textField/primary_textField.dart';
@@ -20,8 +21,7 @@ class PharmacyPendingSalesBills extends StatefulWidget {
 }
 
 class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
-  // To store the index of the selected drawer item
-  int selectedIndex = 1;
+  int selectedIndex = 2;
   final List<String> headers = [
     'Date',
     'Bill NO',
@@ -58,7 +58,14 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementPharmacyAccounts(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
           : null, // No drawer for web view (permanently open)
       body: Row(
@@ -67,7 +74,14 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementPharmacyAccounts(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(

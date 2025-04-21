@@ -574,7 +574,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     title: 'Total Income',
                     value: isTotalIncomeLoading
                         ? 'Calculating...'
-                        : totalIncome.toString(),
+                        : '₹ ' + totalIncome.toString(),
                     icon: Iconsax.money_recive,
                     width: screenWidth * 0.17,
                     height: screenHeight * 0.17,
@@ -583,7 +583,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     title: 'Total Expense',
                     value: isTotalIncomeLoading
                         ? 'Calculating...'
-                        : totalExpense.toString(),
+                        : '₹ ' + totalExpense.toString(),
                     icon: Iconsax.money_remove,
                     width: screenWidth * 0.17,
                     height: screenHeight * 0.17,
@@ -592,7 +592,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     title: 'Pharmacy Sales',
                     value: isPharmacyTotalIncomeLoading
                         ? 'Calculating...'
-                        : pharmacyTotalIncome.toString(),
+                        : '₹ ' + pharmacyTotalIncome.toString(),
                     icon: Iconsax.money_recive,
                     width: screenWidth * 0.17,
                     height: screenHeight * 0.17,
@@ -601,7 +601,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     title: 'Pharmacy Expense',
                     value: isPharmacyTotalExpenseLoading
                         ? 'Calculating...'
-                        : pharmacyTotalExpense.toString(),
+                        : '₹ ' + pharmacyTotalExpense.toString(),
                     icon: Iconsax.money_remove,
                     width: screenWidth * 0.17,
                     height: screenHeight * 0.17,

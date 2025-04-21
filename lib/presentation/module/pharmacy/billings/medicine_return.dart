@@ -32,6 +32,7 @@ class _MedicineReturn extends State<MedicineReturn> {
   double gstAmount = 0.00;
   double totalGst = 0.00;
   double grandTotal = 0.00;
+
   final List<String> headers1 = [
     'Bill NO',
     'Patient Name',
