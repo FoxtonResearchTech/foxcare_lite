@@ -7,7 +7,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utilities/colors.dart';
+import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
+import '../../../utilities/widgets/textField/primary_textField.dart';
 
 class ManagementDashboard extends StatefulWidget {
   @override
@@ -15,9 +17,16 @@ class ManagementDashboard extends StatefulWidget {
 }
 
 class _ManagementDashboard extends State<ManagementDashboard> {
+  final TextEditingController _fromDate = TextEditingController();
+  final TextEditingController _toDate = TextEditingController();
+
   int selectedIndex = 0;
 
   Timer? _timer;
+
+  bool isTotalOpLoading = false;
+  bool isTotalIpLoading = false;
+
   bool isTotalIncomeLoading = false;
   bool isTotalExpenseLoading = false;
 
@@ -36,11 +45,23 @@ class _ManagementDashboard extends State<ManagementDashboard> {
   int pharmacyTotalIncome = 0;
   int pharmacyTotalExpense = 0;
 
-  Future<void> getPharmacyIncome() async {
+  Future<void> getPharmacyIncome({String? fromDate, String? toDate}) async {
     double total = 0.0;
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     List<String> subcollections = ['countersales', 'ipbilling', 'opbilling'];
+
+    DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+
+    bool isInRange(String? dateStr) {
+      if (dateStr == null) return false;
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) return false;
+      if (from != null && date.isBefore(from)) return false;
+      if (to != null && date.isAfter(to)) return false;
+      return true;
+    }
 
     try {
       setState(() {
@@ -56,12 +77,17 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          double value =
-              double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
-          total += value;
+          final String? billDate = data['billDate'];
+
+          if (isInRange(billDate)) {
+            double value =
+                double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
+            total += value;
+          }
         }
       }
 
+      // Handle returns
       final QuerySnapshot returnSnapshot = await firestore
           .collection('pharmacy')
           .doc('billing')
@@ -70,9 +96,13 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
       for (var doc in returnSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        double returnValue =
-            double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
-        total -= returnValue;
+        final String? billDate = data['billDate'];
+
+        if (isInRange(billDate)) {
+          double returnValue =
+              double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
+          total -= returnValue;
+        }
       }
 
       setState(() {
@@ -89,26 +119,45 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<void> getPharmacyExpense() async {
+  Future<void> getPharmacyExpense({String? fromDate, String? toDate}) async {
     double total = 0.0;
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+    DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+
+    bool isInRange(String? dateStr) {
+      if (dateStr == null) return false;
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) return false;
+      if (from != null && date.isBefore(from)) return false;
+      if (to != null && date.isAfter(to)) return false;
+      return true;
+    }
+
     try {
+      setState(() {
+        isPharmacyTotalExpenseLoading = true;
+      });
+
+      // Purchase Entry
       final QuerySnapshot purchaseSnapshot = await firestore
           .collection('stock')
           .doc('Products')
           .collection('PurchaseEntry')
           .get();
-      setState(() {
-        isPharmacyTotalExpenseLoading = true;
-      });
 
       for (var doc in purchaseSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        double value = double.tryParse(data['amount']?.toString() ?? '0') ?? 0;
-        total += value;
+        final String? reportDate = data['reportDate'];
+        if (isInRange(reportDate)) {
+          double value =
+              double.tryParse(data['amount']?.toString() ?? '0') ?? 0;
+          total += value;
+        }
       }
 
+      // Return Collections
       List<String> returnCollections = [
         'StockReturn',
         'ExpiryReturn',
@@ -124,10 +173,14 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
         for (var doc in returnSnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          double returnValue =
-              double.tryParse(data['totalReturnAmount']?.toString() ?? '0') ??
-                  0;
-          total -= returnValue;
+          final String? dateStr = data['date'];
+
+          if (isInRange(dateStr)) {
+            double returnValue =
+                double.tryParse(data['totalReturnAmount']?.toString() ?? '0') ??
+                    0;
+            total -= returnValue;
+          }
         }
       }
 
@@ -139,10 +192,13 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       print("Pharmacy Total Expense (after returns): $pharmacyTotalExpense");
     } catch (e) {
       print("Error calculating pharmacy expense: $e");
+      setState(() {
+        isPharmacyTotalExpenseLoading = false;
+      });
     }
   }
 
-  Future<int> getTotalIncome() async {
+  Future<int> getTotalIncome({String? fromDate, String? toDate}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int income = 0;
 
@@ -153,20 +209,42 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       setState(() {
         isTotalIncomeLoading = true;
       });
+
+      DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+      DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+
+      bool isInRange(String? dateStr) {
+        if (dateStr == null) return false;
+        DateTime? d = DateTime.tryParse(dateStr);
+        if (d == null) return false;
+
+        if (from != null && d.isBefore(from)) return false;
+        if (to != null && d.isAfter(to)) return false;
+        return true;
+      }
+
+      int parseAmount(dynamic value) {
+        if (value == null) return 0;
+        return int.tryParse(value.toString()) ?? 0;
+      }
+
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
-        int parseAmount(dynamic value) {
-          if (value == null) return 0;
-          return int.tryParse(value.toString()) ?? 0;
+        if (isInRange(data['opAdmissionDate'])) {
+          income += parseAmount(data['opAmountCollected']);
         }
 
-        income += parseAmount(data['opAmountCollected']);
-        income += parseAmount(data['opTicketCollectedAmount']);
-        income += parseAmount(data['labCollected']);
+        if (isInRange(data['tokenDate'])) {
+          income += parseAmount(data['opTicketCollectedAmount']);
+        }
+
+        if (isInRange(data['reportDate'])) {
+          income += parseAmount(data['labCollected']);
+        }
 
         try {
-          final DocumentSnapshot ipAdmissionDoc = await fireStore
+          final ipAdmissionDoc = await fireStore
               .collection('patients')
               .doc(doc.id)
               .collection('ipAdmissionPayments')
@@ -175,15 +253,17 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
           if (ipAdmissionDoc.exists) {
             final ipData = ipAdmissionDoc.data() as Map<String, dynamic>;
-            income += parseAmount(ipData['ipAdmissionCollected']);
+            if (isInRange(ipData['date'])) {
+              income += parseAmount(ipData['ipAdmissionCollected']);
+            }
           }
         } catch (e) {
           print('Error fetching ipAdmissionPayments for ${doc.id}: $e');
         }
 
-        // Add from /ipPrescription/details
+        // ipPrescription
         try {
-          final DocumentSnapshot ipPrescriptionDoc = await fireStore
+          final ipPrescriptionDoc = await fireStore
               .collection('patients')
               .doc(doc.id)
               .collection('ipPrescription')
@@ -193,7 +273,9 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           if (ipPrescriptionDoc.exists) {
             final ipPrescData =
                 ipPrescriptionDoc.data() as Map<String, dynamic>;
-            income += parseAmount(ipPrescData['ipAdmissionCollected']);
+            if (isInRange(ipPrescData['date'])) {
+              income += parseAmount(ipPrescData['ipAdmissionCollected']);
+            }
           }
         } catch (e) {
           print('Error fetching ipPrescription for ${doc.id}: $e');
@@ -212,9 +294,26 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<int> getTotalExpense() async {
+  Future<int> getTotalExpense({String? fromDate, String? toDate}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int expense = 0;
+    setState(() {
+      isTotalExpenseLoading = true;
+    });
+
+    DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+
+    bool isInRange(String? dateStr) {
+      if (dateStr == null) return false;
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) return false;
+
+      if (from != null && date.isBefore(from)) return false;
+      if (to != null && date.isAfter(to)) return false;
+
+      return true;
+    }
 
     int parseAmount(dynamic value) {
       if (value == null) return 0;
@@ -222,30 +321,30 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
 
     try {
-      final QuerySnapshot directPurchaseSnapshot = await fireStore
+      final directPurchaseSnapshot = await fireStore
           .collection('hospital')
           .doc('purchase')
           .collection('directPurchase')
           .get();
-      setState(() {
-        isTotalExpenseLoading = true;
-      });
 
       for (var doc in directPurchaseSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        expense += parseAmount(data['collected']);
+        final data = doc.data();
+        if (isInRange(data['purchaseDate'])) {
+          expense += parseAmount(data['collected']);
+        }
       }
 
-      // Fetch from otherExpense
-      final QuerySnapshot otherExpenseSnapshot = await fireStore
+      final otherExpenseSnapshot = await fireStore
           .collection('hospital')
           .doc('purchase')
           .collection('otherExpense')
           .get();
 
       for (var doc in otherExpenseSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        expense += parseAmount(data['collected']);
+        final data = doc.data();
+        if (isInRange(data['billDate'])) {
+          expense += parseAmount(data['collected']);
+        }
       }
 
       setState(() {
@@ -260,10 +359,26 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<int> getNoOfOp() async {
+  Future<int> getNoOfOp({String? fromDate, String? toDate}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
-
     int opCount = 0;
+
+    setState(() {
+      isTotalOpLoading = true;
+    });
+    DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+
+    bool isInRange(String? dateStr) {
+      if (dateStr == null) return false;
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) return false;
+
+      if (from != null && date.isBefore(from)) return false;
+      if (to != null && date.isAfter(to)) return false;
+
+      return true;
+    }
 
     try {
       final QuerySnapshot patientSnapshot =
@@ -273,10 +388,16 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         final data = doc.data() as Map<String, dynamic>;
 
         if (!data.containsKey('opNumber') ||
-            !data.containsKey('opAdmissionDate')) continue;
+            !data.containsKey('opAdmissionDate')) {
+          continue;
+        }
+
+        if (!isInRange(data['opAdmissionDate'])) {
+          continue;
+        }
 
         try {
-          final DocumentSnapshot tokenSnapshot = await fireStore
+          final tokenSnapshot = await fireStore
               .collection('patients')
               .doc(doc.id)
               .collection('tokens')
@@ -293,6 +414,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
       setState(() {
         noOfOp = opCount;
+        isTotalOpLoading = false;
       });
 
       return opCount;
@@ -302,11 +424,25 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<int> getNoOfIp() async {
+  Future<int> getNoOfIp({String? fromDate, String? toDate}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
     int ipCount = 0;
+    setState(() {
+      isTotalIpLoading = true;
+    });
+    DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+
+    bool isInRange(String? dateStr) {
+      if (dateStr == null) return false;
+      final date = DateTime.tryParse(dateStr);
+      if (date == null) return false;
+
+      if (from != null && date.isBefore(from)) return false;
+      if (to != null && date.isAfter(to)) return false;
+
+      return true;
+    }
 
     try {
       final QuerySnapshot patientSnapshot =
@@ -315,27 +451,32 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
-        if (!data.containsKey('ipNumber') ||
-            !data.containsKey('opAdmissionDate')) continue;
+        if (!data.containsKey('ipNumber')) continue;
 
         try {
-          final DocumentSnapshot tokenSnapshot = await fireStore
+          final ipDetailsSnapshot = await fireStore
               .collection('patients')
               .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
+              .collection('ipPrescription')
+              .doc('details')
               .get();
 
-          if (tokenSnapshot.exists) {
-            ipCount++;
+          if (ipDetailsSnapshot.exists) {
+            final ipData = ipDetailsSnapshot.data() as Map<String, dynamic>;
+            final ipDateStr = ipData['date'];
+
+            if (isInRange(ipDateStr)) {
+              ipCount++;
+            }
           }
         } catch (e) {
-          print('Error fetching token for patient ${doc.id}: $e');
+          print('Error fetching ipPrescription for ${doc.id}: $e');
         }
       }
 
       setState(() {
         noOfIp = ipCount;
+        isTotalIpLoading = false;
       });
 
       return ipCount;
@@ -416,19 +557,41 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      getNoOfOp();
-      getNoOfIp();
       getTodayNoOfOp();
       getNoOfNewPatients();
     });
-    getTotalExpense();
-    getTotalIncome();
-    getPharmacyIncome();
-    getPharmacyExpense();
+    final now = DateTime.now();
+    final String fromDate = DateFormat('yyyy-MM-01').format(now);
+    final String toDate = DateFormat('yyyy-MM-dd').format(
+      DateTime(now.year, now.month + 1, 0),
+    );
+    getNoOfOp(fromDate: fromDate, toDate: toDate);
+    getNoOfIp(fromDate: fromDate, toDate: toDate);
+    getTotalExpense(fromDate: fromDate, toDate: toDate);
+    getTotalIncome(fromDate: fromDate, toDate: toDate);
+    getPharmacyIncome(fromDate: fromDate, toDate: toDate);
+    getPharmacyExpense(fromDate: fromDate, toDate: toDate);
   }
 
   @override
@@ -449,7 +612,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                 text: 'Management Dashboard',
               ),
             )
-          : null, // No AppBar for web view
+          : null,
       drawer: isMobile
           ? Drawer(
               child: ManagementModuleDrawer(
@@ -532,20 +695,75 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.15),
+              SizedBox(height: screenHeight * 0.075),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _fromDate),
+                    icon: Icon(Icons.date_range),
+                    controller: _fromDate,
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _toDate),
+                    icon: Icon(Icons.date_range),
+                    controller: _toDate,
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      getNoOfOp(
+                        fromDate: _fromDate.text,
+                        toDate: _toDate.text,
+                      );
+                      getNoOfIp(
+                        fromDate: _fromDate.text,
+                        toDate: _toDate.text,
+                      );
+                      getTotalIncome(
+                        fromDate: _fromDate.text,
+                        toDate: _toDate.text,
+                      );
+                      getTotalExpense(
+                        fromDate: _fromDate.text,
+                        toDate: _toDate.text,
+                      );
+                      getPharmacyIncome(
+                        fromDate: _fromDate.text,
+                        toDate: _toDate.text,
+                      );
+                      getPharmacyExpense(
+                        fromDate: _fromDate.text,
+                        toDate: _toDate.text,
+                      );
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.027,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.075),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   buildDashboardCard(
                     title: 'No Of OP',
-                    value: noOfOp.toString(),
+                    value:
+                        isTotalOpLoading ? 'Calculating...' : noOfOp.toString(),
                     icon: Icons.person,
                     width: screenWidth * 0.17,
                     height: screenHeight * 0.17,
                   ),
                   buildDashboardCard(
                     title: 'No Of IP',
-                    value: noOfIp.toString(),
+                    value:
+                        isTotalIpLoading ? 'Calculating...' : noOfIp.toString(),
                     icon: Icons.person,
                     width: screenWidth * 0.17,
                     height: screenHeight * 0.17,
@@ -581,7 +799,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                   buildDashboardCard(
                     title: 'Total Expense',
-                    value: isTotalIncomeLoading
+                    value: isTotalExpenseLoading
                         ? 'Calculating...'
                         : '₹ ' + totalExpense.toString(),
                     icon: Iconsax.money_remove,
