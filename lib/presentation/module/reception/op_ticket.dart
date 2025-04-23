@@ -43,8 +43,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 500), () {});
-    incrementCounter();
   }
 
   Future<void> fetchDoctorAndSpecialization() async {

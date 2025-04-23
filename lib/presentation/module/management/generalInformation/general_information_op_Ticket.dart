@@ -51,7 +51,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
   @override
   void initState() {
     super.initState();
-    incrementCounter();
   }
 
   Future<void> fetchDoctorAndSpecialization() async {
