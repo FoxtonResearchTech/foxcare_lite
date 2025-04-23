@@ -6,6 +6,7 @@ import 'dart:io';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
+import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
@@ -147,9 +148,12 @@ class _OpTicketPageState extends State<OpTicketPage> {
           );
         },
       );
-      showMessage('Token saved: $storedTokenValue');
+      CustomSnackBar(context,
+          message: 'Token saved: $storedTokenValue',
+          backgroundColor: Colors.green);
     } catch (e) {
-      showMessage('Failed to save token: $e');
+      CustomSnackBar(context,
+          message: 'Failed to save token: $e', backgroundColor: Colors.red);
     }
   }
 
