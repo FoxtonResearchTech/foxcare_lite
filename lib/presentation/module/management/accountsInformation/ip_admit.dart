@@ -75,6 +75,11 @@ class _IpAdmit extends State<IpAdmit> {
         'ipAdmissionTotalAmount': amount.text,
         'ipAdmissionCollected': collected.text,
         'ipAdmissionBalance': balanceAmount.text,
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
       };
       await FirebaseFirestore.instance
           .collection('patients')

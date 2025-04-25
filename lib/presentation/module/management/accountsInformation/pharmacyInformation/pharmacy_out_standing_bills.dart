@@ -9,6 +9,7 @@ import 'package:foxcare_lite/presentation/module/management/management_dashboard
 import 'package:iconsax/iconsax.dart';
 
 import '../../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../../utilities/widgets/drawer/management/accounts/pharmacy/management_pharmacy_accounts.dart';
 import '../../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../../utilities/widgets/table/data_table.dart';
 import '../../../../../utilities/widgets/text/primary_text.dart';
@@ -20,8 +21,7 @@ class PharmacyOutStandingBills extends StatefulWidget {
 }
 
 class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
-  // To store the index of the selected drawer item
-  int selectedIndex = 2;
+  int selectedIndex = 3;
   String? choosePartyName;
   final List<String> headers = [
     'Date',
@@ -63,16 +63,30 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: buildDrawerContent(), // Drawer minimized for mobile
+              child: ManagementPharmacyAccounts(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             )
-          : null, // No drawer for web view (permanently open)
+          : null,
       body: Row(
         children: [
           if (!isMobile)
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: buildDrawerContent(), // Sidebar always open for web view
+              child: ManagementPharmacyAccounts(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: Padding(
@@ -85,66 +99,6 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
     );
   }
 
-  // Drawer content reused for both web and mobile
-  Widget buildDrawerContent() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Pharmacy Accounts Information',
-            style: TextStyle(
-              fontFamily: 'SanFrancisco',
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        buildDrawerItem(0, 'Total Sales', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyTotalSales()));
-        }, Iconsax.mask),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(1, 'Pending Sales Bill', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => PharmacyPendingSalesBills()));
-        }, Iconsax.receipt),
-        Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(2, 'OutStanding Bills', () {}, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(3, 'Purchase', () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => PharmacyPurchase()));
-        }, Iconsax.add_circle),
-        const Divider(
-          height: 5,
-          color: Colors.grey,
-        ),
-        buildDrawerItem(4, 'Back To Accounts Information', () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NewPatientRegisterCollection()));
-        }, Iconsax.backward),
-      ],
-    );
-  }
-
-  // Helper method to build drawer items with the ability to highlight the selected item
   Widget buildDrawerItem(
       int index, String title, VoidCallback onTap, IconData icon) {
     return ListTile(

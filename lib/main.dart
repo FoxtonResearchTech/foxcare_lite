@@ -6,6 +6,7 @@ import 'package:foxcare_lite/presentation/login/fetch_user.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';

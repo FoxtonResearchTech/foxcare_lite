@@ -143,9 +143,9 @@ class _OtherExpense extends State<OtherExpense> {
           'City': data['city'],
           'Address': data['address'],
           'Particular': data['particular'],
-          'Amount': opAmount,
-          'Collected': opAmountCollected,
-          'Balance': balance,
+          'Amount': opAmount.toInt(),
+          'Collected': opAmountCollected.toInt(),
+          'Balance': balance.toInt(),
           'Pay': TextButton(
             onPressed: () {
               showDialog(

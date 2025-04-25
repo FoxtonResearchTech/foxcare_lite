@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -50,8 +51,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 500), () {});
-    incrementCounter();
   }
 
   Future<void> fetchDoctorAndSpecialization() async {
@@ -81,6 +80,15 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     } catch (e) {
       print('Error fetching doctors: $e');
     }
+  }
+
+  final String documentId = "counterDoc";
+
+  bool _shouldResetCounter(DateTime lastReset) {
+    final now = DateTime.now();
+    return now.year != lastReset.year ||
+        now.month != lastReset.month ||
+        now.day != lastReset.day;
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -155,9 +163,12 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
           );
         },
       );
-      showMessage('Token saved: $storedTokenValue');
+      CustomSnackBar(context,
+          message: 'Token saved: $storedTokenValue',
+          backgroundColor: Colors.green);
     } catch (e) {
-      showMessage('Failed to save token: $e');
+      CustomSnackBar(context,
+          message: 'Failed to save token: $e', backgroundColor: Colors.red);
     }
   }
 
@@ -212,7 +223,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     List<Map<String, String>> patientsList = [];
     List<QueryDocumentSnapshot> docs = [];
 
-    // Perform query based on opNumber, phoneNumber, or both
     if (opNumber.isNotEmpty) {
       final QuerySnapshot snapshot = await firestore
           .collection('patients')
@@ -221,7 +231,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
       docs.addAll(snapshot.docs);
     }
 
-    // Perform query based on phoneNumber for phone1
     if (phoneNumber.isNotEmpty) {
       final QuerySnapshot snapshotPhone1 = await firestore
           .collection('patients')
@@ -237,10 +246,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
       docs.addAll(snapshotPhone2.docs);
     }
 
-    // Eliminate duplicates based on the document ID
     final uniqueDocs = docs.toSet();
 
-    // Map documents to the desired structure
     for (var doc in uniqueDocs) {
       patientsList.add({
         'opNumber': doc['opNumber'] ?? '',
@@ -253,15 +260,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     }
 
     return patientsList;
-  }
-
-  final String documentId = "counterDoc";
-
-  bool _shouldResetCounter(DateTime lastReset) {
-    final now = DateTime.now();
-    return now.year != lastReset.year ||
-        now.month != lastReset.month ||
-        now.day != lastReset.day;
   }
 
   @override

@@ -83,13 +83,40 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.01,
-            left: screenWidth * 0.04,
-            right: screenWidth * 0.04,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
             bottom: screenWidth * 0.25,
           ),
           child: Column(
             children: [
-              SizedBox(height: screenHeight * 0.08),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Employee Information",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.08),
             ],
           ),
