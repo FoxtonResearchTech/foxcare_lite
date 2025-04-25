@@ -7,12 +7,14 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../utilities/widgets/table/editable_drop_down_table.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
+import 'package:http/http.dart' as http;
 
 class RxPrescription extends StatefulWidget {
   final String patientID;
@@ -35,6 +37,7 @@ class RxPrescription extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String dob;
+
   const RxPrescription(
       {super.key,
       required this.patientID,
@@ -512,6 +515,13 @@ class _RxPrescription extends State<RxPrescription> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+            )),
         title: Center(
             child: CustomText(
           text: "RX Prescription",
@@ -941,7 +951,8 @@ class _RxPrescription extends State<RxPrescription> {
                                                           'Evening',
                                                           'Night',
                                                           'Duration'
-                                                        ], // Editable columns
+                                                        ],
+                                                        // Editable columns
                                                         dropdownValues: const {
                                                           'Morning': [
                                                             '0.5 ml',
@@ -1123,6 +1134,509 @@ class _RxPrescription extends State<RxPrescription> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          final TextEditingController _controller = TextEditingController();
+          final ScrollController _scrollController = ScrollController();
+
+          List<ChatMessage> _messages = [
+            ChatMessage(
+              text: "👋 Hello! I'm your FoxCare assistant.\nHow can I help you today?",
+              isUser: false,
+            )
+          ];
+          bool _isLoading = false;
+
+          void _scrollToBottom() {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+          }
+
+          showDialog(
+            context: context,
+            barrierColor: Colors.black54,
+            builder: (context) {
+              return Align(
+                alignment: Alignment.bottomRight,
+                child: FractionallySizedBox(
+                  widthFactor: 0.3,
+                  heightFactor: 0.9,
+                  child: Material(
+                    color: Colors.white,
+                    elevation: 12,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
+                    ),
+                    child: StatefulBuilder(
+                      builder: (context, setState) {
+                        return Column(
+                          children: [
+                            // Header
+                            Container(
+                              padding:
+                              EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [AppColors.lightBlue, AppColors.blue],
+                                  begin: Alignment.bottomLeft,
+                                  end: Alignment.topRight,
+                                ),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.chat_bubble, color: Colors.white),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "FoxCare Assistant",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  IconButton(
+                                    icon: Icon(Icons.close, color: Colors.white),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Chat Body
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                                  itemBuilder: (context, index) {
+                                    if (_isLoading && index == _messages.length) {
+                                      return Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                          child: Lottie.asset(
+                                            'assets/ai_bot_loading.json',
+                                            width: 50,
+                                            height: 50,
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    final msg = _messages[index];
+                                    final isUser = msg.isUser;
+
+                                    return Container(
+                                      margin: EdgeInsets.symmetric(vertical: 8),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                        isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          if (!isUser)
+                                            CircleAvatar(
+                                              radius: 18,
+                                              backgroundColor: Colors.white,
+                                              backgroundImage: AssetImage('assets/fox_doc.png'),
+                                            ),
+                                          if (!isUser) SizedBox(width: 8),
+
+                                          // Message bubble
+                                          Flexible(
+                                            child: Container(
+                                              padding: EdgeInsets.all(14),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: isUser
+                                                      ? [Colors.blueAccent, Colors.lightBlueAccent]
+                                                      : [Colors.grey.shade200, Colors.grey.shade300],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(16),
+                                                  topRight: Radius.circular(16),
+                                                  bottomLeft:
+                                                  Radius.circular(isUser ? 16 : 0), // tail design
+                                                  bottomRight:
+                                                  Radius.circular(isUser ? 0 : 16), // tail design
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black12,
+                                                    blurRadius: 6,
+                                                    offset: Offset(0, 3),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Text(
+                                                msg.text,
+                                                style: TextStyle(
+                                                  color: isUser ? Colors.white : Colors.black87,
+                                                  fontSize: 15.5,
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          if (isUser) SizedBox(width: 8),
+                                          if (isUser)
+                                            CircleAvatar(
+                                              radius: 18,
+                                              backgroundColor: Colors.blueAccent,
+                                              child: Icon(Icons.person, color: Colors.white),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+
+
+                            // Input
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _controller,
+                                      decoration: InputDecoration(
+                                        hintText: "Type your message...",
+                                        filled: true,
+                                        fillColor: Colors.grey[100],
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                      onSubmitted: (userMessage) async {
+                                        userMessage = userMessage.trim();
+                                        if (userMessage.isEmpty) return;
+
+                                        setState(() {
+                                          _messages.add(ChatMessage(
+                                              text: userMessage, isUser: true));
+                                          _isLoading = true;
+                                        });
+                                        _scrollToBottom();
+                                        _controller.clear();
+
+                                        try {
+                                          final response = await http.post(
+                                            Uri.parse(
+                                                'https://chatbot-api-3ixb.onrender.com/analyze-plant'),
+                                            headers: {
+                                              'Content-Type': 'application/json'
+                                            },
+                                            body: jsonEncode(
+                                                {'user_input': userMessage}),
+                                          );
+
+                                          if (response.statusCode == 200) {
+                                            final data = jsonDecode(response.body);
+                                            String botReply = data['response'] ??
+                                                "I'm sorry, I didn't understand that.";
+
+                                            setState(() {
+                                              _messages.add(ChatMessage(
+                                                  text: botReply, isUser: false));
+                                              _isLoading = false;
+                                            });
+                                          } else {
+                                            setState(() {
+                                              _messages.add(ChatMessage(
+                                                  text: "Bot is sleeping 😴",
+                                                  isUser: false));
+                                              _isLoading = false;
+                                            });
+                                          }
+                                        } catch (e) {
+                                          setState(() {
+                                            _messages.add(ChatMessage(
+                                                text:
+                                                "Error: Unable to get a response",
+                                                isUser: false));
+                                            _isLoading = false;
+                                          });
+                                        }
+                                        _scrollToBottom();
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      String userMessage = _controller.text.trim();
+                                      if (userMessage.isEmpty) return;
+
+                                      setState(() {
+                                        _messages.add(ChatMessage(
+                                            text: userMessage, isUser: true));
+                                        _isLoading = true;
+                                      });
+                                      _scrollToBottom();
+                                      _controller.clear();
+
+                                      try {
+                                        final response = await http.post(
+                                          Uri.parse(
+                                              'https://chatbot-api-3ixb.onrender.com/analyze-plant'),
+                                          headers: {
+                                            'Content-Type': 'application/json'
+                                          },
+                                          body: jsonEncode(
+                                              {'user_input': userMessage}),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          final data = jsonDecode(response.body);
+                                          String botReply = data['response'] ??
+                                              "I'm sorry, I didn't understand that.";
+
+                                          setState(() {
+                                            _messages.add(ChatMessage(
+                                                text: botReply, isUser: false));
+                                            _isLoading = false;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            _messages.add(ChatMessage(
+                                                text: "Bot is sleeping 😴",
+                                                isUser: false));
+                                            _isLoading = false;
+                                          });
+                                        }
+                                      } catch (e) {
+                                        setState(() {
+                                          _messages.add(ChatMessage(
+                                              text:
+                                              "Error: Unable to get a response",
+                                              isUser: false));
+                                          _isLoading = false;
+                                        });
+                                      }
+                                      _scrollToBottom();
+                                    },
+                                    child: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.lightBlue,
+                                            AppColors.blue
+                                          ],
+                                          begin: Alignment.bottomLeft,
+                                          end: Alignment.topRight,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.send,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        hoverElevation: 0,
+        child: Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: AssetImage('assets/fox_doc.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      )
+      ,
     );
   }
+
+  void _showBotSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        builder: (_, controller) => Align(
+          alignment: Alignment.bottomRight,
+          child: FractionallySizedBox(
+            widthFactor: 0.5,
+            child: ChatBotWidget(scrollController: controller),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ChatBotWidget extends StatefulWidget {
+  final ScrollController scrollController;
+
+  const ChatBotWidget({Key? key, required this.scrollController})
+      : super(key: key);
+
+  @override
+  State<ChatBotWidget> createState() => _ChatBotWidgetState();
+}
+
+class _ChatBotWidgetState extends State<ChatBotWidget> {
+  final TextEditingController _controller = TextEditingController();
+  final List<ChatMessage> _messages = [];
+
+  Future<void> _sendMessage() async {
+    String userMessage = _controller.text.trim();
+    if (userMessage.isEmpty) return;
+
+    setState(() {
+      _messages.add(ChatMessage(text: userMessage, isUser: true));
+    });
+
+    _controller.clear();
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://chatbot-api-3ixb.onrender.com/analyze-plant'),
+        // Replace with your API
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'user_input': userMessage}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Safely accessing the 'reply' field
+        String botReply = data['response'] ??
+            "I'm sorry, I didn't understand that."; // Default reply if null
+
+        setState(() {
+          _messages.add(ChatMessage(text: botReply, isUser: false));
+        });
+      } else {
+        setState(() {
+          _messages.add(ChatMessage(text: "Bot is sleeping 😴", isUser: false));
+        });
+      }
+    } catch (e) {
+      // Handle error if the API call fails
+      setState(() {
+        _messages.add(ChatMessage(
+            text: "Error: Unable to get a response", isUser: false));
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white,
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12),
+            child: Text("FoxCare Assistant",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          Divider(height: 1),
+          Expanded(
+            child: ListView.builder(
+              controller: widget.scrollController,
+              reverse: true,
+              itemCount: _messages.length,
+              itemBuilder: (_, index) {
+                final msg = _messages[_messages.length - 1 - index];
+                return Align(
+                  alignment:
+                      msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: msg.isUser ? Colors.blue : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(msg.text,
+                        style: TextStyle(
+                            color: msg.isUser ? Colors.white : Colors.black)),
+                  ),
+                );
+              },
+            ),
+          ),
+          Divider(height: 1),
+          Padding(
+            padding: EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: "Ask your health query...",
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: _sendMessage,
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+
+  ChatMessage({required this.text, required this.isUser});
 }
