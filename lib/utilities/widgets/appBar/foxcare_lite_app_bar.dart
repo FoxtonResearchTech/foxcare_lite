@@ -31,9 +31,15 @@ import '../../../presentation/module/pharmacy/tools/manage_pharmacy_info.dart';
 import '../../../presentation/module/pharmacy/tools/pharmacy_info.dart';
 import '../../../presentation/module/pharmacy/tools/profile.dart';
 import '../../colors.dart';
+import '../state/app_bar_selection_state.dart';
 
 class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const FoxCareLiteAppBar({super.key});
+  final Map<String, Map<String, WidgetBuilder>>? navigationMap;
+
+  const FoxCareLiteAppBar({
+    super.key,
+    this.navigationMap,
+  });
 
   @override
   State<FoxCareLiteAppBar> createState() => _FoxCareLiteAppBarState();
@@ -56,6 +62,13 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
 
   String? selectedField;
   Map<String, String> selectedOptionsMap = {};
+  @override
+  void initState() {
+    super.initState();
+    selectedField = AppBarSelectionState.selectedField;
+    selectedOptionsMap =
+        Map<String, String>.from(AppBarSelectionState.selectedOptionsMap);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,20 +85,36 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
       selectedOptionsMap: selectedOptionsMap,
       onFieldSelected: (fieldName) {
         setState(() {
+          AppBarSelectionState.selectedField = fieldName;
           selectedField = fieldName;
+
           if (fieldName == 'Home') {
-            Navigator.pushAndRemoveUntil(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => SalesChartScreen()),
-              (route) => false,
             );
           }
         });
       },
-      onOptionSelected: (fieldName, option) {
+      onOptionSelected: (fieldName, option) async {
+        if (option == 'Logout') {
+          await _logout(context);
+          return;
+        }
+
         setState(() {
-          selectedOptionsMap[fieldName] = option;
+          AppBarSelectionState.selectedOptionsMap.clear();
+          AppBarSelectionState.selectedOptionsMap[fieldName] = option;
+          selectedOptionsMap = AppBarSelectionState.selectedOptionsMap;
         });
+
+        final navigationTarget = widget.navigationMap?[fieldName]?[option];
+        if (navigationTarget != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => navigationTarget(context)),
+          );
+        }
       },
       navigationMap: {
         'Dashboard': {'Home': (context) => SalesChartScreen()},
@@ -122,10 +151,7 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
           'Distributor List': (context) => const DistributorList(),
           'Add Distributor': (context) => const AddNewDistributor(),
           'Profile': (context) => const Profile(),
-          'Logout': (context) {
-            _logout(context);
-            return const SizedBox.shrink();
-          }
+          'Logout': (context) => const SizedBox.shrink(),
         }
       },
     );

@@ -23,13 +23,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }) : super(key: key);
 
   @override
-  Size get preferredSize => const Size.fromHeight(60.0);
+  Size get preferredSize => const Size.fromHeight(90.0);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: backgroundColor,
-      height: 60.0,
+      height: 90.0,
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -184,7 +184,7 @@ class _OptionFieldState extends State<_OptionField> {
         link: _layerLink,
         child: Container(
           height: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
           decoration: BoxDecoration(
             color: isSelectedField ? AppColors.lightBlue : AppColors.appBar,
           ),
@@ -195,9 +195,16 @@ class _OptionFieldState extends State<_OptionField> {
                 Icon(widget.icon, color: Colors.white, size: 22),
                 const SizedBox(height: 2),
                 CustomText(
-                  text: widget.selectedOption ?? widget.fieldName,
+                  text: widget.fieldName,
                   color: Colors.white,
                 ),
+                if (widget.selectedOption != null) ...[
+                  const SizedBox(height: 2),
+                  CustomText(
+                    text: widget.selectedOption!,
+                    color: Colors.white,
+                  ),
+                ],
               ],
             ),
           ),
