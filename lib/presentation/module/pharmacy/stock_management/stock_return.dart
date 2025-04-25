@@ -259,8 +259,9 @@ class _StockReturn extends State<StockReturn> {
               double currentAmount =
                   double.tryParse(doc['amount'].toString()) ?? 0;
 
-              double updatedQuantity =
+              double rawUpdatedQuantity =
                   (currentQuantity - returnQuantity).clamp(0, double.infinity);
+              int updatedQuantity = rawUpdatedQuantity.floor();
               double updatedAmount =
                   (currentAmount - returnAmount).clamp(0, double.infinity);
               String formattedAmount = updatedAmount.toStringAsFixed(2);

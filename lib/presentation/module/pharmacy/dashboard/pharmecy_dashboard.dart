@@ -1,325 +1,634 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
+import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
-import '../../../../utilities/widgets/decoration/gradient_box.dart';
-import '../reports/non_moving_stock.dart';
 
-class SalesChartScreen extends StatelessWidget {
+class SalesChartScreen extends StatefulWidget {
   const SalesChartScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: const FoxCareLiteAppBar(),
-        body: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SalesLineChart(),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const ScrollPhysics(),
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  children: [
-                    const GradientBox(
-                      subText: "25",
-                      gradientColors: [
-                        Colors.blue,
-                        Colors.lightBlueAccent,
-                        Colors.cyan
-                      ],
-                      text: 'No of Bill Generated',
-                    ),
-                    const SizedBox(height: 20),
-                    const GradientBox(
-                      subText: '15',
-                      gradientColors: [
-                        Colors.red,
-                        Colors.orange,
-                        Colors.yellow
-                      ],
-                      text: 'Total Qty Sales',
-                    ),
-                    const SizedBox(height: 20),
-                    const GradientBox(
-                      subText: '₹150000',
-                      gradientColors: [
-                        Color(0xFF004D40), // Dark Green
-                        Color(0xFF00C853), // Emerald Green
-                        Color(0xFFB9F6CA), // Light Mint Green
-                      ],
-                      text: 'Total Amount Collected',
-                    ),
-                    const SizedBox(height: 20),
-                    const GradientBox(
-                      subText: '158',
-                      gradientColors: [
-                        Color(0xFF6A1B9A), // Deep Purple
-                        Color(0xFFAB47BC), // Medium Purple
-                        Color(0xFFE1BEE7), // Light Lavender
-                      ],
-                      text: 'Total Medicine Entry Qty',
-                    ),
-                    const SizedBox(height: 20),
-                    const GradientBox(
-                      subText: '₹452125',
-                      gradientColors: [
-                        Color(0xFFF06292), // Light Pink
-                        Color(0xFFE91E63), // Pink
-                        Color(0xFFD50000), // Deep Red
-                      ],
-                      text: 'Total Medicine \n Retrive Value',
-                    ),
-                    const SizedBox(height: 20),
-                    const GradientBox(
-                      subText: '₹845665',
-                      gradientColors: [
-                        Color(0xFF4DD0E1), // Light Cyan
-                        Color(0xFF00ACC1), // Medium Cyan
-                        Color(0xFF006064), // Deep Cyan
-                      ],
-                      text: 'Total Total Collection',
-                    ),
-                    const SizedBox(height: 30),
-                    Center(
-                      child: ElevatedButton(
-                        style: ButtonStyle(
-                          padding: MaterialStateProperty.all(
-                              const EdgeInsets.symmetric(
-                                  vertical: 15, horizontal: 30)),
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.white),
-                          elevation: MaterialStateProperty.all(0),
-                          shape:
-                              MaterialStateProperty.all(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(7),
-                          )),
-                          shadowColor: MaterialStateProperty.all(
-                              Colors.black.withOpacity(0.3)),
-                        ),
-                        onPressed: () {
-                          // Add your action here when the button is pressed
-                        },
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF64B5F6), Color(0xFF2196F3)],
-                              // Gradient color
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(7),
-                          ),
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const NonMovingStock()));
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 15, horizontal: 30),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Non Moving Products',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontFamily:
-                                      'Roboto', // Use any custom font if you like
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 100,
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ));
-  }
+  State<SalesChartScreen> createState() => _SalesChartScreenState();
 }
 
-class SalesLineChart extends StatelessWidget {
-  const SalesLineChart({Key? key}) : super(key: key);
+class _SalesChartScreenState extends State<SalesChartScreen> {
+  final List<String> opBillHeaders = ['Bill No', 'Patient Name', 'Amount'];
+  List<Map<String, dynamic>> opBillData = [];
+  Timer? _timer;
+  int todayTotalBills = 0;
+  int todayTotalOpBills = 0;
+  int todayTotalIpBills = 0;
+  int todayTotalCounterSalesBills = 0;
+  bool isPharmacyTotalIncomeLoading = false;
+  int pharmacyTotalIncome = 0;
+  int i = 1;
+
+  final List<String> nonMovingStocksHeader = [
+    'SL No',
+    'Product Name',
+    'Opening Stock',
+    'Remaining Stock',
+    'Expiry Date',
+    'Non-Moving Details',
+  ];
+  List<Map<String, dynamic>> nonMovingStocksData = [];
+  final List<String> expiryStocksHeader = [
+    'SL No',
+    'Product Name',
+    'Opening Stock',
+    'Remaining Stock',
+    'Expiry Date',
+  ];
+  List<Map<String, dynamic>> expiryStocksData = [];
+
+  final Map<int, FixedColumnWidth> columnWidths = {
+    0: FixedColumnWidth(240.0),
+    1: FixedColumnWidth(240.0),
+    2: FixedColumnWidth(240.0),
+  };
+
+  Future<void> fetchNearExpiryData() async {
+    try {
+      final DateTime todayDate = DateTime.now();
+      final DateTime tenDaysFromNow = todayDate.add(Duration(days: 10));
+      int i = 1;
+
+      Query query = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts');
+      final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          expiryStocksData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('amount') || !data.containsKey('reportDate'))
+          continue;
+
+        if (data.containsKey('fixedQuantity') &&
+            data.containsKey('quantity') &&
+            data.containsKey('expiry')) {
+          try {
+            DateTime expiryDate = DateTime.parse(data['expiry']);
+
+            DateTime expiryOnly =
+                DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
+            DateTime todayOnly =
+                DateTime(todayDate.year, todayDate.month, todayDate.day);
+            DateTime tenDaysOnly = DateTime(
+                tenDaysFromNow.year, tenDaysFromNow.month, tenDaysFromNow.day);
+
+            if ((expiryOnly.isAtSameMomentAs(todayOnly) ||
+                    expiryOnly.isAfter(todayOnly)) &&
+                (expiryOnly.isAtSameMomentAs(tenDaysOnly) ||
+                    expiryOnly.isBefore(tenDaysOnly))) {
+              fetchedData.add({
+                'SL No': i++,
+                'Product Name': data['productName'],
+                'Opening Stock': data['fixedQuantity'],
+                'Remaining Stock': data['quantity'],
+                'Expiry Date': data['expiry'],
+              });
+
+              if (fetchedData.length >= 5) break;
+            }
+          } catch (e) {
+            print("Invalid expiry date format: ${data['expiry']}");
+            continue;
+          }
+        }
+      }
+
+      setState(() {
+        expiryStocksData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching expiry data: $e');
+    }
+  }
+
+  Future<void> fetchNonMovingStocksData() async {
+    try {
+      final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      int i = 1;
+
+      Query query = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts')
+          .where('reportDate', isEqualTo: today)
+          .limit(5);
+
+      final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found for today");
+        setState(() {
+          nonMovingStocksData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (!data.containsKey('amount')) continue;
+        if (!data.containsKey('reportDate')) continue;
+
+        if (data.containsKey('fixedQuantity') &&
+            data.containsKey('quantity') &&
+            data['fixedQuantity'] == data['quantity']) {
+          fetchedData.add({
+            'SL No': i++,
+            'Product Name': data['productName'],
+            'Opening Stock': data['fixedQuantity'],
+            'Remaining Stock': data['quantity'],
+            'Expiry Date': data['expiry'],
+            'Non-Moving Details': TextButton(
+              onPressed: () {
+                DateTime reportDate = DateTime.parse(data['reportDate']);
+                DateTime todayDate = DateTime.now();
+                int daysDifference = todayDate.difference(reportDate).inDays;
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Non-Moving Stocks Details'),
+                      content: Container(
+                        width: 350,
+                        height: 180,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                                text:
+                                    'Product Entry Date: ${data['reportDate']}'),
+                            CustomText(
+                                text: 'Product Name: ${data['productName']}'),
+                            CustomText(
+                                text:
+                                    'Opening Stock: ${data['fixedQuantity']}'),
+                            CustomText(
+                                text: 'Remaining Stock: ${data['quantity']}'),
+                            CustomText(text: 'Expiry Date: ${data['expiry']}'),
+                            CustomText(
+                                text: 'Days Since Entry: $daysDifference days'),
+                          ],
+                        ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: CustomText(
+                            text: 'Close',
+                            color: AppColors.secondaryColor,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: CustomText(text: 'View Details'),
+            ),
+          });
+        }
+      }
+
+      setState(() {
+        nonMovingStocksData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching today\'s data: $e');
+    }
+  }
+
+  Future<void> getPharmacyIncome() async {
+    double total = 0.0;
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    List<String> subcollections = ['countersales', 'ipbilling', 'opbilling'];
+
+    try {
+      setState(() {
+        isPharmacyTotalIncomeLoading = true;
+      });
+
+      for (String collection in subcollections) {
+        final QuerySnapshot snapshot = await firestore
+            .collection('pharmacy')
+            .doc('billing')
+            .collection(collection)
+            .where('billDate', isEqualTo: today)
+            .get();
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          double value =
+              double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
+          total += value;
+        }
+      }
+
+      final QuerySnapshot returnSnapshot = await firestore
+          .collection('pharmacy')
+          .doc('billing')
+          .collection('medicinereturn')
+          .where('billDate', isEqualTo: today)
+          .get();
+
+      for (var doc in returnSnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        double returnValue =
+            double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
+        total -= returnValue;
+      }
+
+      setState(() {
+        pharmacyTotalIncome = total.toInt();
+        isPharmacyTotalIncomeLoading = false;
+      });
+
+      print("Pharmacy Total Income (today): $pharmacyTotalIncome");
+    } catch (e) {
+      print("Error fetching today's pharmacy income: $e");
+      setState(() {
+        isPharmacyTotalIncomeLoading = false;
+      });
+    }
+  }
+
+  Future<void> getLastOPFewBills() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      final QuerySnapshot patientSnapshot = await fireStore
+          .collection('pharmacy')
+          .doc('billing')
+          .collection('opbilling')
+          .where('billDate', isEqualTo: today)
+          .get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+      int count = 0;
+
+      for (var doc in patientSnapshot.docs) {
+        if (count >= 5) break;
+
+        final data = doc.data() as Map<String, dynamic>;
+
+        if (!data.containsKey('opNumber')) continue;
+
+        fetchedData.add({
+          'Bill No': data['billNumber'] ?? 'N/A',
+          'Patient Name': data['patientName'] ?? 'N/A',
+          'Amount': data['grandTotal'] ?? 'N/A',
+        });
+
+        count++;
+      }
+
+      setState(() {
+        opBillData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching documents: $e');
+    }
+  }
+
+  Future<void> countTotalBillsToday() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    int totalBills = 0;
+
+    try {
+      final List<String> subcollections = [
+        'opbilling',
+        'ipbilling',
+        'countersales'
+      ];
+
+      for (String subcollection in subcollections) {
+        final QuerySnapshot snapshot = await fireStore
+            .collection('pharmacy')
+            .doc('billing')
+            .collection(subcollection)
+            .where('billDate', isEqualTo: today)
+            .get();
+
+        totalBills += snapshot.docs.length;
+      }
+
+      setState(() {
+        todayTotalBills = totalBills;
+      });
+    } catch (e) {
+      print("Error counting bills: $e");
+    }
+  }
+
+  Future<void> countTotalOpBillsToday() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    int totalBills = 0;
+
+    try {
+      final QuerySnapshot snapshot = await fireStore
+          .collection('pharmacy')
+          .doc('billing')
+          .collection('opbilling')
+          .where('billDate', isEqualTo: today)
+          .get();
+
+      totalBills = snapshot.docs.length;
+
+      setState(() {
+        todayTotalOpBills = totalBills;
+      });
+    } catch (e) {
+      print("Error counting bills: $e");
+    }
+  }
+
+  Future<void> countTotalIpBillsToday() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    int totalBills = 0;
+
+    try {
+      final QuerySnapshot snapshot = await fireStore
+          .collection('pharmacy')
+          .doc('billing')
+          .collection('opbilling')
+          .where('billDate', isEqualTo: today)
+          .get();
+
+      totalBills = snapshot.docs.length;
+
+      setState(() {
+        todayTotalIpBills = totalBills;
+      });
+    } catch (e) {
+      print("Error counting bills: $e");
+    }
+  }
+
+  Future<void> countTotalCounterSalesBillsToday() async {
+    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    int totalBills = 0;
+
+    try {
+      final QuerySnapshot snapshot = await fireStore
+          .collection('pharmacy')
+          .doc('billing')
+          .collection('countersales')
+          .where('billDate', isEqualTo: today)
+          .get();
+
+      totalBills = snapshot.docs.length;
+
+      setState(() {
+        todayTotalCounterSalesBills = totalBills;
+      });
+    } catch (e) {
+      print("Error counting bills: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      getLastOPFewBills();
+      countTotalBillsToday();
+      countTotalOpBillsToday();
+      countTotalIpBillsToday();
+      countTotalCounterSalesBillsToday();
+      fetchNonMovingStocksData();
+      fetchNearExpiryData();
+    });
+    getPharmacyIncome();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<String> months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-
-    final List<double> sales2024 = [
-      1500,
-      2000,
-      1800,
-      2200,
-      3000,
-      3500,
-      3200,
-      2900,
-      3300,
-      4000,
-      4500,
-      5000
-    ];
-
-    final List<double> sales2025 = [
-      1600,
-      2100,
-      1900,
-      2400,
-      3100,
-      3600,
-      3300,
-      3000,
-      3400,
-      4100,
-      4600,
-      5100
-    ];
-
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.7,
-      child: LineChart(
-        LineChartData(
-          backgroundColor: Colors.white,
-          gridData: FlGridData(
-            show: true,
-            drawHorizontalLine: true,
-            horizontalInterval: 1000,
-            verticalInterval: 1,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.grey.shade300,
-              strokeWidth: 0.5,
-            ),
-            getDrawingVerticalLine: (value) => FlLine(
-              color: Colors.grey.shade300,
-              strokeWidth: 0.5,
-            ),
+    double screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: const FoxCareLiteAppBar(),
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(
+            top: screenHeight * 0.05,
+            left: screenWidth * 0.04,
+            right: screenWidth * 0.04,
+            bottom: screenHeight * 0.05,
           ),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) => Text(
-                  '\$${value.toInt()}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  if (value.toInt() < 1 || value.toInt() > months.length) {
-                    return const SizedBox.shrink();
-                  }
-
-                  final int index = value.toInt() - 1;
-                  final double sales = sales2024[index] + sales2025[index];
-
-                  return Column(
+          child: Column(
+            children: [
+              Column(
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        months[index],
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '₹${sales.toInt()}',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 10,
-                        ),
+                      CustomText(
+                        text: 'Recent OP Bills ',
+                        size: screenWidth * 0.02,
                       ),
                     ],
-                  );
-                },
+                  ),
+                  SizedBox(height: screenHeight * 0.05),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomDataTable(
+                        headers: opBillHeaders,
+                        tableData: opBillData,
+                        columnWidths: columnWidths,
+                      ),
+                      SizedBox(width: screenHeight * 0.15),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              buildDashboardCard(
+                                title: 'Total Bills',
+                                value: todayTotalBills.toString(),
+                                icon: Icons.dock,
+                                width: screenWidth * 0.13,
+                                height: screenHeight * 0.135,
+                              ),
+                              SizedBox(width: screenHeight * 0.05),
+                              buildDashboardCard(
+                                title: 'Total OP Bills',
+                                value: todayTotalOpBills.toString(),
+                                icon: Icons.person,
+                                width: screenWidth * 0.13,
+                                height: screenHeight * 0.135,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenHeight * 0.05),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              buildDashboardCard(
+                                title: 'Total IP Bills',
+                                value: todayTotalIpBills.toString(),
+                                icon: Icons.person,
+                                width: screenWidth * 0.13,
+                                height: screenHeight * 0.135,
+                              ),
+                              SizedBox(width: screenHeight * 0.05),
+                              buildDashboardCard(
+                                title: 'Total Counter Sales Bills',
+                                value: todayTotalCounterSalesBills.toString(),
+                                icon: Icons.person,
+                                width: screenWidth * 0.13,
+                                height: screenHeight * 0.135,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenHeight * 0.05),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              buildDashboardCard(
+                                title: 'Total Collected Payments',
+                                value: isPharmacyTotalIncomeLoading
+                                    ? 'Calculating...'
+                                    : '₹ ' + pharmacyTotalIncome.toString(),
+                                icon: Icons.attach_money,
+                                width: screenWidth * 0.28,
+                                height: screenHeight * 0.135,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
+              SizedBox(height: screenHeight * 0.05),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Non Moving Stocks Products',
+                        size: screenWidth * 0.02,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.05),
+                  CustomDataTable(
+                    headers: nonMovingStocksHeader,
+                    tableData: nonMovingStocksData,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.05),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Expiry Stocks Products',
+                        size: screenWidth * 0.02,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.05),
+                  CustomDataTable(
+                    headers: expiryStocksHeader,
+                    tableData: expiryStocksData,
+                  ),
+                ],
+              ),
+            ],
           ),
-          borderData: FlBorderData(
-            show: true,
-            border: Border.all(color: Colors.grey.shade300, width: 1),
-          ),
-          minX: 1,
-          maxX: 12,
-          minY: 0,
-          maxY: 6000,
-          lineBarsData: [
-            LineChartBarData(
-              spots: sales2024
-                  .asMap()
-                  .entries
-                  .map((e) => FlSpot(e.key + 1.0, e.value))
-                  .toList(),
-              isCurved: true,
-              color: Colors.teal,
-              barWidth: 4,
-              isStrokeCapRound: true,
-              belowBarData: BarAreaData(
-                show: true,
-                color: Colors.green.withOpacity(0.3),
-              ),
-              dotData: const FlDotData(show: false),
-            ),
-            LineChartBarData(
-              spots: sales2025
-                  .asMap()
-                  .entries
-                  .map((e) => FlSpot(e.key + 1.0, e.value))
-                  .toList(),
-              isCurved: true,
-              color: Colors.pink,
-              barWidth: 4,
-              isStrokeCapRound: true,
-              belowBarData: BarAreaData(
-                show: true,
-                color: Colors.red.withOpacity(0.1),
-              ),
-              dotData: const FlDotData(show: false),
-            ),
-          ],
         ),
+      ),
+    );
+  }
+
+  Widget buildDashboardCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required double width,
+    required double height,
+    Color? color,
+  }) {
+    color ??= AppColors.blue;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Container(
+      padding: EdgeInsets.all(screenWidth * 0.01),
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(icon, size: screenWidth * 0.02, color: Colors.white),
+          CustomText(
+            text: title,
+            color: Colors.white,
+          ),
+          CustomText(
+            text: value,
+            color: Colors.white,
+          ),
+        ],
       ),
     );
   }

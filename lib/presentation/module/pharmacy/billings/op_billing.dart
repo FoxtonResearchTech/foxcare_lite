@@ -248,9 +248,9 @@ class _OpBilling extends State<OpBilling> {
               double currentQuantity =
                   double.tryParse(doc['quantity'].toString()) ?? 0;
 
-              double updatedQuantity =
+              double rawUpdatedQuantity =
                   (currentQuantity - Quantity).clamp(0, double.infinity);
-
+              int updatedQuantity = rawUpdatedQuantity.floor();
               print(
                   'Current Quantity: $currentQuantity, Updated Quantity: $updatedQuantity');
 

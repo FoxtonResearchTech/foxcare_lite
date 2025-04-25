@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/op_billing.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 
+import '../../../presentation/login/fetch_user.dart';
 import '../../../presentation/login/login.dart';
 import '../../../presentation/module/pharmacy/billings/cancel_bill.dart';
 import '../../../presentation/module/pharmacy/billings/counter_sales.dart';
@@ -41,6 +43,17 @@ class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
+  Future<void> _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    UserSession.clearUser();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
+  }
+
   String? selectedField;
   Map<String, String> selectedOptionsMap = {};
 
@@ -49,7 +62,7 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
     return CustomAppBar(
       backgroundColor: AppColors.appBar,
       fields: [
-        FieldConfig(name: 'Home', icon: Icons.home),
+        FieldConfig(name: 'Dashboard', icon: Icons.home),
         FieldConfig(name: 'Billing', icon: Icons.receipt),
         FieldConfig(name: 'Stock Management', icon: Icons.store),
         FieldConfig(name: 'Reports', icon: Icons.bar_chart),
@@ -60,6 +73,13 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
       onFieldSelected: (fieldName) {
         setState(() {
           selectedField = fieldName;
+          if (fieldName == 'Home') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => SalesChartScreen()),
+              (route) => false,
+            );
+          }
         });
       },
       onOptionSelected: (fieldName, option) {
@@ -68,7 +88,7 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
         });
       },
       navigationMap: {
-        'Home': {'Sales Chart Screen': (context) => SalesChartScreen()},
+        'Dashboard': {'Home': (context) => SalesChartScreen()},
         'Billing': {
           'Counter Sales': (context) => const CounterSales(),
           'OP Billings': (context) => const OpBilling(),
@@ -102,7 +122,10 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
           'Distributor List': (context) => const DistributorList(),
           'Add Distributor': (context) => const AddNewDistributor(),
           'Profile': (context) => const Profile(),
-          'Logout': (context) => LoginScreen(),
+          'Logout': (context) {
+            _logout(context);
+            return const SizedBox.shrink();
+          }
         }
       },
     );
