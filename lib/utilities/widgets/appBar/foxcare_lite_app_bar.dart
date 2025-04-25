@@ -51,6 +51,8 @@ class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
+    AppBarSelectionState.selectedField = null;
+    AppBarSelectionState.selectedOptionsMap.clear();
     UserSession.clearUser();
 
     Navigator.pushAndRemoveUntil(
