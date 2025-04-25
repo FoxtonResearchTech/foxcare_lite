@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../colors.dart';
 import '../text/primary_text.dart';
 
 class CustomDataTable extends StatefulWidget {
@@ -14,19 +15,19 @@ class CustomDataTable extends StatefulWidget {
   final Function(int rowIndex, String header, String value)? onValueChanged;
   final List<Map<String, TextEditingController>>? controllers;
 
-  const CustomDataTable({
+  CustomDataTable({
     super.key,
     required this.headers,
     required this.tableData,
     this.editableColumns,
     this.columnWidths = const {},
-    this.headerBackgroundColor = Colors.grey,
+    Color? headerBackgroundColor,
     this.borderColor = Colors.black,
     this.rowColorResolver,
     this.onValueChanged,
     this.controllers,
-    this.headerColor = Colors.black,
-  });
+    this.headerColor = Colors.white,
+  }) : headerBackgroundColor = headerBackgroundColor ?? AppColors.blue;
 
   @override
   State<CustomDataTable> createState() => _CustomDataTableState();
