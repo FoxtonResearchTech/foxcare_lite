@@ -48,7 +48,13 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
   Widget build(BuildContext context) {
     return CustomAppBar(
       backgroundColor: AppColors.appBar,
-      fieldNames: ['Home', 'Billing', 'Stock Management', 'Reports', 'Tools'],
+      fields: [
+        FieldConfig(name: 'Home', icon: Icons.home),
+        FieldConfig(name: 'Billing', icon: Icons.receipt),
+        FieldConfig(name: 'Stock Management', icon: Icons.store),
+        FieldConfig(name: 'Reports', icon: Icons.bar_chart),
+        FieldConfig(name: 'Tools', icon: Icons.build),
+      ],
       selectedField: selectedField,
       selectedOptionsMap: selectedOptionsMap,
       onFieldSelected: (fieldName) {

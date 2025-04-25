@@ -4,7 +4,7 @@ import '../text/primary_text.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
-  final List<String> fieldNames;
+  final List<FieldConfig> fields;
   final Map<String, Map<String, WidgetBuilder>> navigationMap;
   final String? selectedField;
   final Map<String, String> selectedOptionsMap;
@@ -14,7 +14,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     Key? key,
     required this.backgroundColor,
-    required this.fieldNames,
+    required this.fields,
     required this.navigationMap,
     required this.selectedField,
     required this.selectedOptionsMap,
@@ -33,11 +33,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: fieldNames.map((fieldName) {
+          children: fields.map((fieldConfig) {
+            final fieldName = fieldConfig.name;
+            final icon = fieldConfig.icon;
             final options = navigationMap[fieldName]?.keys.toList() ?? [];
             final selectedOption = selectedOptionsMap[fieldName];
+
             return Expanded(
               child: _OptionField(
+                icon: icon,
                 fieldName: fieldName,
                 options: options,
                 navigationMap: navigationMap[fieldName] ?? {},
@@ -63,11 +67,13 @@ class _OptionField extends StatefulWidget {
   final String? selectedOption;
   final ValueChanged<String> onFieldSelected;
   final ValueChanged<String> onOptionSelected;
+  final IconData icon;
 
   const _OptionField({
     Key? key,
-    required this.fieldName,
     required this.options,
+    required this.icon,
+    required this.fieldName,
     required this.navigationMap,
     required this.selectedField,
     required this.selectedOption,
@@ -178,14 +184,21 @@ class _OptionFieldState extends State<_OptionField> {
         link: _layerLink,
         child: Container(
           height: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
           decoration: BoxDecoration(
             color: isSelectedField ? AppColors.lightBlue : AppColors.appBar,
           ),
           child: Center(
-            child: CustomText(
-              text: widget.selectedOption ?? widget.fieldName,
-              color: Colors.white,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(widget.icon, color: Colors.white, size: 22),
+                const SizedBox(height: 2),
+                CustomText(
+                  text: widget.selectedOption ?? widget.fieldName,
+                  color: Colors.white,
+                ),
+              ],
             ),
           ),
         ),
@@ -242,4 +255,11 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
       ),
     );
   }
+}
+
+class FieldConfig {
+  final String name;
+  final IconData icon;
+
+  FieldConfig({required this.name, required this.icon});
 }
