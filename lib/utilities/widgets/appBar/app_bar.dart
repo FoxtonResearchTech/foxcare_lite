@@ -218,9 +218,18 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        color: widget.isSelected
-            ? AppColors.lightBlue
-            : (isHovered ? AppColors.lightBlue : AppColors.appBar),
+        decoration: BoxDecoration(
+          color: widget.isSelected
+              ? AppColors.lightBlue
+              : (isHovered ? null : AppColors.appBar),
+          gradient: isHovered && !widget.isSelected
+              ? LinearGradient(
+                  colors: [AppColors.lightBlue, AppColors.blue],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+        ),
         child: Align(
           alignment: Alignment.centerLeft,
           child: Center(
