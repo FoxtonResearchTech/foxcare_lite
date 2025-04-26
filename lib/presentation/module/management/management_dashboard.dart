@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/mangement_module_drawer.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -573,10 +574,16 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       });
     }
   }
+  String message = '';
+  String status = '';
+  Color backgroundColor = Colors.yellow.shade100;
+  Color borderColor = Colors.yellow.shade700;
+  IconData icon = Icons.warning_amber_rounded;
 
   @override
   void initState() {
     super.initState();
+    fetchMessage();
     _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       getTodayNoOfOp();
       getNoOfNewPatients();
@@ -599,7 +606,36 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     super.dispose();
     _timer?.cancel();
   }
+  void fetchMessage() async {
+    // Replace with your actual Firestore document path
+    var doc = await FirebaseFirestore.instance
+        .collection('admin_message') // Your Firestore collection
+        .doc('opMuI4flH4BhvvhnZwEn') // Replace with your document ID
+        .get();
 
+    if (doc.exists) {
+      var data = doc.data() as Map<String, dynamic>;
+      setState(() {
+        message = data['message'] ?? ''; // Message field
+        status = data['status'] ?? 'warning'; // Status field
+
+        // Set color and icon based on status
+        if (status == 'warning') {
+          backgroundColor = Colors.yellow.shade100;
+          borderColor = Colors.yellow.shade700;
+          icon = Icons.warning_amber_rounded;
+        } else if (status == 'bad') {
+          backgroundColor = Colors.red.shade100;
+          borderColor = Colors.red.shade700;
+          icon = Icons.error_outline;
+        } else if (status == 'good') {
+          backgroundColor = Colors.green.shade100;
+          borderColor = Colors.green.shade700;
+          icon = Icons.check_circle_outline;
+        }
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -747,6 +783,67 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.075),
+              status == 'All Good' ? SizedBox():
+              Container(
+                padding: EdgeInsets.all(16),
+                margin: EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: backgroundColor, // Dynamic background color
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: borderColor), // Dynamic border color
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          icon, // Dynamic icon based on status
+                          color: borderColor,
+                        ),
+                        SizedBox(width: 8), // Space between icon and text
+                        Expanded(
+                          child: Text(
+                            '${message} ', // Dynamic message
+                            style: TextStyle(
+                              color: borderColor, // Apply dynamic color here
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8), // Space between message and contact info
+                    Align(
+                      alignment: Alignment.centerRight, // Align to the right
+                      child: TextButton(
+                        onPressed: () async {
+                          // Launch the URL when the button is pressed
+                          final Uri url = Uri.parse('https://foxtonresearch.com/');
+                          if (await canLaunch(url.toString())) {
+                            await launch(url.toString());
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+
+                        child: Text(
+                          "If you have any queries, contact us", // Contact information
+                          style: TextStyle(
+                            color: Colors.blue, // Apply dynamic color here
+                            fontWeight: FontWeight.bold,
+                           // Underline the text
+                          ),
+                        ),
+                      ),
+                    )
+
+                  ],
+                ),
+              ),
+
+
               SizedBox(height: screenHeight * 0.075),
               Row(
                 children: [
