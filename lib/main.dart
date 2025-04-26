@@ -14,6 +14,8 @@ import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_das
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -72,8 +74,27 @@ class AuthGate extends StatelessWidget {
             }
 
             if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Scaffold(
-                body: Center(child: Text("User document not found.")),
+              return Scaffold(
+                body: Center(
+                  child: Column(
+                    children: [
+                      const CustomText(text: "User document not found."),
+                      CustomButton(
+                          label: 'Logout',
+                          onPressed: () async {
+                            await FirebaseAuth.instance.signOut();
+                            UserSession.clearUser();
+
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => LoginScreen()),
+                              (route) => false,
+                            );
+                          },
+                          width: 250)
+                    ],
+                  ),
+                ),
               );
             }
 

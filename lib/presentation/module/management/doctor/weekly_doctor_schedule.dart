@@ -44,14 +44,16 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
 
     for (var doc in snapshot.docs) {
       if (doc['roles'] == 'Doctor') {
-        final name = doc['firstName'];
+        final firstName = doc['firstName'] ?? '';
+        final lastName = doc['lastName'] ?? '';
+        final doctorName = '$firstName $lastName';
         final specialization = doc['specialization'] ?? 'Not Available';
 
-        if (!fetchedDoctors.contains(name)) {
-          fetchedDoctors.add(name);
+        if (!fetchedDoctors.contains(doctorName)) {
+          fetchedDoctors.add(doctorName);
         }
 
-        doctorSpecializations[name] = specialization;
+        doctorSpecializations[doctorName] = specialization;
       }
     }
 

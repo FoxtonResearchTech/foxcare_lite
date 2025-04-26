@@ -15,28 +15,6 @@ class DoctorScheduleView extends StatefulWidget {
 class _DoctorScheduleViewState extends State<DoctorScheduleView> {
   Map<String, List<Map<String, dynamic>>> groupedSchedules = {};
   List<String> sortedDates = [];
-  final List<Map<String, String>> doctors = [
-    {
-      'name': 'Dr. John Doe',
-      'designation': 'Cardiologist',
-      'time': '10:00 AM - 4:00 PM'
-    },
-    {
-      'name': 'Dr. Emily Smith',
-      'designation': 'Dentist',
-      'time': '11:00 AM - 5:00 PM'
-    },
-    {
-      'name': 'Dr. Rahul Sharma',
-      'designation': 'Neurologist',
-      'time': '9:00 AM - 3:00 PM'
-    },
-    {
-      'name': 'Dr. Sarah Lee',
-      'designation': 'Pediatrician',
-      'time': '1:00 PM - 7:00 PM'
-    },
-  ];
 
   List<String> days = [
     'Monday',
@@ -52,13 +30,12 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
 
   final String formattedDate = DateFormat('d MMMM, y').format(DateTime.now());
   Future<List<List<Map<String, dynamic>>>> getGroupedMonthlySchedule() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('doctorSchedules')
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('doctorSchedules').get();
 
     // Create a list for 31 days (for days 1–31)
     List<List<Map<String, dynamic>>> monthlySchedule =
-    List.generate(31, (_) => []);
+        List.generate(31, (_) => []);
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
@@ -73,10 +50,14 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
 
     return monthlySchedule;
   }
-  List<List<Map<String, dynamic>>> monthlyDoctorSchedule = List.generate(31, (_) => []);
+
+  List<List<Map<String, dynamic>>> monthlyDoctorSchedule =
+      List.generate(31, (_) => []);
   bool isLoading = true;
   Future<void> loadMonthlySchedule() async {
-    final snapshot = await FirebaseFirestore.instance.collection('doctorSchedulesMonthly').get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('doctorSchedulesMonthly')
+        .get();
 
     List<List<Map<String, dynamic>>> grouped = List.generate(31, (_) => []);
 
@@ -97,6 +78,7 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
       isLoading = false;
     });
   }
+
   @override
   void initState() {
     super.initState();
@@ -105,6 +87,7 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
     fetchWeeklyDoctorSchedule();
     fetchSchedulesFromFirestore();
   }
+
   Future<void> loadSchedule() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -628,30 +611,30 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
         groupedSchedules.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : SizedBox(
-          height: 500,
-              child: GridView.builder(
-                        padding: const EdgeInsets.all(8.0),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 5, // ⬅️ From 7 to 5 for more space per card
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 16.0,
-                          childAspectRatio: 0.65, // ⬅️ Lower ratio = taller card
-                        ),
-                        itemCount: sortedDates.length,
-                        itemBuilder: (context, index) {
-              final dateStr = sortedDates[index];
-              final schedules = groupedSchedules[dateStr] ?? [];
-              final date = DateTime.parse(dateStr);
-              final dayLabel = "${date.day} ${_monthName(date.month)}";
+                height: 500,
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(8.0),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5, // ⬅️ From 7 to 5 for more space per card
+                    crossAxisSpacing: 16.0,
+                    mainAxisSpacing: 16.0,
+                    childAspectRatio: 0.65, // ⬅️ Lower ratio = taller card
+                  ),
+                  itemCount: sortedDates.length,
+                  itemBuilder: (context, index) {
+                    final dateStr = sortedDates[index];
+                    final schedules = groupedSchedules[dateStr] ?? [];
+                    final date = DateTime.parse(dateStr);
+                    final dayLabel = "${date.day} ${_monthName(date.month)}";
 
-              if (schedules.isEmpty) {
-                return _noScheduleCard(dayLabel);
-              }
+                    if (schedules.isEmpty) {
+                      return _noScheduleCard(dayLabel);
+                    }
 
-              return _scheduleCard(dayLabel, schedules);
-                        },
-                      ),
-            ),
+                    return _scheduleCard(dayLabel, schedules);
+                  },
+                ),
+              ),
       ],
     );
   }
@@ -698,7 +681,8 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                         ],
                       ),
                     ),
-                    const Divider(color: Colors.white24, thickness: 1, height: 20),
+                    const Divider(
+                        color: Colors.white24, thickness: 1, height: 20),
                     ...schedules.map((doctor) {
                       return Column(
                         children: [
@@ -722,7 +706,8 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                           ),
                           const SizedBox(height: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.3),
@@ -730,7 +715,7 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                             ),
                             child: Text(
                               'Morning: ${doctor['fromTimeMorning']} - ${doctor['toTimeMorning']}\n'
-                                  'Evening: ${doctor['fromTimeEvening']} - ${doctor['toTimeEvening']}',
+                              'Evening: ${doctor['fromTimeEvening']} - ${doctor['toTimeEvening']}',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontSize: 13,
@@ -751,7 +736,6 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
     );
   }
 
-
   Widget _noScheduleCard(String dayLabel) {
     return Container(
       decoration: BoxDecoration(
@@ -762,7 +746,8 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(dayLabel,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 8),
           const Icon(Icons.event_busy, color: Colors.redAccent, size: 32),
           const SizedBox(height: 8),
@@ -771,8 +756,11 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
       ),
     );
   }
+
   Future<void> fetchSchedulesFromFirestore() async {
-    final snapshot = await FirebaseFirestore.instance.collection('doctorSchedulesMonthly').get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('doctorSchedulesMonthly')
+        .get();
 
     final allSchedules = snapshot.docs.map((doc) => doc.data()).toList();
 
@@ -797,8 +785,19 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
 
   String _monthName(int month) {
     const months = [
-      "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
     ];
     return months[month];
   }

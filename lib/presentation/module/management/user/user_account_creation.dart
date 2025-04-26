@@ -120,7 +120,6 @@ class _UserAccountCreation extends State<UserAccountCreation> {
 
   Future<void> registerEmployee() async {
     try {
-      // Authenticate user
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
@@ -132,7 +131,6 @@ class _UserAccountCreation extends State<UserAccountCreation> {
       if (positionSelectedValue != null) {
         String docId = userCredential.user!.uid;
 
-        // Create the employee document
         await firestore
             .collection('employees')
             .doc(docId)
@@ -191,8 +189,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
             .catchError(
                 (error) => debugPrint('Failed to add employee: $error'));
       }
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => LoginScreen()));
+
       CustomSnackBar(context,
           message: 'Employee registered successfully!',
           backgroundColor: Colors.green);
@@ -205,7 +202,11 @@ class _UserAccountCreation extends State<UserAccountCreation> {
         showMessage('Registration failed: ${e.message}');
       }
     } catch (e) {
-      showMessage('An error occurred: $e');
+      CustomSnackBar(
+        context,
+        message: 'An error occurred: $e',
+        backgroundColor: Colors.red,
+      );
     }
   }
 
@@ -627,7 +628,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                       ),
                       SizedBox(width: screenHeight * 0.1),
                       CustomTextField(
-                        hintText: 'University',
+                        hintText: 'College',
                         width: screenWidth * 0.25,
                         controller: collegeController,
                       ),
@@ -678,7 +679,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                         ),
                         SizedBox(width: screenHeight * 0.1),
                         CustomTextField(
-                          hintText: 'University',
+                          hintText: 'College',
                           width: screenWidth * 0.25,
                           controller: pgCollegeController,
                         ),

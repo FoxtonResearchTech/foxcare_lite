@@ -1,14 +1,15 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/management/user/doctor_and_counter_setup.dart';
-import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
+import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:intl/intl.dart';
 
-import 'package:iconsax/iconsax.dart';
-
+import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/drawer/management/user_information/user_information_drawer.dart';
+import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
-import '../generalInformation/general_information_admission_status.dart';
+import '../../../../utilities/widgets/textField/primary_textField.dart';
 
 class EditDeleteUserAccount extends StatefulWidget {
   @override
@@ -16,12 +17,765 @@ class EditDeleteUserAccount extends StatefulWidget {
 }
 
 class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
-  // To store the index of the selected drawer item
   int selectedIndex = 1;
+  String? positionSelectedValue;
+  String? relationSelectedValue;
+  String? selectedSpecialization;
+
+  String? selectedSex;
+
+  // Controllers for employee details
+  final TextEditingController empCodeController = TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController relationNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phone1Controller = TextEditingController();
+  final TextEditingController phone2Controller = TextEditingController();
+
+  // Controllers for permanent address
+  final TextEditingController lane1Controller = TextEditingController();
+  final TextEditingController lane2Controller = TextEditingController();
+  final TextEditingController landmarkController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController stateController = TextEditingController();
+  final TextEditingController pinCodeController = TextEditingController();
+
+  // Controllers for temporary address
+  final TextEditingController tempLane1Controller = TextEditingController();
+  final TextEditingController tempLane2Controller = TextEditingController();
+  final TextEditingController tempLandmarkController = TextEditingController();
+  final TextEditingController tempCityController = TextEditingController();
+  final TextEditingController tempStateController = TextEditingController();
+  final TextEditingController tempPinCodeController = TextEditingController();
+
+  // Controllers for Qualification details
+  final TextEditingController qualificationController = TextEditingController();
+  final TextEditingController registerNoController = TextEditingController();
+  final TextEditingController universityController = TextEditingController();
+  final TextEditingController collegeController = TextEditingController();
+
+  // Controllers for PG Qualification details
+  final TextEditingController pgQualificationController =
+      TextEditingController();
+  final TextEditingController pgRegisterNoController = TextEditingController();
+  final TextEditingController pgUniversityController = TextEditingController();
+  final TextEditingController pgCollegeController = TextEditingController();
+
+  // Controllers for password
+  final TextEditingController passwordController = TextEditingController();
+
+  final TextEditingController dobController = TextEditingController();
+
+  void populateTemporaryAddress() {
+    tempLane1Controller.text = lane1Controller.text;
+    tempLane2Controller.text = lane2Controller.text;
+    tempLandmarkController.text = landmarkController.text;
+    tempCityController.text = cityController.text;
+    tempStateController.text = stateController.text;
+    tempPinCodeController.text = pinCodeController.text;
+  }
+
+  void clearTemporaryAddress() {
+    tempLane1Controller.clear();
+    tempLane2Controller.clear();
+    tempLandmarkController.clear();
+    tempCityController.clear();
+    tempStateController.clear();
+    tempPinCodeController.clear();
+  }
+
+  final List<String> headers = [
+    'Name',
+    'EMP Code',
+    'Role',
+    'Email',
+    'Gender',
+    'City',
+    'Action'
+  ];
+  List<Map<String, dynamic>> employeeData = [];
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        dobController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+      });
+    }
+  }
+
+  Future<void> fetchData() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
+          await FirebaseFirestore.instance.collection('employees').get();
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in stockSnapshot.docs) {
+        final data = doc.data();
+        fetchedData.add({
+          'Name': data['firstName'] + ' ' + data['lastName'] ?? 'N/A',
+          'EMP Code': data['empCode'] ?? 'N/A',
+          'Role': data['role'] ?? 'N/A',
+          'Email': data['email'] ?? 'N/A',
+          'City': data['city'] ?? 'N/A',
+          'Gender': data['gender'] ?? 'N/A',
+          'Action': Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              TextButton(
+                onPressed: () {
+                  bool isSameAsPermanent = true;
+                  bool isPostgraduate = false;
+                  bool isDoc = false;
+                  void isDoctor(String value) {
+                    setState(() {
+                      isDoc = value == 'Doctor';
+                    });
+                  }
+
+                  firstNameController.text = data['firstName'];
+                  lastNameController.text = data['lastName'];
+                  relationNameController.text = data['relationName'];
+                  emailController.text = data['email'];
+                  phone1Controller.text = data['phone1'];
+                  phone2Controller.text = data['phone2'];
+                  empCodeController.text = data['empCode'];
+                  selectedSex = data['gender'];
+                  relationSelectedValue = data['relationType'];
+                  dobController.text = data['dob'];
+                  positionSelectedValue = data['roles'];
+                  selectedSpecialization = data['specialization'];
+                  lane1Controller.text = data['address']['permanent']['lane1'];
+                  lane2Controller.text = data['address']['permanent']['lane2'];
+                  landmarkController.text =
+                      data['address']['permanent']['landmark'];
+                  cityController.text = data['address']['permanent']['city'];
+                  stateController.text = data['address']['permanent']['state'];
+                  pinCodeController.text =
+                      data['address']['permanent']['pincode'];
+                  if (positionSelectedValue == 'Doctor') {
+                    isDoc = true;
+                  }
+                  if (data['address']['temporary'] != null) {
+                    tempLane1Controller.text =
+                        data['address']['temporary']['lane1'];
+                    tempLane2Controller.text =
+                        data['address']['temporary']['lane2'];
+                    tempLandmarkController.text =
+                        data['address']['temporary']['landmark'];
+                    tempCityController.text =
+                        data['address']['temporary']['city'];
+                    tempStateController.text =
+                        data['address']['temporary']['state'];
+                  }
+                  qualificationController.text =
+                      data['qualification']['ug']['degree'];
+                  registerNoController.text =
+                      data['qualification']['ug']['registerNo'];
+                  universityController.text =
+                      data['qualification']['ug']['university'];
+                  collegeController.text =
+                      data['qualification']['ug']['college'];
+                  if (data['qualification']['pg'] != null) {
+                    isPostgraduate = true;
+                    pgQualificationController.text =
+                        data['qualification']['pg']['degree'];
+                    pgRegisterNoController.text =
+                        data['qualification']['pg']['registerNo'];
+                    pgUniversityController.text =
+                        data['qualification']['pg']['university'];
+                    pgCollegeController.text =
+                        data['qualification']['pg']['college'];
+                  }
+                  passwordController.text = data['password'];
+
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Edit Employee Details'),
+                        content: StatefulBuilder(builder: (context, setState) {
+                          return Container(
+                            width: 800,
+                            height: 1000,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            CustomDropdown(
+                                              label: 'Position',
+                                              items: const [
+                                                'Management',
+                                                'Pharmacist',
+                                                'Receptionist',
+                                                'Doctor',
+                                                'Manager',
+                                                'Lab Assistance',
+                                                'X-Ray Technician'
+                                              ],
+                                              selectedItem:
+                                                  positionSelectedValue,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  positionSelectedValue =
+                                                      value!;
+                                                  isDoctor(
+                                                      positionSelectedValue!);
+                                                });
+                                              },
+                                            ),
+                                            SizedBox(width: 100),
+                                            CustomTextField(
+                                              hintText: 'Emp Code',
+                                              width: 300,
+                                              controller: empCodeController,
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        if (isDoc)
+                                          Row(
+                                            children: [
+                                              CustomDropdown(
+                                                label: 'Specialization',
+                                                items: const [
+                                                  'General Physician',
+                                                  'Pediatrician',
+                                                  'Cardiologist',
+                                                  'Dermatologist',
+                                                  'Neurologist',
+                                                  'Orthopedic Surgeon',
+                                                  'ENT Specialist',
+                                                  'Gynecologist',
+                                                  'Ophthalmologist',
+                                                  'Psychiatrist',
+                                                ],
+                                                selectedItem:
+                                                    selectedSpecialization,
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    selectedSpecialization =
+                                                        value!;
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                              hintText: 'First Name',
+                                              width: 300,
+                                              controller: firstNameController,
+                                            ),
+                                            SizedBox(width: 100),
+                                            CustomTextField(
+                                              hintText: 'Last Name',
+                                              width: 300,
+                                              controller: lastNameController,
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                              hintText:
+                                                  "Father's Name / Mother's Name / Guardian's Name",
+                                              width: 300,
+                                              controller:
+                                                  relationNameController,
+                                            ),
+                                            SizedBox(width: 100),
+                                            CustomDropdown(
+                                              label: 'Relation',
+                                              items: const [
+                                                'Father',
+                                                'Mother',
+                                                'Guardian'
+                                              ],
+                                              selectedItem:
+                                                  relationSelectedValue,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  relationSelectedValue =
+                                                      value!;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomDropdown(
+                                              label: 'Sex',
+                                              items: const ['Male', 'Female'],
+                                              selectedItem: selectedSex,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  selectedSex = value!;
+                                                });
+                                              },
+                                            ),
+                                            SizedBox(width: 100),
+                                            CustomTextField(
+                                              controller: dobController,
+                                              hintText: 'Date of Birth',
+                                              width: 200,
+                                              icon:
+                                                  const Icon(Icons.date_range),
+                                              onTap: () => _selectDate(context),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 40),
+                                        const CustomText(
+                                            text: 'Permanent Address'),
+                                        SizedBox(height: 30),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                              hintText: 'Lane 1',
+                                              width: 300,
+                                              controller: lane1Controller,
+                                            ),
+                                            SizedBox(width: 100),
+                                            CustomTextField(
+                                              hintText: 'Lane 2',
+                                              width: 300,
+                                              controller: lane2Controller,
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        CustomTextField(
+                                          hintText: 'Landmark',
+                                          width: 700,
+                                          controller: landmarkController,
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                                hintText: 'City',
+                                                width: 200,
+                                                controller: cityController),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                                hintText: 'State',
+                                                width: 200,
+                                                controller: stateController),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                                hintText: 'Pin code',
+                                                width: 200,
+                                                controller: pinCodeController),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                                hintText: 'E-Mail ID',
+                                                width: 200,
+                                                controller: emailController),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                                hintText: 'Phone No 1',
+                                                width: 200,
+                                                controller: phone1Controller),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                                hintText: 'Phone No 2',
+                                                width: 200,
+                                                controller: phone2Controller),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            Checkbox(
+                                              value: isSameAsPermanent,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  isSameAsPermanent = value!;
+                                                  if (isSameAsPermanent) {
+                                                    populateTemporaryAddress();
+                                                  } else {
+                                                    clearTemporaryAddress();
+                                                  }
+                                                });
+                                              },
+                                            ),
+                                            const Text('Same as Above'),
+                                            SizedBox(width: 100),
+                                            Checkbox(
+                                              value: !isSameAsPermanent,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  isSameAsPermanent = !value!;
+                                                  if (isSameAsPermanent) {
+                                                    populateTemporaryAddress();
+                                                  } else {
+                                                    clearTemporaryAddress();
+                                                  }
+                                                });
+                                              },
+                                            ),
+                                            const Text('Different'),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        const CustomText(
+                                            text: 'Temporary Address'),
+                                        SizedBox(height: 30),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                              hintText: 'Lane 1',
+                                              width: 300,
+                                              controller: tempLane1Controller,
+                                            ),
+                                            SizedBox(width: 100),
+                                            CustomTextField(
+                                              hintText: 'Lane 2',
+                                              width: 300,
+                                              controller: tempLane2Controller,
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        CustomTextField(
+                                          hintText: 'Landmark',
+                                          width: 700,
+                                          controller: tempLandmarkController,
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                                hintText: 'City',
+                                                width: 200,
+                                                controller: tempCityController),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                                hintText: 'State',
+                                                width: 200,
+                                                controller:
+                                                    tempStateController),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                                hintText: 'Pin code',
+                                                width: 200,
+                                                controller:
+                                                    tempPinCodeController),
+                                          ],
+                                        ),
+                                        SizedBox(height: 40),
+                                        const CustomText(
+                                            text: 'Education Qualification'),
+                                        SizedBox(height: 30),
+                                        CustomTextField(
+                                          hintText: 'Qualification',
+                                          width: 300,
+                                          controller: qualificationController,
+                                        ),
+                                        SizedBox(height: 20),
+                                        CustomTextField(
+                                          hintText: 'Register No',
+                                          width: 300,
+                                          controller: registerNoController,
+                                        ),
+                                        SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            CustomTextField(
+                                              hintText: 'University',
+                                              width: 300,
+                                              controller: universityController,
+                                            ),
+                                            SizedBox(width: 60),
+                                            CustomTextField(
+                                              hintText: 'College',
+                                              width: 300,
+                                              controller: collegeController,
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 40),
+                                        Row(
+                                          children: [
+                                            Checkbox(
+                                              value: isPostgraduate,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  isPostgraduate = value!;
+                                                });
+                                              },
+                                            ),
+                                            const Text(
+                                                'Postgraduate Qualification'),
+                                          ],
+                                        ),
+                                        SizedBox(height: 20),
+                                        if (isPostgraduate) ...[
+                                          CustomTextField(
+                                            hintText: 'Qualification',
+                                            width: 300,
+                                            controller:
+                                                pgQualificationController,
+                                          ),
+                                          SizedBox(height: 20),
+                                          CustomTextField(
+                                            hintText: 'Register No',
+                                            width: 300,
+                                            controller: pgRegisterNoController,
+                                          ),
+                                          SizedBox(height: 20),
+                                          Row(
+                                            children: [
+                                              CustomTextField(
+                                                hintText: 'University',
+                                                width: 300,
+                                                controller:
+                                                    pgUniversityController,
+                                              ),
+                                              SizedBox(width: 60),
+                                              CustomTextField(
+                                                hintText: 'College',
+                                                width: 300,
+                                                controller: pgCollegeController,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        SizedBox(height: 20),
+                                        const CustomText(
+                                            text: 'Password Details'),
+                                        SizedBox(height: 30),
+                                        CustomTextField(
+                                          hintText: 'Password',
+                                          width: 300,
+                                          controller: passwordController,
+                                        ),
+                                        SizedBox(height: 40),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () async {
+                              try {
+                                final firestore = FirebaseFirestore.instance;
+
+                                if (data['docId'] != null) {
+                                  await firestore
+                                      .collection('employees')
+                                      .doc(data['docId'])
+                                      .update({
+                                        'empCode': empCodeController.text,
+                                        'firstName': firstNameController.text,
+                                        'lastName': lastNameController.text,
+                                        'relationName':
+                                            relationNameController.text,
+                                        'relationType': relationSelectedValue,
+                                        'email': emailController.text,
+                                        'password': passwordController.text,
+                                        'phone1': phone1Controller.text,
+                                        'phone2': phone2Controller.text,
+                                        'gender': selectedSex,
+                                        'dob': dobController.text,
+                                        'roles': positionSelectedValue,
+                                        'specialization':
+                                            selectedSpecialization,
+                                        'address': {
+                                          'permanent': {
+                                            'lane1': lane1Controller.text,
+                                            'lane2': lane2Controller.text,
+                                            'landmark': landmarkController.text,
+                                            'city': cityController.text,
+                                            'state': stateController.text,
+                                            'pincode': pinCodeController.text,
+                                          },
+                                          'temporary': {
+                                            'lane1': tempLane1Controller.text,
+                                            'lane2': tempLane2Controller.text,
+                                            'landmark':
+                                                tempLandmarkController.text,
+                                            'city': tempCityController.text,
+                                            'state': tempStateController.text,
+                                            'pincode':
+                                                tempPinCodeController.text,
+                                          },
+                                        },
+                                        'qualification': {
+                                          'ug': {
+                                            'degree':
+                                                qualificationController.text,
+                                            'registerNo':
+                                                registerNoController.text,
+                                            'university':
+                                                universityController.text,
+                                            'college': collegeController.text,
+                                          },
+                                          if (isPostgraduate) ...{
+                                            'pg': {
+                                              'degree':
+                                                  pgQualificationController
+                                                      .text,
+                                              'registerNo':
+                                                  pgRegisterNoController.text,
+                                              'university':
+                                                  pgUniversityController.text,
+                                              'college':
+                                                  pgCollegeController.text,
+                                            }
+                                          }
+                                        },
+                                        'updatedAt': FieldValue
+                                            .serverTimestamp(), // <-- changed from createdAt
+                                      })
+                                      .then((value) => debugPrint(
+                                          'Employee updated successfully'))
+                                      .catchError((error) => debugPrint(
+                                          'Failed to update employee: $error'));
+                                }
+
+                                CustomSnackBar(
+                                  context,
+                                  message: 'Employee updated successfully!',
+                                  backgroundColor: Colors.green,
+                                );
+                              } catch (e) {
+                                CustomSnackBar(
+                                  context,
+                                  message: 'An error occurred: $e',
+                                  backgroundColor: Colors.red,
+                                );
+                              }
+                            },
+                            child: CustomText(
+                              text: 'Submit ',
+                              color: AppColors.secondaryColor,
+                              size: 15,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: CustomText(
+                              text: 'Cancel',
+                              color: AppColors.secondaryColor,
+                              size: 15,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: const CustomText(text: 'Edit'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Deletion Conformation'),
+                        content: Container(
+                          width: 100,
+                          height: 25,
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                  text: 'Are you sure you want to delete ?'),
+                            ],
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                              onPressed: () async {
+                                try {
+                                  await FirebaseFirestore.instance
+                                      .collection('employees')
+                                      .doc(data['docId'])
+                                      .delete();
+
+                                  CustomSnackBar(context,
+                                      message: 'Employee Details Deleted');
+                                } catch (e) {
+                                  print(
+                                      'Error updating status for patient ${data['patientID']}: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('Failed to update status')),
+                                  );
+                                }
+                                Navigator.pop(context);
+                              },
+                              child: CustomText(text: 'Delete')),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: CustomText(text: 'Close'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: const CustomText(text: 'Delete'),
+              ),
+            ],
+          ),
+        });
+      }
+
+      setState(() {
+        employeeData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
@@ -117,6 +871,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                   ),
                 ],
               ),
+              CustomDataTable(headers: headers, tableData: employeeData),
               SizedBox(height: screenHeight * 0.08),
             ],
           ),

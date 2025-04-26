@@ -1,17 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/doctor/add_schedule.dart';
 import 'package:foxcare_lite/presentation/module/management/doctor/doctor_view-schedule_manager.dart';
 import 'package:foxcare_lite/presentation/module/management/doctor/monthly_doctor_schedule.dart';
+import 'package:foxcare_lite/presentation/module/management/doctor/monthly_schedule_edit.dart';
 import 'package:foxcare_lite/presentation/module/management/doctor/weekly_doctor_schedule.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
+import 'package:foxcare_lite/presentation/module/management/doctor/weekly_schedule_edit.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_patient_history.dart';
-import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_patients_list.dart';
-import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_register_patient.dart';
-import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
-import 'package:foxcare_lite/presentation/module/management/wardRoomInformation/ward_rooms.dart';
 
 import 'package:iconsax/iconsax.dart';
 
@@ -95,6 +89,20 @@ class _ManagementDoctorSchedule extends State<ManagementDoctorSchedule> {
           icon: Iconsax.hospital,
           onTap: () {
             navigateWithTransition(context, MonthlyDoctorSchedule());
+          },
+        ),
+        DrawerMenuItem(
+          title: 'Weekly Schedule Edit',
+          icon: Iconsax.edit,
+          onTap: () {
+            navigateWithTransition(context, WeeklyScheduleEdit());
+          },
+        ),
+        DrawerMenuItem(
+          title: 'Monthly Schedule Edit',
+          icon: Iconsax.edit,
+          onTap: () {
+            navigateWithTransition(context, MonthlyScheduleEdit());
           },
         ),
         DrawerMenuItem(

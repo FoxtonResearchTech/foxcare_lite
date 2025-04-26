@@ -39,6 +39,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     'Neurologist'
   ];
   String? selectedSpecialization;
+
   final List<String> counterValues =
       List.generate(5, (index) => (index + 1).toString());
 
