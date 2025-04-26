@@ -749,82 +749,105 @@ class _ManagementDashboard extends State<ManagementDashboard> {
               ),
               SizedBox(height: screenHeight * 0.075),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  buildDashboardCard(
-                    title: 'No Of OP',
-                    value:
-                        isTotalOpLoading ? 'Calculating...' : noOfOp.toString(),
-                    icon: Icons.person,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'No Of OP',
+                      value: isTotalOpLoading ? 'Calculating...' : noOfOp.toString(),
+                      icon: Icons.person,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
-                  buildDashboardCard(
-                    title: 'No Of IP',
-                    value:
-                        isTotalIpLoading ? 'Calculating...' : noOfIp.toString(),
-                    icon: Icons.person,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  SizedBox(width: 12), // spacing between cards
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'No Of IP',
+                      value: isTotalIpLoading ? 'Calculating...' : noOfIp.toString(),
+                      icon: Icons.person,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
-                  buildDashboardCard(
-                    title: 'Today No Of New Patients',
-                    value: noOfNewPatients.toString(),
-                    icon: Icons.person_add_alt,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'Today No Of New Patients',
+                      value: noOfNewPatients.toString(),
+                      icon: Icons.person_add_alt,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
-                  buildDashboardCard(
-                    title: 'Today No of Patients',
-                    value: todayNoOfOp.toString(),
-                    icon: Icons.person_add_alt,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'Today No of Patients',
+                      value: todayNoOfOp.toString(),
+                      icon: Icons.person_add_alt,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
                 ],
               ),
+
+
+
               SizedBox(height: screenHeight * 0.05),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+               
                 children: [
-                  buildDashboardCard(
-                    title: 'Total Income',
-                    value: isTotalIncomeLoading
-                        ? 'Calculating...'
-                        : '₹ ' + totalIncome.toString(),
-                    icon: Iconsax.money_recive,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'Total Income',
+                      value: isTotalIncomeLoading
+                          ? 'Calculating...'
+                          : '₹ ' + totalIncome.toString(),
+                      icon: Iconsax.money_recive,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
-                  buildDashboardCard(
-                    title: 'Total Expense',
-                    value: isTotalExpenseLoading
-                        ? 'Calculating...'
-                        : '₹ ' + totalExpense.toString(),
-                    icon: Iconsax.money_remove,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'Total Expense',
+                      value: isTotalExpenseLoading
+                          ? 'Calculating...'
+                          : '₹ ' + totalExpense.toString(),
+                      icon: Iconsax.money_remove,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
-                  buildDashboardCard(
-                    title: 'Pharmacy Sales',
-                    value: isPharmacyTotalIncomeLoading
-                        ? 'Calculating...'
-                        : '₹ ' + pharmacyTotalIncome.toString(),
-                    icon: Iconsax.money_recive,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'Pharmacy Sales',
+                      value: isPharmacyTotalIncomeLoading
+                          ? 'Calculating...'
+                          : '₹ ' + pharmacyTotalIncome.toString(),
+                      icon: Iconsax.money_recive,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
-                  buildDashboardCard(
-                    title: 'Pharmacy Expense',
-                    value: isPharmacyTotalExpenseLoading
-                        ? 'Calculating...'
-                        : '₹ ' + pharmacyTotalExpense.toString(),
-                    icon: Iconsax.money_remove,
-                    width: screenWidth * 0.17,
-                    height: screenHeight * 0.17,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: buildDashboardCard(
+                      title: 'Pharmacy Expense',
+                      value: isPharmacyTotalExpenseLoading
+                          ? 'Calculating...'
+                          : '₹ ' + pharmacyTotalExpense.toString(),
+                      icon: Iconsax.money_remove,
+                      width: double.infinity,
+                      height: screenHeight * 0.18,
+                    ),
                   ),
                 ],
               ),
+
             ],
           ),
         ),

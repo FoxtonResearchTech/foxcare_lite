@@ -583,100 +583,124 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
               ),
               SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'First Name : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: firstname,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+                  // First Name Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'First Name : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: firstname,
+                          width: double.infinity,  // Takes up the full available space
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Middle Name : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: middlename,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // Middle Name Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Middle Name : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: middlename,
+                          width: double.infinity,  // Takes up the full available space
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Last Name : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: lastname,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // Last Name Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Last Name : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: lastname,
+                          width: double.infinity,  // Takes up the full available space
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Sex : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryDropdown(
-                        width: screenWidth * 0.25,
-                        hintText: '',
-                        items: const ['Male', 'Female', 'Other'],
-                        selectedItem: selectedSex,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSex = value!;
-                          });
-                        },
-                      ),
-                    ],
+                  // Sex Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Sex : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryDropdown(
+                          width: double.infinity, // Take full available width
+                          hintText: '',
+                          items: const ['Male', 'Female', 'Other'],
+                          selectedItem: selectedSex,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedSex = value!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Age : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: age,
-                        width: screenWidth * 0.2,
-                      )
-                    ],
+
+                  // Age Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Age : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: age,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'DOB (YYYY-MM-DD) : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: dob,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // DOB Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'DOB (YYYY-MM-DD) : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: dob,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -709,154 +733,190 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
               ),
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Landmark : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: landmark,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+                  // Landmark Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Landmark : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: landmark,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'City : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: city,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // City Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'City : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: city,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'State : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: state,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // State Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'State : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: state,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Pincode : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: pincode,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+                  // Pincode Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Pincode : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: pincode,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Phone Number 1 : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: phone1,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // Phone Number 1 Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Phone Number 1 : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: phone1,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Phone Number 2 : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: phone2,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // Phone Number 2 Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Phone Number 2 : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: phone2,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'Blood Group : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryDropdown(
-                        hintText: '',
-                        width: screenWidth * 0.25,
-                        items: const [
-                          'A+',
-                          'A-',
-                          'B+',
-                          'B-',
-                          'O+',
-                          'O-',
-                          'AB+',
-                          'AB-'
-                        ],
-                        selectedItem: selectedBloodGroup,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedBloodGroup = value!;
-                          });
-                        },
-                      ),
-                    ],
+                  // Blood Group Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'Blood Group : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryDropdown(
+                          hintText: '',
+                          width: double.infinity, // Take full available width
+                          items: const [
+                            'A+',
+                            'A-',
+                            'B+',
+                            'B-',
+                            'O+',
+                            'O-',
+                            'AB+',
+                            'AB-'
+                          ],
+                          selectedItem: selectedBloodGroup,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedBloodGroup = value!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'OP Amount : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: opAmount,
-                        width: screenWidth * 0.2,
-                      )
-                    ],
+
+                  // OP Amount Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'OP Amount : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: opAmount,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(text: 'OP Amount Collected : '),
-                      SizedBox(height: screenHeight * 0.01),
-                      SecondaryTextField(
-                        hintText: '',
-                        controller: opAmountCollected,
-                        width: screenWidth * 0.25,
-                      )
-                    ],
+
+                  // OP Amount Collected Column
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomText(text: 'OP Amount Collected : '),
+                        SizedBox(height: screenHeight * 0.01),
+                        SecondaryTextField(
+                          hintText: '',
+                          controller: opAmountCollected,
+                          width: double.infinity, // Take full available width
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 45),
               Center(
                 child: SizedBox(
