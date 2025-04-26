@@ -80,18 +80,19 @@ class AuthGate extends StatelessWidget {
                     children: [
                       const CustomText(text: "User document not found."),
                       CustomButton(
-                          label: 'Logout',
-                          onPressed: () async {
-                            await FirebaseAuth.instance.signOut();
-                            UserSession.clearUser();
+                        label: 'Logout',
+                        onPressed: () async {
+                          await FirebaseAuth.instance.signOut();
+                          UserSession.clearUser();
 
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (_) => LoginScreen()),
-                              (route) => false,
-                            );
-                          },
-                          width: 250)
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => LoginScreen()),
+                            (route) => false,
+                          );
+                        },
+                        width: 250,
+                      ),
                     ],
                   ),
                 ),

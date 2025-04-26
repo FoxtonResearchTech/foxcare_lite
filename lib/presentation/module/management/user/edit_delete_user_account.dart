@@ -5,6 +5,7 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../utilities/colors.dart';
+import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/user_information/user_information_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -24,6 +25,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
 
   String? selectedSex;
 
+  final TextEditingController empCodeSearch = TextEditingController();
+  final TextEditingController phoneNumberSearch = TextEditingController();
   // Controllers for employee details
   final TextEditingController empCodeController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
@@ -90,6 +93,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
     'EMP Code',
     'Role',
     'Email',
+    'Phone Number',
     'Gender',
     'City',
     'Action'
@@ -111,20 +115,35 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
     }
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData({String? empCode, String? phoneNumber}) async {
     try {
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance.collection('employees').get();
+      Query query = FirebaseFirestore.instance.collection('employees');
 
+      if (empCode != null) {
+        query = query.where('empCode', isEqualTo: empCode);
+      } else if (phoneNumber != null) {
+        query = query.where(Filter.or(
+          Filter('phone1', isEqualTo: phoneNumber),
+          Filter('phone2', isEqualTo: phoneNumber),
+        ));
+      }
+      final QuerySnapshot snapshot = await query.get();
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          employeeData = [];
+        });
+      }
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in stockSnapshot.docs) {
-        final data = doc.data();
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
         fetchedData.add({
           'Name': data['firstName'] + ' ' + data['lastName'] ?? 'N/A',
           'EMP Code': data['empCode'] ?? 'N/A',
           'Role': data['role'] ?? 'N/A',
           'Email': data['email'] ?? 'N/A',
+          'Phone Number': data['phone1'] ?? 'N/A',
           'City': data['city'] ?? 'N/A',
           'Gender': data['gender'] ?? 'N/A',
           'Action': Row(
@@ -670,6 +689,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                   message: 'Employee updated successfully!',
                                   backgroundColor: Colors.green,
                                 );
+                                Navigator.of(context).pop();
                               } catch (e) {
                                 CustomSnackBar(
                                   context,
@@ -871,6 +891,41 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                   ),
                 ],
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    hintText: 'EMP Code',
+                    width: screenWidth * 0.15,
+                    controller: empCodeSearch,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(empCode: empCodeSearch.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  CustomTextField(
+                    hintText: 'Phone Number',
+                    width: screenWidth * 0.15,
+                    controller: phoneNumberSearch,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(phoneNumber: phoneNumberSearch.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
               CustomDataTable(headers: headers, tableData: employeeData),
               SizedBox(height: screenHeight * 0.08),
             ],
