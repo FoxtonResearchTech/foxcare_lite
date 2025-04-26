@@ -651,7 +651,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     );
   }
 
-  // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;

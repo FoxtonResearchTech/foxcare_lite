@@ -173,19 +173,41 @@ class _NonMovingStock extends State<NonMovingStock> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
+            top: screenHeight * 0.02,
             left: screenWidth * 0.08,
             right: screenWidth * 0.08,
             bottom: screenWidth * 0.05,
           ),
           child: Column(
             children: [
-              const Row(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomText(text: 'Non-Moving Stock :'),
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Non-Moving Statement",
+                          size: screenWidth * 0.0275,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
               Row(
                 children: [
                   CustomTextField(

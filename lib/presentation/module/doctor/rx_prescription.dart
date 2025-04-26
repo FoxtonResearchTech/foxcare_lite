@@ -517,7 +517,9 @@ class _RxPrescription extends State<RxPrescription> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
             icon: Icon(
               Icons.arrow_back_ios,
               color: Colors.white,
@@ -1141,7 +1143,8 @@ class _RxPrescription extends State<RxPrescription> {
 
           List<ChatMessage> _messages = [
             ChatMessage(
-              text: "👋 Hello! I'm your FoxCare assistant.\nHow can I help you today?",
+              text:
+                  "👋 Hello! I'm your FoxCare assistant.\nHow can I help you today?",
               isUser: false,
             )
           ];
@@ -1182,8 +1185,8 @@ class _RxPrescription extends State<RxPrescription> {
                           children: [
                             // Header
                             Container(
-                              padding:
-                              EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [AppColors.lightBlue, AppColors.blue],
@@ -1209,7 +1212,8 @@ class _RxPrescription extends State<RxPrescription> {
                                   ),
                                   Spacer(),
                                   IconButton(
-                                    icon: Icon(Icons.close, color: Colors.white),
+                                    icon:
+                                        Icon(Icons.close, color: Colors.white),
                                     onPressed: () => Navigator.pop(context),
                                   ),
                                 ],
@@ -1222,13 +1226,16 @@ class _RxPrescription extends State<RxPrescription> {
                                 padding: const EdgeInsets.all(16.0),
                                 child: ListView.builder(
                                   controller: _scrollController,
-                                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                                  itemCount:
+                                      _messages.length + (_isLoading ? 1 : 0),
                                   itemBuilder: (context, index) {
-                                    if (_isLoading && index == _messages.length) {
+                                    if (_isLoading &&
+                                        index == _messages.length) {
                                       return Align(
                                         alignment: Alignment.centerLeft,
                                         child: Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8.0),
                                           child: Lottie.asset(
                                             'assets/ai_bot_loading.json',
                                             width: 50,
@@ -1244,15 +1251,18 @@ class _RxPrescription extends State<RxPrescription> {
                                     return Container(
                                       margin: EdgeInsets.symmetric(vertical: 8),
                                       child: Row(
-                                        mainAxisAlignment:
-                                        isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: isUser
+                                            ? MainAxisAlignment.end
+                                            : MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           if (!isUser)
                                             CircleAvatar(
                                               radius: 18,
                                               backgroundColor: Colors.white,
-                                              backgroundImage: AssetImage('assets/fox_doc.png'),
+                                              backgroundImage: AssetImage(
+                                                  'assets/fox_doc.png'),
                                             ),
                                           if (!isUser) SizedBox(width: 8),
 
@@ -1263,18 +1273,28 @@ class _RxPrescription extends State<RxPrescription> {
                                               decoration: BoxDecoration(
                                                 gradient: LinearGradient(
                                                   colors: isUser
-                                                      ? [Colors.blueAccent, Colors.lightBlueAccent]
-                                                      : [Colors.grey.shade200, Colors.grey.shade300],
+                                                      ? [
+                                                          Colors.blueAccent,
+                                                          Colors.lightBlueAccent
+                                                        ]
+                                                      : [
+                                                          Colors.grey.shade200,
+                                                          Colors.grey.shade300
+                                                        ],
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
                                                 ),
                                                 borderRadius: BorderRadius.only(
                                                   topLeft: Radius.circular(16),
                                                   topRight: Radius.circular(16),
-                                                  bottomLeft:
-                                                  Radius.circular(isUser ? 16 : 0), // tail design
-                                                  bottomRight:
-                                                  Radius.circular(isUser ? 0 : 16), // tail design
+                                                  bottomLeft: Radius.circular(
+                                                      isUser
+                                                          ? 16
+                                                          : 0), // tail design
+                                                  bottomRight: Radius.circular(
+                                                      isUser
+                                                          ? 0
+                                                          : 16), // tail design
                                                 ),
                                                 boxShadow: [
                                                   BoxShadow(
@@ -1287,7 +1307,9 @@ class _RxPrescription extends State<RxPrescription> {
                                               child: Text(
                                                 msg.text,
                                                 style: TextStyle(
-                                                  color: isUser ? Colors.white : Colors.black87,
+                                                  color: isUser
+                                                      ? Colors.white
+                                                      : Colors.black87,
                                                   fontSize: 15.5,
                                                   height: 1.4,
                                                 ),
@@ -1299,8 +1321,10 @@ class _RxPrescription extends State<RxPrescription> {
                                           if (isUser)
                                             CircleAvatar(
                                               radius: 18,
-                                              backgroundColor: Colors.blueAccent,
-                                              child: Icon(Icons.person, color: Colors.white),
+                                              backgroundColor:
+                                                  Colors.blueAccent,
+                                              child: Icon(Icons.person,
+                                                  color: Colors.white),
                                             ),
                                         ],
                                       ),
@@ -1309,7 +1333,6 @@ class _RxPrescription extends State<RxPrescription> {
                                 ),
                               ),
                             ),
-
 
                             // Input
                             Padding(
@@ -1324,7 +1347,8 @@ class _RxPrescription extends State<RxPrescription> {
                                         filled: true,
                                         fillColor: Colors.grey[100],
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           borderSide: BorderSide.none,
                                         ),
                                       ),
@@ -1352,13 +1376,16 @@ class _RxPrescription extends State<RxPrescription> {
                                           );
 
                                           if (response.statusCode == 200) {
-                                            final data = jsonDecode(response.body);
-                                            String botReply = data['response'] ??
+                                            final data =
+                                                jsonDecode(response.body);
+                                            String botReply = data[
+                                                    'response'] ??
                                                 "I'm sorry, I didn't understand that.";
 
                                             setState(() {
                                               _messages.add(ChatMessage(
-                                                  text: botReply, isUser: false));
+                                                  text: botReply,
+                                                  isUser: false));
                                               _isLoading = false;
                                             });
                                           } else {
@@ -1373,7 +1400,7 @@ class _RxPrescription extends State<RxPrescription> {
                                           setState(() {
                                             _messages.add(ChatMessage(
                                                 text:
-                                                "Error: Unable to get a response",
+                                                    "Error: Unable to get a response",
                                                 isUser: false));
                                             _isLoading = false;
                                           });
@@ -1385,7 +1412,8 @@ class _RxPrescription extends State<RxPrescription> {
                                   SizedBox(width: 10),
                                   GestureDetector(
                                     onTap: () async {
-                                      String userMessage = _controller.text.trim();
+                                      String userMessage =
+                                          _controller.text.trim();
                                       if (userMessage.isEmpty) return;
 
                                       setState(() {
@@ -1408,7 +1436,8 @@ class _RxPrescription extends State<RxPrescription> {
                                         );
 
                                         if (response.statusCode == 200) {
-                                          final data = jsonDecode(response.body);
+                                          final data =
+                                              jsonDecode(response.body);
                                           String botReply = data['response'] ??
                                               "I'm sorry, I didn't understand that.";
 
@@ -1429,7 +1458,7 @@ class _RxPrescription extends State<RxPrescription> {
                                         setState(() {
                                           _messages.add(ChatMessage(
                                               text:
-                                              "Error: Unable to get a response",
+                                                  "Error: Unable to get a response",
                                               isUser: false));
                                           _isLoading = false;
                                         });
@@ -1485,8 +1514,7 @@ class _RxPrescription extends State<RxPrescription> {
             ),
           ),
         ),
-      )
-      ,
+      ),
     );
   }
 

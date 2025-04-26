@@ -59,81 +59,120 @@ class _Profile extends State<Profile> {
           children: [
             Container(
               padding: EdgeInsets.only(
-                top: screenHeight * 0.03,
+                top: screenHeight * 0.02,
                 right: screenWidth * 0.01,
                 bottom: screenWidth * 0.01,
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Container(
-                    width: screenWidth * 0.25,
-                    height: screenHeight * 0.25,
-                    child: const CircleAvatar(
-                      backgroundImage: AssetImage('assets/splash.png'),
+                  Padding(
+                    padding: EdgeInsets.only(
+                        left: screenWidth * 0.08, right: screenWidth * 0.08),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(top: screenWidth * 0.03),
+                          child: Column(
+                            children: [
+                              CustomText(
+                                text: "Profile",
+                                size: screenWidth * 0.0275,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: screenWidth * 0.15,
+                          height: screenWidth * 0.1,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            borderRadius:
+                                BorderRadius.circular(screenWidth * 0.05),
+                            image: const DecorationImage(
+                              image: AssetImage('assets/foxcare_lite_logo.png'),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Column(
+                  Row(
                     children: [
-                      const CustomText(text: 'Pharmacist Details'),
-                      SizedBox(height: screenHeight * 0.05),
-                      Row(
+                      Container(
+                        width: screenWidth * 0.25,
+                        height: screenHeight * 0.25,
+                        child: const CircleAvatar(
+                          backgroundImage: AssetImage('assets/splash.png'),
+                        ),
+                      ),
+                      Column(
                         children: [
-                          CustomTextField(
-                            readOnly: true,
-                            controller: TextEditingController(
-                                text: user['firstName'].toString() +
-                                        user['lastName'].toString() ??
-                                    ''),
-                            hintText: 'Name',
-                            width: screenWidth * 0.25,
+                          const CustomText(text: 'Pharmacist Details'),
+                          SizedBox(height: screenHeight * 0.05),
+                          Row(
+                            children: [
+                              CustomTextField(
+                                readOnly: true,
+                                controller: TextEditingController(
+                                    text: user['firstName'].toString() +
+                                            user['lastName'].toString() ??
+                                        ''),
+                                hintText: 'Name',
+                                width: screenWidth * 0.25,
+                              ),
+                              SizedBox(width: screenHeight * 0.66),
+                            ],
                           ),
-                          SizedBox(width: screenHeight * 0.66),
+                          SizedBox(height: screenHeight * 0.02),
+                          Row(
+                            children: [
+                              CustomTextField(
+                                readOnly: true,
+                                controller: TextEditingController(
+                                    text: user['qualification']?['ug']
+                                                ?['degree']
+                                            .toString() ??
+                                        ''),
+                                hintText: 'Qualification',
+                                width: screenWidth * 0.25,
+                              ),
+                              SizedBox(width: screenHeight * 0.2),
+                              CustomTextField(
+                                readOnly: true,
+                                controller: TextEditingController(
+                                    text: user['gender'] ?? ''),
+                                hintText: 'Gender',
+                                width: screenWidth * 0.25,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          Row(
+                            children: [
+                              CustomTextField(
+                                readOnly: true,
+                                controller: TextEditingController(
+                                    text: user['address']?['permanent']
+                                            ?['city'] ??
+                                        ''),
+                                hintText: 'Place',
+                                width: screenWidth * 0.25,
+                              ),
+                              SizedBox(width: screenHeight * 0.2),
+                              CustomTextField(
+                                readOnly: true,
+                                controller: TextEditingController(
+                                    text: user['dob'] ?? ''),
+                                hintText: 'Date of Birth',
+                                width: screenWidth * 0.25,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
                         ],
                       ),
-                      SizedBox(height: screenHeight * 0.02),
-                      Row(
-                        children: [
-                          CustomTextField(
-                            readOnly: true,
-                            controller: TextEditingController(
-                                text: user['qualification']?['ug']?['degree']
-                                        .toString() ??
-                                    ''),
-                            hintText: 'Qualification',
-                            width: screenWidth * 0.25,
-                          ),
-                          SizedBox(width: screenHeight * 0.2),
-                          CustomTextField(
-                            readOnly: true,
-                            controller: TextEditingController(
-                                text: user['gender'] ?? ''),
-                            hintText: 'Gender',
-                            width: screenWidth * 0.25,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: screenHeight * 0.02),
-                      Row(
-                        children: [
-                          CustomTextField(
-                            readOnly: true,
-                            controller: TextEditingController(
-                                text: user['address']?['permanent']?['city'] ??
-                                    ''),
-                            hintText: 'Place',
-                            width: screenWidth * 0.25,
-                          ),
-                          SizedBox(width: screenHeight * 0.2),
-                          CustomTextField(
-                            readOnly: true,
-                            controller:
-                                TextEditingController(text: user['dob'] ?? ''),
-                            hintText: 'Date of Birth',
-                            width: screenWidth * 0.25,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: screenHeight * 0.02),
                     ],
                   ),
                 ],

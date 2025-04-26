@@ -4,7 +4,7 @@ import '../text/primary_text.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
-  final List<String> fieldNames;
+  final List<FieldConfig> fields;
   final Map<String, Map<String, WidgetBuilder>> navigationMap;
   final String? selectedField;
   final Map<String, String> selectedOptionsMap;
@@ -14,7 +14,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     Key? key,
     required this.backgroundColor,
-    required this.fieldNames,
+    required this.fields,
     required this.navigationMap,
     required this.selectedField,
     required this.selectedOptionsMap,
@@ -23,21 +23,25 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }) : super(key: key);
 
   @override
-  Size get preferredSize => const Size.fromHeight(60.0);
+  Size get preferredSize => const Size.fromHeight(90.0);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: backgroundColor,
-      height: 60.0,
+      height: 90.0,
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: fieldNames.map((fieldName) {
+          children: fields.map((fieldConfig) {
+            final fieldName = fieldConfig.name;
+            final icon = fieldConfig.icon;
             final options = navigationMap[fieldName]?.keys.toList() ?? [];
             final selectedOption = selectedOptionsMap[fieldName];
+
             return Expanded(
               child: _OptionField(
+                icon: icon,
                 fieldName: fieldName,
                 options: options,
                 navigationMap: navigationMap[fieldName] ?? {},
@@ -63,11 +67,13 @@ class _OptionField extends StatefulWidget {
   final String? selectedOption;
   final ValueChanged<String> onFieldSelected;
   final ValueChanged<String> onOptionSelected;
+  final IconData icon;
 
   const _OptionField({
     Key? key,
-    required this.fieldName,
     required this.options,
+    required this.icon,
+    required this.fieldName,
     required this.navigationMap,
     required this.selectedField,
     required this.selectedOption,
@@ -178,14 +184,28 @@ class _OptionFieldState extends State<_OptionField> {
         link: _layerLink,
         child: Container(
           height: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
           decoration: BoxDecoration(
             color: isSelectedField ? AppColors.lightBlue : AppColors.appBar,
           ),
           child: Center(
-            child: CustomText(
-              text: widget.selectedOption ?? widget.fieldName,
-              color: Colors.white,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(widget.icon, color: Colors.white, size: 22),
+                const SizedBox(height: 2),
+                CustomText(
+                  text: widget.fieldName,
+                  color: Colors.white,
+                ),
+                if (widget.selectedOption != null) ...[
+                  const SizedBox(height: 2),
+                  CustomText(
+                    text: widget.selectedOption!,
+                    color: Colors.white,
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -218,9 +238,18 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        color: widget.isSelected
-            ? AppColors.lightBlue
-            : (isHovered ? AppColors.lightBlue : AppColors.appBar),
+        decoration: BoxDecoration(
+          color: widget.isSelected
+              ? AppColors.lightBlue
+              : (isHovered ? null : AppColors.appBar),
+          gradient: isHovered && !widget.isSelected
+              ? LinearGradient(
+                  colors: [AppColors.lightBlue, AppColors.blue],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+        ),
         child: Align(
           alignment: Alignment.centerLeft,
           child: Center(
@@ -233,4 +262,11 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
       ),
     );
   }
+}
+
+class FieldConfig {
+  final String name;
+  final IconData icon;
+
+  FieldConfig({required this.name, required this.icon});
 }

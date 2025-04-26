@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/billings/op_billing.dart';
 import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 
+import '../../../presentation/login/fetch_user.dart';
 import '../../../presentation/login/login.dart';
 import '../../../presentation/module/pharmacy/billings/cancel_bill.dart';
 import '../../../presentation/module/pharmacy/billings/counter_sales.dart';
@@ -29,9 +31,15 @@ import '../../../presentation/module/pharmacy/tools/manage_pharmacy_info.dart';
 import '../../../presentation/module/pharmacy/tools/pharmacy_info.dart';
 import '../../../presentation/module/pharmacy/tools/profile.dart';
 import '../../colors.dart';
+import '../state/app_bar_selection_state.dart';
 
 class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const FoxCareLiteAppBar({super.key});
+  final Map<String, Map<String, WidgetBuilder>>? navigationMap;
+
+  const FoxCareLiteAppBar({
+    super.key,
+    this.navigationMap,
+  });
 
   @override
   State<FoxCareLiteAppBar> createState() => _FoxCareLiteAppBarState();
@@ -41,28 +49,77 @@ class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
+  Future<void> _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    AppBarSelectionState.selectedField = null;
+    AppBarSelectionState.selectedOptionsMap.clear();
+    UserSession.clearUser();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
+  }
+
   String? selectedField;
   Map<String, String> selectedOptionsMap = {};
+  @override
+  void initState() {
+    super.initState();
+    selectedField = AppBarSelectionState.selectedField;
+    selectedOptionsMap =
+        Map<String, String>.from(AppBarSelectionState.selectedOptionsMap);
+  }
 
   @override
   Widget build(BuildContext context) {
     return CustomAppBar(
       backgroundColor: AppColors.appBar,
-      fieldNames: ['Home', 'Billing', 'Stock Management', 'Reports', 'Tools'],
+      fields: [
+        FieldConfig(name: 'Dashboard', icon: Icons.home),
+        FieldConfig(name: 'Billing', icon: Icons.receipt),
+        FieldConfig(name: 'Stock Management', icon: Icons.store),
+        FieldConfig(name: 'Reports', icon: Icons.bar_chart),
+        FieldConfig(name: 'Tools', icon: Icons.build),
+      ],
       selectedField: selectedField,
       selectedOptionsMap: selectedOptionsMap,
       onFieldSelected: (fieldName) {
         setState(() {
+          AppBarSelectionState.selectedField = fieldName;
           selectedField = fieldName;
+
+          if (fieldName == 'Home') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => SalesChartScreen()),
+            );
+          }
         });
       },
-      onOptionSelected: (fieldName, option) {
+      onOptionSelected: (fieldName, option) async {
+        if (option == 'Logout') {
+          await _logout(context);
+          return;
+        }
+
         setState(() {
-          selectedOptionsMap[fieldName] = option;
+          AppBarSelectionState.selectedOptionsMap.clear();
+          AppBarSelectionState.selectedOptionsMap[fieldName] = option;
+          selectedOptionsMap = AppBarSelectionState.selectedOptionsMap;
         });
+
+        final navigationTarget = widget.navigationMap?[fieldName]?[option];
+        if (navigationTarget != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => navigationTarget(context)),
+          );
+        }
       },
       navigationMap: {
-        'Home': {'Sales Chart Screen': (context) => SalesChartScreen()},
+        'Dashboard': {'Home': (context) => SalesChartScreen()},
         'Billing': {
           'Counter Sales': (context) => const CounterSales(),
           'OP Billings': (context) => const OpBilling(),
@@ -96,7 +153,7 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
           'Distributor List': (context) => const DistributorList(),
           'Add Distributor': (context) => const AddNewDistributor(),
           'Profile': (context) => const Profile(),
-          'Logout': (context) => LoginScreen(),
+          'Logout': (context) => const SizedBox.shrink(),
         }
       },
     );
