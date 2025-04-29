@@ -49,78 +49,72 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
 
   Future<void> fetchData() async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('patients')
-          .where('firstName', isEqualTo: widget.firstName)
-          .where('lastName', isEqualTo: widget.lastName)
-          .where('sex', isEqualTo: widget.sex)
-          .where('bloodGroup', isEqualTo: widget.bloodGroup)
-          .where('phone1', isEqualTo: widget.phone1)
-          .where('phone2', isEqualTo: widget.phone2)
-          .where('dob', isEqualTo: widget.dob);
+      List<Map<String, dynamic>> fetchedOpHistory = [];
+      List<Map<String, dynamic>> fetchedIpHistory = [];
 
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
+      if (widget.opNumber == null || widget.opNumber!.isEmpty) {
         setState(() {
-          opHistory = [];
-          ipHistory = [];
           isLoading = false;
         });
         return;
       }
 
-      List<Map<String, dynamic>> fetchedOpHistory = [];
-      List<Map<String, dynamic>> fetchedIpHistory = [];
+      final opTicketsSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.opNumber!)
+          .collection('opTickets')
+          .get();
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        if (data.containsKey('opNumber') &&
-            data['opNumber'] != widget.opNumber) {
-          fetchedOpHistory.add({
-            'patientId': data['opNumber'],
-            'time': data['time'],
-            'date': data['opAdmissionDate'],
-            'opAdmissionDate': data['opAdmissionDate'] ?? '',
-            'symptoms': (data['investigationTests']
-                    as Map<String, dynamic>?)?['symptoms'] ??
-                '',
-            'findings': data['findings'] ?? '',
-            'rxPrescription': data['Medication'] ?? '',
-          });
-        }
-        if (data.containsKey('ipNumber') &&
-            data['ipNumber'] != widget.ipNumber) {
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .doc('details')
-              .get();
-
-          String date = detailsDoc.exists ? detailsDoc['date'] ?? '' : '';
-          fetchedIpHistory.add({
-            'patientId': data['ipNumber'],
-            'time': date,
-            'date': (data['ipPrescription']
-                    as Map<String, dynamic>?)?['details']?['date'] ??
-                '',
-            'opAdmissionDate': data['opAdmissionDate'] ?? '',
-            'symptoms': (data['investigationTests']
-                    as Map<String, dynamic>?)?['symptoms'] ??
-                '',
-            'findings': data['findings'] ?? '',
-            'rxPrescription': data['Medication'] ?? '',
-          });
-        }
+      for (var doc in opTicketsSnapshot.docs) {
+        final data = doc.data();
+        fetchedOpHistory.add({
+          'patientId': data['opTicket'],
+          'date': data['tokenDate'] ?? '',
+          'symptoms': data['investigationTests']?['symptoms'] ?? '',
+          'rxPrescription': data['Medication'] ?? '',
+        });
       }
 
-      fetchedOpHistory
-          .sort((a, b) => b['opAdmissionDate'].compareTo(a['opAdmissionDate']));
-      fetchedIpHistory
-          .sort((a, b) => b['opAdmissionDate'].compareTo(a['opAdmissionDate']));
+      final ipTicketsSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.opNumber)
+          .collection('ipTickets')
+          .get();
+
+      for (var ipDoc in ipTicketsSnapshot.docs) {
+        final ipData = ipDoc.data();
+        final ipTicketId = ipData['ipTicket'];
+        final ipAdmitDate = ipData['ipAdmitDate'] ?? '';
+        final ipSymptoms = ipData['investigationTests']?['symptoms'] ?? '';
+
+        final medicationSnapshot = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(widget.opNumber)
+            .collection('ipTickets')
+            .doc(ipDoc.id)
+            .collection('Medication')
+            .get();
+
+        List<dynamic> prescriptions = [];
+
+        for (var medDoc in medicationSnapshot.docs) {
+          final medData = medDoc.data();
+          prescriptions.add({
+            'date': medData['date'] ?? '',
+            'Medications': medData['items'] ?? '',
+          });
+        }
+
+        fetchedIpHistory.add({
+          'patientId': ipTicketId,
+          'date': ipAdmitDate,
+          'symptoms': ipSymptoms,
+          'rxPrescription': prescriptions, // list of meds
+        });
+      }
+
+      fetchedOpHistory.sort((a, b) => b['date'].compareTo(a['date']));
+      fetchedIpHistory.sort((a, b) => b['date'].compareTo(a['date']));
 
       setState(() {
         opHistory = fetchedOpHistory;
@@ -128,7 +122,7 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching ticket data: $e');
       setState(() {
         isLoading = false;
       });
@@ -148,7 +142,7 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
               ? Center(child: CustomText(text: "No history found"))
               : SingleChildScrollView(
                   child: SizedBox(
-                    width: screenWidth * 0.25,
+                    width: screenWidth * 0.3,
                     height: screenHeight * 0.6,
                     child: ListView.builder(
                       itemCount: opHistory.length + ipHistory.length,
@@ -171,7 +165,7 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
                                 children: [
                                   CustomText(
                                     text:
-                                        "Op number: ${opHistory[index]['patientId']} on ${opHistory[index]['date']}",
+                                        "OP number: ${opHistory[index]['patientId']} on ${opHistory[index]['date']}",
                                   ),
                                   Row(
                                     children: [
@@ -201,15 +195,13 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
                                           CustomText(
                                               text:
                                                   'Symptoms: ${opHistory[index]['symptoms']}'),
-                                          CustomText(
-                                              text:
-                                                  'Findings: ${opHistory[index]['findings']}'),
+                                          CustomText(text: 'Findings: '),
                                           Padding(
                                             padding:
                                                 EdgeInsets.only(left: 50.0),
                                             child: CustomText(
                                                 text:
-                                                    'Rx Prescription: ${opHistory[index]['rxPrescription']}'),
+                                                    'Prescription: ${opHistory[index]['rxPrescription']}'),
                                           ),
                                         ],
                                       ),
@@ -237,7 +229,7 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
                                 children: [
                                   CustomText(
                                     text:
-                                        "Ip number: ${ipHistory[ipIndex]['patientId']} on ${ipHistory[ipIndex]['date']} ${ipHistory[ipIndex]['time']}",
+                                        "IP number: ${ipHistory[ipIndex]['patientId']} on ${ipHistory[ipIndex]['date']} ",
                                   ),
                                   Row(
                                     children: [
@@ -268,16 +260,14 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
                                           CustomText(
                                               text:
                                                   'Symptoms: ${ipHistory[ipIndex]['symptoms']}'),
-                                          CustomText(
-                                              text:
-                                                  'Findings: ${ipHistory[ipIndex]['findings']}'),
+                                          CustomText(text: 'Findings'),
                                           SizedBox(height: screenHeight * 0.01),
                                           Padding(
                                             padding:
                                                 EdgeInsets.only(left: 50.0),
                                             child: CustomText(
                                                 text:
-                                                    'Rx Prescription: ${ipHistory[ipIndex]['rxPrescription']}'),
+                                                    'Prescription: \n ${ipHistory[ipIndex]['rxPrescription']}'),
                                           ),
                                         ],
                                       ),

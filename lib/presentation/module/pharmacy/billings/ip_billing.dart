@@ -57,18 +57,13 @@ class _IpBilling extends State<IpBilling> {
 
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData({String? ipNumber}) async {
+  Future<void> fetchData({String? ipTicket}) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      final patientsSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
-      if (ipNumber != null) {
-        query = query.where('ipNumber', isEqualTo: ipNumber);
-      }
-
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
+      if (patientsSnapshot.docs.isEmpty) {
+        print("No patient records found.");
         setState(() {
           tableData = [];
           resetTotals();
@@ -77,66 +72,104 @@ class _IpBilling extends State<IpBilling> {
       }
 
       List<Map<String, dynamic>> fetchedData = [];
+      bool found = false;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final querySnapshot = await FirebaseFirestore.instance
+      String todayDate = DateTime.now().toIso8601String().split('T').first;
+
+      for (var patientDoc in patientsSnapshot.docs) {
+        final patientId = patientDoc.id;
+        final patientData = patientDoc.data();
+
+        final ipTicketsSnapshot = await FirebaseFirestore.instance
             .collection('patients')
-            .doc(ipNumber)
-            .collection('ipPrescription')
-            .doc('details')
+            .doc(patientId)
+            .collection('ipTickets')
             .get();
 
-        String patientRoomNumber = querySnapshot['ipAdmission']['roomNumber'];
-        String patientRoomType = querySnapshot['ipAdmission']['roomType'];
-        if (data.isNotEmpty) {
-          setState(() {
-            gender.text = data['sex'] ?? 'N/A';
-            patientName.text =
-                (data['firstName'] ?? '') + ' ' + (data['lastName'] ?? 'N/A');
-            age.text = data['age'] ?? 'N/A';
-            place.text = data['city'] ?? 'N/A';
-            phoneNumber.text = data['phoneNumber'] ?? 'N/A';
-            doctorName.text = data['doctorName'] ?? 'N/A';
-            roomNo.text = patientRoomNumber ?? 'N/A';
-            roomType.text = patientRoomType ?? 'N/A';
-          });
-        }
+        for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+          final ipTicketData = ipTicketDoc.data();
 
-        List<dynamic> medicines = data['Medication'] ?? [];
+          if ((ipTicketData['ipTicket'] ?? '') == ipTicket) {
+            found = true;
 
-        for (String medicineName in medicines) {
-          QuerySnapshot medicineSnapshot = await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .where('productName', isEqualTo: medicineName)
-              .get();
+            // Fetch ipAdmission details
+            final detailsDoc = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientId)
+                .collection('ipPrescription')
+                .doc('details')
+                .get();
 
-          for (var medicineDoc in medicineSnapshot.docs) {
-            var medicineData = medicineDoc.data() as Map<String, dynamic>;
+            final ipAdmission = detailsDoc.data()?['ipAdmission'] ?? {};
 
-            fetchedData.add({
-              'Product Name': medicineData['productName'] ?? 'N/A',
-              'Type': medicineData['type'] ?? 'N/A',
-              'Batch': medicineData['batchNumber'] ?? 'N/A',
-              'EXP': medicineData['expiry'] ?? 'N/A',
-              'HSN': medicineData['hsnCode'] ?? 'N/A',
-              'Quantity': '',
-              'MPS': medicineData['mrp'] ?? 'N/A',
-              'Price': medicineData['price'] ?? 'N/A',
-              'Gst': (medicineData['gst'] ?? 0).toString() + '%',
-              'Amount': medicineData['amount'] ?? 'N/A',
+            setState(() {
+              gender.text = patientData['sex'] ?? 'N/A';
+              patientName.text = (patientData['firstName'] ?? '') +
+                  ' ' +
+                  (patientData['lastName'] ?? 'N/A');
+              age.text = patientData['age'] ?? 'N/A';
+              place.text = patientData['city'] ?? 'N/A';
+              phoneNumber.text = patientData['phoneNumber'] ?? 'N/A';
+              doctorName.text = patientData['doctorName'] ?? 'N/A';
+              roomNo.text = ipAdmission['roomNumber'] ?? 'N/A';
+              roomType.text = ipAdmission['roomType'] ?? 'N/A';
             });
+
+            final medicationSnapshot = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientId)
+                .collection('ipTickets')
+                .doc(ipTicketDoc.id)
+                .collection('Medication')
+                .get();
+
+            for (var medDoc in medicationSnapshot.docs) {
+              final medData = medDoc.data();
+
+              if ((medData['date'] ?? '') == todayDate) {
+                List<dynamic> medicineNames = medData['items'] ?? [];
+
+                for (var medicineName in medicineNames) {
+                  final stockSnapshot = await FirebaseFirestore.instance
+                      .collection('stock')
+                      .doc('Products')
+                      .collection('AddedProducts')
+                      .where('productName', isEqualTo: medicineName)
+                      .get();
+
+                  for (var medicineDoc in stockSnapshot.docs) {
+                    var medicineData =
+                        medicineDoc.data() as Map<String, dynamic>;
+
+                    fetchedData.add({
+                      'Product Name': medicineData['productName'] ?? 'N/A',
+                      'Type': medicineData['type'] ?? 'N/A',
+                      'Batch': medicineData['batchNumber'] ?? 'N/A',
+                      'EXP': medicineData['expiry'] ?? 'N/A',
+                      'HSN': medicineData['hsnCode'] ?? 'N/A',
+                      'Quantity': '',
+                      'MPS': medicineData['mrp'] ?? 'N/A',
+                      'Price': medicineData['price'] ?? 'N/A',
+                      'Gst': (medicineData['gst'] ?? 0).toString() + '%',
+                      'Amount': medicineData['amount'] ?? 'N/A',
+                    });
+                  }
+                }
+              }
+            }
+
+            break; // Exit inner loop after matching ipTicket
           }
         }
+
+        if (found) break;
       }
 
       setState(() {
         tableData = fetchedData;
-        calculateTotals();
-
-        if (ipNumber == null) {
+        if (found) {
+          calculateTotals();
+        } else {
           resetTotals();
         }
       });
@@ -359,7 +392,7 @@ class _IpBilling extends State<IpBilling> {
                     hintText: 'IP Number',
                     width: screenWidth * 0.25,
                     onChanged: (value) {
-                      fetchData(ipNumber: value);
+                      fetchData(ipTicket: value);
                     },
                   ),
                 ],

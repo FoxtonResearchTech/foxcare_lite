@@ -116,6 +116,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
         for (var doc in ipDocs.docs) {
           await doc.reference.delete();
         }
+
+        await patientDocRef.update({'isIP': false});
         await patientDocRef
             .collection('ipTickets')
             .doc(ipTicket)

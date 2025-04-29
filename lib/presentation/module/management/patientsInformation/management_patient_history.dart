@@ -22,7 +22,6 @@ class ManagementPatientHistory extends StatefulWidget {
 }
 
 class _ManagementPatientHistory extends State<ManagementPatientHistory> {
-  // To store the index of the selected drawer item
   int selectedIndex = 1;
   TextEditingController _opNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
