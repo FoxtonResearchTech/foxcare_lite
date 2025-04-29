@@ -16,7 +16,7 @@ class IpPatientReport extends StatefulWidget {
   final String age;
   final String sex;
   final String dob;
-
+  final String ipTicket;
   final String place;
   final String address;
   final String pincode;
@@ -40,13 +40,16 @@ class IpPatientReport extends StatefulWidget {
       required this.sugarLevel,
       required this.sex,
       required this.medication,
-      required this.dob});
+      required this.dob,
+      required this.ipTicket});
 
   @override
   State<IpPatientReport> createState() => _IpPatientReport();
 }
 
 class _IpPatientReport extends State<IpPatientReport> {
+  final dateTime = DateTime.timestamp();
+
   final TextEditingController totalAmountController = TextEditingController();
   final TextEditingController paidController = TextEditingController();
   final TextEditingController balanceController = TextEditingController();
@@ -85,28 +88,42 @@ class _IpPatientReport extends State<IpPatientReport> {
     try {
       final patientRef = FirebaseFirestore.instance
           .collection('patients')
-          .doc(widget.patientID);
+          .doc(widget.patientID)
+          .collection('ipTickets')
+          .doc(widget.ipTicket);
+
+      final reportDoc = await patientRef.get();
+      int reportNo = (reportDoc.data()?['reportNo'] ?? 0) + 1;
 
       for (var row in tableData1) {
         final testDescription = row['Test Descriptions'];
         final value = row['Values'];
 
         if (testDescription != null && value != '') {
-          await patientRef.collection('tests').doc(testDescription).set({
+          await patientRef.collection('tests').doc().set({
+            'Test Descriptions': testDescription,
             'Values': value,
+            'Report No': reportNo,
+            'date': dateTime.year.toString() +
+                '-' +
+                dateTime.month.toString().padLeft(2, '0') +
+                '-' +
+                dateTime.day.toString().padLeft(2, '0'),
           }, SetOptions(merge: true));
         }
       }
 
-      await patientRef.set({
+      await patientRef.collection('labCollection').doc().set({
         'labTotalAmount': totalAmountController.text,
         'labCollected': paidController.text,
         'labBalance': balanceController.text,
         'reportDate': _dateController.text,
-      }, SetOptions(merge: true));
+        'Report No': reportNo,
+      });
 
+      // Increment report number to track separate visits
       await patientRef.set({
-        'reportNo': FieldValue.increment(1),
+        'reportNo': reportNo,
       }, SetOptions(merge: true));
 
       CustomSnackBar(context,
@@ -185,8 +202,8 @@ class _IpPatientReport extends State<IpPatientReport> {
                       readOnly: true,
                       width: screenWidth * 0.2),
                   CustomTextField(
-                    controller: TextEditingController(text: widget.patientID),
-                    hintText: 'IP Number ',
+                    controller: TextEditingController(text: widget.ipTicket),
+                    hintText: 'IP Ticket ',
                     width: screenWidth * 0.2,
                     readOnly: true,
                   )

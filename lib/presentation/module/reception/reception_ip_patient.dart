@@ -16,7 +16,7 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 class ReceptionIpPatient extends StatefulWidget {
   final String patientID;
   final String ipNumber;
-
+  final String date;
   final String name;
   final String age;
   final String place;
@@ -40,6 +40,7 @@ class ReceptionIpPatient extends StatefulWidget {
     required this.bloodPressure,
     required this.sugarLevel,
     required this.ipNumber,
+    required this.date,
   }) : super(key: key);
   @override
   State<ReceptionIpPatient> createState() => _ReceptionIpPatient();
@@ -139,7 +140,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
     try {
       await FirebaseFirestore.instance
           .collection('patients')
-          .doc(widget.ipNumber)
+          .doc(widget.patientID)
           .collection('ipPrescription')
           .doc('details')
           .set({
@@ -214,6 +215,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   const SizedBox(width: 100),
                   Expanded(
                       child: CustomTextField(
+                    controller: TextEditingController(text: widget.date),
                     hintText: 'Date',
                     readOnly: true,
                     obscureText: false,

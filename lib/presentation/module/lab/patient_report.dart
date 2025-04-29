@@ -16,7 +16,7 @@ class PatientReport extends StatefulWidget {
   final String age;
   final String sex;
   final String dob;
-
+  final String opTicket;
   final String place;
   final String address;
   final String pincode;
@@ -40,13 +40,16 @@ class PatientReport extends StatefulWidget {
       required this.sugarLevel,
       required this.sex,
       required this.medication,
-      required this.dob});
+      required this.dob,
+      required this.opTicket});
 
   @override
   State<PatientReport> createState() => _PatientReport();
 }
 
 class _PatientReport extends State<PatientReport> {
+  final TextEditingController reportNo = TextEditingController();
+
   final TextEditingController totalAmountController = TextEditingController();
   final TextEditingController paidController = TextEditingController();
   final TextEditingController balanceController = TextEditingController();
@@ -85,7 +88,9 @@ class _PatientReport extends State<PatientReport> {
     try {
       final patientRef = FirebaseFirestore.instance
           .collection('patients')
-          .doc(widget.patientID);
+          .doc(widget.patientID)
+          .collection('opTickets')
+          .doc(widget.opTicket);
 
       for (var row in tableData1) {
         final testDescription = row['Test Descriptions'];
@@ -103,6 +108,7 @@ class _PatientReport extends State<PatientReport> {
         'labCollected': paidController.text,
         'labBalance': balanceController.text,
         'reportDate': _dateController.text,
+        'reportNo': reportNo.text,
       }, SetOptions(merge: true));
 
       await patientRef.set({
@@ -185,8 +191,8 @@ class _PatientReport extends State<PatientReport> {
                       readOnly: true,
                       width: screenWidth * 0.2),
                   CustomTextField(
-                    controller: TextEditingController(text: widget.patientID),
-                    hintText: 'OP Number ',
+                    controller: TextEditingController(text: widget.opTicket),
+                    hintText: 'OP Ticket ',
                     width: screenWidth * 0.2,
                     readOnly: true,
                   )
@@ -231,7 +237,9 @@ class _PatientReport extends State<PatientReport> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomTextField(
-                      hintText: 'Report Number ', width: screenWidth * 0.2),
+                      controller: TextEditingController(),
+                      hintText: 'Report Number ',
+                      width: screenWidth * 0.2),
                   CustomTextField(
                       controller: _dateController,
                       readOnly: true,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
@@ -17,9 +18,10 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'package:http/http.dart' as http;
 
 class RxPrescription extends StatefulWidget {
+  final String opTicket;
   final String patientID;
-  final String ipNumber;
   final String doctorName;
+  final String specialization;
   final String name;
   final String age;
   final String date;
@@ -41,7 +43,6 @@ class RxPrescription extends StatefulWidget {
   const RxPrescription(
       {super.key,
       required this.patientID,
-      required this.ipNumber,
       required this.name,
       required this.age,
       required this.place,
@@ -59,7 +60,9 @@ class RxPrescription extends StatefulWidget {
       required this.lastName,
       required this.dob,
       required this.date,
-      required this.doctorName});
+      required this.doctorName,
+      required this.opTicket,
+      required this.specialization});
 
   @override
   State<RxPrescription> createState() => _RxPrescription();
@@ -206,6 +209,7 @@ class _RxPrescription extends State<RxPrescription> {
   @override
   void initState() {
     super.initState();
+    initializeIpTicketID();
     loadPrescriptionDraft(widget.patientID);
     _filteredItems = _allItems;
     _filteredMedicine = medicineNames;
@@ -264,31 +268,66 @@ class _RxPrescription extends State<RxPrescription> {
     });
   }
 
+  Future<String> generateUniqueOpTicketId() async {
+    const chars = '0123456789';
+    Random random = Random.secure();
+    String ipTicketId = '';
+
+    bool exists = true;
+    while (exists) {
+      String randomString =
+          List.generate(6, (index) => chars[random.nextInt(chars.length)])
+              .join();
+      ipTicketId = 'IP$randomString';
+
+      var docSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .collection('ipTickets')
+          .doc(ipTicketId)
+          .get();
+
+      exists = docSnapshot.exists;
+    }
+
+    return ipTicketId;
+  }
+
+  Future<void> initializeIpTicketID() async {
+    ipTicketId = await generateUniqueOpTicketId();
+    setState(() {});
+  }
+
+  String ipTicketId = '';
+
   Future<void> _onToggle(bool value) async {
     var firestore = FirebaseFirestore.instance;
     var docRef = firestore.collection('patients').doc(widget.patientID);
 
     setState(() {
+      docRef.update({'isIP': true});
+      docRef.collection('ipTickets').doc(ipTicketId).set({
+        'ipTicket': ipTicketId,
+        'doctorName': widget.doctorName,
+        'specialization': widget.specialization,
+        'discharged': false,
+        'temperature': widget.temperature,
+        'bloodPressure': widget.bloodPressure,
+        'bloodSugarLevel': widget.sugarLevel,
+        'otherComments': widget.primaryInfo,
+        'status': 'waiting',
+        'ipAdmitDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0')
+      });
       _isSwitched = value;
     });
 
     if (_isSwitched) {
-      // Move 'opNumber' value to 'ipNumber' and delete 'opNumber'
-      await docRef.update({
-        'ipNumber': widget.patientID,
-        'opNumber': FieldValue.delete(),
-      });
       CustomSnackBar(context,
           message: 'Patients Marked as IP',
-          backgroundColor: AppColors.secondaryColor);
-    } else {
-      // Move 'ipNumber' value back to 'opNumber' and delete 'ipNumber'
-      await docRef.update({
-        'opNumber': widget.patientID,
-        'ipNumber': FieldValue.delete(),
-      });
-      CustomSnackBar(context,
-          message: 'Patients Marked as OP',
           backgroundColor: AppColors.secondaryColor);
     }
   }
@@ -344,7 +383,7 @@ class _RxPrescription extends State<RxPrescription> {
           phone2: widget.phone2,
           dob: widget.dob,
           opNumber: widget.patientID,
-          ipNumber: widget.ipNumber,
+          ipNumber: '',
         );
       },
     );
@@ -388,6 +427,8 @@ class _RxPrescription extends State<RxPrescription> {
       await FirebaseFirestore.instance
           .collection('patients')
           .doc(widget.patientID)
+          .collection('opTickets')
+          .doc(widget.opTicket)
           .set(patientData, SetOptions(merge: true));
 
       if (_appointmentDate.text.isNotEmpty &&
@@ -555,7 +596,9 @@ class _RxPrescription extends State<RxPrescription> {
                   Switch(
                     activeColor: AppColors.secondaryColor,
                     value: _isSwitched,
-                    onChanged: _onToggle,
+                    onChanged: (bool value) {
+                      _onToggle(value);
+                    },
                   ),
                   SizedBox(width: screenWidth * 0.01),
                   CustomText(text: 'IP Number'),
@@ -569,8 +612,8 @@ class _RxPrescription extends State<RxPrescription> {
                 children: [
                   CustomTextField(
                     readOnly: true,
-                    controller: TextEditingController(text: widget.patientID),
-                    hintText: 'OP Number',
+                    controller: TextEditingController(text: widget.opTicket),
+                    hintText: 'OP Ticket Number',
                     obscureText: false,
                     width: screenWidth * 0.46,
                   ),

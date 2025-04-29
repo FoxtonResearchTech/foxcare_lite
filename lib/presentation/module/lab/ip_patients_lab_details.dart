@@ -33,7 +33,8 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
   int selectedIndex = 2;
   final List<String> headers1 = [
     'Token NO',
-    'IP NO',
+    'IP Ticket',
+    'OP Number',
     'Name',
     'Age',
     'Place',
@@ -65,122 +66,146 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
           await FirebaseFirestore.instance.collection('patients').get();
 
       List<Map<String, dynamic>> fetchedData = [];
+      final todayString = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-      for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('ipNumber')) continue;
+      for (var patientDoc in patientSnapshot.docs) {
+        final patientData = patientDoc.data() as Map<String, dynamic>;
 
-        DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+        // Filter by phone number
+        if (phoneNumber != null && phoneNumber.isNotEmpty) {
+          if ((patientData['phone1'] ?? '') != phoneNumber &&
+              (patientData['phone2'] ?? '') != phoneNumber) {
+            continue;
+          }
+        }
+
+        final ipTicketsSnapshot = await FirebaseFirestore.instance
             .collection('patients')
-            .doc(doc.id)
-            .collection('ipPrescription')
-            .doc('details')
+            .doc(patientDoc.id)
+            .collection('ipTickets')
             .get();
 
-        Map<String, dynamic>? detailsData = detailsDoc.exists
-            ? detailsDoc.data() as Map<String, dynamic>?
-            : null;
+        for (var ticketDoc in ipTicketsSnapshot.docs) {
+          final data = ticketDoc.data();
 
-        if (detailsData?['Examination'] == null ||
-            (detailsData?['Examination'] as List).isEmpty) {
-          continue;
-        }
+          if (!data.containsKey('ipTicket')) continue;
 
-        // Manual filtering logic
-        if (patientID != null && patientID.isNotEmpty) {
-          if ((data['ipNumber'] ?? '') != patientID) {
-            continue;
-          }
-        }
-
-        if (phoneNumber != null && phoneNumber.isNotEmpty) {
-          if ((data['phone1'] ?? '') != phoneNumber &&
-              (data['phone2'] ?? '') != phoneNumber) {
-            continue;
-          }
-        }
-
-        // Fetch token as before
-        String tokenNo = '';
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
+          // Filter by patientID
+          if (patientID != null && patientID.isNotEmpty) {
+            if ((data['ipTicket'] ?? '') != patientID) {
+              continue;
             }
           }
-        } catch (e) {
-          print('Error fetching tokenNo for patient ${doc.id}: $e');
-        }
 
-        fetchedData.add({
-          'Token NO': tokenNo,
-          'IP NO': data['ipNumber'] ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'Age': data['age'] ?? 'N/A',
-          'Place': data['state'] ?? 'N/A',
-          'Address': data['address1'] ?? 'N/A',
-          'PinCode': data['pincode'] ?? 'N/A',
-          'Status': data['status'] ?? 'N/A',
-          'List of Tests': detailsData?['Examination'] ?? 'N/A',
-          'Action': TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => IpPatientReport(
-                      patientID: data['ipNumber'] ?? 'N/A',
-                      name:
-                          '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
-                              .trim(),
-                      age: data['age'] ?? 'N/A',
-                      sex: data['sex'] ?? 'N/A',
-                      place: data['state'] ?? 'N/A',
-                      dob: data['dob'] ?? 'N/A',
-                      medication: detailsData?['Examination'] ?? 'N/A',
-                      address: data['address1'] ?? 'N/A',
-                      pincode: data['pincode'] ?? 'N/A',
-                      primaryInfo: data['otherComments'] ?? 'N/A',
-                      temperature: data['temperature'] ?? 'N/A',
-                      bloodPressure: data['bloodPressure'] ?? 'N/A',
-                      sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+          // Fetch today's Examination items
+          final examSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(patientDoc.id)
+              .collection('ipTickets')
+              .doc(ticketDoc.id)
+              .collection('Examination')
+              .get();
+
+          final Set<String> todayExams = {};
+
+          for (var examDoc in examSnapshot.docs) {
+            final examData = examDoc.data();
+            final examDate = examData['date'];
+            final examItems = examData['items'];
+
+            if (examDate is String && examDate == todayString) {
+              if (examItems is List) {
+                todayExams.addAll(examItems.whereType<String>());
+              }
+            }
+          }
+
+          if (todayExams.isEmpty) continue;
+
+          String tokenNo = '';
+          try {
+            final tokenSnapshot = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientDoc.id)
+                .collection('tokens')
+                .doc('currentToken')
+                .get();
+
+            if (tokenSnapshot.exists) {
+              final tokenData = tokenSnapshot.data();
+              if (tokenData != null && tokenData['tokenNumber'] != null) {
+                tokenNo = tokenData['tokenNumber'].toString();
+              }
+            }
+          } catch (e) {
+            print('Error fetching tokenNo for patient ${patientDoc.id}: $e');
+          }
+
+          fetchedData.add({
+            'Token NO': tokenNo,
+            'IP Ticket': data['ipTicket'] ?? 'N/A',
+            'OP NO': patientData['opNumber'] ?? 'N/A',
+            'Name':
+                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                    .trim(),
+            'Age': patientData['age'] ?? 'N/A',
+            'Place': patientData['state'] ?? 'N/A',
+            'Address': patientData['address1'] ?? 'N/A',
+            'PinCode': patientData['pincode'] ?? 'N/A',
+            'Status': data['status'] ?? 'N/A',
+            'List of Tests': todayExams.toList(),
+            'Action': TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => IpPatientReport(
+                        patientID: patientData['opNumber'] ?? 'N/A',
+                        ipTicket: data['ipTicket'] ?? 'N/A',
+                        name:
+                            '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                .trim(),
+                        age: patientData['age'] ?? 'N/A',
+                        sex: patientData['sex'] ?? 'N/A',
+                        place: patientData['state'] ?? 'N/A',
+                        dob: patientData['dob'] ?? 'N/A',
+                        medication: todayExams.toList(),
+                        address: patientData['address1'] ?? 'N/A',
+                        pincode: patientData['pincode'] ?? 'N/A',
+                        primaryInfo: patientData['otherComments'] ?? 'N/A',
+                        temperature: data['temperature'] ?? 'N/A',
+                        bloodPressure: data['bloodPressure'] ?? 'N/A',
+                        sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+                      ),
                     ),
-                  ),
-                );
-              },
-              child: const CustomText(text: 'Open')),
-          'Sample Data': TextButton(
-              onPressed: () async {
-                final time = DateFormat('HH:mm:ss').format(DateTime.now());
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('patients')
-                      .doc(data['opNumber'])
-                      .collection('sampleData')
-                      .doc('data')
-                      .set({
-                    'Time': time,
-                  }, SetOptions(merge: true));
+                  );
+                },
+                child: const CustomText(text: 'Open')),
+            'Sample Data': TextButton(
+                onPressed: () async {
+                  final time = DateFormat('HH:mm:ss').format(DateTime.now());
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('patients')
+                        .doc(patientDoc.id)
+                        .collection('ipTickets')
+                        .doc(ticketDoc.id)
+                        .collection('sampleData')
+                        .doc('data')
+                        .set({'Time': time}, SetOptions(merge: true));
 
-                  CustomSnackBar(context,
-                      message: "Sample Date Entered $time",
-                      backgroundColor: Colors.green);
-                } catch (e) {
-                  CustomSnackBar(context,
-                      message: 'Failed to save: $e',
-                      backgroundColor: Colors.red);
-                }
-              },
-              child: const CustomText(text: 'Enter Sample Data'))
-        });
+                    CustomSnackBar(context,
+                        message: "Sample Date Entered $time",
+                        backgroundColor: Colors.green);
+                  } catch (e) {
+                    CustomSnackBar(context,
+                        message: 'Failed to save: $e',
+                        backgroundColor: Colors.red);
+                  }
+                },
+                child: const CustomText(text: 'Enter Sample Data'))
+          });
+        }
       }
 
       // Sort by token number

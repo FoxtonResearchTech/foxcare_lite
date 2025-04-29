@@ -24,7 +24,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await UserSession.initUser();
-
   runApp(
     const MyApp(),
   );

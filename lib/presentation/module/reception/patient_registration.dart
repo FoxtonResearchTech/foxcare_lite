@@ -30,8 +30,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   final dateTime = DateTime.timestamp();
 
   int selectedIndex = 1;
-  String? selectedSex; // Default value for Sex
-  String? selectedBloodGroup; // Default value for Blood Group
+  String? selectedSex;
+  String? selectedBloodGroup;
   final TextEditingController firstname = TextEditingController();
   final TextEditingController lastname = TextEditingController();
   final TextEditingController middlename = TextEditingController();
@@ -48,17 +48,37 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   final TextEditingController opAmount = TextEditingController();
   final TextEditingController opAmountCollected = TextEditingController();
 
-  String generateNumericUid() {
-    var random = Random();
-    return 'Fox' +
-        List.generate(6, (_) => random.nextInt(10).toString()).join();
+  Future<String> generateUniquePatientId() async {
+    const chars = '0123456789';
+    Random random = Random.secure();
+    String patientId = '';
+
+    bool exists = true;
+    while (exists) {
+      String randomString =
+          List.generate(6, (index) => chars[random.nextInt(chars.length)])
+              .join();
+      patientId = 'Fox$randomString';
+
+      var docSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(patientId)
+          .get();
+
+      exists = docSnapshot.exists;
+    }
+
+    return patientId;
+  }
+
+  Future<void> initializeUid() async {
+    uid = await generateUniquePatientId();
+    setState(() {});
   }
 
   String uid = '';
 
   Future<void> savePatientDetails() async {
-    final patientID = generateNumericUid();
-
     if (firstname.text.isEmpty ||
         lastname.text.isEmpty ||
         selectedSex == null ||
@@ -70,13 +90,14 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     }
 
     Map<String, dynamic> patientData = {
-      'opNumber': patientID,
+      'opNumber': uid,
       'firstName': firstname.text,
       'middleName': middlename.text,
       'lastName': lastname.text,
       'sex': selectedSex,
       'age': age.text,
       'dob': dob.text,
+      'isIP': false,
       'address1': address1.text,
       'address2': address2.text,
       'landmark': landmark.text,
@@ -98,14 +119,13 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     try {
       await FirebaseFirestore.instance
           .collection('patients')
-          .doc(patientID)
+          .doc(uid)
           .set(patientData);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Patient registered successfully")),
       );
 
-      // Show a dialog with the entered details
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -118,7 +138,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomText(text: 'Patient ID: $patientID'),
+                  CustomText(text: 'Patient ID: $uid'),
                   CustomText(text: 'First Name: ${firstname.text}'),
                   CustomText(text: 'Middle Name: ${middlename.text}'),
                   CustomText(text: 'Last Name: ${lastname.text}'),
@@ -175,7 +195,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                               pw.SizedBox(height: 2),
                               pw.Divider(),
                               pw.SizedBox(height: 5),
-                              pw.Text('Patient ID: $patientID'),
+                              pw.Text('Patient ID: $uid'),
                               pw.Text(
                                   'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
                               pw.Text('DOB: ${dob.text}'),
@@ -216,6 +236,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           );
         },
       );
+      await initializeUid();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to register patient: $e")),
@@ -247,8 +268,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
   @override
   void initState() {
-    uid = generateNumericUid();
     super.initState();
+    initializeUid();
   }
 
   @override

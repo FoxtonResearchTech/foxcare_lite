@@ -89,36 +89,55 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
   final TextEditingController opAmount = TextEditingController();
   final TextEditingController opAmountCollected = TextEditingController();
 
-  String generateNumericUid() {
-    var random = Random();
-    return 'Fox' +
-        List.generate(6, (_) => random.nextInt(10).toString()).join();
+  Future<String> generateUniquePatientId() async {
+    const chars = '0123456789';
+    Random random = Random.secure();
+    String patientId = '';
+
+    bool exists = true;
+    while (exists) {
+      String randomString =
+          List.generate(6, (index) => chars[random.nextInt(chars.length)])
+              .join();
+      patientId = 'Fox$randomString';
+
+      var docSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(patientId)
+          .get();
+
+      exists = docSnapshot.exists;
+    }
+
+    return patientId;
+  }
+
+  Future<void> initializeUid() async {
+    uid = await generateUniquePatientId();
+    setState(() {});
   }
 
   String uid = '';
 
   Future<void> savePatientDetails() async {
-    final patientID = generateNumericUid();
-
-    // Validate input
     if (firstname.text.isEmpty ||
         lastname.text.isEmpty ||
         selectedSex == null ||
         selectedBloodGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all required fields")),
+        const SnackBar(content: Text("Please fill all required fields")),
       );
       return;
     }
 
-    // Create patient data object
     Map<String, dynamic> patientData = {
-      'opNumber': patientID,
+      'opNumber': uid,
       'firstName': firstname.text,
       'middleName': middlename.text,
       'lastName': lastname.text,
       'sex': selectedSex,
       'age': age.text,
+      'isIP': false,
       'dob': dob.text,
       'address1': address1.text,
       'address2': address2.text,
@@ -141,26 +160,26 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     try {
       await FirebaseFirestore.instance
           .collection('patients')
-          .doc(patientID)
+          .doc(uid)
           .set(patientData);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Patient registered successfully")),
+        const SnackBar(content: Text("Patient registered successfully")),
       );
 
-      // Show a dialog with the entered details
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Patient Details'),
+            title: const Text('Patient Details'),
             content: Container(
               width: 350,
               height: 350,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomText(text: 'Patient ID: $patientID'),
+                  CustomText(text: 'Patient ID: $uid'),
                   CustomText(text: 'First Name: ${firstname.text}'),
                   CustomText(text: 'Middle Name: ${middlename.text}'),
                   CustomText(text: 'Last Name: ${lastname.text}'),
@@ -217,7 +236,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                               pw.SizedBox(height: 2),
                               pw.Divider(),
                               pw.SizedBox(height: 5),
-                              pw.Text('Patient ID: $patientID'),
+                              pw.Text('Patient ID: $uid'),
                               pw.Text(
                                   'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
                               pw.Text('DOB: ${dob.text}'),
@@ -258,164 +277,10 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
           );
         },
       );
+      await initializeUid();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to register patient: $e")),
-      );
-    }
-  }
-
-  Future<void> updatePatientDetails() async {
-    if (widget.opNumberEdit == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: Patient ID is missing")),
-      );
-      return;
-    }
-
-    Map<String, dynamic> updatedData = {
-      'firstName': firstname.text,
-      'middleName': middlename.text,
-      'lastName': lastname.text,
-      'sex': selectedSex,
-      'age': age.text,
-      'dob': dob.text,
-      'address1': address1.text,
-      'address2': address2.text,
-      'landmark': landmark.text,
-      'city': city.text,
-      'state': state.text,
-      'pincode': pincode.text,
-      'phone1': phone1.text,
-      'phone2': phone2.text,
-      'bloodGroup': selectedBloodGroup,
-      'opAmount': opAmount.text,
-      'opAmountCollected': opAmountCollected.text,
-    };
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.opNumberEdit)
-          .update(updatedData);
-
-      CustomSnackBar(context,
-          message: 'Patients Details Updated Successfully',
-          backgroundColor: Colors.green);
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Patient Details'),
-            content: Container(
-              width: 350,
-              height: 350,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  CustomText(text: 'Patient ID: ${widget.opNumberEdit}'),
-                  CustomText(text: 'First Name: ${firstname.text}'),
-                  CustomText(text: 'Middle Name: ${middlename.text}'),
-                  CustomText(text: 'Last Name: ${lastname.text}'),
-                  CustomText(text: 'Sex: ${selectedSex}'),
-                  CustomText(text: 'Age: ${age.text}'),
-                  CustomText(text: 'DOB: ${dob.text}'),
-                  CustomText(
-                      text: 'Address: ${address1.text}, ${address2.text}'),
-                  CustomText(text: 'Landmark: ${landmark.text}'),
-                  CustomText(text: 'City: ${city.text}'),
-                  CustomText(text: 'State: ${state.text}'),
-                  CustomText(text: 'Pincode: ${pincode.text}'),
-                  CustomText(text: 'Phone 1: ${phone1.text}'),
-                  CustomText(text: 'Phone 2: ${phone2.text}'),
-                  CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
-                  CustomText(text: 'Amount: ${opAmount.text}'),
-                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
-                  CustomText(text: 'Amount: ${opAmount.text}'),
-                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () async {
-                  final pdf = pw.Document();
-                  pdf.addPage(
-                    pw.Page(
-                      pageFormat: const PdfPageFormat(
-                          10 * PdfPageFormat.cm, 7 * PdfPageFormat.cm),
-                      build: (pw.Context context) => pw.Center(
-                        child: pw.Container(
-                          width: 300,
-                          height: 200,
-                          padding: const pw.EdgeInsets.all(16), // Inner padding
-                          decoration: pw.BoxDecoration(
-                            border: pw.Border.all(
-                                color: PdfColors.grey), // Border color
-                            borderRadius:
-                                pw.BorderRadius.circular(8), // Rounded corners
-                          ),
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Text(
-                                'ABC Hospital ',
-                                style: pw.TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: pw.FontWeight.bold,
-                                ),
-                              ),
-                              pw.SizedBox(height: 2),
-                              pw.Center(
-                                child: pw.Text('Care through excelling'),
-                              ),
-                              pw.SizedBox(height: 2),
-                              pw.Divider(),
-                              pw.SizedBox(height: 5),
-                              pw.Text('Patient ID: ${widget.opNumberEdit}'),
-                              pw.Text(
-                                  'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
-                              pw.Text('DOB: ${dob.text}'),
-                              pw.Text(
-                                  'Address: ${address1.text},${city.text},${pincode.text}'),
-                              pw.Divider(),
-                              pw.Text(
-                                  'Please bring your card for every check up'),
-                              pw.SizedBox(height: 2),
-                              pw.Text('Contact : '),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
-                },
-                child: CustomText(
-                  text: 'Print',
-                  color: AppColors.secondaryColor,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  clearForm();
-                },
-                child: CustomText(
-                  text: 'Close',
-                  color: AppColors.secondaryColor,
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to update patient: $e")),
       );
     }
   }
@@ -444,28 +309,8 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
 
   @override
   void initState() {
-    uid = generateNumericUid();
-    if (widget.opNumberEdit != null) {
-      isEditing = true;
-      firstname.text = widget.firstNameEdit ?? '';
-      middlename.text = widget.middleNameEdit ?? '';
-      lastname.text = widget.lastNameEdit ?? '';
-      selectedSex = widget.sexEdit;
-      age.text = widget.ageEdit ?? '';
-      dob.text = widget.dobEdit ?? '';
-      address1.text = widget.address1Edit ?? '';
-      address2.text = widget.address2Edit ?? '';
-      landmark.text = widget.landmarkEdit ?? '';
-      city.text = widget.cityEdit ?? '';
-      state.text = widget.stateEdit ?? '';
-      pincode.text = widget.pincodeEdit ?? '';
-      phone1.text = widget.phone1Edit ?? '';
-      phone2.text = widget.phone2Edit ?? '';
-      selectedBloodGroup = widget.bloodGroupEdit;
-      opAmount.text = widget.opAmountEdit ?? '';
-      opAmountCollected.text = widget.opAmountCollectedEdit ?? '';
-    }
     super.initState();
+    initializeUid();
   }
 
   @override
@@ -596,7 +441,8 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                         SecondaryTextField(
                           hintText: '',
                           controller: firstname,
-                          width: double.infinity,  // Takes up the full available space
+                          width: double
+                              .infinity, // Takes up the full available space
                         ),
                       ],
                     ),
@@ -613,7 +459,8 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                         SecondaryTextField(
                           hintText: '',
                           controller: middlename,
-                          width: double.infinity,  // Takes up the full available space
+                          width: double
+                              .infinity, // Takes up the full available space
                         ),
                       ],
                     ),
@@ -630,14 +477,14 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                         SecondaryTextField(
                           hintText: '',
                           controller: lastname,
-                          width: double.infinity,  // Takes up the full available space
+                          width: double
+                              .infinity, // Takes up the full available space
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -700,7 +547,6 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -787,7 +633,6 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -844,7 +689,6 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -916,7 +760,6 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 45),
               Center(
                 child: SizedBox(

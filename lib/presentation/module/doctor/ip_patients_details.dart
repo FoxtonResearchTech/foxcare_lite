@@ -34,7 +34,9 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
 
   final List<String> headers1 = [
     'Token NO',
-    'IP NO',
+    'IP Ticket',
+    'IP Admit Date',
+    'OP NO',
     'Name',
     'Age',
     'Place',
@@ -63,14 +65,14 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
     super.dispose();
   }
 
-  Future<void> endIP(String ipNumber) async {
+  Future<void> endIP(String opNumber, String ipTicket) async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(ipNumber)
-          .collection('ipPrescription')
-          .doc('details')
-          .get();
+      final patientDocRef =
+          FirebaseFirestore.instance.collection('patients').doc(opNumber);
+
+      // Get IP admission details
+      final querySnapshot =
+          await patientDocRef.collection('ipPrescription').doc('details').get();
 
       String roomNumber = querySnapshot['ipAdmission']['roomNumber'];
       String roomType = querySnapshot['ipAdmission']['roomType'];
@@ -108,141 +110,193 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
           "ICUStatus": ICUStatus,
         });
 
-        CustomSnackBar(context, message: 'IP Ended Successfully');
+        final ipPrescriptionRef = patientDocRef.collection('ipPrescription');
+        final ipDocs = await ipPrescriptionRef.get();
+
+        for (var doc in ipDocs.docs) {
+          await doc.reference.delete();
+        }
+        await patientDocRef
+            .collection('ipTickets')
+            .doc(ipTicket)
+            .update({'discharged': true});
+
+        CustomSnackBar(context, message: 'IP ended and ipPrescription removed');
       } else {
         CustomSnackBar(context, message: 'Total Room Data Not Found');
       }
     } catch (e) {
       CustomSnackBar(context, message: 'Cannot End IP');
-      print("Error updating totalRoom: $e");
+      print("Error ending IP: $e");
     }
   }
 
   Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
+    print('Fetching data with OP Number: $ipNumber');
+
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('patients')
-          .where('doctorName', isEqualTo: widget.doctorName);
-      ;
-
-      if (ipNumber != null) {
-        query = query.where('ipNumber', isEqualTo: ipNumber);
-      } else if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
-      }
-
-      final QuerySnapshot snapshot = await query.get();
       List<Map<String, dynamic>> fetchedData = [];
+      bool hasIpPrescription = false;
+      final today = DateTime.now();
+      final todayString =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('ipNumber')) continue;
-        if (!data.containsKey('tokenDate')) continue;
+      final QuerySnapshot<Map<String, dynamic>> patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
-        String tokenNo = '';
-        bool hasIpPrescription = false;
+      for (var patientDoc in patientSnapshot.docs) {
+        final patientId = patientDoc.id;
+        final patientData = patientDoc.data();
 
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+        final opTicketsSnapshot = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(patientId)
+            .collection('ipTickets')
+            .get();
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
+        bool found = false;
+
+        for (var ipTicketDoc in opTicketsSnapshot.docs) {
+          final ipTicketData = ipTicketDoc.data();
+          print(
+              'opTicketData: ${ipTicketData['opTicket']}'); // Debugging print statement
+
+          bool matches = false;
+
+          if (ipTicketData['doctorName'] == widget.doctorName &&
+              patientData['isIP'] == true) {
+            if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+              matches = true;
+            } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+              if (patientData['phone1'] == phoneNumber ||
+                  patientData['phone2'] == phoneNumber) {
+                matches = true;
+              }
+            } else if (ipNumber == null &&
+                (phoneNumber == null || phoneNumber.isEmpty)) {
+              matches = true;
             }
           }
-          final ipPrescriptionSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .get();
 
-          if (ipPrescriptionSnapshot.docs.isNotEmpty) {
-            hasIpPrescription = true;
-          }
-        } catch (e) {
-          print('Error fetching tokenNo for patient ${doc.id}: $e');
-        }
+          if (matches) {
+            String tokenNo = '';
+            String tokenDate = '';
 
-        fetchedData.add({
-          'Token NO': tokenNo,
-          'OP NO': data['opNumber'] ?? 'N/A',
-          'IP NO': data['ipNumber'] ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'Age': data['age'] ?? 'N/A',
-          'Place': data['state'] ?? 'N/A',
-          'Address': data['address1'] ?? 'N/A',
-          'PinCode': data['pincode'] ?? 'N/A',
-          'Status': data['status'] ?? 'N/A',
-          'Primary Info': data['otherComments'] ?? 'N/A',
-          'Action': hasIpPrescription
-              ? TextButton(
-                  onPressed: () {
-                    endIP(data['ipNumber']);
-                  },
-                  child: const CustomText(text: 'End IP'),
-                )
-              : TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => IpPrescription(
-                          patientID: data['opNumber'] ?? 'N/A',
-                          ipNumber: data['ipNumber'] ?? 'N/A',
-                          name:
-                              '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
-                                  .trim(),
-                          age: data['age'] ?? 'N/A',
-                          place: data['state'] ?? 'N/A',
-                          address: data['address1'] ?? 'N/A',
-                          pincode: data['pincode'] ?? 'N/A',
-                          primaryInfo: data['otherComments'] ?? 'N/A',
-                          temperature: data['temperature'] ?? 'N/A',
-                          bloodPressure: data['bloodPressure'] ?? 'N/A',
-                          sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
-                          phone1: data['phone1'],
-                          phone2: data['phone2'],
-                          sex: data['sex'],
-                          bloodGroup: data['bloodGroup'],
-                          firstName: data['firstName'],
-                          lastName: data['lastName'],
-                          dob: data['dob'],
-                          doctorName: widget.doctorName,
-                          date: data['tokenDate'],
-                        ),
-                      ),
-                    );
-                  },
-                  child: const CustomText(text: 'Create')),
-          'Abscond': TextButton(
-              onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('patients')
-                      .doc(data['ipNumber'])
-                      .update({'status': 'abscond'});
+            try {
+              final tokenSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('tokens')
+                  .doc('currentToken')
+                  .get();
 
-                  CustomSnackBar(context, message: 'Status updated to aborted');
-                } catch (e) {
-                  print(
-                      'Error updating status for patient ${data['patientID']}: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update status')),
-                  );
+              if (tokenSnapshot.exists) {
+                final tokenData = tokenSnapshot.data();
+                if (tokenData != null && tokenData['tokenNumber'] != null) {
+                  tokenNo = tokenData['tokenNumber'].toString();
                 }
-              },
-              child: const CustomText(text: 'Abort'))
-        });
+                if (tokenData != null && tokenData['date'] != null) {
+                  tokenDate = tokenData['date'];
+                }
+                final ipPrescriptionSnapshot = await FirebaseFirestore.instance
+                    .collection('patients')
+                    .doc(patientId)
+                    .collection('ipPrescription')
+                    .get();
+
+                if (ipPrescriptionSnapshot.docs.isNotEmpty) {
+                  hasIpPrescription = true;
+                }
+              }
+            } catch (e) {
+              print('Error fetching tokenNo for patient $patientId: $e');
+            }
+
+            fetchedData.add({
+              'Token NO': tokenNo,
+              'IP Admit Date': ipTicketData['ipAdmitDate'] ?? 'N/A',
+              'OP NO': patientData['opNumber'] ?? 'N/A',
+              'IP Ticket': ipTicketData['ipTicket'] ?? 'N/A',
+              'Name':
+                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'Age': patientData['age'] ?? 'N/A',
+              'Place': patientData['city'] ?? 'N/A',
+              'Address': patientData['address1'] ?? 'N/A',
+              'PinCode': patientData['pincode'] ?? 'N/A',
+              'Status': ipTicketData['status'] ?? 'N/A',
+              'Primary Info': patientData['otherComments'] ?? 'N/A',
+              'Action': hasIpPrescription
+                  ? TextButton(
+                      onPressed: () {
+                        endIP(patientId, ipTicketData['ipTicket']);
+                      },
+                      child: const CustomText(text: 'End IP'),
+                    )
+                  : TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => IpPrescription(
+                              patientID: patientData['opNumber'] ?? 'N/A',
+                              name:
+                                  '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                      .trim(),
+                              date: ipTicketData['ipAdmitDate'],
+                              age: patientData['age'] ?? 'N/A',
+                              place: patientData['state'] ?? 'N/A',
+                              address: patientData['address1'] ?? 'N/A',
+                              pincode: patientData['pincode'] ?? 'N/A',
+                              primaryInfo:
+                                  ipTicketData['otherComments'] ?? 'N/A',
+                              temperature: ipTicketData['temperature'] ?? 'N/A',
+                              bloodPressure:
+                                  ipTicketData['bloodPressure'] ?? 'N/A',
+                              sugarLevel:
+                                  ipTicketData['bloodSugarLevel'] ?? 'N/A',
+                              phone1: patientData['phone1'],
+                              phone2: patientData['phone2'],
+                              sex: patientData['sex'],
+                              bloodGroup: patientData['bloodGroup'],
+                              firstName: patientData['firstName'],
+                              lastName: patientData['lastName'],
+                              dob: patientData['dob'],
+                              doctorName: widget.doctorName,
+                              ipNumber: ipTicketData['ipTicket'],
+                              specialization: ipTicketData['specialization'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: const CustomText(text: 'Create')),
+              'Abscond': TextButton(
+                  onPressed: () async {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('patients')
+                          .doc(patientId)
+                          .collection('ipTickets')
+                          .doc(ipTicketData['ipTicket'])
+                          .update({'status': 'abscond'});
+
+                      CustomSnackBar(context,
+                          message: 'Status updated to abscond');
+                    } catch (e) {
+                      print('Error updating status: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Failed to update status')),
+                      );
+                    }
+                  },
+                  child: const CustomText(text: 'Abort')),
+            });
+
+            found = true;
+            break;
+          }
+        }
       }
 
       fetchedData.sort((a, b) {
@@ -255,7 +309,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
         tableData1 = fetchedData;
       });
     } catch (e) {
-      print('Error fetching data from Firestore: $e');
+      print('Error fetching data: $e');
     }
   }
 
@@ -419,7 +473,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
+                  return row['Status'] == 'abscond'
                       ? Colors.red.shade200
                       : Colors.transparent;
                 },

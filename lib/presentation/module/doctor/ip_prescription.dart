@@ -21,6 +21,7 @@ class IpPrescription extends StatefulWidget {
   final String name;
   final String age;
   final String date;
+  final String specialization;
 
   final String place;
   final String address;
@@ -59,6 +60,7 @@ class IpPrescription extends StatefulWidget {
     required this.dob,
     required this.doctorName,
     required this.date,
+    required this.specialization,
   }) : super(key: key);
   @override
   State<IpPrescription> createState() => _IpPrescription();
@@ -273,35 +275,6 @@ class _IpPrescription extends State<IpPrescription> {
     }
   }
 
-  Future<void> _onToggle(bool value) async {
-    var firestore = FirebaseFirestore.instance;
-    var docRef = firestore.collection('patients').doc(widget.patientID);
-
-    setState(() {
-      _isSwitched = value;
-    });
-
-    if (_isSwitched) {
-      // Move 'opNumber' value to 'ipNumber' and delete 'opNumber'
-      await docRef.update({
-        'ipNumber': widget.patientID,
-        'opNumber': FieldValue.delete(),
-      });
-      CustomSnackBar(context,
-          message: 'Patients Marked as IP',
-          backgroundColor: AppColors.secondaryColor);
-    } else {
-      // Move 'ipNumber' value back to 'opNumber' and delete 'ipNumber'
-      await docRef.update({
-        'opNumber': widget.patientID,
-        'ipNumber': FieldValue.delete(),
-      });
-      CustomSnackBar(context,
-          message: 'Patients Marked as OP',
-          backgroundColor: AppColors.secondaryColor);
-    }
-  }
-
   void _filterMedicine(String query) {
     setState(() {
       _searchMedicine = query;
@@ -355,11 +328,18 @@ class _IpPrescription extends State<IpPrescription> {
 
   Future<void> _savePrescriptionData() async {
     try {
+      final DateTime now = DateTime.now();
+      final String formattedDate =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      final patientRef = FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .collection('ipTickets')
+          .doc(widget.ipNumber);
+
       final Map<String, dynamic> patientData = {
-        'Medication': _selectedMedicine,
-        'Examination': _selectedItems,
         'proceedTo': selectedValue,
-        'prescribedMedicines': medicineTableData,
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
           'bloodPressure': _bloodPressureController.text,
@@ -373,48 +353,42 @@ class _IpPrescription extends State<IpPrescription> {
         },
       };
 
+      await patientRef.set(patientData, SetOptions(merge: true));
+
       if (_selectedMedicine.isNotEmpty) {
-        patientData['medicinePrescribedDate'] = dateTime.year.toString() +
-            '-' +
-            dateTime.month.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.day.toString().padLeft(2, '0');
+        await patientRef.collection('Medication').doc().set({
+          'items': _selectedMedicine,
+          'date': formattedDate,
+        });
       }
+
       if (_selectedItems.isNotEmpty) {
-        patientData['labExaminationPrescribedDate'] = dateTime.year.toString() +
-            '-' +
-            dateTime.month.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.day.toString().padLeft(2, '0');
+        await patientRef.collection('Examination').doc().set({
+          'items': _selectedItems,
+          'date': formattedDate,
+        });
       }
 
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.ipNumber)
-          .collection('ipPrescription')
-          .doc('details')
-          .set(patientData, SetOptions(merge: true));
-
-      if (_appointmentDate.text.isNotEmpty &&
-          _appointmentTime.text.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(widget.patientID)
-            .collection('appointments')
-            .doc('appointment')
-            .set({
-          'appointmentDate': _appointmentDate.text,
-          'appointmentTime': _appointmentTime.text,
-        }, SetOptions(merge: true));
+      if (medicineTableData.isNotEmpty) {
+        await patientRef.collection('prescribedMedicines').doc().set({
+          'items': medicineTableData,
+          'date': formattedDate,
+        });
       }
 
       await clearPrescriptionDraft(widget.ipNumber);
-      CustomSnackBar(context,
-          message: 'Details saved successfully!',
-          backgroundColor: Colors.green);
+
+      CustomSnackBar(
+        context,
+        message: 'Details saved successfully!',
+        backgroundColor: Colors.green,
+      );
     } catch (e) {
-      CustomSnackBar(context,
-          message: 'Failed to save: $e', backgroundColor: Colors.red);
+      CustomSnackBar(
+        context,
+        message: 'Failed to save: $e',
+        backgroundColor: Colors.red,
+      );
     }
   }
 
@@ -546,16 +520,6 @@ class _IpPrescription extends State<IpPrescription> {
                     text: 'Dr. ${widget.doctorName}',
                     size: screenWidth * 0.02,
                   ),
-                  // SizedBox(width: screenWidth * 0.47),
-                  // CustomText(text: 'OP Number'),
-                  // SizedBox(width: screenWidth * 0.01),
-                  // Switch(
-                  //   activeColor: AppColors.secondaryColor,
-                  //   value: _isSwitched,
-                  //   onChanged: _onToggle,
-                  // ),
-                  // SizedBox(width: screenWidth * 0.01),
-                  // CustomText(text: 'IP Number'),
                 ],
               ),
               const SizedBox(
@@ -567,7 +531,7 @@ class _IpPrescription extends State<IpPrescription> {
                   CustomTextField(
                     readOnly: true,
                     controller: TextEditingController(text: widget.ipNumber),
-                    hintText: 'OP Number',
+                    hintText: 'IP Ticket Number',
                     obscureText: false,
                     width: screenWidth * 0.5,
                   ),

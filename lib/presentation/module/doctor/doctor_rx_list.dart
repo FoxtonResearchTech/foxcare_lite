@@ -26,14 +26,15 @@ class DoctorRxList extends StatefulWidget {
 }
 
 class _DoctorRxList extends State<DoctorRxList> {
-  TextEditingController _opNumber = TextEditingController();
-  TextEditingController _phoneNumber = TextEditingController();
+  final TextEditingController _opNumber = TextEditingController();
+  final TextEditingController _phoneNumber = TextEditingController();
   int selectedIndex = 1;
 
   DateTime now = DateTime.now();
 
   final List<String> headers1 = [
     'Token NO',
+    'OP Ticket',
     'OP NO',
     'Name',
     'Age',
@@ -62,111 +63,155 @@ class _DoctorRxList extends State<DoctorRxList> {
   }
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
+    print('Fetching data with OP Number: $opNumber');
+
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('patients')
-          .where('doctorName', isEqualTo: widget.doctorName);
-
-      if (opNumber != null) {
-        query = query.where('opNumber', isEqualTo: opNumber);
-      } else if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
-      }
-      final QuerySnapshot snapshot = await query.get();
-
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        if (!data.containsKey('tokenDate')) continue;
+      final today = DateTime.now();
+      final todayString =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-        String tokenNo = '';
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+      final QuerySnapshot<Map<String, dynamic>> patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
+      for (var patientDoc in patientSnapshot.docs) {
+        final patientId = patientDoc.id;
+        final patientData = patientDoc.data();
+
+        final opTicketsSnapshot = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(patientId)
+            .collection('opTickets')
+            .get();
+
+        bool found = false;
+
+        for (var opTicketDoc in opTicketsSnapshot.docs) {
+          final opTicketData = opTicketDoc.data();
+          print(
+              'opTicketData: ${opTicketData['opTicket']}'); // Debugging print statement
+
+          bool matches = false;
+
+          if (opTicketData['doctorName'] == widget.doctorName &&
+              patientData['isIP'] == false) {
+            if (opNumber != null && opTicketData['opTicket'] == opNumber) {
+              matches = true;
+            } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+              if (patientData['phone1'] == phoneNumber ||
+                  patientData['phone2'] == phoneNumber) {
+                matches = true;
+              }
+            } else if (opNumber == null &&
+                (phoneNumber == null || phoneNumber.isEmpty)) {
+              matches = true;
             }
           }
-        } catch (e) {
-          print('Error fetching tokenNo for patient ${doc.id}: $e');
-        }
 
-        fetchedData.add({
-          'Token NO': tokenNo,
-          'OP NO': data['opNumber'] ?? 'N/A',
-          'IP NO': data['ipNumber'] ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'Age': data['age'] ?? 'N/A',
-          'Place': data['state'] ?? 'N/A',
-          'Address': data['address1'] ?? 'N/A',
-          'PinCode': data['pincode'] ?? 'N/A',
-          'Status': data['status'] ?? 'N/A',
-          'Primary Info': data['otherComments'] ?? 'N/A',
-          'Action': TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RxPrescription(
-                      patientID: data['opNumber'] ?? 'N/A',
-                      ipNumber: data['ipNumber'] ?? 'N/A',
-                      name:
-                          '${data['firstName'] ?? ''} ${data['lastName'] ?? 'N/A'}'
-                              .trim(),
-                      date: data['tokenDate'],
-                      age: data['age'] ?? 'N/A',
-                      place: data['state'] ?? 'N/A',
-                      address: data['address1'] ?? 'N/A',
-                      pincode: data['pincode'] ?? 'N/A',
-                      primaryInfo: data['otherComments'] ?? 'N/A',
-                      temperature: data['temperature'] ?? 'N/A',
-                      bloodPressure: data['bloodPressure'] ?? 'N/A',
-                      sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
-                      phone1: data['phone1'],
-                      phone2: data['phone2'],
-                      sex: data['sex'],
-                      bloodGroup: data['bloodGroup'],
-                      firstName: data['firstName'],
-                      lastName: data['lastName'],
-                      dob: data['dob'],
-                      doctorName: widget.doctorName,
-                    ),
-                  ),
-                );
-              },
-              child: const CustomText(text: 'Open')),
-          'Abscond': TextButton(
-              onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('patients')
-                      .doc(data['opNumber'])
-                      .update({'status': 'abscond'});
+          if (matches) {
+            String tokenNo = '';
+            String tokenDate = '';
 
-                  CustomSnackBar(context, message: 'Status updated to aborted');
-                } catch (e) {
-                  print(
-                      'Error updating status for patient ${data['patientID']}: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update status')),
-                  );
+            try {
+              final tokenSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('tokens')
+                  .doc('currentToken')
+                  .get();
+
+              if (tokenSnapshot.exists) {
+                final tokenData = tokenSnapshot.data();
+                if (tokenData != null && tokenData['tokenNumber'] != null) {
+                  tokenNo = tokenData['tokenNumber'].toString();
                 }
-              },
-              child: const CustomText(text: 'Abort'))
-        });
+                if (tokenData != null && tokenData['date'] != null) {
+                  tokenDate = tokenData['date'];
+                }
+              }
+            } catch (e) {
+              print('Error fetching tokenNo for patient $patientId: $e');
+            }
+
+            if (tokenDate == todayString) {
+              fetchedData.add({
+                'Token NO': tokenNo,
+                'OP NO': patientData['opNumber'] ?? 'N/A',
+                'OP Ticket': opTicketData['opTicket'] ?? 'N/A',
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'Age': patientData['age'] ?? 'N/A',
+                'Place': patientData['city'] ?? 'N/A',
+                'Address': patientData['address1'] ?? 'N/A',
+                'PinCode': patientData['pincode'] ?? 'N/A',
+                'Status': opTicketData['status'] ?? 'N/A',
+                'Primary Info': patientData['otherComments'] ?? 'N/A',
+                'Action': TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RxPrescription(
+                            patientID: patientData['opNumber'] ?? 'N/A',
+                            name:
+                                '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                    .trim(),
+                            date: opTicketData['tokenDate'],
+                            age: patientData['age'] ?? 'N/A',
+                            place: patientData['state'] ?? 'N/A',
+                            address: patientData['address1'] ?? 'N/A',
+                            pincode: patientData['pincode'] ?? 'N/A',
+                            primaryInfo: opTicketData['otherComments'] ?? 'N/A',
+                            temperature: opTicketData['temperature'] ?? 'N/A',
+                            bloodPressure:
+                                opTicketData['bloodPressure'] ?? 'N/A',
+                            sugarLevel:
+                                opTicketData['bloodSugarLevel'] ?? 'N/A',
+                            phone1: patientData['phone1'],
+                            phone2: patientData['phone2'],
+                            sex: patientData['sex'],
+                            bloodGroup: patientData['bloodGroup'],
+                            firstName: patientData['firstName'],
+                            lastName: patientData['lastName'],
+                            dob: patientData['dob'],
+                            doctorName: widget.doctorName,
+                            opTicket: opTicketData['opTicket'],
+                            specialization: opTicketData['specialization'],
+                          ),
+                        ),
+                      );
+                    },
+                    child: const CustomText(text: 'Open')),
+                'Abscond': TextButton(
+                    onPressed: () async {
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('patients')
+                            .doc(patientId)
+                            .collection('opTickets')
+                            .doc(opTicketData['opTicket'])
+                            .update({'status': 'abscond'});
+
+                        CustomSnackBar(context,
+                            message: 'Status updated to abscond');
+                      } catch (e) {
+                        print('Error updating status: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Failed to update status')),
+                        );
+                      }
+                    },
+                    child: const CustomText(text: 'Abort')),
+              });
+
+              found = true;
+              break;
+            }
+          }
+        }
       }
 
       fetchedData.sort((a, b) {
@@ -179,7 +224,7 @@ class _DoctorRxList extends State<DoctorRxList> {
         tableData1 = fetchedData;
       });
     } catch (e) {
-      print('Error fetching data from Firestore: $e');
+      print('Error fetching data: $e');
     }
   }
 
@@ -299,15 +344,17 @@ class _DoctorRxList extends State<DoctorRxList> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CustomTextField(
-                    hintText: 'OP Number',
+                    hintText: 'OP Ticket Number',
                     width: screenWidth * 0.15,
                     controller: _opNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _opNumber.text);
+                    onPressed: () async {
+                      print('pressed search: ${_opNumber.text}');
+
+                      await fetchData(opNumber: _opNumber.text);
                     },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
@@ -336,7 +383,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
+                  return row['Status'] == 'abscond'
                       ? Colors.red.shade200
                       : Colors.transparent;
                 },

@@ -54,10 +54,8 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     int opCount = 0;
 
     try {
-      final QuerySnapshot patientSnapshot = await fireStore
-          .collection('patients')
-          .where('doctorName', isEqualTo: widget.doctorName)
-          .get();
+      final QuerySnapshot patientSnapshot =
+          await fireStore.collection('patients').get();
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -79,7 +77,17 @@ class _DoctorDashboard extends State<DoctorDashboard> {
             final String? tokenDate = tokenData?['date'];
 
             if (tokenDate == today) {
-              opCount++;
+              final QuerySnapshot opTicketsSnapshot = await fireStore
+                  .collection('patients')
+                  .doc(doc.id)
+                  .collection('opTickets')
+                  .where('doctorName', isEqualTo: currentUser!.name)
+                  .where('tokenDate', isEqualTo: today)
+                  .get();
+
+              if (opTicketsSnapshot.docs.isNotEmpty) {
+                opCount += opTicketsSnapshot.docs.length;
+              }
             }
           }
         } catch (e) {
@@ -106,7 +114,6 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('patients')
-          .where('doctorName', isEqualTo: widget.doctorName)
           .where('opAdmissionDate', isEqualTo: today)
           .get();
 
@@ -125,21 +132,28 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+    int missingCount = 0;
+
     try {
-      final QuerySnapshot snapshot = await fireStore
-          .collection('patients')
-          .where('doctorName', isEqualTo: widget.doctorName)
-          .where('opAdmissionDate', isEqualTo: today)
-          .get();
+      final QuerySnapshot patientSnapshot =
+          await fireStore.collection('patients').get();
 
-      int missingCount = 0;
+      for (var patientDoc in patientSnapshot.docs) {
+        final QuerySnapshot opTicketsSnapshot = await fireStore
+            .collection('patients')
+            .doc(patientDoc.id)
+            .collection('opTickets')
+            .where('doctorName', isEqualTo: currentUser!.name)
+            .where('tokenDate', isEqualTo: today)
+            .get();
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        for (var opTicketDoc in opTicketsSnapshot.docs) {
+          final data = opTicketDoc.data() as Map<String, dynamic>;
 
-        if (!data.containsKey('Medication') &&
-            !data.containsKey('Examination')) {
-          missingCount++;
+          if (!data.containsKey('Medication') &&
+              !data.containsKey('Examination')) {
+            missingCount++;
+          }
         }
       }
 
@@ -156,11 +170,11 @@ class _DoctorDashboard extends State<DoctorDashboard> {
 
   Future<void> fetchCounterOneData() async {
     final user = UserSession.currentUser;
-
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     try {
       List<Map<String, dynamic>> fetchedData = [];
+
       QuerySnapshot<Map<String, dynamic>> counterSnapshot =
           await FirebaseFirestore.instance
               .collection('employees')
@@ -192,36 +206,37 @@ class _DoctorDashboard extends State<DoctorDashboard> {
           'Token': 'N/A',
         });
       }
-      print("Doctor Name Used: ${widget.doctorName}");
 
-      QuerySnapshot<Map<String, dynamic>> patientsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('patients')
-              .where('doctorName', isEqualTo: widget.doctorName)
-              .where('tokenDate', isEqualTo: today)
-              .get();
+      QuerySnapshot<Map<String, dynamic>> patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       List<Map<String, dynamic>> tokenData = [];
 
-      if (patientsSnapshot.docs.isNotEmpty) {
-        for (var doc in patientsSnapshot.docs) {
-          final data = doc.data();
+      for (var patientDoc in patientSnapshot.docs) {
+        final patientId = patientDoc.id;
 
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+        QuerySnapshot<Map<String, dynamic>> opTicketsSnapshot =
+            await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientId)
+                .collection('opTickets')
+                .where('doctorName', isEqualTo: currentUser!.name)
+                .where('tokenDate', isEqualTo: today)
+                .get();
 
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
+        if (opTicketsSnapshot.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> currentTokenSnapshot =
+              await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('tokens')
+                  .doc('currentToken')
+                  .get();
 
-          if (detailsData != null &&
-              !data.containsKey('Medication') &&
-              !data.containsKey('Examination')) {
-            String token = detailsData['tokenNumber']?.toString() ?? 'N/A';
+          if (currentTokenSnapshot.exists) {
+            final currentTokenData = currentTokenSnapshot.data();
+            String token =
+                currentTokenData?['tokenNumber']?.toString() ?? 'N/A';
 
             if (token != 'N/A') {
               tokenData.add({
@@ -234,15 +249,18 @@ class _DoctorDashboard extends State<DoctorDashboard> {
             }
           }
         }
+      }
 
-        tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
+      // Sort tokens
+      tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
 
-        for (var item in tokenData) {
-          fetchedData.add(item['display']);
-        }
-      } else {
+      for (var item in tokenData) {
+        fetchedData.add(item['display']);
+      }
+
+      if (tokenData.isEmpty) {
         fetchedData.add({
-          'Counter 1': 'No patients found for today.',
+          'Counter': 'No patients found for today.',
           'Token': 'N/A',
         });
       }

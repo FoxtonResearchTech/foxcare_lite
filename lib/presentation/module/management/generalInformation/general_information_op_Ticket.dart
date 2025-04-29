@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
@@ -53,6 +55,37 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     super.initState();
   }
 
+  Future<String> generateUniqueOpTicketId(String selectedPatientId) async {
+    const chars = '0123456789';
+    Random random = Random.secure();
+    String opTicketId = '';
+
+    bool exists = true;
+    while (exists) {
+      String randomString =
+          List.generate(6, (index) => chars[random.nextInt(chars.length)])
+              .join();
+      opTicketId = 'OP$randomString';
+
+      var docSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(selectedPatientId)
+          .collection('opTickets')
+          .doc(opTicketId)
+          .get();
+
+      exists = docSnapshot.exists;
+    }
+
+    return opTicketId;
+  }
+
+  Future<void> initializeOpTicketID(String selectedPatientId) async {
+    opTicketId = await generateUniqueOpTicketId(selectedPatientId);
+    setState(() {});
+  }
+
+  String opTicketId = '';
   Future<void> fetchDoctorAndSpecialization() async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
@@ -120,12 +153,20 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
       });
-      await firestore.collection('patients').doc(selectedPatientId).update({
+      await firestore
+          .collection('patients')
+          .doc(selectedPatientId)
+          .collection('opTickets')
+          .doc(opTicketId)
+          .set({
+        'opTicket': opTicketId,
+        'tokenNumber': storedTokenValue,
         'tokenDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
+        'status': 'waiting',
         'counter': selectedCounter,
         'doctorName': doctorName.text,
         'specialization': specialization.text,
@@ -778,6 +819,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                         width: 5,
                       ),
                       CustomTextField(
+                        controller: otherComments,
                         hintText: '',
                         width: 800,
                         verticalSize: 30,
@@ -801,6 +843,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                 label: 'Generate',
                 onPressed: () async {
                   String? selectedPatientId = selectedPatient?['opNumber'];
+                  await initializeOpTicketID(selectedPatientId!);
                   print(selectedPatientId);
                   await incrementCounter();
                   await _generateToken(selectedPatientId!);
