@@ -54,17 +54,12 @@ class _OpBilling extends State<OpBilling> {
 
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData({String? opNumber}) async {
+  Future<void> fetchData({String? opTicket}) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      final patientsSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
-      if (opNumber != null) {
-        query = query.where('opNumber', isEqualTo: opNumber);
-      }
-
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
+      if (patientsSnapshot.docs.isEmpty) {
         setState(() {
           tableData = [];
           resetTotals();
@@ -73,55 +68,74 @@ class _OpBilling extends State<OpBilling> {
       }
 
       List<Map<String, dynamic>> fetchedData = [];
+      bool found = false;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+      for (var patientDoc in patientsSnapshot.docs) {
+        final patientData = patientDoc.data() as Map<String, dynamic>;
 
-        if (data.isNotEmpty) {
-          setState(() {
-            gender.text = data['sex'] ?? 'N/A';
-            patientName.text =
-                (data['firstName'] ?? '') + ' ' + (data['lastName'] ?? 'N/A');
-            age.text = data['age'] ?? 'N/A';
-            place.text = data['city'] ?? 'N/A';
-            phoneNumber.text = data['phoneNumber'] ?? 'N/A';
-          });
-        }
+        final opTicketsSnapshot = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(patientDoc.id)
+            .collection('opTickets')
+            .get();
 
-        List<dynamic> medicines = data['Medication'] ?? [];
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
 
-        for (String medicineName in medicines) {
-          QuerySnapshot medicineSnapshot = await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .where('productName', isEqualTo: medicineName)
-              .get();
+          if ((ticketData['opTicket'] ?? '') == opTicket) {
+            found = true;
 
-          for (var medicineDoc in medicineSnapshot.docs) {
-            var medicineData = medicineDoc.data() as Map<String, dynamic>;
-
-            fetchedData.add({
-              'Product Name': medicineData['productName'] ?? 'N/A',
-              'Type': medicineData['type'] ?? 'N/A',
-              'Batch': medicineData['batchNumber'] ?? 'N/A',
-              'EXP': medicineData['expiry'] ?? 'N/A',
-              'HSN': medicineData['hsnCode'] ?? 'N/A',
-              'Quantity': '',
-              'MPS': medicineData['mrp'] ?? 'N/A',
-              'Price': medicineData['price'] ?? 'N/A',
-              'Gst': (medicineData['gst'] ?? 0).toString() + '%',
-              'Amount': medicineData['amount'] ?? 'N/A',
+            // Set patient fields
+            setState(() {
+              gender.text = patientData['sex'] ?? 'N/A';
+              patientName.text = (patientData['firstName'] ?? '') +
+                  ' ' +
+                  (patientData['lastName'] ?? 'N/A');
+              age.text = patientData['age'] ?? 'N/A';
+              place.text = patientData['city'] ?? 'N/A';
+              phoneNumber.text = patientData['phoneNumber'] ?? 'N/A';
             });
+
+            List<dynamic> medicines = ticketData['Medication'] ?? [];
+
+            for (String medicineName in medicines) {
+              QuerySnapshot medicineSnapshot = await FirebaseFirestore.instance
+                  .collection('stock')
+                  .doc('Products')
+                  .collection('AddedProducts')
+                  .where('productName', isEqualTo: medicineName)
+                  .get();
+
+              for (var medicineDoc in medicineSnapshot.docs) {
+                var medicineData = medicineDoc.data() as Map<String, dynamic>;
+
+                fetchedData.add({
+                  'Product Name': medicineData['productName'] ?? 'N/A',
+                  'Type': medicineData['type'] ?? 'N/A',
+                  'Batch': medicineData['batchNumber'] ?? 'N/A',
+                  'EXP': medicineData['expiry'] ?? 'N/A',
+                  'HSN': medicineData['hsnCode'] ?? 'N/A',
+                  'Quantity': '',
+                  'MPS': medicineData['mrp'] ?? 'N/A',
+                  'Price': medicineData['price'] ?? 'N/A',
+                  'Gst': (medicineData['gst'] ?? 0).toString() + '%',
+                  'Amount': medicineData['amount'] ?? 'N/A',
+                });
+              }
+            }
+
+            break; // Stop after finding the first matching opTicket
           }
         }
+
+        if (found) break;
       }
 
       setState(() {
         tableData = fetchedData;
-        calculateTotals();
-
-        if (opNumber == null) {
+        if (found) {
+          calculateTotals();
+        } else {
           resetTotals();
         }
       });
@@ -202,7 +216,7 @@ class _OpBilling extends State<OpBilling> {
       }).toList();
       Map<String, dynamic> billingData = {
         'billNo': billNo.text,
-        'opNumber': _opNumber.text,
+        'opTicket': _opNumber.text,
         'billDate': _dateController.text,
         'patientName': patientName.text,
         'age': age.text,
@@ -334,10 +348,10 @@ class _OpBilling extends State<OpBilling> {
                   SizedBox(width: screenHeight * 0.5),
                   CustomTextField(
                     controller: _opNumber,
-                    hintText: 'OP Number',
+                    hintText: 'OP Ticket',
                     width: screenWidth * 0.25,
                     onChanged: (value) {
-                      fetchData(opNumber: value);
+                      fetchData(opTicket: value);
                     },
                   ),
                 ],

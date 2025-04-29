@@ -384,7 +384,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       final QuerySnapshot snapshot = await fireStore
           .collection('pharmacy')
           .doc('billing')
-          .collection('opbilling')
+          .collection('ipbilling')
           .where('billDate', isEqualTo: today)
           .get();
 

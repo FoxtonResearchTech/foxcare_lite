@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
@@ -56,6 +57,38 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
     searchOpNumber.text = widget.patientId!;
     incrementCounter();
   }
+
+  Future<String> generateUniqueOpTicketId(String selectedPatientId) async {
+    const chars = '0123456789';
+    Random random = Random.secure();
+    String opTicketId = '';
+
+    bool exists = true;
+    while (exists) {
+      String randomString =
+          List.generate(6, (index) => chars[random.nextInt(chars.length)])
+              .join();
+      opTicketId = 'OP$randomString';
+
+      var docSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(selectedPatientId)
+          .collection('opTickets')
+          .doc(opTicketId)
+          .get();
+
+      exists = docSnapshot.exists;
+    }
+
+    return opTicketId;
+  }
+
+  Future<void> initializeOpTicketID(String selectedPatientId) async {
+    opTicketId = await generateUniqueOpTicketId(selectedPatientId);
+    setState(() {});
+  }
+
+  String opTicketId = '';
 
   Future<void> fetchDoctorAndSpecialization() async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -115,12 +148,20 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
       });
-      await firestore.collection('patients').doc(selectedPatientId).update({
+      await firestore
+          .collection('patients')
+          .doc(selectedPatientId)
+          .collection('opTickets')
+          .doc(opTicketId)
+          .set({
+        'opTicket': opTicketId,
+        'tokenNumber': storedTokenValue,
         'tokenDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
+        'status': 'waiting',
         'counter': selectedCounter,
         'doctorName': doctorName.text,
         'specialization': specialization.text,
@@ -158,9 +199,12 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
           );
         },
       );
-      showMessage('Token saved: $storedTokenValue');
+      CustomSnackBar(context,
+          message: 'Token saved: $storedTokenValue',
+          backgroundColor: Colors.green);
     } catch (e) {
-      showMessage('Failed to save token: $e');
+      CustomSnackBar(context,
+          message: 'Failed to save token: $e', backgroundColor: Colors.red);
     }
   }
 
@@ -738,6 +782,7 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                 label: 'Generate',
                 onPressed: () async {
                   String? selectedPatientId = selectedPatient?['opNumber'];
+                  await initializeOpTicketID(selectedPatientId!);
                   print(selectedPatientId);
                   await incrementCounter();
                   await _generateToken(selectedPatientId!);
