@@ -8,11 +8,13 @@ import '../textField/primary_textField.dart';
 
 class IpAdmitAdditionalAmount extends StatefulWidget {
   final String? docId;
+  final String? ipTicket;
+
   final Future<void> Function()? fetchData;
   final bool? timeLine;
 
   IpAdmitAdditionalAmount(
-      {this.docId, super.key, this.fetchData, this.timeLine});
+      {this.docId, super.key, this.fetchData, this.timeLine, this.ipTicket});
 
   @override
   State<IpAdmitAdditionalAmount> createState() =>
@@ -73,7 +75,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     }
   }
 
-  Future<void> additionalPaymentAmount(String docID) async {
+  Future<void> additionalPaymentAmount(String docID, String? ipTicket) async {
     try {
       DocumentReference paymentDocRef = FirebaseFirestore.instance
           .collection('patients')
@@ -83,10 +85,12 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
 
       DocumentSnapshot paymentSnapshot = await paymentDocRef.get();
       double currentTotalAmount = 0.0;
+      String existingCollectedAmount = "0";
 
       if (paymentSnapshot.exists && paymentSnapshot.data() != null) {
         var data = paymentSnapshot.data() as Map<String, dynamic>;
         String existingAmountStr = data['ipAdmissionTotalAmount'] ?? "0";
+        existingCollectedAmount = data['ipAdmissionCollected'] ?? "0";
 
         currentTotalAmount = double.tryParse(existingAmountStr) ?? 0.0;
       }
@@ -102,6 +106,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
       await paymentDocRef.collection('additionalAmount').doc().set({
         'additionalAmount': additionalAmount.text,
         'reason': reasonForAdditionalAmount.text,
+        'ipTicket': ipTicket,
+        'collectedTillNow': existingCollectedAmount,
         'date':
             "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}",
         'time':
@@ -168,7 +174,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            additionalPaymentAmount(widget.docId.toString());
+            additionalPaymentAmount(widget.docId.toString(), widget.ipTicket);
             widget.fetchData!();
           },
           child: CustomText(

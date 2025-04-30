@@ -70,7 +70,7 @@ class _IpAdmit extends State<IpAdmit> {
     balanceAmount.text = balance.toStringAsFixed(2);
   }
 
-  Future<void> addPaymentAmount(String docID) async {
+  Future<void> addPaymentAmount(String docID, String ipTicket) async {
     try {
       Map<String, dynamic> data = {
         'ipAdmissionTotalAmount': amount.text,
@@ -98,6 +98,8 @@ class _IpAdmit extends State<IpAdmit> {
           .set({
         'additionalAmount': amount.text,
         'reason': 'Initial Amount',
+        'ipTicket': ipTicket,
+        'collectedTillNow': collected.text,
         'date': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
@@ -273,7 +275,8 @@ class _IpAdmit extends State<IpAdmit> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                addPaymentAmount(doc.id);
+                                addPaymentAmount(
+                                    doc.id, ipData['ipTicket'].toString());
                                 fetchData(ipNumber: ipNumber);
                                 showDialog(
                                   context: context,
@@ -312,6 +315,7 @@ class _IpAdmit extends State<IpAdmit> {
                 showDialog(
                   context: context,
                   builder: (_) => IpAdmitAdditionalAmount(
+                    ipTicket: ipData['ipTicket'].toString(),
                     docId: doc.id,
                     fetchData: fetchData,
                     timeLine: true,

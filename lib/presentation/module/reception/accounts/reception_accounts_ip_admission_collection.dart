@@ -28,9 +28,10 @@ class _ReceptionAccountsIpAdmissionCollection
 
   DateTime now = DateTime.now();
   final List<String> headers = [
-    'OP Ticket',
-    'IP No',
+    'OP No',
+    'IP Ticket',
     'IP Admission Date',
+    'Room Allotment Date',
     'Name',
     'City',
     'Doctor Name',
@@ -40,18 +41,14 @@ class _ReceptionAccountsIpAdmissionCollection
   ];
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
       Query query = FirebaseFirestore.instance.collection('patients');
 
-      if (singleDate != null) {
-        query = query.where('date', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('date', isGreaterThanOrEqualTo: fromDate)
-            .where('date', isLessThanOrEqualTo: toDate);
-      }
       final QuerySnapshot snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
@@ -66,81 +63,58 @@ class _ReceptionAccountsIpAdmissionCollection
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('ipNumber')) continue;
 
-        String tokenNo = '';
-        bool hasIpPrescription = false;
+        final ipTicketsSnapshot =
+            await doc.reference.collection('ipTickets').get();
 
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+        for (var ipDoc in ipTicketsSnapshot.docs) {
+          final ticketData = ipDoc.data();
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
-            }
+          if (singleDate != null &&
+              ticketData['roomAllotmentDate'] != singleDate) {
+            continue;
           }
-          final ipPrescriptionSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .get();
 
-          if (ipPrescriptionSnapshot.docs.isNotEmpty) {
-            hasIpPrescription = true;
+          if (fromDate != null &&
+              toDate != null &&
+              (ticketData['roomAllotmentDate'] == null ||
+                  !isDateInRange(
+                      ticketData['roomAllotmentDate'], fromDate, toDate))) {
+            continue; // Skip if roomAllotmentDate doesn't fall within the range
           }
-        } catch (e) {
-          print('Error fetching token No for patient ${doc.id}: $e');
-        }
 
-        if (hasIpPrescription) {
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .doc('details')
-              .get();
+          String ipTicketId = ipDoc.id;
+          String roomAllotmentDate = ticketData['roomAllotmentDate'] ?? 'N/A';
+          String ipAdmissionDate = ticketData['ipAdmitDate'] ?? 'N/A';
 
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
-          String ipAdmissionTotalAmountStr =
-              detailsData?['ipAdmissionTotalAmount'] ?? '0';
-          String ipAdmissionCollectedStr =
-              detailsData?['ipAdmissionCollected'] ?? '0';
-          String ipAdmissionDate = detailsData?['date'] ?? 'N/A';
-
-          double ipAdmissionTotalAmount =
-              double.tryParse(ipAdmissionTotalAmountStr) ?? 0;
-          double ipAdmissionCollected =
-              double.tryParse(ipAdmissionCollectedStr) ?? 0;
-
-          double balance = ipAdmissionTotalAmount - ipAdmissionCollected;
+          double totalAmount = double.tryParse(
+                  ticketData['ipAdmissionTotalAmount']?.toString() ?? '0') ??
+              0;
+          double collectedAmount = double.tryParse(
+                  ticketData['ipAdmissionCollected']?.toString() ?? '0') ??
+              0;
+          double balance = totalAmount - collectedAmount;
 
           fetchedData.add({
-            'OP Ticket': tokenNo,
-            'IP No': data['ipNumber']?.toString() ?? 'N/A',
+            'IP Ticket': ipTicketId,
+            'OP No': data['opNumber']?.toString() ?? 'N/A',
             'IP Admission Date': ipAdmissionDate,
+            'Room Allotment Date': roomAllotmentDate,
             'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
                 .trim(),
             'City': data['city']?.toString() ?? 'N/A',
-            'Doctor Name': data['doctorName']?.toString() ?? 'N/A',
-            'Total Amount': ipAdmissionTotalAmountStr,
-            'Collected': ipAdmissionCollectedStr,
-            'Balance': balance,
+            'Doctor Name': ticketData['doctorName']?.toString() ?? 'N/A',
+            'Total Amount': totalAmount.toInt(),
+            'Collected': collectedAmount.toInt(),
+            'Balance': balance.toInt(),
           });
         }
       }
 
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['OP Ticket'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['OP Ticket'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
+        int aId = int.tryParse(a['IP Ticket'].toString()) ?? 0;
+        int bId = int.tryParse(b['IP Ticket'].toString()) ?? 0;
+        return aId.compareTo(bId);
       });
 
       setState(() {
@@ -149,6 +123,14 @@ class _ReceptionAccountsIpAdmissionCollection
     } catch (e) {
       print('Error fetching data: $e');
     }
+  }
+
+  bool isDateInRange(String date, String fromDate, String toDate) {
+    DateTime parsedDate = DateTime.parse(date);
+    DateTime parsedFromDate = DateTime.parse(fromDate);
+    DateTime parsedToDate = DateTime.parse(toDate);
+    return parsedDate.isAfter(parsedFromDate) &&
+        parsedDate.isBefore(parsedToDate);
   }
 
   Future<void> _selectDate(

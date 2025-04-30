@@ -43,6 +43,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
 
   final headers1 = [
     'OP Number',
+    'OP Ticket',
     'Token',
     'Name',
     'Place',
@@ -318,45 +319,67 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     try {
-      final QuerySnapshot snapshot = await fireStore
+      final QuerySnapshot patientSnapshot = await fireStore
           .collection('patients')
           .where('opAdmissionDate', isEqualTo: today)
-          .where('status', isEqualTo: 'abscond')
           .get();
 
       int missingCount = 0;
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
+      for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(doc.id)
-            .collection('tokens')
-            .doc('currentToken')
-            .get();
+
+        DocumentSnapshot detailsDoc =
+            await doc.reference.collection('tokens').doc('currentToken').get();
 
         Map<String, dynamic>? detailsData = detailsDoc.exists
             ? detailsDoc.data() as Map<String, dynamic>?
             : null;
 
-        if (!data.containsKey('Medication') &&
-            !data.containsKey('Examination')) {
-          fetchedData.add({
-            'OP Number': data['opNumber'] ?? 'N/A',
-            'Token': detailsData?['tokenNumber'] ?? 'N/A',
-            'Name': data['firstName'] + ' ' + data['lastName'] ?? 'N/A',
-            'Place': data['city'] ?? 'N/A',
-            'Phone Number': data['phone1'] ?? 'N/A',
-            'Status': CustomDropdown(
+        // Fetch opTickets for this patient
+        final opTicketsSnapshot = await doc.reference
+            .collection('opTickets')
+            .where('status', isEqualTo: 'abscond')
+            .get();
+
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+
+          final hasMedication = ticketData.containsKey('Medication') &&
+              ticketData['Medication'] != null &&
+              ticketData['Medication'].toString().trim().isNotEmpty;
+
+          final hasExamination = ticketData.containsKey('Examination') &&
+              ticketData['Examination'] != null &&
+              ticketData['Examination'].toString().trim().isNotEmpty;
+
+          if (!hasMedication && !hasExamination) {
+            missingCount++;
+
+            fetchedData.add({
+              'OP Number': data['opNumber'] ?? 'N/A',
+              'OP Ticket': ticketData['opTicket'] ?? 'N/A',
+              'Token': detailsData?['tokenNumber']?.toString() ?? 'N/A',
+              'Name':
+                  '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'.trim(),
+              'Place': data['city'] ?? 'N/A',
+              'Phone Number': data['phone1'] ?? 'N/A',
+              'Status': CustomDropdown(
                 focusColor: Colors.white,
                 borderColor: Colors.white,
                 label: '',
                 items: ['Not Attending Call', 'Come Later', 'Others'],
-                onChanged: (value) {}),
-          });
+                onChanged: (value) {},
+              ),
+            });
+
+            break; // Only count one missing ticket per patient
+          }
         }
       }
+
+      // Sort by token number
       fetchedData.sort((a, b) {
         int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
         int tokenB = int.tryParse(b['Token'].toString()) ?? 0;

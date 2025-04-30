@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/reception/accounts/reception_accounts_drawer.dart';
-import '../../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 
@@ -46,19 +45,11 @@ class _ReceptionAccountsOpTicketCollection
     String? toDate,
   }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-
-      if (singleDate != null) {
-        query = query.where('tokenDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('tokenDate', isGreaterThanOrEqualTo: fromDate)
-            .where('tokenDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
+      final QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       if (snapshot.docs.isEmpty) {
-        print("No records found");
+        print("No patient records found");
         setState(() {
           tableData = [];
         });
@@ -69,46 +60,44 @@ class _ReceptionAccountsOpTicketCollection
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        if (!data.containsKey('tokenDate')) continue;
-        String tokenNo = '';
+        final docRef = doc.reference;
 
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+        final opTicketsSnapshot = await docRef.collection('opTickets').get();
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
-            }
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+          final ticketDate = ticketData['tokenDate']?.toString();
+
+          if (singleDate != null && ticketDate != singleDate) continue;
+
+          if (fromDate != null &&
+              toDate != null &&
+              (ticketDate == null ||
+                  ticketDate.compareTo(fromDate) < 0 ||
+                  ticketDate.compareTo(toDate) > 0)) {
+            continue;
           }
-        } catch (e) {
-          print('Error fetching token No for patient ${doc.id}: $e');
-        }
-        double opAmount =
-            double.tryParse(data['opTicketTotalAmount']?.toString() ?? '0') ??
-                0;
-        double opAmountCollected = double.tryParse(
-                data['opTicketCollectedAmount']?.toString() ?? '0') ??
-            0;
-        double balance = opAmount - opAmountCollected;
 
-        fetchedData.add({
-          'OP Ticket': tokenNo,
-          'OP No': data['opNumber']?.toString() ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'City': data['city']?.toString() ?? 'N/A',
-          'Doctor Name': data['doctorName']?.toString() ?? 'N/A',
-          'Total Amount': data['opTicketTotalAmount']?.toString() ?? '0',
-          'Collected': data['opTicketCollectedAmount']?.toString() ?? '0',
-          'Balance': balance,
-        });
+          double opAmount = double.tryParse(
+                  ticketData['opTicketTotalAmount']?.toString() ?? '0') ??
+              0;
+          double opAmountCollected = double.tryParse(
+                  ticketData['opTicketCollectedAmount']?.toString() ?? '0') ??
+              0;
+          double balance = opAmount - opAmountCollected;
+
+          fetchedData.add({
+            'OP Ticket': ticketDoc.id,
+            'OP No': data['opNumber']?.toString() ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'City': data['city']?.toString() ?? 'N/A',
+            'Doctor Name': ticketData['doctorName']?.toString() ?? 'N/A',
+            'Total Amount': opAmount.toString(),
+            'Collected': opAmountCollected.toString(),
+            'Balance': balance,
+          });
+        }
       }
 
       fetchedData.sort((a, b) {
@@ -119,6 +108,9 @@ class _ReceptionAccountsOpTicketCollection
 
       setState(() {
         tableData = fetchedData;
+        _totalAmountCollected();
+        _totalCollected();
+        _totalBalance();
       });
     } catch (e) {
       print('Error fetching data: $e');

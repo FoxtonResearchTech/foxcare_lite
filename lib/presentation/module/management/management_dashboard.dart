@@ -218,7 +218,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         if (dateStr == null) return false;
         DateTime? d = DateTime.tryParse(dateStr);
         if (d == null) return false;
-
         if (from != null && d.isBefore(from)) return false;
         if (to != null && d.isAfter(to)) return false;
         return true;
@@ -232,54 +231,120 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
+        // 1. opAmountCollected from patient doc
         if (isInRange(data['opAdmissionDate'])) {
           income += parseAmount(data['opAmountCollected']);
         }
 
-        if (isInRange(data['tokenDate'])) {
-          income += parseAmount(data['opTicketCollectedAmount']);
-        }
-
-        if (isInRange(data['reportDate'])) {
-          income += parseAmount(data['labCollected']);
-        }
-
+        // 2. opTickets subcollection
         try {
-          final ipAdmissionDoc = await fireStore
+          final opTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(doc.id)
+              .collection('opTickets')
+              .get();
+
+          for (var opDoc in opTicketsSnapshot.docs) {
+            final opData = opDoc.data();
+
+            if (isInRange(opData['tokenDate'])) {
+              income += parseAmount(opData['opTicketCollectedAmount']);
+            }
+
+            if (isInRange(opData['reportDate'])) {
+              income += parseAmount(opData['labCollected']);
+            }
+          }
+        } catch (e) {
+          print('Error fetching opTickets for ${doc.id}: $e');
+        }
+
+        // 3. ipTickets subcollection (updated for labCollection)
+        try {
+          final ipTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(doc.id)
+              .collection('ipTickets')
+              .get();
+
+          for (var ipDoc in ipTicketsSnapshot.docs) {
+            final ipData = ipDoc.data();
+
+            // ipAdmissionCollected
+            if (isInRange(ipData['roomAllotmentDate'])) {
+              income += parseAmount(ipData['ipAdmissionCollected']);
+            }
+
+            try {
+              final labCollectionSnapshot = await fireStore
+                  .collection('patients')
+                  .doc(doc.id)
+                  .collection('ipTickets')
+                  .doc(ipDoc.id)
+                  .collection('labCollection')
+                  .get();
+
+              for (var labDoc in labCollectionSnapshot.docs) {
+                final labData = labDoc.data();
+                if (isInRange(labData['reportDate'])) {
+                  income += parseAmount(labData['labCollected']);
+                }
+              }
+            } catch (e) {
+              print(
+                  'Error fetching labCollection for ipTicket ${ipDoc.id} of patient ${doc.id}: $e');
+            }
+          }
+        } catch (e) {
+          print('Error fetching ipTickets for ${doc.id}: $e');
+        }
+
+        // 4. ipAdmissionPayments/payments (no change)
+        try {
+          final snapshot = await fireStore
               .collection('patients')
               .doc(doc.id)
               .collection('ipAdmissionPayments')
               .doc('payments')
+              .collection('additionalAmount')
               .get();
 
-          if (ipAdmissionDoc.exists) {
-            final ipData = ipAdmissionDoc.data() as Map<String, dynamic>;
-            if (isInRange(ipData['date'])) {
-              income += parseAmount(ipData['ipAdmissionCollected']);
+          DateTime? latestDateTime;
+          double latestCollected = 0;
+
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final dateStr = data['date'] as String?;
+            final timeStr = data['time'] as String?;
+            final amountStr = data['collectedTillNow'];
+            if (dateStr == null || timeStr == null || amountStr == null)
+              continue;
+
+            // Filter by date only
+            if (!isInRange(dateStr)) continue;
+
+            // Combine date + time
+            final fullDateTimeStr = '$dateStr $timeStr';
+
+            try {
+              final dt = DateTime.parse(fullDateTimeStr);
+
+              if (latestDateTime == null || dt.isAfter(latestDateTime)) {
+                latestDateTime = dt;
+                latestCollected = double.parse(amountStr.toString());
+                print('Latest Amount : ${latestCollected}');
+              }
+            } catch (e) {
+              print(
+                  'Error parsing date+time "$fullDateTimeStr" for ${doc.id}: $e');
             }
           }
-        } catch (e) {
-          print('Error fetching ipAdmissionPayments for ${doc.id}: $e');
-        }
 
-        // ipPrescription
-        try {
-          final ipPrescriptionDoc = await fireStore
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .doc('details')
-              .get();
-
-          if (ipPrescriptionDoc.exists) {
-            final ipPrescData =
-                ipPrescriptionDoc.data() as Map<String, dynamic>;
-            if (isInRange(ipPrescData['date'])) {
-              income += parseAmount(ipPrescData['ipAdmissionCollected']);
-            }
+          if (latestDateTime != null) {
+            income += latestCollected.toInt();
           }
         } catch (e) {
-          print('Error fetching ipPrescription for ${doc.id}: $e');
+          print('Error fetching additionalAmount for ${doc.id}: $e');
         }
       }
 
@@ -292,6 +357,18 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     } catch (e) {
       print('Error fetching patients: $e');
       return 0;
+    }
+  }
+
+  double parseAmount(dynamic value) {
+    if (value == null) return 0.0;
+
+    try {
+      final parsed = double.tryParse(value.toString());
+      return parsed ?? 0.0;
+    } catch (e) {
+      print('Error parsing amount: $value');
+      return 0.0;
     }
   }
 
@@ -428,9 +505,11 @@ class _ManagementDashboard extends State<ManagementDashboard> {
   Future<int> getNoOfIp({String? fromDate, String? toDate}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int ipCount = 0;
+
     setState(() {
       isTotalIpLoading = true;
     });
+
     DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
     DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
 
@@ -452,26 +531,23 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
-        if (!data.containsKey('ipNumber')) continue;
-
         try {
-          final ipDetailsSnapshot = await fireStore
+          final ipTicketsSnapshot = await fireStore
               .collection('patients')
               .doc(doc.id)
-              .collection('ipPrescription')
-              .doc('details')
+              .collection('ipTickets')
               .get();
 
-          if (ipDetailsSnapshot.exists) {
-            final ipData = ipDetailsSnapshot.data() as Map<String, dynamic>;
-            final ipDateStr = ipData['date'];
+          for (var ipDoc in ipTicketsSnapshot.docs) {
+            final ipData = ipDoc.data();
+            final ipDateStr = ipData['ipAdmitDate'];
 
             if (isInRange(ipDateStr)) {
               ipCount++;
             }
           }
         } catch (e) {
-          print('Error fetching ipPrescription for ${doc.id}: $e');
+          print('Error fetching ipTickets for ${doc.id}: $e');
         }
       }
 
@@ -574,6 +650,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       });
     }
   }
+
   String message = '';
   String status = '';
   Color backgroundColor = Colors.yellow.shade100;
@@ -606,6 +683,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     super.dispose();
     _timer?.cancel();
   }
+
   void fetchMessage() async {
     // Replace with your actual Firestore document path
     var doc = await FirebaseFirestore.instance
@@ -636,6 +714,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -784,73 +863,79 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.075),
-              status == 'All Good' ? SizedBox():
-              Container(
-                padding: EdgeInsets.all(16),
-                margin: EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: backgroundColor, // Dynamic background color
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderColor), // Dynamic border color
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          icon, // Dynamic icon based on status
-                          color: borderColor,
-                        ),
-                        SizedBox(width: 8), // Space between icon and text
-                        Expanded(
-                          child: Text(
-                            '${message} ', // Dynamic message
-                            style: TextStyle(
-                              color: borderColor, // Apply dynamic color here
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8), // Space between message and contact info
-                    Align(
-                      alignment: Alignment.centerRight, // Align to the right
-                      child: TextButton(
-                        onPressed: () async {
-                          // Launch the URL when the button is pressed
-                          final Uri url = Uri.parse('https://foxtonresearch.com/');
-                          if (await canLaunch(url.toString())) {
-                            await launch(url.toString());
-                          } else {
-                            throw 'Could not launch $url';
-                          }
-                        },
-
-                        child: Text(
-                          "If you have any queries, contact us", // Contact information
-                          style: TextStyle(
-                            color: Colors.blue, // Apply dynamic color here
-                            fontWeight: FontWeight.bold,
-                           // Underline the text
-                          ),
-                        ),
+              status == 'All Good'
+                  ? SizedBox()
+                  : Container(
+                      padding: EdgeInsets.all(16),
+                      margin: EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: backgroundColor, // Dynamic background color
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: borderColor), // Dynamic border color
                       ),
-                    )
-
-                  ],
-                ),
-              ),
-
-
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                icon, // Dynamic icon based on status
+                                color: borderColor,
+                              ),
+                              SizedBox(width: 8), // Space between icon and text
+                              Expanded(
+                                child: Text(
+                                  '${message} ', // Dynamic message
+                                  style: TextStyle(
+                                    color:
+                                        borderColor, // Apply dynamic color here
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  8), // Space between message and contact info
+                          Align(
+                            alignment:
+                                Alignment.centerRight, // Align to the right
+                            child: TextButton(
+                              onPressed: () async {
+                                // Launch the URL when the button is pressed
+                                final Uri url =
+                                    Uri.parse('https://foxtonresearch.com/');
+                                if (await canLaunch(url.toString())) {
+                                  await launch(url.toString());
+                                } else {
+                                  throw 'Could not launch $url';
+                                }
+                              },
+                              child: Text(
+                                "If you have any queries, contact us", // Contact information
+                                style: TextStyle(
+                                  color:
+                                      Colors.blue, // Apply dynamic color here
+                                  fontWeight: FontWeight.bold,
+                                  // Underline the text
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
               SizedBox(height: screenHeight * 0.075),
               Row(
                 children: [
                   Expanded(
                     child: buildDashboardCard(
                       title: 'No Of OP',
-                      value: isTotalOpLoading ? 'Calculating...' : noOfOp.toString(),
+                      value: isTotalOpLoading
+                          ? 'Calculating...'
+                          : noOfOp.toString(),
                       icon: Icons.person,
                       width: double.infinity,
                       height: screenHeight * 0.18,
@@ -860,7 +945,9 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   Expanded(
                     child: buildDashboardCard(
                       title: 'No Of IP',
-                      value: isTotalIpLoading ? 'Calculating...' : noOfIp.toString(),
+                      value: isTotalIpLoading
+                          ? 'Calculating...'
+                          : noOfIp.toString(),
                       icon: Icons.person,
                       width: double.infinity,
                       height: screenHeight * 0.18,
@@ -879,7 +966,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   SizedBox(width: 12),
                   Expanded(
                     child: buildDashboardCard(
-                      title: 'Today No of Patients',
+                      title: 'Today No of OP Patients',
                       value: todayNoOfOp.toString(),
                       icon: Icons.person_add_alt,
                       width: double.infinity,
@@ -888,12 +975,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
-
-
-
               SizedBox(height: screenHeight * 0.05),
               Row(
-               
                 children: [
                   Expanded(
                     child: buildDashboardCard(
@@ -944,7 +1027,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
-
             ],
           ),
         ),
