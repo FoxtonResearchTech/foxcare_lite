@@ -47,9 +47,10 @@ class _IpAdmitList extends State<IpAdmitList> {
 
   DateTime now = DateTime.now();
   final List<String> headers = [
-    'OP Ticket',
-    'IP No',
+    'IP Ticket',
+    'OP No',
     'IP Admission Date',
+    'Room Allotment Date',
     'Name',
     'City',
     'Doctor Name',
@@ -67,119 +68,79 @@ class _IpAdmitList extends State<IpAdmitList> {
     balanceAmount.text = balance.toStringAsFixed(2);
   }
 
-  Future<void> addPaymentAmount(String docID) async {
+  Future<void> fetchData({
+    String? ipNumber,
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
-      Map<String, dynamic> data = {
-        'ipAdmissionTotalAmount': amount.text,
-        'ipAdmissionCollected': collected.text,
-        'ipAdmissionBalance': balanceAmount.text,
-      };
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(docID)
-          .collection('ipAdmissionPayments')
-          .doc('payments')
-          .set(data);
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(docID)
-          .collection('ipAdmissionPayments')
-          .doc('payments')
-          .collection('additionalAmount')
-          .doc()
-          .set({
-        'additionalAmount': amount.text,
-        'reason': 'Initial Amount',
-        'date': dateTime.year.toString() +
-            '-' +
-            dateTime.month.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.day.toString().padLeft(2, '0'),
-        'time': dateTime.hour.toString() +
-            ':' +
-            dateTime.minute.toString().padLeft(2, '0'),
-      });
-      CustomSnackBar(context,
-          message: 'Additional Fees Added Successfully',
-          backgroundColor: Colors.green);
-    } catch (e) {
-      CustomSnackBar(context,
-          message: 'Failed to Add Fees', backgroundColor: Colors.red);
-    }
-  }
+      final patientQuerySnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
-  Future<void> fetchData(
-      {String? ipNumber,
-      String? singleDate,
-      String? fromDate,
-      String? toDate}) async {
-    try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-      if (ipNumber != null) {
-        query = query.where('ipNumber', isEqualTo: ipNumber);
-      } else if (singleDate != null) {
-        query = query.where('date', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('date', isGreaterThanOrEqualTo: fromDate)
-            .where('date', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
+      if (patientQuerySnapshot.docs.isEmpty) {
+        print("No patient records found");
         setState(() {
           tableData = [];
         });
         return;
       }
+
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('ipNumber')) continue;
+      for (var doc in patientQuerySnapshot.docs) {
+        final data = doc.data();
 
-        String tokenNo = '';
-        bool hasIpPrescription = false;
-        bool hasIpPayment = false;
+        final ipTicketsSnapshot = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(doc.id)
+            .collection('ipTickets')
+            .where('discharged', isEqualTo: false)
+            .get();
 
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+        for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+          final ipData = ipTicketDoc.data();
+          final String? roomAllotmentDateStr =
+              ipData['roomAllotmentDate']?.toString();
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
+          bool match = true;
+
+          if ((ipNumber != null && ipNumber.isNotEmpty) ||
+              (singleDate != null && singleDate.isNotEmpty) ||
+              (fromDate != null &&
+                  fromDate.isNotEmpty &&
+                  toDate != null &&
+                  toDate.isNotEmpty)) {
+            match = false;
+
+            if (ipNumber != null &&
+                ipNumber.isNotEmpty &&
+                ipData['ipTicket'].toString() == ipNumber) {
+              match = true;
+            } else if (singleDate != null &&
+                singleDate.isNotEmpty &&
+                roomAllotmentDateStr == singleDate) {
+              match = true;
+            } else if (fromDate != null &&
+                fromDate.isNotEmpty &&
+                toDate != null &&
+                toDate.isNotEmpty &&
+                roomAllotmentDateStr != null &&
+                roomAllotmentDateStr.compareTo(fromDate) >= 0 &&
+                roomAllotmentDateStr.compareTo(toDate) <= 0) {
+              match = true;
             }
           }
-          final ipPrescriptionSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .get();
 
-          if (ipPrescriptionSnapshot.docs.isNotEmpty) {
-            hasIpPrescription = true;
-          }
-        } catch (e) {
-          print('Error fetching token No for patient ${doc.id}: $e');
-        }
+          if (!match) continue;
 
-        if (hasIpPrescription) {
           final ipAdmissionSnapshot = await FirebaseFirestore.instance
               .collection('patients')
               .doc(doc.id)
               .collection('ipAdmissionPayments')
               .get();
 
-          if (ipAdmissionSnapshot.docs.isNotEmpty) {
-            hasIpPayment = true;
-          }
+          bool hasIpPayment = ipAdmissionSnapshot.docs.isNotEmpty;
 
           DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
               .collection('patients')
@@ -191,37 +152,33 @@ class _IpAdmitList extends State<IpAdmitList> {
           Map<String, dynamic>? detailsData = detailsDoc.exists
               ? detailsDoc.data() as Map<String, dynamic>?
               : null;
-          String ipAdmissionTotalAmountStr =
-              detailsData?['ipAdmissionTotalAmount'] ?? '0';
-          String ipAdmissionCollectedStr =
-              detailsData?['ipAdmissionCollected'] ?? '0';
-          String ipAdmissionDate = detailsData?['date'] ?? 'N/A';
 
           double ipAdmissionTotalAmount =
-              double.tryParse(ipAdmissionTotalAmountStr) ?? 0;
+              double.tryParse(detailsData?['ipAdmissionTotalAmount'] ?? '0') ??
+                  0;
           double ipAdmissionCollected =
-              double.tryParse(ipAdmissionCollectedStr) ?? 0;
-
+              double.tryParse(detailsData?['ipAdmissionCollected'] ?? '0') ?? 0;
           double balance = ipAdmissionTotalAmount - ipAdmissionCollected;
 
           fetchedData.add({
-            'OP Ticket': tokenNo,
-            'IP No': data['ipNumber']?.toString() ?? 'N/A',
-            'IP Admission Date': ipAdmissionDate,
+            'IP Ticket': ipData['ipTicket']?.toString() ?? '',
+            'OP No': data['opNumber']?.toString() ?? 'N/A',
+            'IP Admission Date': ipData['ipAdmitDate']?.toString() ?? '',
+            'Room Allotment Date': roomAllotmentDateStr ?? '',
             'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
                 .trim(),
             'City': data['city']?.toString() ?? 'N/A',
-            'Doctor Name': data['doctorName']?.toString() ?? 'N/A',
-            'Total Amount': ipAdmissionTotalAmountStr,
-            'Collected': ipAdmissionCollectedStr,
-            'Balance': balance,
+            'Doctor Name': ipData['doctorName']?.toString() ?? '',
+            'Total Amount': ipAdmissionTotalAmount.toStringAsFixed(2),
+            'Collected': ipAdmissionCollected.toStringAsFixed(2),
+            'Balance': balance.toStringAsFixed(2),
           });
         }
       }
 
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['OP Ticket'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['OP Ticket'].toString()) ?? 0;
+        int tokenA = int.tryParse(a['IP Ticket'].toString()) ?? 0;
+        int tokenB = int.tryParse(b['IP Ticket'].toString()) ?? 0;
         return tokenA.compareTo(tokenB);
       });
 
@@ -256,10 +213,14 @@ class _IpAdmitList extends State<IpAdmitList> {
       (sum, entry) {
         var value = entry['Total Amount'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }
@@ -270,10 +231,14 @@ class _IpAdmitList extends State<IpAdmitList> {
       (sum, entry) {
         var value = entry['Collected'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }

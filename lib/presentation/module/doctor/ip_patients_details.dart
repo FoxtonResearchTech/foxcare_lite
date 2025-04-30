@@ -183,6 +183,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
           if (matches) {
             String tokenNo = '';
             String tokenDate = '';
+            bool hasIpPrescription = false;
 
             try {
               final tokenSnapshot = await FirebaseFirestore.instance
@@ -204,9 +205,10 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                     .collection('patients')
                     .doc(patientId)
                     .collection('ipPrescription')
+                    .limit(1)
                     .get();
 
-                if (ipPrescriptionSnapshot.docs.isNotEmpty) {
+                if (ipPrescriptionSnapshot.size > 0) {
                   hasIpPrescription = true;
                 }
               }

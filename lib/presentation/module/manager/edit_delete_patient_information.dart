@@ -76,7 +76,7 @@ class _EditDeletePatientInformation
           'OP NO': data['opNumber'] ?? 'N/A',
           'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
               .trim(),
-          'Place': data['state'] ?? 'N/A',
+          'Place': data['city'] ?? 'N/A',
           'Phone No': data['phone1'] ?? 'N/A',
           'DOB': data['dob'] ?? 'N/A',
           'Edit': TextButton(

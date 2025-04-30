@@ -28,6 +28,8 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
 
   final List<String> headers1 = [
     'Patient ID',
+    'OP / IP Ticket',
+    'Ticket Type',
     'Name',
     'Place',
     'Phone No',
@@ -50,18 +52,17 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
     try {
       Query query = FirebaseFirestore.instance.collection('patients');
 
-      if (opNumber != null) {
-        query = query.where('opNumber', isEqualTo: opNumber);
-      } else if (phoneNumber != null) {
+      if (phoneNumber != null) {
         query = query.where(Filter.or(
           Filter('phone1', isEqualTo: phoneNumber),
           Filter('phone2', isEqualTo: phoneNumber),
         ));
       }
+
       final QuerySnapshot snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
-        print("No records found");
+        print("No patient records found");
         setState(() {
           tableData1 = [];
         });
@@ -72,33 +73,56 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        // if (!data.containsKey('opNumber')) continue;
-        bool hasOpNumber =
-            data.containsKey('opNumber') && data['opNumber'] != null;
-        fetchedData.add(
-          {
-            'Patient ID': hasOpNumber
-                ? data['opNumber'] ?? 'N/A'
-                : data['ipNumber'] ?? 'N/A',
+        final docRef = doc.reference;
+
+        final opTicketsSnapshot = await docRef.collection('opTickets').get();
+        for (var opDoc in opTicketsSnapshot.docs) {
+          if (opNumber != null && opNumber.isNotEmpty) {
+            if (opDoc.data()['opTicket'] != opNumber) continue;
+          }
+
+          fetchedData.add({
+            'Patient ID': data['opNumber'] ?? 'N/A',
+            'OP / IP Ticket': opDoc.id,
+            'Ticket Type': 'OP',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'Place': data['city'] ?? 'N/A',
+            'Phone No': data['phone1'] ?? 'N/A',
+            'DOB': data['dob'] ?? 'N/A',
+          });
+        }
+
+        // Fetch all ipTickets
+        final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
+        for (var ipDoc in ipTicketsSnapshot.docs) {
+          if (opNumber != null && opNumber.isNotEmpty) {
+            if (ipDoc.data()['ipTicket'] != opNumber) continue;
+          }
+
+          fetchedData.add({
+            'Patient ID': data['opNumber'] ?? 'N/A',
+            'OP / IP Ticket': ipDoc.id,
+            'Ticket Type': 'IP',
             'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
                 .trim(),
             'Place': data['state'] ?? 'N/A',
             'Phone No': data['phone1'] ?? 'N/A',
             'DOB': data['dob'] ?? 'N/A',
-          },
-        );
+          });
+        }
       }
+
       setState(() {
         tableData1 = fetchedData;
       });
     } catch (e) {
-      print('Error fetching data from Firestore: $e');
+      print('Error fetching data: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 

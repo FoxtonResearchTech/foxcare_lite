@@ -161,6 +161,24 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
           'roomNumber': selectedRoom
         },
       }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .collection('ipTickets')
+          .doc(widget.ipNumber)
+          .set({
+        'roomAllotmentDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'ipAdmissionTotalAmount': _ipAdmissionTotalAmount.text,
+        'ipAdmissionCollected': _ipAdmissionCollected.text,
+        'ipAdmission': {
+          'roomType': selectedIPAdmissionValue,
+          'roomNumber': selectedRoom
+        },
+      }, SetOptions(merge: true));
 
       CustomSnackBar(context,
           message: 'Details saved successfully!',

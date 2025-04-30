@@ -44,19 +44,11 @@ class _OpTicketCollection extends State<OpTicketCollection> {
     String? toDate,
   }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-
-      if (singleDate != null) {
-        query = query.where('tokenDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('tokenDate', isGreaterThanOrEqualTo: fromDate)
-            .where('tokenDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
+      final QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       if (snapshot.docs.isEmpty) {
-        print("No records found");
+        print("No patient records found");
         setState(() {
           tableData = [];
         });
@@ -67,62 +59,61 @@ class _OpTicketCollection extends State<OpTicketCollection> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        if (!data.containsKey('tokenDate')) continue;
-        String tokenNo = '';
+        final docRef = doc.reference;
 
-        try {
-          final tokenSnapshot = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+        final opTicketsSnapshot = await docRef.collection('opTickets').get();
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data();
-            if (tokenData != null && tokenData['tokenNumber'] != null) {
-              tokenNo = tokenData['tokenNumber'].toString();
-            }
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+          final ticketDate = ticketData['tokenDate']?.toString();
+
+          if (singleDate != null && ticketDate != singleDate) continue;
+
+          if (fromDate != null &&
+              toDate != null &&
+              (ticketDate == null ||
+                  ticketDate.compareTo(fromDate) < 0 ||
+                  ticketDate.compareTo(toDate) > 0)) {
+            continue;
           }
-        } catch (e) {
-          print('Error fetching token No for patient ${doc.id}: $e');
-        }
-        double opAmount =
-            double.tryParse(data['opTicketTotalAmount']?.toString() ?? '0') ??
-                0;
-        double opAmountCollected = double.tryParse(
-                data['opTicketCollectedAmount']?.toString() ?? '0') ??
-            0;
-        double balance = opAmount - opAmountCollected;
 
-        fetchedData.add({
-          'OP Ticket': tokenNo,
-          'OP No': data['opNumber']?.toString() ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'City': data['city']?.toString() ?? 'N/A',
-          'Doctor Name': data['doctorName']?.toString() ?? 'N/A',
-          'Total Amount': data['opTicketTotalAmount']?.toString() ?? '0',
-          'Collected': data['opTicketCollectedAmount']?.toString() ?? '0',
-          'Balance': balance,
-          'Pay': TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return PaymentDialog(
+          double opAmount = double.tryParse(
+                  ticketData['opTicketTotalAmount']?.toString() ?? '0') ??
+              0;
+          double opAmountCollected = double.tryParse(
+                  ticketData['opTicketCollectedAmount']?.toString() ?? '0') ??
+              0;
+          double balance = opAmount - opAmountCollected;
+
+          fetchedData.add({
+            'OP Ticket': ticketDoc.id,
+            'OP No': data['opNumber']?.toString() ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'City': data['city']?.toString() ?? 'N/A',
+            'Doctor Name': ticketData['doctorName']?.toString() ?? 'N/A',
+            'Total Amount': opAmount.toString(),
+            'Collected': opAmountCollected.toString(),
+            'Balance': balance,
+            'Pay': TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return PaymentDialog(
                       patientID: data['opNumber'],
                       firstName: data['firstName'],
                       lastName: data['lastName'],
                       city: data['city'],
-                      balance: balance.toString());
-                },
-              );
-            },
-            child: CustomText(text: 'Pay'),
-          ),
-        });
+                      balance: balance.toString(),
+                    );
+                  },
+                );
+              },
+              child: CustomText(text: 'Pay'),
+            ),
+          });
+        }
       }
 
       fetchedData.sort((a, b) {
@@ -133,6 +124,9 @@ class _OpTicketCollection extends State<OpTicketCollection> {
 
       setState(() {
         tableData = fetchedData;
+        _totalAmountCollected();
+        _totalCollected();
+        _totalBalance();
       });
     } catch (e) {
       print('Error fetching data: $e');
@@ -162,10 +156,14 @@ class _OpTicketCollection extends State<OpTicketCollection> {
       (sum, entry) {
         var value = entry['Total Amount'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }
@@ -176,10 +174,14 @@ class _OpTicketCollection extends State<OpTicketCollection> {
       (sum, entry) {
         var value = entry['Collected'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }
@@ -190,11 +192,9 @@ class _OpTicketCollection extends State<OpTicketCollection> {
       (sum, entry) {
         var value = entry['Balance'];
         if (value == null) return sum;
-        // Convert string to double safely
         if (value is String) {
           value = double.tryParse(value) ?? 0.0;
         }
-        // Ensure value is double before conversion to int
         if (value is double) {
           value = value.toInt();
         }
