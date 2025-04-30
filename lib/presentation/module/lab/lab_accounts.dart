@@ -35,28 +35,24 @@ class _LabAccountsState extends State<LabAccounts> {
     'Report No',
     'Name',
     'OP Number',
+    'OP Ticket',
     'Total Amount',
     'Collected',
     'Balance',
   ];
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      final QuerySnapshot patientsSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
-      if (singleDate != null) {
-        query = query.where('reportDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
+      if (patientsSnapshot.docs.isEmpty) {
+        print("No patient records found");
         setState(() {
           tableData = [];
         });
@@ -65,28 +61,47 @@ class _LabAccountsState extends State<LabAccounts> {
 
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('reportNo')) continue;
-        if (!data.containsKey('reportDate')) continue;
-        if (!data.containsKey('opNumber')) continue;
+      for (var patientDoc in patientsSnapshot.docs) {
+        final patientData = patientDoc.data() as Map<String, dynamic>;
 
-        fetchedData.add({
-          'Report Date': data['reportDate']?.toString() ?? 'N/A',
-          'Report No': data['reportNo']?.toString() ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'OP Number': data['opNumber']?.toString() ?? 'N/A',
-          'Total Amount': data['labTotalAmount']?.toString() ?? '0',
-          'Collected': data['labCollected']?.toString() ?? '0',
-          'Balance': data['labBalance']?.toString() ?? '0',
-        });
+        final opTicketsSnapshot =
+            await patientDoc.reference.collection('opTickets').get();
+
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+          if (!ticketData.containsKey('reportNo') ||
+              !ticketData.containsKey('reportDate')) continue;
+
+          final reportDate = ticketData['reportDate']?.toString();
+          if (singleDate != null && reportDate != singleDate) continue;
+          if (fromDate != null &&
+              toDate != null &&
+              (reportDate == null ||
+                  reportDate.compareTo(fromDate) < 0 ||
+                  reportDate.compareTo(toDate) > 0)) {
+            continue;
+          }
+
+          fetchedData.add({
+            'Report Date': reportDate ?? 'N/A',
+            'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
+            'Name':
+                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                    .trim(),
+            'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
+            'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+            'Total Amount': ticketData['labTotalAmount']?.toString() ?? '0',
+            'Collected': ticketData['labCollected']?.toString() ?? '0',
+            'Balance': ticketData['labBalance']?.toString() ?? '0',
+          });
+        }
       }
 
+      // Sort by report number
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
+        int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
+        int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
+        return aNo.compareTo(bNo);
       });
 
       setState(() {

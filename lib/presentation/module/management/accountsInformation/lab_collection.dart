@@ -54,6 +54,7 @@ class _LabCollection extends State<LabCollection> {
   final List<String> headers = [
     'Report No',
     'Report Date',
+    'OP Ticket',
     'OP No',
     'Name',
     'City',
@@ -70,19 +71,11 @@ class _LabCollection extends State<LabCollection> {
     String? toDate,
   }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-
-      if (singleDate != null) {
-        query = query.where('reportDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
+      final QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       if (snapshot.docs.isEmpty) {
-        print("No records found");
+        print("No patient records found");
         setState(() {
           tableData = [];
         });
@@ -93,42 +86,66 @@ class _LabCollection extends State<LabCollection> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        if (!data.containsKey('reportDate')) continue;
+        final docRef = doc.reference;
 
-        double opAmount =
-            double.tryParse(data['labTotalAmount']?.toString() ?? '0') ?? 0;
-        double opAmountCollected =
-            double.tryParse(data['labCollected']?.toString() ?? '0') ?? 0;
-        double balance = opAmount - opAmountCollected;
+        final opTicketsSnapshot = await docRef.collection('opTickets').get();
 
-        fetchedData.add({
-          'OP No': data['opNumber']?.toString() ?? 'N/A',
-          'Report No': data['reportNo']?.toString() ?? 'N/A',
-          'Report Date': data['reportDate']?.toString() ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'City': data['city']?.toString() ?? 'N/A',
-          'Total Amount': data['labTotalAmount']?.toString() ?? '0',
-          'Collected': data['labCollected']?.toString() ?? '0',
-          'Balance': balance,
-          'Pay': TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return PaymentDialog(
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+          if (!ticketData.containsKey('reportNo')) continue;
+          if (!ticketData.containsKey('reportDate')) continue;
+
+          final ticketDate = ticketData['tokenDate']?.toString();
+
+          if (singleDate != null && ticketDate != singleDate) continue;
+
+          if (fromDate != null &&
+              toDate != null &&
+              (ticketDate == null ||
+                  ticketDate.compareTo(fromDate) < 0 ||
+                  ticketDate.compareTo(toDate) > 0)) {
+            continue;
+          }
+
+          double opAmount = double.tryParse(
+                  ticketData['labTotalAmount']?.toString() ?? '0') ??
+              0;
+          double opAmountCollected =
+              double.tryParse(ticketData['labCollected']?.toString() ?? '0') ??
+                  0;
+          double balance = opAmount - opAmountCollected;
+
+          fetchedData.add({
+            'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
+            'Report Date': ticketData['reportDate']?.toString() ?? 'N/A',
+            'OP Ticket': ticketDoc.id,
+            'OP No': data['opNumber']?.toString() ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'City': data['city']?.toString() ?? 'N/A',
+            'Doctor Name': ticketData['doctorName']?.toString() ?? 'N/A',
+            'Total Amount': opAmount.toString(),
+            'Collected': opAmountCollected.toString(),
+            'Balance': balance,
+            'Pay': TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return PaymentDialog(
                       patientID: data['opNumber'],
                       firstName: data['firstName'],
                       lastName: data['lastName'],
                       city: data['city'],
-                      balance: balance.toString());
-                },
-              );
-            },
-            child: CustomText(text: 'Pay'),
-          ),
-        });
+                      balance: balance.toString(),
+                    );
+                  },
+                );
+              },
+              child: CustomText(text: 'Pay'),
+            ),
+          });
+        }
       }
 
       fetchedData.sort((a, b) {
@@ -139,6 +156,9 @@ class _LabCollection extends State<LabCollection> {
 
       setState(() {
         tableData = fetchedData;
+        _totalAmountCollected();
+        _totalCollected();
+        _totalBalance();
       });
     } catch (e) {
       print('Error fetching data: $e');
@@ -168,10 +188,14 @@ class _LabCollection extends State<LabCollection> {
       (sum, entry) {
         var value = entry['Total Amount'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }
@@ -182,10 +206,14 @@ class _LabCollection extends State<LabCollection> {
       (sum, entry) {
         var value = entry['Collected'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }

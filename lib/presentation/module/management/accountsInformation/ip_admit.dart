@@ -70,12 +70,13 @@ class _IpAdmit extends State<IpAdmit> {
     balanceAmount.text = balance.toStringAsFixed(2);
   }
 
-  Future<void> addPaymentAmount(String docID) async {
+  Future<void> addPaymentAmount(String docID, String ipTicket) async {
     try {
       Map<String, dynamic> data = {
         'ipAdmissionTotalAmount': amount.text,
         'ipAdmissionCollected': collected.text,
         'ipAdmissionBalance': balanceAmount.text,
+        'patientIpTicket': ipTicket,
         'date': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
@@ -86,18 +87,20 @@ class _IpAdmit extends State<IpAdmit> {
           .collection('patients')
           .doc(docID)
           .collection('ipAdmissionPayments')
-          .doc('payments')
+          .doc('payments$ipTicket')
           .set(data);
       await FirebaseFirestore.instance
           .collection('patients')
           .doc(docID)
           .collection('ipAdmissionPayments')
-          .doc('payments')
+          .doc('payments$ipTicket')
           .collection('additionalAmount')
           .doc()
           .set({
         'additionalAmount': amount.text,
         'reason': 'Initial Amount',
+        'ipTicket': ipTicket,
+        'collectedTillNow': collected.text,
         'date': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
@@ -182,19 +185,20 @@ class _IpAdmit extends State<IpAdmit> {
 
           if (!match) continue;
 
-          final ipAdmissionSnapshot = await FirebaseFirestore.instance
+          final ipPaymentDoc = await FirebaseFirestore.instance
               .collection('patients')
               .doc(doc.id)
               .collection('ipAdmissionPayments')
+              .doc("payments${ipData['ipTicket'].toString()}")
               .get();
 
-          bool hasIpPayment = ipAdmissionSnapshot.docs.isNotEmpty;
+          bool hasIpPayment = ipPaymentDoc.exists;
 
           DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
               .collection('patients')
               .doc(doc.id)
               .collection('ipAdmissionPayments')
-              .doc('payments')
+              .doc('payments${ipData['ipTicket'].toString()}')
               .get();
 
           Map<String, dynamic>? detailsData = detailsDoc.exists
@@ -227,6 +231,7 @@ class _IpAdmit extends State<IpAdmit> {
                         context: context,
                         builder: (_) => PaymentDialog(
                           timeLine: true,
+                          ipTicket: ipData['ipTicket'],
                           patientID: data['opNumber'],
                           firstName: data['firstName'],
                           lastName: data['lastName'],
@@ -273,11 +278,13 @@ class _IpAdmit extends State<IpAdmit> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                addPaymentAmount(doc.id);
+                                addPaymentAmount(
+                                    doc.id, ipData['ipTicket'].toString());
                                 fetchData(ipNumber: ipNumber);
                                 showDialog(
                                   context: context,
                                   builder: (_) => IpAdmitPaymentDialog(
+                                    ipTicket: ipData['ipTicket'].toString(),
                                     patientID: data['opNumber'],
                                     firstName: data['firstName'],
                                     lastName: data['lastName'],
@@ -312,6 +319,7 @@ class _IpAdmit extends State<IpAdmit> {
                 showDialog(
                   context: context,
                   builder: (_) => IpAdmitAdditionalAmount(
+                    ipTicket: ipData['ipTicket'].toString(),
                     docId: doc.id,
                     fetchData: fetchData,
                     timeLine: true,

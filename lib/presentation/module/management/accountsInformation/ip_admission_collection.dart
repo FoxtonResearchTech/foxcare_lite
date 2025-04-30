@@ -62,10 +62,8 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
     String? toDate,
   }) async {
     try {
-      // Querying the 'patients' collection
       Query query = FirebaseFirestore.instance.collection('patients');
 
-      // Fetching patient data with filtering based on roomAllotmentDate
       final QuerySnapshot snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
@@ -81,17 +79,15 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
-        // Fetching ipTickets subcollection for each patient
         final ipTicketsSnapshot =
             await doc.reference.collection('ipTickets').get();
 
         for (var ipDoc in ipTicketsSnapshot.docs) {
           final ticketData = ipDoc.data();
 
-          // Filtering ipTickets based on roomAllotmentDate
           if (singleDate != null &&
               ticketData['roomAllotmentDate'] != singleDate) {
-            continue; // Skip if the roomAllotmentDate doesn't match singleDate
+            continue;
           }
 
           if (fromDate != null &&

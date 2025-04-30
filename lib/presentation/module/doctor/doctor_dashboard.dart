@@ -32,6 +32,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
 
   final headers1 = [
     'OP Number',
+    'OP Ticket',
     'Token',
     'Name',
     'Place',
@@ -279,45 +280,59 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     try {
-      final QuerySnapshot snapshot = await fireStore
+      final QuerySnapshot patientSnapshot = await fireStore
           .collection('patients')
-          .where('doctorName', isEqualTo: widget.doctorName)
           .where('opAdmissionDate', isEqualTo: today)
           .get();
 
-      int missingCount = 0;
+      int matchingCount = 0;
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
+      for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(doc.id)
-            .collection('tokens')
-            .doc('currentToken')
-            .get();
+
+        DocumentSnapshot detailsDoc =
+            await doc.reference.collection('tokens').doc('currentToken').get();
 
         Map<String, dynamic>? detailsData = detailsDoc.exists
             ? detailsDoc.data() as Map<String, dynamic>?
             : null;
 
-        if (data.containsKey('Examination')) {
-          fetchedData.add({
-            'OP Number': data['opNumber'] ?? 'N/A',
-            'Token': detailsData?['tokenNumber'] ?? 'N/A',
-            'Name': data['firstName'] + ' ' + data['lastName'] ?? 'N/A',
-            'Place': data['city'] ?? 'N/A',
-            'Phone Number': data['phone1'] ?? 'N/A',
-            'Examinations': data['Examination'],
-            'Status': CustomDropdown(
+        final opTicketsSnapshot = await doc.reference
+            .collection('opTickets')
+            .where('doctorName', isEqualTo: widget.doctorName)
+            .get();
+
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+
+          if (ticketData.containsKey('Examination')) {
+            matchingCount++;
+
+            fetchedData.add({
+              'OP Number': data['opNumber'] ?? 'N/A',
+              'OP Ticket': ticketDoc.id,
+              'Token': detailsData?['tokenNumber']?.toString() ?? 'N/A',
+              'Name':
+                  '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'.trim(),
+              'Place': data['city'] ?? 'N/A',
+              'Phone Number': data['phone1'] ?? 'N/A',
+              'Examinations': ticketData['Examination'],
+              'Status': CustomDropdown(
                 focusColor: Colors.white,
                 borderColor: Colors.white,
                 label: '',
-                items: ['Not Attending Call', 'Come Later', 'Others'],
-                onChanged: (value) {}),
-          });
+                items: const ['Not Attending Call', 'Come Later', 'Others'],
+                onChanged: (value) {},
+              ),
+            });
+
+            break;
+          }
         }
       }
+
+      // Sort by token number
       fetchedData.sort((a, b) {
         int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
         int tokenB = int.tryParse(b['Token'].toString()) ?? 0;
@@ -328,7 +343,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
         tableData1 = fetchedData;
       });
 
-      return missingCount;
+      return matchingCount;
     } catch (e) {
       print('Error fetching documents: $e');
       return 0;
@@ -527,6 +542,15 @@ class _DoctorDashboard extends State<DoctorDashboard> {
                 ),
                 SizedBox(height: screenHeight * 0.03),
                 CustomDataTable(
+                  columnWidths: const {
+                    0: FixedColumnWidth(100.0),
+                    1: FixedColumnWidth(100.0),
+                    2: FixedColumnWidth(70.0),
+                    3: FixedColumnWidth(150.0),
+                    4: FixedColumnWidth(125.0),
+                    5: FixedColumnWidth(150.0),
+                    6: FixedColumnWidth(200.0),
+                  },
                   headerColor: Colors.white,
                   headerBackgroundColor: AppColors.blue,
                   headers: headers1,

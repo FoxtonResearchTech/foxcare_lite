@@ -147,7 +147,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                 'Address': patientData['address1'] ?? 'N/A',
                 'PinCode': patientData['pincode'] ?? 'N/A',
                 'Status': opTicketData['status'] ?? 'N/A',
-                'Primary Info': patientData['otherComments'] ?? 'N/A',
+                'Primary Info': opTicketData['otherComments'] ?? 'N/A',
                 'Action': TextButton(
                     onPressed: () {
                       Navigator.push(

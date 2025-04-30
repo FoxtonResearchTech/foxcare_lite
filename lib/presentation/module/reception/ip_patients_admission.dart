@@ -29,9 +29,10 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
   TextEditingController _phoneNumber = TextEditingController();
 
   final List<String> headers1 = [
-    'Token NO',
-    'IP Admit Date',
     'IP Ticket',
+    'OP NO',
+    'IP Admit Date',
+    'Status',
     'Name',
     'Age',
     'Place',
@@ -134,7 +135,11 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
             } catch (e) {
               print('Error fetching tokenNo for patient $patientId: $e');
             }
-
+            if (ipTicketData['discharged'] == true) {
+              print(
+                  'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
+              continue;
+            }
             fetchedData.add({
               'Token NO': tokenNo,
               'IP Admit Date': ipTicketData['ipAdmitDate'] ?? 'N/A',

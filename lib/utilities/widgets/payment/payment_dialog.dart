@@ -7,6 +7,8 @@ import '../textField/primary_textField.dart';
 
 class PaymentDialog extends StatefulWidget {
   final String? billNo;
+  final String? ipTicket;
+
   final String? partyName;
   final String? patientID;
   final String? firstName;
@@ -34,6 +36,7 @@ class PaymentDialog extends StatefulWidget {
     this.fetchData,
     this.initialPayment = false,
     this.initialBalance,
+    this.ipTicket,
   });
 
   @override
@@ -81,6 +84,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
     try {
       Map<String, dynamic> data = {
         'payedAmount': balance.text,
+        'payedBy': widget.ipTicket.toString(),
         'payedDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +
@@ -113,7 +117,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
           .collection('patients')
           .doc(docID)
           .collection('ipAdmissionPayments')
-          .doc('payments');
+          .doc('payments${widget.ipTicket.toString()}');
 
       DocumentSnapshot snapshot = await patientDoc.get();
 
@@ -157,23 +161,32 @@ class _PaymentDialogState extends State<PaymentDialog> {
 
       List<Map<String, dynamic>> tempPayments = [];
       for (var doc in querySnapshot.docs) {
-        if (doc.id == "payments") {
-          print("Skipping document: payment");
+        if (doc.id == "payments${widget.ipTicket.toString()}") {
+          print("Skipping document: ${doc.id}");
+          continue;
+        }
+
+        final data = doc.data() as Map<String, dynamic>;
+        if (data["payedBy"] != widget.ipTicket.toString()) {
+          print("Skipping document not matching payedBy: ${doc.id}");
           continue;
         }
 
         print("Fetched document: ${doc.id}");
 
         tempPayments.add({
-          "time": doc["payedTime"] ?? "00:00",
-          "date": doc["payedDate"] ?? "No Date",
-          "method": doc["paymentMode"] ?? "Unknown",
-          "paidAmount": doc["payedAmount"] ?? "₹0",
+          "time": data["payedTime"] ?? "00:00",
+          "date": data["payedDate"] ?? "No Date",
+          "method": data["paymentMode"] ?? "Unknown",
+          "paidAmount": data["payedAmount"] ?? "₹0",
         });
       }
+
       tempPayments.sort((a, b) {
-        DateTime dateTimeA = DateTime.parse("${a["date"]} ${a["time"]}");
-        DateTime dateTimeB = DateTime.parse("${b["date"]} ${b["time"]}");
+        DateTime dateTimeA =
+            DateTime.tryParse("${a["date"]} ${a["time"]}") ?? DateTime(1970);
+        DateTime dateTimeB =
+            DateTime.tryParse("${b["date"]} ${b["time"]}") ?? DateTime(1970);
         return dateTimeB.compareTo(dateTimeA);
       });
 

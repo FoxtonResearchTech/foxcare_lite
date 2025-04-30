@@ -146,7 +146,7 @@ class _IpAdmitList extends State<IpAdmitList> {
               .collection('patients')
               .doc(doc.id)
               .collection('ipAdmissionPayments')
-              .doc('payments')
+              .doc('payments${ipData['ipTicket'].toString()}')
               .get();
 
           Map<String, dynamic>? detailsData = detailsDoc.exists

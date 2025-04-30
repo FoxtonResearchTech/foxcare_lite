@@ -8,6 +8,8 @@ import '../text/primary_text.dart';
 class IpAdmitPaymentDialog extends StatefulWidget {
   final String? billNo;
   final String? partyName;
+  final String? ipTicket;
+
   final String? patientID;
   final String? firstName;
   final String? lastName;
@@ -25,6 +27,7 @@ class IpAdmitPaymentDialog extends StatefulWidget {
     this.partyName,
     super.key,
     this.docId,
+    this.ipTicket,
   });
 
   @override
@@ -52,6 +55,7 @@ class _IpAdmitPaymentDialog extends State<IpAdmitPaymentDialog> {
     try {
       Map<String, dynamic> data = {
         'payedAmount': balance.text,
+        'payedBy': widget.ipTicket.toString(),
         'payedDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +

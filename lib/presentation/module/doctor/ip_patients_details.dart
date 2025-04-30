@@ -215,6 +215,11 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
             } catch (e) {
               print('Error fetching tokenNo for patient $patientId: $e');
             }
+            if (ipTicketData['discharged'] == true) {
+              print(
+                  'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
+              continue;
+            }
 
             fetchedData.add({
               'Token NO': tokenNo,
@@ -229,7 +234,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
               'Address': patientData['address1'] ?? 'N/A',
               'PinCode': patientData['pincode'] ?? 'N/A',
               'Status': ipTicketData['status'] ?? 'N/A',
-              'Primary Info': patientData['otherComments'] ?? 'N/A',
+              'Primary Info': ipTicketData['otherComments'] ?? 'N/A',
               'Action': hasIpPrescription
                   ? TextButton(
                       onPressed: () {

@@ -6,6 +6,7 @@ import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
+import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
@@ -38,6 +39,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   List<Map<String, String>> searchResults = [];
   Map<String, String>? selectedPatient;
   String? selectedCounter;
+  bool isGeneratingToken = false;
 
   int tokenNumber = 0;
   String lastSavedDate = '';
@@ -111,12 +113,12 @@ class _OpTicketPageState extends State<OpTicketPage> {
   Future<void> _generateToken(String selectedPatientId) async {
     setState(() {
       tokenNumber++;
+      isGeneratingToken = true;
     });
 
     try {
       final firestore = FirebaseFirestore.instance;
 
-      await Future.delayed(const Duration(seconds: 1));
       DocumentSnapshot documentSnapshot =
           await firestore.collection('counters').doc('counterDoc').get();
 
@@ -188,6 +190,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
           );
         },
       );
+      setState(() {
+        isGeneratingToken = false;
+      });
+      clearFields();
       CustomSnackBar(context,
           message: 'Token saved: $storedTokenValue',
           backgroundColor: Colors.green);
@@ -195,6 +201,23 @@ class _OpTicketPageState extends State<OpTicketPage> {
       CustomSnackBar(context,
           message: 'Failed to save token: $e', backgroundColor: Colors.red);
     }
+  }
+
+  void clearFields() {
+    searchOpNumber.clear();
+    searchPhoneNumber.clear();
+    isSearchPerformed = false;
+    searchResults = [];
+    selectedPatient = null;
+    tokenDate.clear();
+    doctorName.clear();
+    specialization.clear();
+    bloodSugarLevel.clear();
+    temperature.clear();
+    bloodPressure.clear();
+    otherComments.clear();
+    opTicketTotalAmount.clear();
+    opTicketCollectedAmount.clear();
   }
 
   Future<void> incrementCounter() async {
@@ -844,17 +867,22 @@ class _OpTicketPageState extends State<OpTicketPage> {
           Row(
             children: [
               SizedBox(width: 425),
-              CustomButton(
-                label: 'Generate',
-                onPressed: () async {
-                  String? selectedPatientId = selectedPatient?['opNumber'];
-                  await initializeOpTicketID(selectedPatientId!);
-                  print(selectedPatientId);
-                  await incrementCounter();
-                  await _generateToken(selectedPatientId!);
-                },
-                width: 200,
-              ),
+              isGeneratingToken
+                  ? CircularProgressIndicator(
+                      color: AppColors.lightBlue,
+                    )
+                  : CustomButton(
+                      label: 'Generate',
+                      onPressed: () async {
+                        String? selectedPatientId =
+                            selectedPatient?['opNumber'];
+                        await initializeOpTicketID(selectedPatientId!);
+                        print(selectedPatientId);
+                        await incrementCounter();
+                        await _generateToken(selectedPatientId!);
+                      },
+                      width: 200,
+                    ),
             ],
           ),
         ],

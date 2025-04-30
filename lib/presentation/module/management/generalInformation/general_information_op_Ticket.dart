@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 
@@ -49,6 +50,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
 
   int tokenNumber = 0;
   String lastSavedDate = '';
+
+  bool isGeneratingToken = false;
 
   @override
   void initState() {
@@ -127,12 +130,12 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
   Future<void> _generateToken(String selectedPatientId) async {
     setState(() {
       tokenNumber++;
+      isGeneratingToken = true;
     });
 
     try {
       final firestore = FirebaseFirestore.instance;
 
-      await Future.delayed(const Duration(seconds: 1));
       DocumentSnapshot documentSnapshot =
           await firestore.collection('counters').doc('counterDoc').get();
 
@@ -204,6 +207,10 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
           );
         },
       );
+      setState(() {
+        isGeneratingToken = false;
+      });
+      clearFields();
       CustomSnackBar(context,
           message: 'Token saved: $storedTokenValue',
           backgroundColor: Colors.green);
@@ -301,6 +308,23 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     }
 
     return patientsList;
+  }
+
+  void clearFields() {
+    searchOpNumber.clear();
+    searchPhoneNumber.clear();
+    isSearchPerformed = false;
+    searchResults = [];
+    selectedPatient = null;
+    tokenDate.clear();
+    doctorName.clear();
+    specialization.clear();
+    bloodSugarLevel.clear();
+    temperature.clear();
+    bloodPressure.clear();
+    otherComments.clear();
+    opTicketTotalAmount.clear();
+    opTicketCollectedAmount.clear();
   }
 
   @override
@@ -839,17 +863,22 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
           Row(
             children: [
               SizedBox(width: 425),
-              CustomButton(
-                label: 'Generate',
-                onPressed: () async {
-                  String? selectedPatientId = selectedPatient?['opNumber'];
-                  await initializeOpTicketID(selectedPatientId!);
-                  print(selectedPatientId);
-                  await incrementCounter();
-                  await _generateToken(selectedPatientId!);
-                },
-                width: 200,
-              ),
+              isGeneratingToken
+                  ? CircularProgressIndicator(
+                      color: AppColors.lightBlue,
+                    )
+                  : CustomButton(
+                      label: 'Generate',
+                      onPressed: () async {
+                        String? selectedPatientId =
+                            selectedPatient?['opNumber'];
+                        await initializeOpTicketID(selectedPatientId!);
+                        print(selectedPatientId);
+                        await incrementCounter();
+                        await _generateToken(selectedPatientId!);
+                      },
+                      width: 200,
+                    ),
             ],
           ),
         ],

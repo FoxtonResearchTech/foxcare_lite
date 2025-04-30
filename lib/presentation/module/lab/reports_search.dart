@@ -55,65 +55,75 @@ class _ReportsSearch extends State<ReportsSearch> {
     'Report Date',
     'Report No',
     'Name',
+    'OP Ticket',
     'OP Number',
     'Report Use'
   ];
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData(
-      {String? singleDate,
-      String? fromDate,
-      String? toDate,
-      String? reportNo}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+    String? reportNo,
+  }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-
-      if (singleDate != null) {
-        query = query.where('reportDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
-      } else if (reportNo != null) {
-        int? reportNoInt = int.tryParse(reportNo);
-        if (reportNoInt != null) {
-          query = query.where('reportNo', isEqualTo: reportNoInt);
-        }
-      }
-
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
+      final QuerySnapshot patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('reportNo')) continue;
-        if (!data.containsKey('reportDate')) continue;
-        if (!data.containsKey('opNumber')) continue;
-        fetchedData.add({
-          'Report Date': data['reportDate']?.toString() ?? 'N/A',
-          'Report No': data['reportNo']?.toString() ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'OP Number': data['opNumber']?.toString() ?? 'N/A',
-          'Total Amount': data['labTotalAmount']?.toString() ?? '0',
-          'Collected': data['labCollected']?.toString() ?? '0',
-          'Balance': data['labBalance']?.toString() ?? '0',
-        });
+      for (var patientDoc in patientSnapshot.docs) {
+        final patientData = patientDoc.data() as Map<String, dynamic>;
+        final patientId = patientDoc.id;
+
+        final opTicketsSnapshot = await FirebaseFirestore.instance
+            .collection('patients')
+            .doc(patientId)
+            .collection('opTickets')
+            .get();
+
+        for (var ticketDoc in opTicketsSnapshot.docs) {
+          final ticketData = ticketDoc.data();
+
+          if (!ticketData.containsKey('reportNo') ||
+              !ticketData.containsKey('reportDate')) continue;
+
+          bool matches = false;
+
+          if (singleDate != null) {
+            matches = ticketData['reportDate'] == singleDate;
+          } else if (fromDate != null && toDate != null) {
+            final date = ticketData['reportDate'];
+            matches =
+                date.compareTo(fromDate) >= 0 && date.compareTo(toDate) <= 0;
+          } else if (reportNo != null) {
+            matches = ticketData['reportNo'].toString() == reportNo;
+          } else {
+            matches = true;
+          }
+
+          if (matches) {
+            fetchedData.add({
+              'Report Date': ticketData['reportDate']?.toString() ?? 'N/A',
+              'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
+              'Name':
+                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
+              'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+              'Total Amount': ticketData['labTotalAmount']?.toString() ?? '0',
+              'Collected': ticketData['labCollected']?.toString() ?? '0',
+              'Balance': ticketData['labBalance']?.toString() ?? '0',
+            });
+          }
+        }
       }
 
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
+        int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
+        int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
+        return aNo.compareTo(bNo);
       });
 
       setState(() {

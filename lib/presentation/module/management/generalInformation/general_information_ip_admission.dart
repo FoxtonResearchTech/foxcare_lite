@@ -28,8 +28,10 @@ class _GeneralInformationIpAdmission
   // To store the index of the selected drawer item
   int selectedIndex = 1;
   final List<String> headers1 = [
-    'Token NO',
-    'IP NO',
+    'IP Ticket',
+    'OP NO',
+    'IP Admit Date',
+    'Status',
     'Name',
     'Age',
     'Place',
@@ -133,6 +135,12 @@ class _GeneralInformationIpAdmission
               }
             } catch (e) {
               print('Error fetching tokenNo for patient $patientId: $e');
+            }
+
+            if (ipTicketData['discharged'] == true) {
+              print(
+                  'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
+              continue;
             }
 
             fetchedData.add({
