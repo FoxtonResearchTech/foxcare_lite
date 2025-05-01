@@ -9,10 +9,12 @@ import 'package:foxcare_lite/utilities/colors.dart';
 
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
+import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../../reception/reception_ip_patient.dart';
 import 'general_information_doctor_visit_schedule.dart';
 import 'general_information_edit_doctor_visit_schedule.dart';
@@ -25,7 +27,8 @@ class GeneralInformationIpAdmission extends StatefulWidget {
 
 class _GeneralInformationIpAdmission
     extends State<GeneralInformationIpAdmission> {
-  // To store the index of the selected drawer item
+  TextEditingController _ipNumber = TextEditingController();
+  TextEditingController _phoneNumber = TextEditingController();
   int selectedIndex = 1;
   final List<String> headers1 = [
     'IP Ticket',
@@ -322,6 +325,41 @@ class _GeneralInformationIpAdmission
                   ),
                 ],
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    hintText: 'IP Number',
+                    width: screenWidth * 0.15,
+                    controller: _ipNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(ipNumber: _ipNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  CustomTextField(
+                    hintText: 'Phone Number',
+                    width: screenWidth * 0.15,
+                    controller: _phoneNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(phoneNumber: _phoneNumber.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
                 headerColor: Colors.white,
                 headerBackgroundColor: AppColors.blue,

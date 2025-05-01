@@ -99,7 +99,7 @@ class _GeneralInformationAdmissionStatus
                     detailsData?['ipAdmission']?['roomNumber'] != null
                 ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
                 : 'N/A',
-            'Consulting Doctor': data['consultingDoctor'] ?? 'N/A',
+            'Consulting Doctor': data['doctorName'] ?? 'N/A',
             'Admission Date': data['opAdmissionDate'] ?? 'N/A',
           },
         );
