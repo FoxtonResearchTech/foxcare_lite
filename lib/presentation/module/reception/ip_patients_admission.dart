@@ -7,6 +7,7 @@ import 'package:foxcare_lite/presentation/module/reception/reception_ip_patient.
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
@@ -27,7 +28,7 @@ class IpPatientsAdmission extends StatefulWidget {
 class _IpPatientsAdmission extends State<IpPatientsAdmission> {
   TextEditingController _ipNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
-
+  bool isFetchDataLoading = false;
   final List<String> headers1 = [
     'IP Ticket',
     'OP NO',
@@ -41,8 +42,9 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
     'Abort',
   ];
   List<Map<String, dynamic>> tableData1 = [];
-  Timer? _timer;
   int selectedIndex = 3;
+
+  Timer? _timer;
 
   @override
   void initState() {
@@ -58,7 +60,9 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
 
   Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
     print('Fetching data with OP Number: $ipNumber');
-
+    setState(() {
+      isFetchDataLoading = true;
+    });
     try {
       List<Map<String, dynamic>> fetchedData = [];
       bool hasIpPrescription = false;
@@ -217,6 +221,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
 
       setState(() {
         tableData1 = fetchedData;
+        isFetchDataLoading = false;
       });
     } catch (e) {
       print('Error fetching data: $e');
@@ -341,17 +346,22 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                       ],
                     ),
                     SizedBox(height: screenHeight * 0.08),
-                    CustomDataTable(
-                      headerBackgroundColor: AppColors.blue,
-                      headerColor: Colors.white,
-                      tableData: tableData1,
-                      headers: headers1,
-                      rowColorResolver: (row) {
-                        return row['Status'] == 'aborted'
-                            ? Colors.red.shade200
-                            : Colors.transparent;
-                      },
-                    ),
+                    isFetchDataLoading
+                        ? Container(
+                            width: 200,
+                            height: 200,
+                            child: Lottie.asset('assets/tableLoading.json'))
+                        : CustomDataTable(
+                            headerBackgroundColor: AppColors.blue,
+                            headerColor: Colors.white,
+                            tableData: tableData1,
+                            headers: headers1,
+                            rowColorResolver: (row) {
+                              return row['Status'] == 'abscond'
+                                  ? Colors.red.shade200
+                                  : Colors.transparent;
+                            },
+                          ),
                   ],
                 ),
               ),

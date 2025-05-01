@@ -21,6 +21,10 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   String? selectedStatus;
   Timer? _timer;
 
+  bool isNoOfOpLoading = false;
+  bool isNoWaitingQueLoading = false;
+  bool isNoOfNewPatientLoading = false;
+
   final counterOneHeaders = ['Counter 1'];
 
   List<Map<String, dynamic>> counterOneTableData = [{}];
@@ -63,7 +67,9 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     int opCount = 0;
-
+    setState(() {
+      isNoOfOpLoading = true;
+    });
     try {
       final QuerySnapshot patientSnapshot =
           await fireStore.collection('patients').get();
@@ -98,6 +104,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
 
       setState(() {
         noOfOp = opCount;
+        isNoOfOpLoading = false;
       });
 
       return opCount;
@@ -111,7 +118,9 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
+    setState(() {
+      isNoOfNewPatientLoading = true;
+    });
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('patients')
@@ -120,6 +129,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
 
       setState(() {
         noOfNewPatients = snapshot.docs.length;
+        isNoOfNewPatientLoading = false;
       });
 
       return noOfNewPatients;
@@ -132,7 +142,9 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   Future<int> getNoOFWaitingQue() async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
+    setState(() {
+      isNoWaitingQueLoading = true;
+    });
     int missingCount = 0;
 
     try {
@@ -159,6 +171,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
 
       setState(() {
         noOfWaitingQueue = missingCount;
+        isNoWaitingQueLoading = false;
       });
 
       return missingCount;
@@ -409,7 +422,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       getNoOfOp();
       getNoOfNewPatients();
       getNoOFWaitingQue();
