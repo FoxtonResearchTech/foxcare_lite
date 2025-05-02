@@ -389,6 +389,25 @@ class _RxPrescription extends State<RxPrescription> {
     );
   }
 
+  Future<void> _prescribed() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .collection('opTickets')
+          .doc(widget.opTicket)
+          .set({'opTicketStatus': 'completed'}, SetOptions(merge: true));
+
+      await clearPrescriptionDraft(widget.patientID);
+      CustomSnackBar(context,
+          message: 'OP Ticket : ${widget.opTicket} Ended ',
+          backgroundColor: Colors.green);
+    } catch (e) {
+      CustomSnackBar(context,
+          message: 'Failed to save: $e', backgroundColor: Colors.red);
+    }
+  }
+
   Future<void> _savePrescriptionData() async {
     try {
       final Map<String, dynamic> patientData = {
@@ -1003,25 +1022,29 @@ class _RxPrescription extends State<RxPrescription> {
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                           'Afternoon': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                           'Evening': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                           'Night': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                         },
                                                         onValueChanged:
@@ -1164,15 +1187,30 @@ class _RxPrescription extends State<RxPrescription> {
                 height: 35,
               ),
               Center(
-                child: SizedBox(
-                  width: 300,
-                  child: CustomButton(
-                    label: 'Prescribe',
-                    onPressed: () {
-                      _savePrescriptionData();
-                    },
-                    width: screenWidth * 0.5,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SizedBox(
+                      width: 300,
+                      child: CustomButton(
+                        label: 'Process',
+                        onPressed: () {
+                          _savePrescriptionData();
+                        },
+                        width: screenWidth * 0.5,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 300,
+                      child: CustomButton(
+                        label: 'Prescribed',
+                        onPressed: () {
+                          _prescribed();
+                        },
+                        width: screenWidth * 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

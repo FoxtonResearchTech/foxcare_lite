@@ -125,7 +125,9 @@ class AuthGate extends StatelessWidget {
                 return ManagerDashboard();
               default:
                 return Scaffold(
-                  body: Center(child: Text("Unknown role: $role")),
+                  body: Center(
+                    child: Text("Unknown role: $role"),
+                  ),
                 );
             }
           },
