@@ -44,22 +44,30 @@ class _DoctorRxList extends State<DoctorRxList> {
     'Abscond',
   ];
   List<Map<String, dynamic>> tableData1 = [];
-  Timer? _timer;
+  late Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     print(widget.doctorName);
     fetchData();
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      fetchData();
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  void onSearchPressed() {
+    if (_timer != null && _timer!.isActive) {
+      _timer!.cancel();
+      _timer = null;
+    }
   }
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
@@ -93,6 +101,10 @@ class _DoctorRxList extends State<DoctorRxList> {
               'opTicketData: ${opTicketData['opTicket']}'); // Debugging print statement
 
           bool matches = false;
+          bool isAbscond = false;
+          bool isMedPrescribed = false;
+          bool isLabPrescribed = false;
+          bool isTestOver = false;
 
           if (opTicketData['doctorName'] == widget.doctorName &&
               patientData['isIP'] == false) {
@@ -133,6 +145,24 @@ class _DoctorRxList extends State<DoctorRxList> {
             } catch (e) {
               print('Error fetching tokenNo for patient $patientId: $e');
             }
+            isAbscond = opTicketData['status'] == 'abscond';
+            isLabPrescribed =
+                opTicketData.containsKey('labExaminationPrescribedDate');
+            isMedPrescribed =
+                opTicketData.containsKey('medicinePrescribedDate');
+            try {
+              final testSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('opTickets')
+                  .doc(opTicketDoc.id)
+                  .collection('tests')
+                  .get();
+
+              isTestOver = testSnapshot.docs.isNotEmpty;
+            } catch (e) {
+              print('Error checking test subcollection: $e');
+            }
 
             if (tokenDate == todayString) {
               fetchedData.add({
@@ -148,6 +178,9 @@ class _DoctorRxList extends State<DoctorRxList> {
                 'PinCode': patientData['pincode'] ?? 'N/A',
                 'Status': opTicketData['status'] ?? 'N/A',
                 'Primary Info': opTicketData['otherComments'] ?? 'N/A',
+                'isMedPrescribed': isMedPrescribed,
+                'isLabPrescribed': isLabPrescribed,
+                'isTestOver': isTestOver,
                 'Action': TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -183,7 +216,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                         ),
                       );
                     },
-                    child: const CustomText(text: 'Open')),
+                    child: CustomText(text: isAbscond ? 'Open' : 'Prescribe')),
                 'Abscond': TextButton(
                     onPressed: () async {
                       try {
@@ -308,7 +341,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                         size: screenWidth * .04,
                       ),
                       CustomText(
-                        text: 'Waiting Que',
+                        text: 'Waiting Queue',
                         size: screenWidth * .02,
                       ),
                     ],
@@ -351,10 +384,9 @@ class _DoctorRxList extends State<DoctorRxList> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomButton(
                     label: 'Search',
-                    onPressed: () async {
-                      print('pressed search: ${_opNumber.text}');
-
-                      await fetchData(opNumber: _opNumber.text);
+                    onPressed: () {
+                      fetchData(opNumber: _opNumber.text);
+                      onSearchPressed();
                     },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
@@ -370,6 +402,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                     label: 'Search',
                     onPressed: () {
                       fetchData(phoneNumber: _phoneNumber.text);
+                      onSearchPressed();
                     },
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
@@ -383,9 +416,24 @@ class _DoctorRxList extends State<DoctorRxList> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'abscond'
-                      ? Colors.red.shade200
-                      : Colors.transparent;
+                  if (row['Status'] == 'abscond') {
+                    return Colors.red.shade200;
+                  }
+                  if (row['isTestOver'] == true) {
+                    return Colors.yellow.shade400;
+                  }
+                  if (row['isMedPrescribed'] == true &&
+                      row['isLabPrescribed'] == true) {
+                    return Colors.greenAccent.shade100;
+                  }
+                  if (row['isMedPrescribed'] == true) {
+                    return Colors.blueAccent.shade100;
+                  }
+                  if (row['isLabPrescribed'] == true) {
+                    return Colors.yellow.shade100;
+                  }
+
+                  return Colors.transparent;
                 },
               ),
               SizedBox(height: screenHeight * 0.02),

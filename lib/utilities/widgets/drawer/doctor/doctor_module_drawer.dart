@@ -11,6 +11,8 @@ import '../../../../presentation/login/login.dart';
 import '../../../../presentation/module/doctor/doctor_rx_list.dart';
 import '../../../../presentation/module/doctor/ip_patients_details.dart';
 import '../../../../presentation/module/doctor/pharmacy_stocks.dart';
+import '../../snackBar/snakbar.dart';
+import '../../text/primary_text.dart';
 import '../custom_drawer.dart';
 
 class DoctorModuleDrawer extends StatefulWidget {
@@ -138,13 +140,48 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
             title: 'Logout',
             icon: Iconsax.logout,
             onTap: () async {
-              await FirebaseAuth.instance.signOut();
-              UserSession.clearUser();
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Logout Confirmation'),
+                    content: const CustomText(
+                        text: 'Are you sure you want to Logout?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () async {
+                          try {
+                            await FirebaseAuth.instance.signOut();
+                            UserSession.clearUser();
 
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => LoginScreen()),
-                (route) => false,
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => LoginScreen()),
+                              (route) => false,
+                            );
+                            CustomSnackBar(context,
+                                message: 'Logout Successful',
+                                backgroundColor: Colors.green);
+                          } catch (e) {
+                            CustomSnackBar(context,
+                                message: 'Unable to Logout',
+                                backgroundColor: Colors.red);
+                          }
+                        },
+                        child: const CustomText(
+                          text: 'Sure',
+                          color: Colors.red,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const CustomText(text: 'Close'),
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),

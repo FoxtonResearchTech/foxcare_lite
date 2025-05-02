@@ -295,17 +295,17 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              roomStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   roomStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              roomStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   roomStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );
@@ -378,17 +378,17 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              wardStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   wardStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              wardStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   wardStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );
@@ -458,17 +458,17 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              viproomStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   viproomStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              viproomStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   viproomStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );
@@ -541,17 +541,17 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              ICUStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   ICUStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              ICUStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   ICUStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );

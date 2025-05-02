@@ -409,7 +409,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                         size: screenWidth * .04,
                       ),
                       CustomText(
-                        text: 'Waiting Que',
+                        text: 'Waiting Queue',
                         size: screenWidth * .02,
                       ),
                     ],

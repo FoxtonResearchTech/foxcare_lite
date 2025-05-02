@@ -358,17 +358,17 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
                             ),
                           ),
                           onTap: () {
-                            setState(() {
-                              wardStatus[index] =
-                                  true; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   wardStatus[index] =
+                            //       true; // Correctly update the value
+                            // });
                             print('${index + 1} pressed');
                           },
                           onDoubleTap: () {
-                            setState(() {
-                              wardStatus[index] =
-                                  false; // Correctly update the value
-                            });
+                            // setState(() {
+                            //   wardStatus[index] =
+                            //       false; // Correctly update the value
+                            // });
                           },
                         ),
                       );

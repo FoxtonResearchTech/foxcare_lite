@@ -271,14 +271,17 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     List<Map<String, String>> patientsList = [];
     List<QueryDocumentSnapshot> docs = [];
 
+    // Get all patients if opNumber is provided (can't search case-insensitive)
     if (opNumber.isNotEmpty) {
-      final QuerySnapshot snapshot = await firestore
-          .collection('patients')
-          .where('opNumber', isEqualTo: opNumber)
-          .get();
-      docs.addAll(snapshot.docs);
+      final QuerySnapshot snapshot =
+          await firestore.collection('patients').get();
+      docs.addAll(snapshot.docs.where((doc) {
+        final docOp = (doc['opNumber'] ?? '').toString();
+        return docOp.toLowerCase() == opNumber.toLowerCase();
+      }));
     }
 
+    // Phone1 exact match
     if (phoneNumber.isNotEmpty) {
       final QuerySnapshot snapshotPhone1 = await firestore
           .collection('patients')
@@ -286,7 +289,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
           .get();
       docs.addAll(snapshotPhone1.docs);
 
-      // Perform query based on phoneNumber for phone2
+      // Phone2 exact match
       final QuerySnapshot snapshotPhone2 = await firestore
           .collection('patients')
           .where('phone2', isEqualTo: phoneNumber)
@@ -294,7 +297,10 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
       docs.addAll(snapshotPhone2.docs);
     }
 
-    final uniqueDocs = docs.toSet();
+    // Remove duplicates by document ID
+    final uniqueDocs = {
+      for (var doc in docs) doc.id: doc,
+    }.values;
 
     for (var doc in uniqueDocs) {
       patientsList.add({

@@ -1,37 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../colors.dart';
 
-class SecondaryDropdown extends StatelessWidget {
+class FormTextField extends StatelessWidget {
   final String hintText;
-  final List<String> items;
-  final String? selectedItem;
-  final ValueChanged<String?> onChanged;
+  final bool obscureText;
   final double? width;
   final double verticalSize;
+  final bool readOnly;
+  final int? maxLength;
   final double horizontalSize;
-  final bool showFilled;
+  final FocusNode? focusNode;
+  final Function(String)? onChanged;
+  final GestureTapCallback? onTap;
+  final TextEditingController? controller;
   final Icon? icon;
+  final bool showFilled;
+  final Color? textColor;
+  final String? Function(String?)? validator;
 
-  const SecondaryDropdown({
-    Key? key,
+  const FormTextField({
+    super.key,
     required this.hintText,
-    required this.items,
-    this.selectedItem,
-    required this.onChanged,
-    this.width,
+    this.obscureText = false,
+    this.controller,
+    this.icon,
+    this.readOnly = false,
+    required this.width,
     this.verticalSize = 8.0,
     this.horizontalSize = 12.0,
+    this.focusNode,
+    this.onChanged,
+    this.onTap,
     this.showFilled = true,
-    this.icon,
-  }) : super(key: key);
+    this.textColor = Colors.white,
+    this.validator,
+    this.maxLength,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
-      child: DropdownButtonFormField<String>(
-        value: selectedItem,
+      child: TextFormField(
+        maxLength: maxLength,
+        validator: validator,
+        onChanged: onChanged,
+        maxLines: obscureText ? 1 : null,
+        controller: controller,
+        obscureText: obscureText,
+        readOnly: readOnly,
+        focusNode: focusNode,
+        style: TextStyle(
+          color: textColor,
+          fontFamily: 'Poppins',
+        ),
         decoration: InputDecoration(
+          counterText: '',
           isDense: true,
           floatingLabelBehavior: FloatingLabelBehavior.auto,
           alignLabelWithHint: true,
@@ -44,7 +69,7 @@ class SecondaryDropdown extends StatelessWidget {
             color: AppColors.lightBlue,
             fontFamily: 'Poppins',
           ),
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             color: Colors.white,
             fontFamily: 'Poppins',
           ),
@@ -54,7 +79,10 @@ class SecondaryDropdown extends StatelessWidget {
             fontWeight: FontWeight.bold,
             foreground: Paint()
               ..shader = const LinearGradient(
-                colors: [Colors.black, Colors.grey],
+                colors: <Color>[
+                  Colors.black, // top half
+                  Colors.grey, // bottom half
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
@@ -74,30 +102,19 @@ class SecondaryDropdown extends StatelessWidget {
             borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
             borderRadius: BorderRadius.circular(10),
           ),
-          suffixIcon: icon,
+          suffixIcon: icon != null
+              ? GestureDetector(
+                  onTap: onTap,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      icon!,
+                    ],
+                  ),
+                )
+              : null,
           suffixIconColor: Colors.white,
         ),
-        dropdownColor: AppColors.blue,
-        borderRadius: BorderRadius.circular(10),
-        iconEnabledColor: Colors.white,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.white,
-          fontFamily: 'Poppins',
-        ),
-        onChanged: onChanged,
-        items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(
-              item,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.white,
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

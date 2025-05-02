@@ -9,14 +9,17 @@ import 'package:foxcare_lite/utilities/widgets/dropDown/secondary_drop_down.dart
 import 'package:foxcare_lite/utilities/widgets/textField/secondary_text_field.dart';
 
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../../../utilities/colors.dart';
+import '../../../../utilities/widgets/buttons/custom_icon_button.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
+import '../../../../utilities/widgets/textField/form_text_field.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../../manager/edit_delete_patient_information.dart';
 import '../generalInformation/general_information_admission_status.dart';
@@ -117,19 +120,11 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     setState(() {});
   }
 
+  bool isLoading = false;
+
   String uid = '';
 
   Future<void> savePatientDetails() async {
-    if (firstname.text.isEmpty ||
-        lastname.text.isEmpty ||
-        selectedSex == null ||
-        selectedBloodGroup == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all required fields")),
-      );
-      return;
-    }
-
     Map<String, dynamic> patientData = {
       'opNumber': uid,
       'firstName': firstname.text,
@@ -137,8 +132,8 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
       'lastName': lastname.text,
       'sex': selectedSex,
       'age': age.text,
-      'isIP': false,
       'dob': dob.text,
+      'isIP': false,
       'address1': address1.text,
       'address2': address2.text,
       'landmark': landmark.text,
@@ -264,9 +259,15 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                 ),
               ),
               TextButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.of(context).pop();
                   clearForm();
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ManagementRegisterPatient()),
+                  );
                 },
                 child: CustomText(
                   text: 'Close',
@@ -277,12 +278,86 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
           );
         },
       );
+
       await initializeUid();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to register patient: $e")),
       );
     }
+  }
+
+  bool validateForm1() {
+    if (firstname.text.isEmpty ||
+        lastname.text.isEmpty ||
+        age.text.isEmpty ||
+        dob.text.isEmpty ||
+        phone1.text.isEmpty ||
+        selectedSex == null ||
+        selectedBloodGroup == null) {
+      CustomSnackBar(
+        context,
+        message: 'Please fill all required fields',
+        backgroundColor: Colors.red,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  bool validateForm2() {
+    if (landmark.text.isEmpty ||
+        city.text.isEmpty ||
+        state.text.isEmpty ||
+        address1.text.isEmpty ||
+        pincode.text.isEmpty) {
+      CustomSnackBar(
+        context,
+        message: 'Please fill all required fields',
+        backgroundColor: Colors.red,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  bool validateForm3() {
+    if (opAmount.text.isEmpty || opAmountCollected.text.isEmpty) {
+      CustomSnackBar(
+        context,
+        message: 'Please fill all required fields',
+        backgroundColor: Colors.red,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  int _calculateAge(DateTime birthDate) {
+    final today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age;
   }
 
   void clearForm() {
@@ -307,11 +382,56 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     opAmountCollected.clear();
   }
 
+  String? phone1Error;
+  String? phone2Error;
+
+  void _validatePhone1() {
+    final text = phone1.text;
+    final phoneRegex = RegExp(r'^[0-9]{0,10}$');
+
+    setState(() {
+      if (text.isEmpty) {
+        phone1Error = '';
+      } else if (!phoneRegex.hasMatch(text)) {
+        phone1Error = 'Only digits are allowed';
+      } else if (text.length != 10) {
+        phone1Error = 'Phone number must be 10 digits';
+      } else {
+        phone1Error = null;
+      }
+    });
+  }
+
+  void _validatePhone2() {
+    final text = phone2.text;
+    final phoneRegex = RegExp(r'^[0-9]{0,10}$');
+
+    setState(() {
+      if (text.isEmpty) {
+        phone2Error = '';
+      } else if (!phoneRegex.hasMatch(text)) {
+        phone2Error = 'Only digits are allowed';
+      } else if (text.length != 10) {
+        phone2Error = 'Phone number must be 10 digits';
+      } else {
+        phone2Error = null;
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     initializeUid();
+    phone1.addListener(_validatePhone1);
+    phone2.addListener(_validatePhone2);
   }
+
+  int currentStep = 0;
+  final int totalSteps = 3;
+  double previousProgress = 0;
+
+  double get progress => (currentStep + 0) / totalSteps;
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +476,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
             ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(10),
               child: dashboard(),
             ),
           ),
@@ -365,413 +485,938 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     );
   }
 
-  // The form displayed in the body
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
-    bool isMobile = screenWidth < 600;
-
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
           padding: EdgeInsets.only(
-            left: screenWidth * 0.01,
-            right: screenWidth * 0.01,
-            bottom: screenWidth * 0.01,
-          ),
-          child: Column(
+              left: screenWidth * 0.02, right: screenWidth * 0.02),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.02),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Patient Registration",
-                          size: screenWidth * 0.03,
-                        ),
-                      ],
+              Padding(
+                padding: EdgeInsets.only(top: screenWidth * 0.02),
+                child: Column(
+                  children: [
+                    CustomText(
+                      text: "Patient Registration",
+                      size: screenWidth * 0.03,
                     ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        image: const DecorationImage(
-                            image: AssetImage('assets/foxcare_lite_logo.png'))),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CustomButton(
-                    label: 'Edit/Delete Patients',
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  EditDeletePatientInformation()));
-                    },
-                    width: screenWidth * 0.1,
-                    height: screenHeight * 0.05,
-                  )
-                ],
+              Container(
+                width: screenWidth * 0.15,
+                height: screenWidth * 0.1,
+                decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                    image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'))),
               ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  // First Name Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'First Name : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: firstname,
-                          width: double
-                              .infinity, // Takes up the full available space
-                        ),
-                      ],
-                    ),
-                  ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 90, right: 90),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: previousProgress, end: progress),
+            duration: const Duration(milliseconds: 750),
+            builder: (context, value, child) {
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            height: screenHeight * 0.02,
+                            width: constraints.maxWidth,
+                            decoration: BoxDecoration(
+                              color: AppColors.lightBlue.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          Container(
+                            height: screenHeight * 0.02,
+                            width: constraints.maxWidth * value,
+                            decoration: BoxDecoration(
+                              color: AppColors.blue,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                          child: CustomText(
+                              text: '${(value * 100).toInt()}% Completed')),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.02),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                if (currentStep == 0) form1(),
+                if (currentStep == 1) form2(),
+                if (currentStep == 2) form3(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-                  // Middle Name Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Middle Name : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: middlename,
-                          width: double
-                              .infinity, // Takes up the full available space
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Last Name Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Last Name : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: lastname,
-                          width: double
-                              .infinity, // Takes up the full available space
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  // Sex Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Sex : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryDropdown(
-                          width: double.infinity, // Take full available width
-                          hintText: '',
-                          items: const ['Male', 'Female', 'Other'],
-                          selectedItem: selectedSex,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedSex = value!;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Age Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Age : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: age,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // DOB Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'DOB (YYYY-MM-DD) : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: dob,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+  Widget form1() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Container(
+      width: screenWidth * 2,
+      height: screenHeight * 1,
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+      child: Card(
+        elevation: 5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        shadowColor: Colors.black45,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Row(
+            children: [
               Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomText(text: 'Address  Line 1: '),
-                  SizedBox(height: screenHeight * 0.01),
-                  SecondaryTextField(
-                    hintText: '',
-                    controller: address1,
-                    width: screenWidth * 0.8,
-                    verticalSize: screenHeight * 0.025,
-                  )
-                ],
-              ),
-              const SizedBox(height: 20),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomText(text: 'Address  Line 2: '),
-                  SizedBox(height: screenHeight * 0.01),
-                  SecondaryTextField(
-                    hintText: '',
-                    controller: address2,
-                    width: screenWidth * 0.8,
-                    verticalSize: screenHeight * 0.025,
-                  )
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // Landmark Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Landmark : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: landmark,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'First Name : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: firstname,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Middle Name : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: middlename,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: ' ',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Last Name : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: lastname,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Sex : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              SecondaryDropdown(
+                                verticalSize: screenHeight * 0.02,
+                                width: screenWidth * 0.2,
+                                hintText: '',
+                                items: ['Male', 'Female', 'Others'],
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedSex = value!;
+                                  });
+                                },
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Age : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                readOnly: true,
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: age,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'DOB : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                icon: Icon(Icons.date_range_outlined),
+                                onTap: () async {
+                                  await _selectDate(context, dob);
 
-                  // City Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'City : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: city,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
+                                  if (dob.text.isNotEmpty) {
+                                    try {
+                                      DateTime pickedDate =
+                                          DateFormat('yyyy-MM-dd')
+                                              .parse(dob.text);
+                                      int calculatedAge =
+                                          _calculateAge(pickedDate);
+                                      age.text = calculatedAge.toString();
+                                    } catch (e) {
+                                      age.text = '';
+                                    }
+                                  }
+                                },
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: dob,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Blood Group : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              SecondaryDropdown(
+                                verticalSize: screenHeight * 0.02,
+                                width: screenWidth * 0.2,
+                                hintText: '',
+                                items: const [
+                                  'A+',
+                                  'A-',
+                                  'B+',
+                                  'B-',
+                                  'O+',
+                                  'O-',
+                                  'AB+',
+                                  'AB-'
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedBloodGroup = value!;
+                                  });
+                                },
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone 1 : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                maxLength: 10,
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: phone1,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (phone1Error != null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 4.0, left: 8.0),
+                              child: CustomText(
+                                text: phone1Error!,
+                                color: Colors.red, // optional: show it in red
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.03),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone 2 : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                maxLength: 10,
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: phone2,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '  ',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (phone2Error != null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 4.0, left: 8.0),
+                              child: CustomText(
+                                text: phone2Error!,
+                                color: Colors.red, // optional: show it in red
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      CustomIconButton(
+                          suffixWidth: screenWidth * 0.0125,
+                          suffixIcon: Icons.arrow_forward_ios,
+                          label: 'Next',
+                          onPressed: () async {
+                            if (validateForm1()) {
+                              setState(() {
+                                isLoading = true;
+                              });
 
-                  // State Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'State : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: state,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  // Pincode Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Pincode : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: pincode,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
+                              await Future.delayed(
+                                  const Duration(milliseconds: 500));
 
-                  // Phone Number 1 Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Phone Number 1 : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: phone1,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Phone Number 2 Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Phone Number 2 : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: phone2,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  // Blood Group Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'Blood Group : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryDropdown(
-                          hintText: '',
-                          width: double.infinity, // Take full available width
-                          items: const [
-                            'A+',
-                            'A-',
-                            'B+',
-                            'B-',
-                            'O+',
-                            'O-',
-                            'AB+',
-                            'AB-'
-                          ],
-                          selectedItem: selectedBloodGroup,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedBloodGroup = value!;
-                            });
+                              if (currentStep < totalSteps - 1) {
+                                setState(() {
+                                  previousProgress = progress;
+                                  currentStep++;
+                                  isLoading = false;
+                                });
+                              }
+                            }
                           },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // OP Amount Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'OP Amount : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: opAmount,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // OP Amount Collected Column
-                  Flexible(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CustomText(text: 'OP Amount Collected : '),
-                        SizedBox(height: screenHeight * 0.01),
-                        SecondaryTextField(
-                          hintText: '',
-                          controller: opAmountCollected,
-                          width: double.infinity, // Take full available width
-                        ),
-                      ],
-                    ),
+                          width: screenWidth * 0.2)
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 45),
-              Center(
-                child: SizedBox(
-                    width: 400,
-                    child: CustomButton(
-                      label: 'Register',
-                      onPressed: () {
-                        savePatientDetails();
-                      },
-                      width: null,
-                    )),
-              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget form2() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Container(
+      width: screenWidth * 2,
+      height: screenHeight * 0.8,
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+      child: Card(
+        elevation: 5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        shadowColor: Colors.black45,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Address 1 : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.1,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: address1,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.18),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Address 2 : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.1,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: address2,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.188),
+                                child: CustomText(
+                                  text: ' ',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Land Mark : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: landmark,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'City : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: city,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'State : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: state,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Pin code : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: pincode,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomIconButton(
+                          prefixWidth: screenWidth * 0.0125,
+                          prefixIcon: Icons.arrow_back_ios,
+                          label: 'Previous',
+                          onPressed: () {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            if (currentStep < totalSteps - 1) {
+                              setState(() {
+                                currentStep--;
+                                isLoading = false;
+                              });
+                            }
+                          },
+                          width: screenWidth * 0.2),
+                      SizedBox(width: screenWidth * 0.22),
+                      CustomIconButton(
+                          suffixWidth: screenWidth * 0.0125,
+                          suffixIcon: Icons.arrow_forward_ios,
+                          label: 'Next',
+                          onPressed: () async {
+                            if (validateForm2()) {
+                              setState(() {
+                                isLoading = true;
+                              });
+
+                              await Future.delayed(
+                                  const Duration(milliseconds: 500));
+
+                              if (currentStep < totalSteps - 1) {
+                                setState(() {
+                                  previousProgress = progress;
+                                  currentStep++;
+                                  isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                          width: screenWidth * 0.2),
+                      SizedBox(width: screenWidth * 0.015),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget form3() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Container(
+      width: screenWidth * 2,
+      height: screenHeight * 0.8,
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+      child: Card(
+        elevation: 5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        shadowColor: Colors.black45,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: screenWidth * 0.6,
+                        height: screenHeight * 0.3,
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: AssetImage('assets/registration.png'))),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'OP Amount : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: opAmount,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.2),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'OP Amount Collected : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: opAmountCollected,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomIconButton(
+                          prefixWidth: screenWidth * 0.0125,
+                          prefixIcon: Icons.arrow_back_ios,
+                          label: 'Previous',
+                          onPressed: () {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            if (currentStep > 0) {
+                              setState(() {
+                                currentStep--;
+                                isLoading = false;
+                              });
+                            }
+                          },
+                          width: screenWidth * 0.2),
+                      SizedBox(width: screenWidth * 0.22),
+                      CustomButton(
+                          label: 'Register',
+                          onPressed: () async {
+                            if (validateForm3()) {
+                              setState(() {
+                                isLoading = true;
+                                previousProgress = progress;
+                                currentStep++;
+                              });
+
+                              await Future.delayed(
+                                  const Duration(milliseconds: 600));
+
+                              await savePatientDetails();
+
+                              setState(() {
+                                isLoading = false;
+                              });
+                            }
+                          },
+                          width: screenWidth * 0.2),
+                      SizedBox(width: screenWidth * 0.015),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
         ),

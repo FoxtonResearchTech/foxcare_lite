@@ -452,8 +452,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
                                   color: roomStatus[index]
-                                      ? Colors.green[200]
-                                      : Colors.grey,
+                                      ? AppColors.blue
+                                      : AppColors.lightBlue,
                                   // Red for booked, green for available
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
@@ -535,8 +535,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
                                   color: wardStatus[index]
-                                      ? Colors.green[200]
-                                      : Colors.grey,
+                                      ? AppColors.blue
+                                      : AppColors.lightBlue,
                                   // Red for booked, green for available
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
@@ -615,8 +615,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
                                   color: viproomStatus[index]
-                                      ? Colors.green[200]
-                                      : Colors.grey,
+                                      ? AppColors.blue
+                                      : AppColors.lightBlue,
                                   // Red for booked, green for available
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
@@ -698,8 +698,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
                                   color: ICUStatus[index]
-                                      ? Colors.green[200]
-                                      : Colors.grey,
+                                      ? AppColors.blue
+                                      : AppColors.lightBlue,
                                   // Red for booked, green for available
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
@@ -785,8 +785,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: roomStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
@@ -868,8 +868,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: wardStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
@@ -948,8 +948,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: viproomStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
@@ -1031,8 +1031,8 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
                             color: ICUStatus[index]
-                                ? Colors.green[200]
-                                : Colors.grey,
+                                ? AppColors.blue
+                                : AppColors.lightBlue,
                             // Red for booked, green for available
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
