@@ -271,16 +271,17 @@ class _OpTicketPageState extends State<OpTicketPage> {
     List<Map<String, String>> patientsList = [];
     List<QueryDocumentSnapshot> docs = [];
 
-    // Perform query based on opNumber, phoneNumber, or both
+    // Get all patients if opNumber is provided (can't search case-insensitive)
     if (opNumber.isNotEmpty) {
-      final QuerySnapshot snapshot = await firestore
-          .collection('patients')
-          .where('opNumber', isEqualTo: opNumber)
-          .get();
-      docs.addAll(snapshot.docs);
+      final QuerySnapshot snapshot =
+          await firestore.collection('patients').get();
+      docs.addAll(snapshot.docs.where((doc) {
+        final docOp = (doc['opNumber'] ?? '').toString();
+        return docOp.toLowerCase() == opNumber.toLowerCase();
+      }));
     }
 
-    // Perform query based on phoneNumber for phone1
+    // Phone1 exact match
     if (phoneNumber.isNotEmpty) {
       final QuerySnapshot snapshotPhone1 = await firestore
           .collection('patients')
@@ -288,7 +289,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
           .get();
       docs.addAll(snapshotPhone1.docs);
 
-      // Perform query based on phoneNumber for phone2
+      // Phone2 exact match
       final QuerySnapshot snapshotPhone2 = await firestore
           .collection('patients')
           .where('phone2', isEqualTo: phoneNumber)
@@ -296,10 +297,11 @@ class _OpTicketPageState extends State<OpTicketPage> {
       docs.addAll(snapshotPhone2.docs);
     }
 
-    // Eliminate duplicates based on the document ID
-    final uniqueDocs = docs.toSet();
+    // Remove duplicates by document ID
+    final uniqueDocs = {
+      for (var doc in docs) doc.id: doc,
+    }.values;
 
-    // Map documents to the desired structure
     for (var doc in uniqueDocs) {
       patientsList.add({
         'opNumber': doc['opNumber'] ?? '',
