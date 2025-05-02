@@ -34,22 +34,33 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 300), // Faster transition
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0); // Slide from right
-          const end = Offset.zero;
-          const curve = Curves.ease;
+          // Define the scale and fade transition
+          const begin = 0.0;  // Start at 0 scale
+          const end = 1.0;    // End at full scale
+          const curve = Curves.easeOut;
 
-          final tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          final offsetAnimation = animation.drive(tween);
+          // Fade and scale animations
+          final scaleTween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
-          return SlideTransition(position: offsetAnimation, child: child);
+          final scaleAnimation = animation.drive(scaleTween);
+          final fadeAnimation = animation.drive(fadeTween);
+
+          return FadeTransition(
+            opacity: fadeAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: child,
+            ),
+          );
         },
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
