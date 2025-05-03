@@ -523,18 +523,35 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   ],
                 ),
               ),
-              Container(
-                width: screenWidth * 0.15,
-                height: screenWidth * 0.1,
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                    image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'))),
+              Column(
+                children: [
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                  CustomButton(
+                    label: 'Edit / Delete Patients',
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  EditDeletePatientInformation()));
+                    },
+                    width: screenWidth * 0.12,
+                    height: screenHeight * 0.05,
+                  ),
+                ],
               ),
             ],
           ),
         ),
+        SizedBox(height: screenHeight * 0.02),
         Padding(
           padding: const EdgeInsets.only(left: 90, right: 90),
           child: TweenAnimationBuilder<double>(

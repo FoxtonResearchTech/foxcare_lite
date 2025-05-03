@@ -293,31 +293,45 @@ class _PatientInfoState extends State<PatientInfo> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Patient Details'),
+            title: const CustomText(
+              text: 'Patient Details',
+              size: 20,
+            ),
             content: Container(
-              width: 350,
-              height: 350,
+              width: 325,
+              padding: const EdgeInsets.all(20),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomText(text: 'Patient ID: ${widget.opNumberEdit}'),
-                  CustomText(text: 'First Name: ${firstname.text}'),
-                  CustomText(text: 'Middle Name: ${middlename.text}'),
-                  CustomText(text: 'Last Name: ${lastname.text}'),
-                  CustomText(text: 'Sex: ${selectedSex}'),
-                  CustomText(text: 'Age: ${age.text}'),
-                  CustomText(text: 'DOB: ${dob.text}'),
-                  CustomText(
-                      text: 'Address: ${address1.text}, ${address2.text}'),
-                  CustomText(text: 'Landmark: ${landmark.text}'),
-                  CustomText(text: 'City: ${city.text}'),
-                  CustomText(text: 'State: ${state.text}'),
-                  CustomText(text: 'Pincode: ${pincode.text}'),
-                  CustomText(text: 'Phone 1: ${phone1.text}'),
-                  CustomText(text: 'Phone 2: ${phone2.text}'),
-                  CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
-                  CustomText(text: 'Amount: ${opAmount.text}'),
-                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _infoRow('Patient ID', widget.opNumberEdit!),
+                        _infoRow('First Name', firstname.text),
+                        _infoRow('Middle Name', middlename.text),
+                        _infoRow('Last Name', lastname.text),
+                        _infoRow('Sex', selectedSex!),
+                        _infoRow('Age', age.text),
+                        _infoRow('DOB', dob.text),
+                        const Divider(),
+                        _infoRow(
+                            'Address', '${address1.text}, ${address2.text}'),
+                        _infoRow('Landmark', landmark.text),
+                        _infoRow('City', city.text),
+                        _infoRow('State', state.text),
+                        _infoRow('Pincode', pincode.text),
+                        const Divider(),
+                        _infoRow('Phone 1', phone1.text),
+                        _infoRow('Phone 2', phone2.text),
+                        _infoRow('Blood Group', selectedBloodGroup!),
+                        const Divider(),
+                        _infoRow('Amount', opAmount.text),
+                        _infoRow('Collected', opAmountCollected.text),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -385,9 +399,8 @@ class _PatientInfoState extends State<PatientInfo> {
                 ),
               ),
               TextButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.of(context).pop();
-                  clearForm();
                 },
                 child: CustomText(
                   text: 'Close',
@@ -464,6 +477,15 @@ class _PatientInfoState extends State<PatientInfo> {
           child: CustomText(
             text: 'Patient Information',
             size: screenWidth * 0.02,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(
+            Icons.arrow_back_ios,
             color: Colors.white,
           ),
         ),
@@ -649,6 +671,22 @@ class _PatientInfoState extends State<PatientInfo> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+              flex: 3,
+              child: Text('$label:',
+                  style: TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(flex: 5, child: Text(value)),
+        ],
       ),
     );
   }

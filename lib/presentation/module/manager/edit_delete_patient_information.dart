@@ -201,6 +201,15 @@ class _EditDeletePatientInformation
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: AppColors.blue,
       ),
       body: SingleChildScrollView(
