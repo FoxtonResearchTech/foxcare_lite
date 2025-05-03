@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import '../../../utilities/colors.dart';
+import '../../../utilities/constants.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
@@ -201,13 +202,25 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               TextButton(
                 onPressed: () async {
                   final pdf = pw.Document();
+                  final myColor = PdfColor.fromInt(0xFF106ac2); // 0xAARRGGBB
+
+                  final font = await rootBundle
+                      .load('Fonts/Poppins/Poppins-Regular.ttf');
+                  final ttf = pw.Font.ttf(font);
+
                   final topImage = pw.MemoryImage(
                     (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
                         .buffer
                         .asUint8List(),
                   );
+
                   final bottomImage = pw.MemoryImage(
                     (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
+                        .buffer
+                        .asUint8List(),
+                  );
+                  final loc = pw.MemoryImage(
+                    (await rootBundle.load('assets/location_Icon.png'))
                         .buffer
                         .asUint8List(),
                   );
@@ -215,82 +228,155 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                   pdf.addPage(
                     pw.Page(
                       pageFormat: const PdfPageFormat(
-                          10 * PdfPageFormat.cm, 7 * PdfPageFormat.cm),
-                      build: (pw.Context context) => pw.Center(
-                        child: pw.Container(
-                          width: 300,
-                          height: 400, // Increased height to accommodate images
-                          padding: const pw.EdgeInsets.all(16),
-                          decoration: pw.BoxDecoration(
-                            border: pw.Border.all(color: PdfColors.grey),
-                            borderRadius: pw.BorderRadius.circular(8),
-                          ),
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              // TOP IMAGE
-                              pw.Center(
-                                child: pw.Image(topImage,
-                                    height: 50), // Your top image here
+                          8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                      margin: pw.EdgeInsets.zero,
+                      build: (pw.Context context) {
+                        return pw.Stack(
+                          children: [
+                            pw.Positioned.fill(
+                              child: pw.Image(topImage, fit: pw.BoxFit.cover),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(8),
+                              child: pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                                    children: [
+                                      pw.Text(
+                                        'ABC Hospital',
+                                        style: pw.TextStyle(
+                                          fontSize: 14,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 8),
+                                  pw.Text(
+                                    'OP Number: $uid',
+                                    style: pw.TextStyle(
+                                        fontSize: 10,
+                                        font: ttf,
+                                        color: myColor),
+                                  ),
+                                  pw.Text(
+                                    'Name: ${firstname.text} ${middlename.text} ${lastname.text}',
+                                    style: pw.TextStyle(
+                                        fontSize: 10,
+                                        font: ttf,
+                                        color: myColor),
+                                  ),
+                                  pw.Text(
+                                    'Phone Number: ${phone1.text}',
+                                    style: pw.TextStyle(
+                                        fontSize: 10,
+                                        font: ttf,
+                                        color: myColor),
+                                  ),
+                                ],
                               ),
-                              pw.SizedBox(height: 5),
-
-                              pw.Text(
-                                'ABC Hospital',
-                                style: pw.TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: pw.FontWeight.bold,
-                                ),
+                            ),
+                            // Full-width background image at the bottom
+                            pw.Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: pw.Image(
+                                bottomImage,
+                                fit: pw.BoxFit.cover,
                               ),
-                              pw.SizedBox(height: 2),
-                              pw.Center(
-                                  child: pw.Text('Care through excelling')),
-                              pw.SizedBox(height: 2),
-                              pw.Divider(),
-                              pw.SizedBox(height: 5),
-                              pw.Text('Patient ID: $uid'),
-                              pw.Text(
-                                  'Name: ${firstname.text} ${middlename.text} ${lastname.text}'),
-                              pw.Text('DOB: ${dob.text}'),
-                              pw.Text(
-                                  'Address: ${address1.text}, ${city.text}, ${pincode.text}'),
-                              pw.Divider(),
-
-                              // BOTTOM IMAGE WITH STACKED TEXT
-                              pw.Expanded(
-                                child: pw.Stack(
-                                  alignment: pw.Alignment.center,
-                                  children: [
-                                    pw.Positioned.fill(
-                                      child: pw.Image(bottomImage,
-                                          fit: pw.BoxFit.cover),
-                                    ),
-                                    pw.Column(
-                                      mainAxisSize: pw.MainAxisSize.min,
-                                      children: [
-                                        pw.Text(
-                                            'Please bring your card for every check up',
+                            ),
+                            // Text content above the bottom image
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(
+                                  left: 8, right: 8, top: 6),
+                              child: pw.Column(
+                                mainAxisAlignment: pw.MainAxisAlignment.end,
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      // Emergency and appointment info (left side)
+                                      pw.Column(
+                                        crossAxisAlignment:
+                                            pw.CrossAxisAlignment.start,
+                                        children: [
+                                          pw.Text(
+                                            'Emergency No: ${Constants.emergencyNo}',
                                             style: pw.TextStyle(
-                                                color: PdfColors.white)),
-                                        pw.SizedBox(height: 2),
-                                        pw.Text('Contact : ',
+                                                fontSize: 8,
+                                                font: ttf,
+                                                color: PdfColors.white),
+                                          ),
+                                          pw.Text(
+                                            'Appointments: ${Constants.appointmentNo}',
                                             style: pw.TextStyle(
-                                                color: PdfColors.white)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                                fontSize: 8,
+                                                font: ttf,
+                                                color: PdfColors.white),
+                                          ),
+                                        ],
+                                      ),
+
+                                      // City + District + Location Icon (right side)
+                                      pw.Row(
+                                        mainAxisAlignment:
+                                            pw.MainAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            pw.CrossAxisAlignment.center,
+                                        children: [
+                                          pw.Column(
+                                            crossAxisAlignment:
+                                                pw.CrossAxisAlignment.end,
+                                            children: [
+                                              pw.Text(
+                                                '${Constants.hospitalCity}',
+                                                style: pw.TextStyle(
+                                                    fontSize: 8,
+                                                    font: ttf,
+                                                    color: PdfColors.white),
+                                              ),
+                                              pw.Text(
+                                                '${Constants.hospitalDistrict}',
+                                                style: pw.TextStyle(
+                                                    fontSize: 8,
+                                                    font: ttf,
+                                                    color: PdfColors.white),
+                                              ),
+                                            ],
+                                          ),
+                                          pw.SizedBox(width: 4),
+                                          pw.Image(loc,
+                                              height: 20,
+                                              width: 10), // Icon on the right
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   );
+                  // await Printing.layoutPdf(
+                  //   onLayout: (PdfPageFormat format) async {
+                  //     return pdf.save();
+                  //   },
+                  //   format: const PdfPageFormat(
+                  //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                  // );
 
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
+                  await Printing.sharePdf(
+                      bytes: await pdf.save(), filename: '${uid}.pdf');
                 },
                 child: CustomText(
                   text: 'Print',

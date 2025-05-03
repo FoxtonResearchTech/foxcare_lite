@@ -155,6 +155,7 @@ class _EditDeletePatientInformation
 
                                 CustomSnackBar(context,
                                     message: 'Patient Deleted');
+                                fetchData();
                               } catch (e) {
                                 print(
                                     'Error updating status for patient ${data['patientID']}: $e');
@@ -165,7 +166,10 @@ class _EditDeletePatientInformation
                               }
                               Navigator.pop(context);
                             },
-                            child: CustomText(text: 'Delete')),
+                            child: CustomText(
+                              text: 'Delete',
+                              color: Colors.red,
+                            )),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).pop();

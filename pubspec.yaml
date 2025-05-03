@@ -86,9 +86,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
-    - assets/opAssets
-    - assets/opAssets/OP_Card_top.png
-    - assets/opAssets/OP_Card_back.png
+    - assets/opAssets/
     - assets/foxcare_lite_logo.png
   # assets:
   #   - images/a_dot_burr.jpeg
