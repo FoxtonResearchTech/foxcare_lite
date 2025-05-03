@@ -427,7 +427,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                     return Colors.greenAccent.shade100;
                   }
                   if (row['isMedPrescribed'] == true) {
-                    return Colors.blueAccent.shade100;
+                    return Colors.blueGrey.shade400;
                   }
                   if (row['isLabPrescribed'] == true) {
                     return Colors.yellow.shade100;
