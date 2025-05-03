@@ -89,18 +89,18 @@ class FormTextField extends StatelessWidget {
             height: 1.5,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           filled: showFilled,
           fillColor: AppColors.blue,
           focusColor: AppColors.blue,
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.lightBlue, width: 2.0),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: const BorderSide(color: Colors.lightBlue, width: 1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           suffixIcon: icon != null
               ? GestureDetector(
