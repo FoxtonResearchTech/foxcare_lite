@@ -16,6 +16,8 @@ import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../utilities/widgets/textField/long_text_fields.dart'
+    show LongTextField, LongTextFields;
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'admission_status.dart';
 import 'doctor_schedule.dart';
@@ -1006,8 +1008,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                           SizedBox(height: screenHeight * 0.01),
                           Row(
                             children: [
-                              FormTextField(
-                                verticalSize: screenHeight * 0.1,
+                              LongTextField(
                                 hintText: '',
                                 width: screenWidth * 0.2,
                                 controller: address1,
@@ -1037,8 +1038,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                           SizedBox(height: screenHeight * 0.01),
                           Row(
                             children: [
-                              FormTextField(
-                                verticalSize: screenHeight * 0.1,
+                              LongTextField(
                                 hintText: '',
                                 width: screenWidth * 0.2,
                                 controller: address2,

@@ -34,6 +34,7 @@ class CustomTextField extends StatelessWidget {
     return SizedBox(
       width: width,
       child: TextField(
+        onTap: onTap,
         onChanged: onChanged,
         maxLines: obscureText ? 1 : null,
         controller: controller,
@@ -64,15 +65,12 @@ class CustomTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           suffixIcon: icon != null
-              ? GestureDetector(
-                  onTap: onTap,
-                  child: Row(
-                    mainAxisSize:
-                        MainAxisSize.min, // Ensures the icon does not expand
-                    children: [
-                      icon!,
-                    ],
-                  ),
+              ? Row(
+                  mainAxisSize:
+                      MainAxisSize.min, // Ensures the icon does not expand
+                  children: [
+                    icon!,
+                  ],
                 )
               : null,
           suffixIconColor: AppColors.textField,

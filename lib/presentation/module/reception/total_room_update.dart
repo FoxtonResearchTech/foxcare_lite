@@ -90,62 +90,123 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
             size: screenWidth * 0.02,
           ),
         ),
-        backgroundColor: AppColors.secondaryColor,
-      ),
-      body: Container(
-        padding: EdgeInsets.only(
-          top: screenHeight * 0.05,
-          left: screenWidth * 0.04,
-          right: screenWidth * 0.04,
-          bottom: screenWidth * 0.1,
+        backgroundColor: AppColors.blue,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
         ),
-        child: Center(
+      ),
+      body: Center(
+        child: Container(
+          padding: EdgeInsets.only(
+            top: screenHeight * 0.05,
+            left: screenWidth * 0.3,
+            right: screenWidth * 0.04,
+          ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CustomText(text: "Rooms"),
-              CustomTextField(
-                  hintText: 'Enter Total Rooms',
-                  controller: _totalRoomsController,
-                  width: screenWidth * 0.2),
-              CustomTextField(
-                  hintText: 'Enter Booked Rooms',
-                  controller: _bookedRoomsController,
-                  width: screenWidth * 0.2),
-              CustomText(text: "Wards"),
-              CustomTextField(
-                  hintText: 'Enter Total Wards',
-                  controller: _totalWardsController,
-                  width: screenWidth * 0.2),
-              CustomTextField(
-                  hintText: 'Enter Booked Wards',
-                  controller: _bookedWardsController,
-                  width: screenWidth * 0.2),
-              CustomText(text: "VIP Rooms"),
-              CustomTextField(
-                  hintText: 'Enter Total VIP Rooms',
-                  controller: _totalVipRoomsController,
-                  width: screenWidth * 0.2),
-              CustomTextField(
-                  hintText: 'Enter Booked VIP Rooms',
-                  controller: _bookedVipRoomsController,
-                  width: screenWidth * 0.2),
-              CustomText(text: "ICU"),
-              CustomTextField(
-                  hintText: 'Enter Total ICU Rooms',
-                  controller: _totalICUController,
-                  width: screenWidth * 0.2),
-              CustomTextField(
-                  hintText: 'Enter Booked ICU Rooms',
-                  controller: _bookedICUController,
-                  width: screenWidth * 0.2),
-              CustomButton(
-                  label: 'Update',
-                  onPressed: () {
-                    updateRooms();
-                    clearController();
-                  },
-                  width: screenWidth * 0.2),
+              Row(
+                children: [
+                  Column(
+                    children: [
+                      CustomText(
+                        text: "Rooms",
+                        size: screenWidth * 0.016,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      CustomTextField(
+                          hintText: 'Enter Total Rooms',
+                          controller: _totalRoomsController,
+                          width: screenWidth * 0.2),
+                      SizedBox(height: screenHeight * 0.05),
+                      CustomTextField(
+                          hintText: 'Enter Booked Rooms',
+                          controller: _bookedRoomsController,
+                          width: screenWidth * 0.2),
+                    ],
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  Column(
+                    children: [
+                      CustomText(
+                        text: "Wards",
+                        size: screenWidth * 0.016,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      CustomTextField(
+                          hintText: 'Enter Total Wards',
+                          controller: _totalWardsController,
+                          width: screenWidth * 0.2),
+                      SizedBox(height: screenHeight * 0.05),
+                      CustomTextField(
+                          hintText: 'Enter Booked Wards',
+                          controller: _bookedWardsController,
+                          width: screenWidth * 0.2),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  Column(
+                    children: [
+                      CustomText(
+                        text: "VIP Rooms",
+                        size: screenWidth * 0.016,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      CustomTextField(
+                          hintText: 'Enter Total VIP Rooms',
+                          controller: _totalVipRoomsController,
+                          width: screenWidth * 0.2),
+                      SizedBox(height: screenHeight * 0.05),
+                      CustomTextField(
+                          hintText: 'Enter Booked VIP Rooms',
+                          controller: _bookedVipRoomsController,
+                          width: screenWidth * 0.2),
+                    ],
+                  ),
+                  SizedBox(width: screenHeight * 0.04),
+                  Column(
+                    children: [
+                      CustomText(
+                        text: "ICU",
+                        size: screenWidth * 0.016,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      CustomTextField(
+                          hintText: 'Enter Total ICU Rooms',
+                          controller: _totalICUController,
+                          width: screenWidth * 0.2),
+                      SizedBox(height: screenHeight * 0.05),
+                      CustomTextField(
+                          hintText: 'Enter Booked ICU Rooms',
+                          controller: _bookedICUController,
+                          width: screenWidth * 0.2),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  SizedBox(width: screenHeight * 0.2),
+                  CustomButton(
+                      label: 'Update',
+                      onPressed: () {
+                        updateRooms();
+                        clearController();
+                      },
+                      width: screenWidth * 0.2),
+                ],
+              ),
             ],
           ),
         ),

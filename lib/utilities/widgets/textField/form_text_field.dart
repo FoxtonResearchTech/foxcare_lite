@@ -43,6 +43,9 @@ class FormTextField extends StatelessWidget {
     return SizedBox(
       width: width,
       child: TextFormField(
+        textAlignVertical: TextAlignVertical.top,
+        textAlign: TextAlign.start,
+        onTap: onTap,
         maxLength: maxLength,
         validator: validator,
         onChanged: onChanged,
@@ -103,14 +106,11 @@ class FormTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           suffixIcon: icon != null
-              ? GestureDetector(
-                  onTap: onTap,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      icon!,
-                    ],
-                  ),
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    icon!,
+                  ],
                 )
               : null,
           suffixIconColor: Colors.white,

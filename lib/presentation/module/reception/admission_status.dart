@@ -227,9 +227,9 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                       MaterialPageRoute(
                           builder: (context) => TotalRoomUpdate()));
                 },
-                width: screenWidth * 0.1,
-                height: screenHeight * 0.038,
-              )
+                width: screenWidth * 0.12,
+                height: screenHeight * 0.05,
+              ),
             ],
           ),
           SizedBox(

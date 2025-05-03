@@ -38,6 +38,7 @@ class SecondaryTextField extends StatelessWidget {
     return SizedBox(
       width: width,
       child: TextField(
+        onTap: onTap,
         onChanged: onChanged,
         maxLines: obscureText ? 1 : null,
         controller: controller,
@@ -95,14 +96,11 @@ class SecondaryTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           suffixIcon: icon != null
-              ? GestureDetector(
-                  onTap: onTap,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      icon!,
-                    ],
-                  ),
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    icon!,
+                  ],
                 )
               : null,
           suffixIconColor: AppColors.secondaryColor,

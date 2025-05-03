@@ -6,6 +6,7 @@ import 'package:foxcare_lite/presentation/module/management/generalInformation/g
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/patient_information/management_patient_information.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/secondary_drop_down.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/long_text_fields.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/secondary_text_field.dart';
 
 import 'package:iconsax/iconsax.dart';
@@ -1041,8 +1042,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                           SizedBox(height: screenHeight * 0.01),
                           Row(
                             children: [
-                              FormTextField(
-                                verticalSize: screenHeight * 0.1,
+                              LongTextField(
                                 hintText: '',
                                 width: screenWidth * 0.2,
                                 controller: address1,
@@ -1072,8 +1072,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                           SizedBox(height: screenHeight * 0.01),
                           Row(
                             children: [
-                              FormTextField(
-                                verticalSize: screenHeight * 0.1,
+                              LongTextField(
                                 hintText: '',
                                 width: screenWidth * 0.2,
                                 controller: address2,

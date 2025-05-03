@@ -65,74 +65,6 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
     super.dispose();
   }
 
-  Future<void> endIP(String opNumber, String ipTicket) async {
-    try {
-      final patientDocRef =
-          FirebaseFirestore.instance.collection('patients').doc(opNumber);
-
-      // Get IP admission details
-      final querySnapshot =
-          await patientDocRef.collection('ipPrescription').doc('details').get();
-
-      String roomNumber = querySnapshot['ipAdmission']['roomNumber'];
-      String roomType = querySnapshot['ipAdmission']['roomType'];
-
-      int index = int.parse(roomNumber) - 1;
-
-      DocumentReference totalRoomRef =
-          FirebaseFirestore.instance.collection('totalRoom').doc('status');
-
-      final totalRoomSnapshot = await totalRoomRef.get();
-
-      if (totalRoomSnapshot.exists) {
-        Map<String, dynamic> data =
-            totalRoomSnapshot.data() as Map<String, dynamic>;
-
-        List<bool> roomStatus = List<bool>.from(data['roomStatus']);
-        List<bool> wardStatus = List<bool>.from(data['wardStatus']);
-        List<bool> viproomStatus = List<bool>.from(data['viproomStatus']);
-        List<bool> ICUStatus = List<bool>.from(data['ICUStatus']);
-
-        if (roomType == "Ward Room") {
-          wardStatus[index] = false;
-        } else if (roomType == "VIP Room") {
-          viproomStatus[index] = false;
-        } else if (roomType == "ICU") {
-          ICUStatus[index] = false;
-        } else if (roomType == "Room") {
-          roomStatus[index] = false;
-        }
-
-        await totalRoomRef.update({
-          "roomStatus": roomStatus,
-          "wardStatus": wardStatus,
-          "viproomStatus": viproomStatus,
-          "ICUStatus": ICUStatus,
-        });
-
-        final ipPrescriptionRef = patientDocRef.collection('ipPrescription');
-        final ipDocs = await ipPrescriptionRef.get();
-
-        for (var doc in ipDocs.docs) {
-          await doc.reference.delete();
-        }
-
-        await patientDocRef.update({'isIP': false});
-        await patientDocRef
-            .collection('ipTickets')
-            .doc(ipTicket)
-            .update({'discharged': true});
-
-        CustomSnackBar(context, message: 'IP ended and ipPrescription removed');
-      } else {
-        CustomSnackBar(context, message: 'Total Room Data Not Found');
-      }
-    } catch (e) {
-      CustomSnackBar(context, message: 'Cannot End IP');
-      print("Error ending IP: $e");
-    }
-  }
-
   Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
     print('Fetching data with OP Number: $ipNumber');
 
@@ -235,50 +167,40 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
               'PinCode': patientData['pincode'] ?? 'N/A',
               'Status': ipTicketData['status'] ?? 'N/A',
               'Primary Info': ipTicketData['otherComments'] ?? 'N/A',
-              'Action': hasIpPrescription
-                  ? TextButton(
-                      onPressed: () {
-                        endIP(patientId, ipTicketData['ipTicket']);
-                      },
-                      child: const CustomText(text: 'End IP'),
-                    )
-                  : TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => IpPrescription(
-                              patientID: patientData['opNumber'] ?? 'N/A',
-                              name:
-                                  '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
-                                      .trim(),
-                              date: ipTicketData['ipAdmitDate'],
-                              age: patientData['age'] ?? 'N/A',
-                              place: patientData['state'] ?? 'N/A',
-                              address: patientData['address1'] ?? 'N/A',
-                              pincode: patientData['pincode'] ?? 'N/A',
-                              primaryInfo:
-                                  ipTicketData['otherComments'] ?? 'N/A',
-                              temperature: ipTicketData['temperature'] ?? 'N/A',
-                              bloodPressure:
-                                  ipTicketData['bloodPressure'] ?? 'N/A',
-                              sugarLevel:
-                                  ipTicketData['bloodSugarLevel'] ?? 'N/A',
-                              phone1: patientData['phone1'],
-                              phone2: patientData['phone2'],
-                              sex: patientData['sex'],
-                              bloodGroup: patientData['bloodGroup'],
-                              firstName: patientData['firstName'],
-                              lastName: patientData['lastName'],
-                              dob: patientData['dob'],
-                              doctorName: widget.doctorName,
-                              ipNumber: ipTicketData['ipTicket'],
-                              specialization: ipTicketData['specialization'],
-                            ),
-                          ),
-                        );
-                      },
-                      child: const CustomText(text: 'Create')),
+              'Action': TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => IpPrescription(
+                          patientID: patientData['opNumber'] ?? 'N/A',
+                          name:
+                              '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                  .trim(),
+                          date: ipTicketData['ipAdmitDate'],
+                          age: patientData['age'] ?? 'N/A',
+                          place: patientData['state'] ?? 'N/A',
+                          address: patientData['address1'] ?? 'N/A',
+                          pincode: patientData['pincode'] ?? 'N/A',
+                          primaryInfo: ipTicketData['otherComments'] ?? 'N/A',
+                          temperature: ipTicketData['temperature'] ?? 'N/A',
+                          bloodPressure: ipTicketData['bloodPressure'] ?? 'N/A',
+                          sugarLevel: ipTicketData['bloodSugarLevel'] ?? 'N/A',
+                          phone1: patientData['phone1'],
+                          phone2: patientData['phone2'],
+                          sex: patientData['sex'],
+                          bloodGroup: patientData['bloodGroup'],
+                          firstName: patientData['firstName'],
+                          lastName: patientData['lastName'],
+                          dob: patientData['dob'],
+                          doctorName: widget.doctorName,
+                          ipNumber: ipTicketData['ipTicket'],
+                          specialization: ipTicketData['specialization'],
+                        ),
+                      ),
+                    );
+                  },
+                  child: const CustomText(text: 'Prescribe')),
               'Abscond': TextButton(
                   onPressed: () async {
                     try {
