@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/custom_icon_button.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/secondary_drop_down.dart';
@@ -200,6 +201,17 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               TextButton(
                 onPressed: () async {
                   final pdf = pw.Document();
+                  final topImage = pw.MemoryImage(
+                    (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
+                        .buffer
+                        .asUint8List(),
+                  );
+                  final bottomImage = pw.MemoryImage(
+                    (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
+                        .buffer
+                        .asUint8List(),
+                  );
+
                   pdf.addPage(
                     pw.Page(
                       pageFormat: const PdfPageFormat(
@@ -207,19 +219,24 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                       build: (pw.Context context) => pw.Center(
                         child: pw.Container(
                           width: 300,
-                          height: 200,
-                          padding: const pw.EdgeInsets.all(16), // Inner padding
+                          height: 400, // Increased height to accommodate images
+                          padding: const pw.EdgeInsets.all(16),
                           decoration: pw.BoxDecoration(
-                            border: pw.Border.all(
-                                color: PdfColors.grey), // Border color
-                            borderRadius:
-                                pw.BorderRadius.circular(8), // Rounded corners
+                            border: pw.Border.all(color: PdfColors.grey),
+                            borderRadius: pw.BorderRadius.circular(8),
                           ),
                           child: pw.Column(
                             crossAxisAlignment: pw.CrossAxisAlignment.start,
                             children: [
+                              // TOP IMAGE
+                              pw.Center(
+                                child: pw.Image(topImage,
+                                    height: 50), // Your top image here
+                              ),
+                              pw.SizedBox(height: 5),
+
                               pw.Text(
-                                'ABC Hospital ',
+                                'ABC Hospital',
                                 style: pw.TextStyle(
                                   fontSize: 16,
                                   fontWeight: pw.FontWeight.bold,
@@ -227,22 +244,43 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                               ),
                               pw.SizedBox(height: 2),
                               pw.Center(
-                                child: pw.Text('Care through excelling'),
-                              ),
+                                  child: pw.Text('Care through excelling')),
                               pw.SizedBox(height: 2),
                               pw.Divider(),
                               pw.SizedBox(height: 5),
                               pw.Text('Patient ID: $uid'),
                               pw.Text(
-                                  'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
+                                  'Name: ${firstname.text} ${middlename.text} ${lastname.text}'),
                               pw.Text('DOB: ${dob.text}'),
                               pw.Text(
-                                  'Address: ${address1.text},${city.text},${pincode.text}'),
+                                  'Address: ${address1.text}, ${city.text}, ${pincode.text}'),
                               pw.Divider(),
-                              pw.Text(
-                                  'Please bring your card for every check up'),
-                              pw.SizedBox(height: 2),
-                              pw.Text('Contact : '),
+
+                              // BOTTOM IMAGE WITH STACKED TEXT
+                              pw.Expanded(
+                                child: pw.Stack(
+                                  alignment: pw.Alignment.center,
+                                  children: [
+                                    pw.Positioned.fill(
+                                      child: pw.Image(bottomImage,
+                                          fit: pw.BoxFit.cover),
+                                    ),
+                                    pw.Column(
+                                      mainAxisSize: pw.MainAxisSize.min,
+                                      children: [
+                                        pw.Text(
+                                            'Please bring your card for every check up',
+                                            style: pw.TextStyle(
+                                                color: PdfColors.white)),
+                                        pw.SizedBox(height: 2),
+                                        pw.Text('Contact : ',
+                                            style: pw.TextStyle(
+                                                color: PdfColors.white)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
