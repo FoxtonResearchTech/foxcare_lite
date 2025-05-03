@@ -26,6 +26,8 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
 
   String? selectedDoctor;
   String? selectedSpecification;
+  String? selectedDegree;
+
   String? selectedCounter;
   TimeOfDay? opTime;
   TimeOfDay? outTime;
@@ -75,8 +77,8 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     }
   }
 
-  Map<String, String> doctorSpecializations =
-      {}; // {doctorName: specialization}
+  Map<String, String> doctorSpecializations = {};
+  Map<String, String> doctorDegree = {};
   void fetchDoctors() async {
     final employeesSnapshot =
         await FirebaseFirestore.instance.collection('employees').get();
@@ -87,11 +89,23 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
         final lastName = doc['lastName'] ?? '';
         final doctorName = '$firstName $lastName';
         final specialization = doc['specialization'] ?? '';
+        final qualification =
+            doc['qualification'] as Map<String, dynamic>? ?? {};
+
+        final ug = qualification['ug'] as Map<String, dynamic>? ?? {};
+        final pg = qualification['pg'] as Map<String, dynamic>?;
+
+        final ugDegree = ug['degree'] ?? '';
+        final pgDegree = pg != null ? (pg['degree'] ?? '') : null;
+        final degree = pgDegree?.isNotEmpty == true
+            ? ugDegree + ', ' + pgDegree!
+            : ugDegree;
 
         if (!doctors.contains(doctorName)) {
           setState(() {
             doctors.add(doctorName);
             doctorSpecializations[doctorName] = specialization;
+            doctorDegree[doctorName] = degree;
           });
         }
       }
@@ -105,6 +119,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
 
   final TextEditingController specializationController =
       TextEditingController();
+  final TextEditingController degreeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +239,8 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
                     selectedSpecialization =
                         doctorSpecializations[value!] ?? '';
                     specializationController.text = selectedSpecialization!;
+                    selectedDegree = doctorDegree[value] ?? '';
+                    degreeController.text = selectedDegree!;
                   });
                 },
               ),
@@ -564,6 +581,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       'eveningOpOut': outTimeAfternoon?.format(context) ?? '',
       'counter': selectedCounter,
       'createdAt': FieldValue.serverTimestamp(),
+      'degree': selectedDegree,
       'date': today, // 🔥 Add date field
     };
 

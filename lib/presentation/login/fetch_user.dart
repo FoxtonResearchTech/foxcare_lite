@@ -41,7 +41,8 @@ class UserModel {
 
     return UserModel(
       name: '$firstName $lastName'.trim(),
-      degree: pgDegree?.isNotEmpty == true ? pgDegree! : ugDegree,
+      degree:
+          pgDegree?.isNotEmpty == true ? ugDegree + ', ' + pgDegree! : ugDegree,
     );
   }
 }

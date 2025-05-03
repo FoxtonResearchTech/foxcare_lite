@@ -8,8 +8,6 @@ import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/secondary_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/form_text_field.dart';
-import 'package:foxcare_lite/utilities/widgets/textField/secondary_text_field.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
@@ -19,14 +17,9 @@ import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/textField/long_text_fields.dart'
-    show LongTextField, LongTextFields;
+    show LongTextField;
 import '../../../utilities/widgets/textField/primary_textField.dart';
-import 'admission_status.dart';
-import 'doctor_schedule.dart';
-import 'ip_admission.dart';
-import 'ip_patients_admission.dart';
-import 'op_counters.dart';
-import 'op_ticket.dart';
+
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -42,6 +35,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   String? selectedSex;
   String? selectedBloodGroup;
   bool isLoading = false;
+  bool isRegisterLoading = false;
   final TextEditingController firstname = TextEditingController();
   final TextEditingController lastname = TextEditingController();
   final TextEditingController middlename = TextEditingController();
@@ -115,6 +109,9 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   }
 
   Future<void> savePatientDetails() async {
+    setState(() {
+      isRegisterLoading = true;
+    });
     Map<String, dynamic> patientData = {
       'opNumber': uid,
       'firstName': firstname.text,
@@ -403,6 +400,9 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           );
         },
       );
+      setState(() {
+        isRegisterLoading = false;
+      });
       await initializeUid();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1493,27 +1493,30 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                           },
                           width: screenWidth * 0.2),
                       SizedBox(width: screenWidth * 0.22),
-                      CustomButton(
-                          label: 'Register',
-                          onPressed: () async {
-                            if (validateForm3()) {
-                              setState(() {
-                                isLoading = true;
-                                previousProgress = progress;
-                                currentStep++;
-                              });
+                      isRegisterLoading
+                          ? Lottie.asset('assets/button_loading.json',
+                              height: 150, width: 150)
+                          : CustomButton(
+                              label: 'Register',
+                              onPressed: () async {
+                                if (validateForm3()) {
+                                  setState(() {
+                                    isLoading = true;
+                                    previousProgress = progress;
+                                    currentStep++;
+                                  });
 
-                              await Future.delayed(
-                                  const Duration(milliseconds: 600));
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 600));
 
-                              await savePatientDetails();
+                                  await savePatientDetails();
 
-                              setState(() {
-                                isLoading = false;
-                              });
-                            }
-                          },
-                          width: screenWidth * 0.2),
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              },
+                              width: screenWidth * 0.2),
                       SizedBox(width: screenWidth * 0.015),
                     ],
                   ),

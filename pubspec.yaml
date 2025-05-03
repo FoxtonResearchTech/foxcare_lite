@@ -107,6 +107,7 @@ flutter:
     - family: SanFrancisco
       fonts:
         - asset: Fonts/Poppins/Poppins-Regular.ttf
+
   # fonts:
   #   - family: Schyler
   #     fonts:
