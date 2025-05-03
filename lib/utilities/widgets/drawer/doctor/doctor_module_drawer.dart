@@ -36,16 +36,12 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 300), // Faster transition
+        transitionDuration: const Duration(milliseconds: 150), // Very fast
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          // Define the scale and fade transition
-          const begin = 0.0;  // Start at 0 scale
-          const end = 1.0;    // End at full scale
-          const curve = Curves.easeOut;
+          const curve = Curves.fastOutSlowIn;
 
-          // Fade and scale animations
-          final scaleTween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final scaleTween = Tween(begin: 0.9, end: 1.0).chain(CurveTween(curve: curve));
           final fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
           final scaleAnimation = animation.drive(scaleTween);
