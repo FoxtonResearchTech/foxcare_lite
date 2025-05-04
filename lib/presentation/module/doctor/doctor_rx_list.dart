@@ -187,6 +187,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RxPrescription(
+                            tokenNo: tokenNo,
                             patientID: patientData['opNumber'] ?? 'N/A',
                             name:
                                 '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
@@ -195,6 +196,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                             age: patientData['age'] ?? 'N/A',
                             place: patientData['state'] ?? 'N/A',
                             address: patientData['address1'] ?? 'N/A',
+                            city: patientData['city'] ?? 'N/A',
                             pincode: patientData['pincode'] ?? 'N/A',
                             primaryInfo: opTicketData['otherComments'] ?? 'N/A',
                             temperature: opTicketData['temperature'] ?? 'N/A',
@@ -202,6 +204,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                                 opTicketData['bloodPressure'] ?? 'N/A',
                             sugarLevel:
                                 opTicketData['bloodSugarLevel'] ?? 'N/A',
+                            counter: opTicketData['counter'] ?? 'N/A',
                             phone1: patientData['phone1'],
                             phone2: patientData['phone2'],
                             sex: patientData['sex'],
