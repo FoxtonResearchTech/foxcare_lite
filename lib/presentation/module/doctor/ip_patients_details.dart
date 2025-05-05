@@ -115,7 +115,6 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
           if (matches) {
             String tokenNo = '';
             String tokenDate = '';
-            bool hasIpPrescription = false;
 
             try {
               final tokenSnapshot = await FirebaseFirestore.instance
@@ -133,16 +132,6 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                 if (tokenData != null && tokenData['date'] != null) {
                   tokenDate = tokenData['date'];
                 }
-                final ipPrescriptionSnapshot = await FirebaseFirestore.instance
-                    .collection('patients')
-                    .doc(patientId)
-                    .collection('ipPrescription')
-                    .limit(1)
-                    .get();
-
-                if (ipPrescriptionSnapshot.size > 0) {
-                  hasIpPrescription = true;
-                }
               }
             } catch (e) {
               print('Error fetching tokenNo for patient $patientId: $e');
@@ -152,6 +141,16 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                   'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
               continue;
             }
+            DocumentSnapshot ipPrescriptionSnapshot = await FirebaseFirestore
+                .instance
+                .collection('patients')
+                .doc(patientId)
+                .collection('ipPrescription')
+                .doc('details')
+                .get();
+            Map<String, dynamic>? detailsData = ipPrescriptionSnapshot.exists
+                ? ipPrescriptionSnapshot.data() as Map<String, dynamic>?
+                : null;
 
             fetchedData.add({
               'Token NO': tokenNo,
@@ -177,7 +176,15 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                           name:
                               '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
                                   .trim(),
+                          city: patientData['city'] ?? 'N/A',
+                          roomWard: detailsData?['ipAdmission']?['roomType'] !=
+                                      null &&
+                                  detailsData?['ipAdmission']?['roomNumber'] !=
+                                      null
+                              ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
+                              : 'N/A',
                           date: ipTicketData['ipAdmitDate'],
+                          ipAdmitDate: ipTicketData['ipAdmitDate'] ?? 'N/A',
                           age: patientData['age'] ?? 'N/A',
                           place: patientData['state'] ?? 'N/A',
                           address: patientData['address1'] ?? 'N/A',
