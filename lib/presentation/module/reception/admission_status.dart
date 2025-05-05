@@ -192,7 +192,7 @@ class _AdmissionStatus extends State<AdmissionStatus> {
                 child: Column(
                   children: [
                     CustomText(
-                      text: "Admission Status",
+                      text: "Room Availability",
                       size: screenWidth * 0.03,
                     ),
                   ],

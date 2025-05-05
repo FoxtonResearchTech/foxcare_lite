@@ -63,7 +63,10 @@ class SecondaryDataTable extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Center(
-                    child: CustomText(text: value.toString()),
+                    child: CustomText(
+                      text: value.toString(),
+                      maxLines: 2,
+                    ),
                   ),
                 );
               }),

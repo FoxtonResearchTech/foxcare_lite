@@ -207,7 +207,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   final ttf = pw.Font.ttf(font);
 
                   final topImage = pw.MemoryImage(
-                    (await rootBundle.load('assets/opAssets/OP_Ticket_Top.png'))
+                    (await rootBundle
+                            .load('assets/opAssets/OP_Ticket_Top_original.png'))
                         .buffer
                         .asUint8List(),
                   );

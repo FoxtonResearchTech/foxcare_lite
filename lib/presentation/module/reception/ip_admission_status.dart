@@ -1,29 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/utilities/colors.dart';
 
-import 'package:iconsax/iconsax.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import 'general_information_doctor_visit_schedule.dart';
-import 'general_information_edit_doctor_visit_schedule.dart';
-import 'general_information_ip_admission.dart';
 
-class GeneralInformationAdmissionStatus extends StatefulWidget {
+class IpAdmissionStatus extends StatefulWidget {
   @override
-  State<GeneralInformationAdmissionStatus> createState() =>
-      _GeneralInformationAdmissionStatus();
+  State<IpAdmissionStatus> createState() => _IpAdmissionStatus();
 }
 
-class _GeneralInformationAdmissionStatus
-    extends State<GeneralInformationAdmissionStatus> {
-  int selectedIndex = 2;
+class _IpAdmissionStatus extends State<IpAdmissionStatus> {
+  int selectedIndex = 7;
   TextEditingController _patientID = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
 
@@ -163,7 +156,7 @@ class _GeneralInformationAdmissionStatus
           : null, // No AppBar for web view
       drawer: isMobile
           ? Drawer(
-              child: ManagementGeneralInformationDrawer(
+              child: ReceptionDrawer(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {
@@ -179,7 +172,7 @@ class _GeneralInformationAdmissionStatus
             Container(
               width: 300, // Fixed width for the sidebar
               color: Colors.blue.shade100,
-              child: ManagementGeneralInformationDrawer(
+              child: ReceptionDrawer(
                 selectedIndex: selectedIndex,
                 onItemSelected: (index) {
                   setState(() {

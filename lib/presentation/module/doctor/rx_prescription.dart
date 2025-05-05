@@ -405,79 +405,6 @@ class _RxPrescription extends State<RxPrescription> {
     }
   }
 
-  void addPaginatedTablePages({
-    required pw.Document doc,
-    required List<String> headers,
-    required List<Map<String, dynamic>> data,
-    required pw.Font ttf,
-    required PdfColor headerColor,
-    required int maxRowsPerPage,
-    required String title,
-  }) {
-    final int chunkSize = maxRowsPerPage;
-    final chunks = <List<Map<String, dynamic>>>[];
-    for (var i = 0; i < data.length; i += chunkSize) {
-      chunks.add(data.sublist(
-        i,
-        (i + chunkSize > data.length) ? data.length : i + chunkSize,
-      ));
-    }
-
-    for (var chunk in chunks) {
-      doc.addPage(
-        pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
-          build: (context) => [
-            pw.Text(title,
-                style: pw.TextStyle(
-                  fontSize: 16,
-                  font: ttf,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.blue,
-                )),
-            pw.SizedBox(height: 6),
-            pw.Table(
-              border: pw.TableBorder.all(color: headerColor),
-              defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-              children: [
-                pw.TableRow(
-                  decoration: pw.BoxDecoration(color: headerColor),
-                  children: headers.map((h) {
-                    return pw.Padding(
-                      padding: const pw.EdgeInsets.all(2),
-                      child: pw.Text(
-                        h,
-                        style: pw.TextStyle(
-                          fontSize: 8,
-                          font: ttf,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.white,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                ...chunk.map((row) {
-                  return pw.TableRow(
-                    children: headers.map((h) {
-                      return pw.Padding(
-                        padding: const pw.EdgeInsets.all(2),
-                        child: pw.Text(
-                          row[h]?.toString() ?? '',
-                          style: pw.TextStyle(font: ttf, fontSize: 8),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                }),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
   Future<void> _savePrescriptionData() async {
     try {
       final Map<String, dynamic> patientData = {
@@ -970,6 +897,102 @@ class _RxPrescription extends State<RxPrescription> {
                                           pw.MainAxisAlignment.spaceBetween,
                                       children: [
                                         pw.Text(
+                                          'Signs ',
+                                          style: pw.TextStyle(
+                                            fontSize: 16,
+                                            font: ttf,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color: blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    pw.SizedBox(height: 6),
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.start,
+                                      children: [
+                                        pw.SizedBox(width: 40),
+                                        pw.Text(
+                                          '*${_diagnosisSignsController.text} ',
+                                          style: pw.TextStyle(
+                                            fontSize: 12,
+                                            font: ttf,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color: PdfColors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                          child: pw.Container(
+                            child: pw.Column(
+                              children: [
+                                pw.SizedBox(height: 20),
+                                pw.Column(
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        pw.Text(
+                                          'Symptoms ',
+                                          style: pw.TextStyle(
+                                            fontSize: 16,
+                                            font: ttf,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color: blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    pw.SizedBox(height: 6),
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.start,
+                                      children: [
+                                        pw.SizedBox(width: 40),
+                                        pw.Text(
+                                          '*${_symptomsController.text} ',
+                                          style: pw.TextStyle(
+                                            fontSize: 12,
+                                            font: ttf,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color: PdfColors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                          child: pw.Container(
+                            child: pw.Column(
+                              children: [
+                                pw.SizedBox(height: 20),
+                                pw.Column(
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        pw.Text(
                                           'Lab Investigations ',
                                           style: pw.TextStyle(
                                             fontSize: 16,
@@ -1168,13 +1191,13 @@ class _RxPrescription extends State<RxPrescription> {
                     ),
                   );
                   //
-                  // await Printing.layoutPdf(
-                  //   onLayout: (format) async => pdf.save(),
-                  // );
+                  await Printing.layoutPdf(
+                    onLayout: (format) async => pdf.save(),
+                  );
 
-                  await Printing.sharePdf(
-                      bytes: await pdf.save(),
-                      filename: '${widget.opTicket}.pdf');
+                  // await Printing.sharePdf(
+                  //     bytes: await pdf.save(),
+                  //     filename: '${widget.opTicket}.pdf');
                 },
                 child: const Text('Print'),
               ),

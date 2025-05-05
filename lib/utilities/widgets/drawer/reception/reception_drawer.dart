@@ -5,7 +5,10 @@ import 'package:foxcare_lite/presentation/module/reception/admission_status.dart
 import 'package:foxcare_lite/presentation/module/reception/book_appointments.dart';
 import 'package:foxcare_lite/presentation/module/reception/doctor_schedule_view.dart';
 import 'package:foxcare_lite/presentation/module/reception/ip_admission.dart';
+import 'package:foxcare_lite/presentation/module/reception/ip_admission_status.dart';
+import 'package:foxcare_lite/presentation/module/reception/op_card_print.dart';
 import 'package:foxcare_lite/presentation/module/reception/op_ticket.dart';
+import 'package:foxcare_lite/presentation/module/reception/op_ticket_print.dart';
 import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../presentation/login/fetch_user.dart';
@@ -96,7 +99,7 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
           },
         ),
         DrawerMenuItem(
-          title: 'Admission Status',
+          title: 'Room Availability',
           icon: Iconsax.check,
           onTap: () {
             navigateWithTransition(context, AdmissionStatus());
@@ -114,6 +117,27 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
           icon: Icons.book_online_outlined,
           onTap: () {
             navigateWithTransition(context, BookAppointments());
+          },
+        ),
+        DrawerMenuItem(
+          title: 'Admission Status',
+          icon: Icons.book_online_outlined,
+          onTap: () {
+            navigateWithTransition(context, IpAdmissionStatus());
+          },
+        ),
+        DrawerMenuItem(
+          title: 'OP Card Print',
+          icon: Icons.book_online_outlined,
+          onTap: () {
+            navigateWithTransition(context, OpCardPrint());
+          },
+        ),
+        DrawerMenuItem(
+          title: 'OP Ticket Print',
+          icon: Icons.book_online_outlined,
+          onTap: () {
+            navigateWithTransition(context, OpTicketPrint());
           },
         ),
         DrawerMenuItem(
