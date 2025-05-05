@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 
+import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
@@ -29,13 +30,67 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
   final TextEditingController _totalICUController = TextEditingController();
   final TextEditingController _bookedICUController = TextEditingController();
 
-  /// Generates a List<bool> based on total rooms and booked count
-  List<bool> generateRoomStatus(int totalRooms, int bookedRooms) {
-    bookedRooms = bookedRooms.clamp(0, totalRooms); // Ensure valid range
-    return List.generate(totalRooms, (index) => index < bookedRooms);
+  List<String> generateRoomStatus(int total, int booked) {
+    return List.generate(
+        total, (index) => index < booked ? "booked" : "available");
   }
 
   Future<void> updateRooms() async {
+    int totalRooms = int.tryParse(_totalRoomsController.text) ?? 0;
+    int bookedRooms = int.tryParse(_bookedRoomsController.text) ?? 0;
+
+    int totalWards = int.tryParse(_totalWardsController.text) ?? 0;
+    int bookedWards = int.tryParse(_bookedWardsController.text) ?? 0;
+
+    int totalVipRooms = int.tryParse(_totalVipRoomsController.text) ?? 0;
+    int bookedVipRooms = int.tryParse(_bookedVipRoomsController.text) ?? 0;
+
+    int totalICU = int.tryParse(_totalICUController.text) ?? 0;
+    int bookedICU = int.tryParse(_bookedICUController.text) ?? 0;
+
+    DocumentReference docRef =
+        FirebaseFirestore.instance.collection('totalRoom').doc('status');
+    DocumentSnapshot docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Room status document not found.')),
+      );
+      return;
+    }
+
+    Map<String, dynamic> existingData = docSnap.data() as Map<String, dynamic>;
+
+    List<String> updatedRoomStatus = [
+      ...(existingData['roomStatus'] as List<dynamic>).cast<String>(),
+      ...generateRoomStatus(totalRooms, bookedRooms),
+    ];
+    List<String> updatedWardStatus = [
+      ...(existingData['wardStatus'] as List<dynamic>).cast<String>(),
+      ...generateRoomStatus(totalWards, bookedWards),
+    ];
+    List<String> updatedVipRoomStatus = [
+      ...(existingData['viproomStatus'] as List<dynamic>).cast<String>(),
+      ...generateRoomStatus(totalVipRooms, bookedVipRooms),
+    ];
+    List<String> updatedICUStatus = [
+      ...(existingData['ICUStatus'] as List<dynamic>).cast<String>(),
+      ...generateRoomStatus(totalICU, bookedICU),
+    ];
+
+    await docRef.update({
+      "roomStatus": updatedRoomStatus,
+      "wardStatus": updatedWardStatus,
+      "viproomStatus": updatedVipRoomStatus,
+      "ICUStatus": updatedICUStatus,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Room data updated successfully!')),
+    );
+  }
+
+  Future<void> setRooms() async {
     int totalRooms = int.tryParse(_totalRoomsController.text) ?? 0;
     int bookedRooms = int.tryParse(_bookedRoomsController.text) ?? 0;
 
@@ -58,11 +113,10 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
     await FirebaseFirestore.instance
         .collection('totalRoom')
         .doc('status')
-        .update(data);
+        .set(data);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Room data updated successfully!')),
-    );
+    CustomSnackBar(context,
+        message: 'Room Set Successfully', backgroundColor: Colors.green);
   }
 
   void clearController() {
@@ -196,15 +250,23 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
               ),
               SizedBox(height: screenHeight * 0.02),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  SizedBox(width: screenHeight * 0.2),
                   CustomButton(
                       label: 'Update',
                       onPressed: () {
                         updateRooms();
                         clearController();
                       },
-                      width: screenWidth * 0.2),
+                      width: screenWidth * 0.17),
+                  CustomButton(
+                      label: 'Set',
+                      onPressed: () {
+                        setRooms();
+                        clearController();
+                      },
+                      width: screenWidth * 0.17),
+                  SizedBox(width: screenWidth * 0.23),
                 ],
               ),
             ],

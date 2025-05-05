@@ -121,21 +121,21 @@ class _ReceptionDrawer extends State<ReceptionDrawer> {
         ),
         DrawerMenuItem(
           title: 'Admission Status',
-          icon: Icons.book_online_outlined,
+          icon: Icons.fact_check_outlined,
           onTap: () {
             navigateWithTransition(context, IpAdmissionStatus());
           },
         ),
         DrawerMenuItem(
           title: 'OP Card Print',
-          icon: Icons.book_online_outlined,
+          icon: Icons.print,
           onTap: () {
             navigateWithTransition(context, OpCardPrint());
           },
         ),
         DrawerMenuItem(
           title: 'OP Ticket Print',
-          icon: Icons.book_online_outlined,
+          icon: Icons.print,
           onTap: () {
             navigateWithTransition(context, OpTicketPrint());
           },

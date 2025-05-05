@@ -222,6 +222,7 @@ class _IpPrescription extends State<IpPrescription> {
     'Duration',
   ];
   List<Map<String, dynamic>> medicineTableData = [];
+
   Future<void> endIP(String opNumber, String ipTicket) async {
     try {
       final patientDocRef =
@@ -244,19 +245,19 @@ class _IpPrescription extends State<IpPrescription> {
         Map<String, dynamic> data =
             totalRoomSnapshot.data() as Map<String, dynamic>;
 
-        List<bool> roomStatus = List<bool>.from(data['roomStatus']);
-        List<bool> wardStatus = List<bool>.from(data['wardStatus']);
-        List<bool> viproomStatus = List<bool>.from(data['viproomStatus']);
-        List<bool> ICUStatus = List<bool>.from(data['ICUStatus']);
+        List<String> roomStatus = List<String>.from(data['roomStatus']);
+        List<String> wardStatus = List<String>.from(data['wardStatus']);
+        List<String> viproomStatus = List<String>.from(data['viproomStatus']);
+        List<String> ICUStatus = List<String>.from(data['ICUStatus']);
 
         if (roomType == "Ward Room") {
-          wardStatus[index] = false;
+          wardStatus[index] = 'available';
         } else if (roomType == "VIP Room") {
-          viproomStatus[index] = false;
+          viproomStatus[index] = 'available';
         } else if (roomType == "ICU") {
-          ICUStatus[index] = false;
+          ICUStatus[index] = 'available';
         } else if (roomType == "Room") {
-          roomStatus[index] = false;
+          roomStatus[index] = 'available';
         }
 
         await totalRoomRef.update({
@@ -357,15 +358,6 @@ class _IpPrescription extends State<IpPrescription> {
     for (int i = 0; i < medicineTableData.length; i++) {
       medicineTableData[i]['SL No'] = i + 1;
     }
-  }
-
-  void _filterMedicine(String query) {
-    setState(() {
-      _searchMedicine = query;
-      _filteredMedicine = medicineNames
-          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
   }
 
   void _filterItems(String query) {

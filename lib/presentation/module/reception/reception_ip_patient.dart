@@ -67,10 +67,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
   String? selectedValue;
   String? selectedIPAdmissionValue;
   bool _isSwitched = false;
-  List<bool> roomStatus = [];
-  List<bool> wardStatus = [];
-  List<bool> viproomStatus = [];
-  List<bool> ICUStatus = [];
+
+  List<String> roomStatus = [];
+  List<String> wardStatus = [];
+  List<String> viproomStatus = [];
+  List<String> ICUStatus = [];
   String? selectedRoom;
 
   Future<void> fetchRoomData() async {
@@ -82,10 +83,10 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
 
       if (doc.exists) {
         setState(() {
-          roomStatus = List<bool>.from(doc['roomStatus']);
-          wardStatus = List<bool>.from(doc['wardStatus']);
-          viproomStatus = List<bool>.from(doc['viproomStatus']);
-          ICUStatus = List<bool>.from(doc['ICUStatus']);
+          roomStatus = List<String>.from(doc['roomStatus']);
+          wardStatus = List<String>.from(doc['wardStatus']);
+          viproomStatus = List<String>.from(doc['viproomStatus']);
+          ICUStatus = List<String>.from(doc['ICUStatus']);
         });
       } else {
         print("Document does not exist.");
@@ -438,11 +439,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                         runSpacing: 10, // Vertical spacing between rooms
                         children: List.generate(roomStatus.length, (index) {
                           return GestureDetector(
-                            onTap: roomStatus[index]
-                                ? null // Disable interaction if the room is booked
+                            onTap: (roomStatus[index] == "booked" ||
+                                    roomStatus[index] == "available")
+                                ? null
                                 : () {
-                                    // Optional: Add booking functionality here if needed
-                                    // setState to toggle room status or handle booking logic
+                                    // Handle booking or toggling logic
                                   },
                             child: InkWell(
                               child: Container(
@@ -451,10 +452,12 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 height: 60,
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
-                                  color: roomStatus[index]
+                                  color: roomStatus[index] == 'booked'
                                       ? AppColors.blue
-                                      : AppColors.lightBlue,
-                                  // Red for booked, green for available
+                                      : roomStatus[index] == 'available'
+                                          ? AppColors.lightBlue
+                                          : AppColors.roomDisabled,
+
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
                                 ),
@@ -476,19 +479,19 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 ),
                               ),
                               onTap: () {
-                                setState(() {
-                                  roomStatus[index] =
-                                      true; // Correctly update the value
-                                  selectedRoom = (index + 1).toString();
-                                  print(selectedRoom);
-                                });
-                                print('${index + 1} pressed');
+                                // if (roomStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     roomStatus[index] = 'booked';
+                                //   });
+                                //   print('${index + 1} pressed');
+                                // }
                               },
                               onDoubleTap: () {
-                                setState(() {
-                                  roomStatus[index] =
-                                      false; // Correctly update the value
-                                });
+                                // if (roomStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     roomStatus[index] = 'available';
+                                //   });
+                                // }
                               },
                             ),
                           );
@@ -521,11 +524,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                         runSpacing: 10, // Vertical spacing between rooms
                         children: List.generate(wardStatus.length, (index) {
                           return GestureDetector(
-                            onTap: wardStatus[index]
-                                ? null // Disable interaction if the room is booked
+                            onTap: (wardStatus[index] == "booked" ||
+                                    wardStatus[index] == "available")
+                                ? null
                                 : () {
-                                    // Optional: Add booking functionality here if needed
-                                    // setState to toggle room status or handle booking logic
+                                    // Handle booking or toggling logic
                                   },
                             child: InkWell(
                               child: Container(
@@ -534,10 +537,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 height: 60,
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
-                                  color: wardStatus[index]
+                                  color: wardStatus[index] == 'booked'
                                       ? AppColors.blue
-                                      : AppColors.lightBlue,
-                                  // Red for booked, green for available
+                                      : wardStatus[index] == 'available'
+                                          ? AppColors.lightBlue
+                                          : AppColors.roomDisabled,
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
                                 ),
@@ -559,19 +563,19 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 ),
                               ),
                               onTap: () {
-                                setState(() {
-                                  wardStatus[index] =
-                                      true; // Correctly update the value
-                                  selectedRoom = (index + 1).toString();
-                                  print(selectedRoom);
-                                });
-                                print('${index + 1} pressed');
+                                // if (wardStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     wardStatus[index] = 'booked';
+                                //   });
+                                //   print('${index + 1} pressed');
+                                // }
                               },
                               onDoubleTap: () {
-                                setState(() {
-                                  wardStatus[index] =
-                                      false; // Correctly update the value
-                                });
+                                // if (wardStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     wardStatus[index] = 'available';
+                                //   });
+                                // }
                               },
                             ),
                           );
@@ -601,11 +605,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                         runSpacing: 10, // Vertical spacing between rooms
                         children: List.generate(viproomStatus.length, (index) {
                           return GestureDetector(
-                            onTap: viproomStatus[index]
-                                ? null // Disable interaction if the room is booked
+                            onTap: (viproomStatus[index] == "booked" ||
+                                    viproomStatus[index] == "available")
+                                ? null
                                 : () {
-                                    // Optional: Add booking functionality here if needed
-                                    // setState to toggle room status or handle booking logic
+                                    // Handle booking or toggling logic
                                   },
                             child: InkWell(
                               child: Container(
@@ -614,10 +618,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 height: 60,
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
-                                  color: viproomStatus[index]
+                                  color: viproomStatus[index] == 'booked'
                                       ? AppColors.blue
-                                      : AppColors.lightBlue,
-                                  // Red for booked, green for available
+                                      : viproomStatus[index] == 'available'
+                                          ? AppColors.lightBlue
+                                          : AppColors.roomDisabled,
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
                                 ),
@@ -639,19 +644,19 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 ),
                               ),
                               onTap: () {
-                                setState(() {
-                                  viproomStatus[index] =
-                                      true; // Correctly update the value
-                                  selectedRoom = (index + 1).toString();
-                                  print(selectedRoom);
-                                });
-                                print('${index + 1} pressed');
+                                // if (viproomStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     viproomStatus[index] = 'booked';
+                                //   });
+                                //   print('${index + 1} pressed');
+                                // }
                               },
                               onDoubleTap: () {
-                                setState(() {
-                                  viproomStatus[index] =
-                                      false; // Correctly update the value
-                                });
+                                // if (viproomStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     viproomStatus[index] = 'available';
+                                //   });
+                                // }
                               },
                             ),
                           );
@@ -684,11 +689,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                         runSpacing: 10, // Vertical spacing between rooms
                         children: List.generate(ICUStatus.length, (index) {
                           return GestureDetector(
-                            onTap: ICUStatus[index]
-                                ? null // Disable interaction if the room is booked
+                            onTap: (ICUStatus[index] == "booked" ||
+                                    ICUStatus[index] == "available")
+                                ? null
                                 : () {
-                                    // Optional: Add booking functionality here if needed
-                                    // setState to toggle room status or handle booking logic
+                                    // Handle booking or toggling logic
                                   },
                             child: InkWell(
                               child: Container(
@@ -697,10 +702,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 height: 60,
                                 // Set a fixed height for each room box
                                 decoration: BoxDecoration(
-                                  color: ICUStatus[index]
+                                  color: ICUStatus[index] == 'booked'
                                       ? AppColors.blue
-                                      : AppColors.lightBlue,
-                                  // Red for booked, green for available
+                                      : ICUStatus[index] == 'available'
+                                          ? AppColors.lightBlue
+                                          : AppColors.roomDisabled,
                                   borderRadius: BorderRadius.circular(2),
                                   //border: Border.all(color: Colors.black, width: 1),
                                 ),
@@ -722,19 +728,19 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                 ),
                               ),
                               onTap: () {
-                                setState(() {
-                                  ICUStatus[index] =
-                                      true; // Correctly update the value
-                                  selectedRoom = (index + 1).toString();
-                                  print(selectedRoom);
-                                });
-                                print('${index + 1} pressed');
+                                // if (ICUStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     ICUStatus[index] = 'booked';
+                                //   });
+                                //   print('${index + 1} pressed');
+                                // }
                               },
                               onDoubleTap: () {
-                                setState(() {
-                                  ICUStatus[index] =
-                                      false; // Correctly update the value
-                                });
+                                // if (ICUStatus[index] != 'disabled') {
+                                //   setState(() {
+                                //     ICUStatus[index] = 'available';
+                                //   });
+                                // }
                               },
                             ),
                           );
@@ -771,11 +777,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   runSpacing: 10, // Vertical spacing between rooms
                   children: List.generate(roomStatus.length, (index) {
                     return GestureDetector(
-                      onTap: roomStatus[index]
-                          ? null // Disable interaction if the room is booked
+                      onTap: (roomStatus[index] == "booked" ||
+                              roomStatus[index] == "available")
+                          ? null
                           : () {
-                              // Optional: Add booking functionality here if needed
-                              // setState to toggle room status or handle booking logic
+                              // Handle booking or toggling logic
                             },
                       child: InkWell(
                         child: Container(
@@ -784,10 +790,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           height: 60,
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
-                            color: roomStatus[index]
+                            color: roomStatus[index] == 'booked'
                                 ? AppColors.blue
-                                : AppColors.lightBlue,
-                            // Red for booked, green for available
+                                : roomStatus[index] == 'available'
+                                    ? AppColors.lightBlue
+                                    : AppColors.roomDisabled,
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
                           ),
@@ -809,19 +816,20 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           ),
                         ),
                         onTap: () {
-                          setState(() {
-                            roomStatus[index] =
-                                true; // Correctly update the value
-                            selectedRoom = (index + 1).toString();
-                            print(selectedRoom);
-                          });
-                          print('${index + 1} pressed');
+                          if (roomStatus[index] != 'disabled') {
+                            setState(() {
+                              roomStatus[index] = 'booked';
+                              selectedRoom = (index + 1).toString();
+                            });
+                            print('${index + 1} pressed');
+                          }
                         },
                         onDoubleTap: () {
-                          setState(() {
-                            roomStatus[index] =
-                                false; // Correctly update the value
-                          });
+                          if (roomStatus[index] != 'disabled') {
+                            setState(() {
+                              roomStatus[index] = 'available';
+                            });
+                          }
                         },
                       ),
                     );
@@ -854,11 +862,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   runSpacing: 10, // Vertical spacing between rooms
                   children: List.generate(wardStatus.length, (index) {
                     return GestureDetector(
-                      onTap: wardStatus[index]
-                          ? null // Disable interaction if the room is booked
+                      onTap: (wardStatus[index] == "booked" ||
+                              wardStatus[index] == "available")
+                          ? null
                           : () {
-                              // Optional: Add booking functionality here if needed
-                              // setState to toggle room status or handle booking logic
+                              // Handle booking or toggling logic
                             },
                       child: InkWell(
                         child: Container(
@@ -867,10 +875,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           height: 60,
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
-                            color: wardStatus[index]
+                            color: wardStatus[index] == 'booked'
                                 ? AppColors.blue
-                                : AppColors.lightBlue,
-                            // Red for booked, green for available
+                                : wardStatus[index] == 'available'
+                                    ? AppColors.lightBlue
+                                    : AppColors.roomDisabled,
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
                           ),
@@ -892,19 +901,20 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           ),
                         ),
                         onTap: () {
-                          setState(() {
-                            wardStatus[index] =
-                                true; // Correctly update the value
-                            selectedRoom = (index + 1).toString();
-                            print(selectedRoom);
-                          });
-                          print('${index + 1} pressed');
+                          if (wardStatus[index] != 'disabled') {
+                            setState(() {
+                              wardStatus[index] = 'booked';
+                              selectedRoom = (index + 1).toString();
+                            });
+                            print('${index + 1} pressed');
+                          }
                         },
                         onDoubleTap: () {
-                          setState(() {
-                            wardStatus[index] =
-                                false; // Correctly update the value
-                          });
+                          if (wardStatus[index] != 'disabled') {
+                            setState(() {
+                              wardStatus[index] = 'available';
+                            });
+                          }
                         },
                       ),
                     );
@@ -934,11 +944,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   runSpacing: 10, // Vertical spacing between rooms
                   children: List.generate(viproomStatus.length, (index) {
                     return GestureDetector(
-                      onTap: viproomStatus[index]
-                          ? null // Disable interaction if the room is booked
+                      onTap: (viproomStatus[index] == "booked" ||
+                              viproomStatus[index] == "available")
+                          ? null
                           : () {
-                              // Optional: Add booking functionality here if needed
-                              // setState to toggle room status or handle booking logic
+                              // Handle booking or toggling logic
                             },
                       child: InkWell(
                         child: Container(
@@ -947,10 +957,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           height: 60,
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
-                            color: viproomStatus[index]
+                            color: viproomStatus[index] == 'booked'
                                 ? AppColors.blue
-                                : AppColors.lightBlue,
-                            // Red for booked, green for available
+                                : viproomStatus[index] == 'available'
+                                    ? AppColors.lightBlue
+                                    : AppColors.roomDisabled,
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
                           ),
@@ -972,19 +983,20 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           ),
                         ),
                         onTap: () {
-                          setState(() {
-                            viproomStatus[index] =
-                                true; // Correctly update the value
-                            selectedRoom = (index + 1).toString();
-                            print(selectedRoom);
-                          });
-                          print('${index + 1} pressed');
+                          if (viproomStatus[index] != 'disabled') {
+                            setState(() {
+                              viproomStatus[index] = 'booked';
+                              selectedRoom = (index + 1).toString();
+                            });
+                            print('${index + 1} pressed');
+                          }
                         },
                         onDoubleTap: () {
-                          setState(() {
-                            viproomStatus[index] =
-                                false; // Correctly update the value
-                          });
+                          if (viproomStatus[index] != 'disabled') {
+                            setState(() {
+                              viproomStatus[index] = 'available';
+                            });
+                          }
                         },
                       ),
                     );
@@ -1017,11 +1029,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   runSpacing: 10, // Vertical spacing between rooms
                   children: List.generate(ICUStatus.length, (index) {
                     return GestureDetector(
-                      onTap: ICUStatus[index]
-                          ? null // Disable interaction if the room is booked
+                      onTap: (ICUStatus[index] == "booked" ||
+                              ICUStatus[index] == "available")
+                          ? null
                           : () {
-                              // Optional: Add booking functionality here if needed
-                              // setState to toggle room status or handle booking logic
+                              // Handle booking or toggling logic
                             },
                       child: InkWell(
                         child: Container(
@@ -1030,10 +1042,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           height: 60,
                           // Set a fixed height for each room box
                           decoration: BoxDecoration(
-                            color: ICUStatus[index]
+                            color: ICUStatus[index] == 'booked'
                                 ? AppColors.blue
-                                : AppColors.lightBlue,
-                            // Red for booked, green for available
+                                : ICUStatus[index] == 'available'
+                                    ? AppColors.lightBlue
+                                    : AppColors.roomDisabled,
                             borderRadius: BorderRadius.circular(2),
                             //border: Border.all(color: Colors.black, width: 1),
                           ),
@@ -1055,19 +1068,20 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                           ),
                         ),
                         onTap: () {
-                          setState(() {
-                            ICUStatus[index] =
-                                true; // Correctly update the value
-                            selectedRoom = (index + 1).toString();
-                            print(selectedRoom);
-                          });
-                          print('${index + 1} pressed');
+                          if (ICUStatus[index] != 'disabled') {
+                            setState(() {
+                              ICUStatus[index] = 'booked';
+                              selectedRoom = (index + 1).toString();
+                            });
+                            print('${index + 1} pressed');
+                          }
                         },
                         onDoubleTap: () {
-                          setState(() {
-                            ICUStatus[index] =
-                                false; // Correctly update the value
-                          });
+                          if (ICUStatus[index] != 'disabled') {
+                            setState(() {
+                              ICUStatus[index] = 'available';
+                            });
+                          }
                         },
                       ),
                     );
