@@ -172,6 +172,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
           .set({
         'opTicket': opTicketId,
         'tokenNumber': storedTokenValue,
+        'degree': degree.text,
         'tokenDate': dateTime.year.toString() +
             '-' +
             dateTime.month.toString().padLeft(2, '0') +

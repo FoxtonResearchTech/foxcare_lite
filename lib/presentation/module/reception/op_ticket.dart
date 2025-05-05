@@ -159,6 +159,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
           .doc(opTicketId)
           .set({
         'opTicket': opTicketId,
+        'degree': degree.text,
         'tokenNumber': storedTokenValue,
         'tokenDate': dateTime.year.toString() +
             '-' +
