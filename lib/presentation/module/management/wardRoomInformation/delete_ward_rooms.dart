@@ -178,20 +178,20 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
               SizedBox(height: screenHeight * 0.04),
               CustomTextField(
                 controller: _startIndexController,
-                hintText: ' Room No to Delete',
+                hintText: ' Room No to Disable',
                 width: screenWidth * 0.25,
                 verticalSize: screenHeight * 0.02,
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomTextField(
                 controller: _countController,
-                hintText: ' Room No to Delete',
+                hintText: 'No of Rooms to Disable',
                 width: screenWidth * 0.25,
                 verticalSize: screenHeight * 0.02,
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomButton(
-                  label: 'Delete',
+                  label: 'Disable',
                   onPressed: () async {
                     int startIndex =
                         int.tryParse(_startIndexController.text) ?? 0;
