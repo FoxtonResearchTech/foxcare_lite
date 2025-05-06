@@ -122,6 +122,7 @@ class _BookAppointments extends State<BookAppointments> {
       final data = matchedDoc.data() as Map<String, dynamic>;
       setState(() {
         patientName.text = data['firstName'] ?? '';
+        opNumberSearch.text = data['opNumber'] ?? '';
       });
     } else {
       patientName.clear();
