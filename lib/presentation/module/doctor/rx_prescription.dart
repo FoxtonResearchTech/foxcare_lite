@@ -538,35 +538,44 @@ class _RxPrescription extends State<RxPrescription> {
                   pdf.addPage(
                     pw.MultiPage(
                       pageFormat: PdfPageFormat.a4,
-                      header: (context) => pw.Stack(
+                      header: (context) => pw.Column(
                         children: [
-                          pw.Positioned.fill(
-                            child: pw.Image(topImage,
-                                fit: pw.BoxFit.cover, width: 300, height: 50),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.only(
-                                left: 8, right: 8, top: 16),
-                            child: pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Row(
-                                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                          pw.Stack(
+                            children: [
+                              pw.Positioned.fill(
+                                child: pw.Image(topImage,
+                                    fit: pw.BoxFit.cover,
+                                    width: 300,
+                                    height: 50),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.only(
+                                    left: 8, right: 8, top: 16),
+                                child: pw.Column(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
                                   children: [
-                                    pw.Text(
-                                      'ABC Hospital',
-                                      style: pw.TextStyle(
-                                        fontSize: 30,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.red,
-                                      ),
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.end,
+                                      children: [
+                                        pw.Text(
+                                          'ABC Hospital',
+                                          style: pw.TextStyle(
+                                            fontSize: 30,
+                                            font: ttf,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color: PdfColors.red,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
+                          pw.SizedBox(height: 20),
                         ],
                       ),
                       footer: (context) => pw.Stack(
@@ -1003,20 +1012,19 @@ class _RxPrescription extends State<RxPrescription> {
                                         ),
                                       ],
                                     ),
-                                    pw.SizedBox(height: 6),
-                                    ...buildPaginatedTable(
-                                      headers: labHeaders,
-                                      data: labTableData,
-                                      ttf: ttf,
-                                      headerColor: lightBlue,
-                                      rowHeight: 15,
-                                    ),
-                                    pw.SizedBox(height: 6),
                                   ],
                                 ),
                               ],
                             ),
                           ),
+                        ),
+                        pw.SizedBox(height: 10),
+                        ...buildPaginatedTable(
+                          headers: labHeaders,
+                          data: labTableData,
+                          ttf: ttf,
+                          headerColor: lightBlue,
+                          rowHeight: 15,
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.only(left: 8, right: 8),
@@ -1043,19 +1051,19 @@ class _RxPrescription extends State<RxPrescription> {
                                         ),
                                       ],
                                     ),
-                                    pw.SizedBox(height: 6),
-                                    ...buildPaginatedTable(
-                                      headers: medicineHeaders,
-                                      data: medicineTableData,
-                                      ttf: ttf,
-                                      headerColor: lightBlue,
-                                      rowHeight: 15,
-                                    ),
                                   ],
                                 ),
                               ],
                             ),
                           ),
+                        ),
+                        pw.SizedBox(height: 10),
+                        ...buildPaginatedTable(
+                          headers: medicineHeaders,
+                          data: medicineTableData,
+                          ttf: ttf,
+                          headerColor: lightBlue,
+                          rowHeight: 15,
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.only(left: 8, right: 8),
