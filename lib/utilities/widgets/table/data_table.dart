@@ -80,6 +80,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
               .map(
                 (header) => Center(
                   child: CustomText(
+                    maxLines: 5,
                     text: header,
                     color: widget.headerColor,
                   ),
@@ -132,6 +133,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
                   } else {
                     return Center(
                       child: CustomText(
+                        maxLines: 25,
                         text: cellData?.toString() ?? '',
                       ),
                     );

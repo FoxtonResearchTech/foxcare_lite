@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/management/wardRoomInformation/ward_rooms.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
@@ -25,12 +26,49 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
   final TextEditingController _startIndexController = TextEditingController();
   final TextEditingController _countController = TextEditingController();
   String? selectedRoomType;
+  bool isEnabled = true;
   final Map<String, String> roomTypeMap = {
     'Room': 'roomStatus',
     'Ward': 'wardStatus',
     'VIP Room': 'viproomStatus',
     'ICU': 'ICUStatus',
   };
+  Future<void> enableRooms({
+    required String roomType,
+    required int startRoomNumber,
+    int count = 1,
+  }) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('totalRoom').doc('status');
+    final docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      CustomSnackBar(context,
+          message: 'Room data not found.', backgroundColor: Colors.red);
+      return;
+    }
+
+    List<dynamic> roomList = List.from(docSnap[roomType] ?? []);
+    int startIndex = startRoomNumber - 1;
+
+    if (startIndex < 0 || startIndex >= roomList.length) {
+      CustomSnackBar(context,
+          message: 'Invalid room number.', backgroundColor: Colors.red);
+      return;
+    }
+
+    int endIndex = (startIndex + count).clamp(0, roomList.length);
+
+    for (int i = startIndex; i < endIndex; i++) {
+      roomList[i] = "available";
+    }
+
+    await docRef.update({roomType: roomList});
+
+    CustomSnackBar(context,
+        message: "Room(s) enabled successfully.",
+        backgroundColor: Colors.green);
+  }
 
   Future<void> disableRooms({
     required String roomType,
@@ -165,42 +203,84 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDropdown(
-                  label: '',
-                  items: const [
-                    'Room',
-                    'Ward',
-                    'VIP Room',
-                    'ICU',
-                  ],
-                  onChanged: (value) {
-                    selectedRoomType = value;
-                  }),
+                label: '',
+                items: const [
+                  'Room',
+                  'Ward',
+                  'VIP Room',
+                  'ICU',
+                ],
+                onChanged: (value) {
+                  selectedRoomType = value;
+                },
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  SizedBox(width: screenWidth * 0.27),
+                  Radio<bool>(
+                    activeColor: AppColors.blue,
+                    value: true,
+                    groupValue: isEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        isEnabled = value!;
+                      });
+                    },
+                  ),
+                  const CustomText(text: "Enable"),
+                  SizedBox(width: screenWidth * 0.05),
+                  Radio<bool>(
+                    activeColor: AppColors.blue,
+                    value: false,
+                    groupValue: isEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        isEnabled = value!;
+                      });
+                    },
+                  ),
+                  const CustomText(text: "Disable"),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.04),
               CustomTextField(
                 controller: _startIndexController,
-                hintText: ' Room No to Disable',
+                hintText:
+                    isEnabled ? 'Room No to Enable' : 'Room No to Disable',
                 width: screenWidth * 0.25,
                 verticalSize: screenHeight * 0.02,
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomTextField(
                 controller: _countController,
-                hintText: 'No of Rooms to Disable',
+                hintText: isEnabled
+                    ? 'No of Rooms to Enable'
+                    : 'No of Rooms to Disable',
                 width: screenWidth * 0.25,
                 verticalSize: screenHeight * 0.02,
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomButton(
-                  label: 'Disable',
+                  label: isEnabled ? 'Enable Room(s)' : 'Disable Room(s)',
                   onPressed: () async {
                     int startIndex =
                         int.tryParse(_startIndexController.text) ?? 0;
                     int count = int.tryParse(_countController.text) ?? 1;
-                    await disableRooms(
-                      roomType: roomTypeMap[selectedRoomType]!,
-                      startRoomNumber: startIndex,
-                      count: count,
-                    );
+                    if (!isEnabled) {
+                      await disableRooms(
+                        roomType: roomTypeMap[selectedRoomType]!,
+                        startRoomNumber: startIndex,
+                        count: count,
+                      );
+                    }
+                    if (isEnabled) {
+                      await enableRooms(
+                        roomType: roomTypeMap[selectedRoomType]!,
+                        startRoomNumber: startIndex,
+                        count: count,
+                      );
+                    }
                   },
                   width: screenWidth * 0.25)
             ],
