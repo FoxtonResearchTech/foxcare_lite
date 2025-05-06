@@ -273,9 +273,6 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       print("Pharmacy Total Income (today): $pharmacyTotalIncome");
     } catch (e) {
       print("Error fetching today's pharmacy income: $e");
-      setState(() {
-        isPharmacyTotalIncomeLoading = false;
-      });
     }
   }
 
@@ -426,6 +423,8 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+
       getLastOPFewBills();
       countTotalBillsToday();
       countTotalOpBillsToday();
@@ -439,8 +438,8 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel;
     super.dispose();
+    _timer?.cancel();
   }
 
   @override
