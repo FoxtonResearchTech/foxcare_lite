@@ -40,6 +40,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   final List<String> ipAdditionalAmountHeader = [
     'SL No',
     'Description',
+    'Rate',
     'Quantity',
     'Amount'
   ];
@@ -48,10 +49,62 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   final List<String> currentIpAdditionalAmountHeader = [
     'SL No',
     'Description',
+    'Rate',
     'Quantity',
     'Amount'
   ];
   List<Map<String, dynamic>> currentIpAdditionalAmountData = [];
+  bool validateForm1() {
+    if (reasonForAdditionalAmount.text.isEmpty ||
+        quantity.text.isEmpty ||
+        rate.text.isEmpty) {
+      CustomSnackBar(
+        context,
+        message: 'Please fill all required fields',
+        backgroundColor: Colors.red,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> fetchIpAdditionalAmountData(
+      String docID, String ipTicket) async {
+    try {
+      final List<Map<String, dynamic>> fetchedData = [];
+
+      final additionalAmountCollection = FirebaseFirestore.instance
+          .collection('patients')
+          .doc(docID)
+          .collection('ipAdmissionPayments')
+          .doc('payments$ipTicket')
+          .collection('additionalAmount');
+
+      final snapshot = await additionalAmountCollection.get();
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final List<dynamic>? detailsList = data['details'];
+
+        if (detailsList != null) {
+          for (var entry in detailsList) {
+            if (entry is Map<String, dynamic>) {
+              fetchedData.add(entry);
+            }
+          }
+        }
+      }
+
+      setState(() {
+        ipAdditionalAmountData = fetchedData;
+      });
+
+      print("Fetched data: $ipAdditionalAmountData");
+    } catch (e) {
+      print("Error fetching additional amount data: $e");
+    }
+  }
+
   Future<void> handleIpPayment(String docID, String? ipTicket) async {
     if (ipTicket == null) return;
 
@@ -200,7 +253,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     quantity.addListener(_updateAmount);
     rate.addListener(_updateAmount);
     totalAmount.addListener(_updateAmount);
-
+    fetchIpAdditionalAmountData(
+        widget.docId.toString(), widget.ipTicket.toString());
     super.initState();
   }
 
@@ -250,20 +304,23 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
                 CustomButton(
                   label: 'Add',
                   onPressed: () {
-                    setState(() {
-                      currentIpAdditionalAmountData.add({
-                        'SL No': currentIpAdditionalAmountData.length + 1,
-                        'Description': reasonForAdditionalAmount.text,
-                        'Quantity': quantity.text,
-                        'Amount': additionalAmount.text,
+                    if (validateForm1()) {
+                      setState(() {
+                        currentIpAdditionalAmountData.add({
+                          'SL No': currentIpAdditionalAmountData.length + 1,
+                          'Description': reasonForAdditionalAmount.text,
+                          'Rate': rate.text,
+                          'Quantity': quantity.text,
+                          'Amount': additionalAmount.text,
+                        });
+                        reasonForAdditionalAmount.clear();
+                        quantity.clear();
+                        rate.clear();
+                        additionalAmount.clear();
+                        _totalAmount();
+                        totalAmount.text = _totalAmount().toString();
                       });
-                      reasonForAdditionalAmount.clear();
-                      quantity.clear();
-                      rate.clear();
-                      additionalAmount.clear();
-                      _totalAmount();
-                      totalAmount.text = _totalAmount().toString();
-                    });
+                    }
                   },
                   width: screenWidth * 0.04,
                   height: screenHeight * 0.05,
@@ -277,14 +334,33 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
               ],
               SizedBox(height: screenHeight * 0.04),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   CustomTextField(
                       controller: totalAmount,
                       hintText: 'Total Amount ',
                       width: screenWidth * 0.1),
+                  SizedBox(
+                    width: screenWidth * 0.01,
+                  ),
                 ],
-              )
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  CustomText(
+                    text: 'History Of Additional Amount',
+                    size: screenWidth * 0.012,
+                  )
+                ],
+              ),
+              if (ipAdditionalAmountData.isNotEmpty) ...[
+                CustomDataTable(
+                    headers: ipAdditionalAmountHeader,
+                    tableData: ipAdditionalAmountData)
+              ],
+              SizedBox(height: screenHeight * 0.04),
             ],
           ),
         ),

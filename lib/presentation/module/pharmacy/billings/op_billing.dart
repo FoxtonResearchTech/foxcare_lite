@@ -985,7 +985,7 @@ class _OpBilling extends State<OpBilling> {
                                                             .spaceBetween,
                                                         children: [
                                                           pw.Text(
-                                                            'Docotr : ${doctorName.text}',
+                                                            'Doctor : ${doctorName.text}',
                                                             style: pw.TextStyle(
                                                               fontSize: 10,
                                                               font: ttf,

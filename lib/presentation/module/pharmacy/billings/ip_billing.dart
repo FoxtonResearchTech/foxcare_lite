@@ -1064,7 +1064,7 @@ class _IpBilling extends State<IpBilling> {
                                                             .spaceBetween,
                                                         children: [
                                                           pw.Text(
-                                                            'Docotr : ${doctorName.text}',
+                                                            'Doctor : ${doctorName.text}',
                                                             style: pw.TextStyle(
                                                               fontSize: 10,
                                                               font: ttf,

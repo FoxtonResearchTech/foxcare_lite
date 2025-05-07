@@ -157,12 +157,21 @@ class _IpAdmit extends State<IpAdmit> {
           Map<String, dynamic>? detailsData = detailsDoc.exists
               ? detailsDoc.data() as Map<String, dynamic>?
               : null;
+          final ipDetailsDoc = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(doc.id)
+              .collection('ipPrescription')
+              .doc('details')
+              .get();
 
+          final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
           double ipAdmissionTotalAmount =
               double.tryParse(detailsData?['ipAdmissionTotalAmount'] ?? '0') ??
                   0;
           double ipAdmissionCollected =
               double.tryParse(detailsData?['ipAdmissionCollected'] ?? '0') ?? 0;
+          double ipAdmissionBalanceAmount =
+              double.tryParse(detailsData?['ipAdmissionBalance'] ?? '0') ?? 0;
           double balance = ipAdmissionTotalAmount - ipAdmissionCollected;
 
           fetchedData.add({
@@ -187,8 +196,20 @@ class _IpAdmit extends State<IpAdmit> {
                     patientID: data['opNumber'],
                     firstName: data['firstName'],
                     lastName: data['lastName'],
+                    doctorName: ipData['doctorName'],
+                    specialization: ipData['specialization'],
+                    bloodGroup: data['bloodGroup'],
+                    address: data['address1'],
+                    age: data['age'],
+                    phoneNo: data['phone1'],
                     city: data['city'],
+                    roomNo: ipAdmission['roomNo'],
+                    roomType: ipAdmission['roomType'],
+                    ipAdmitDate: ipData['ipAdmitDate'],
                     docId: doc.id,
+                    totalBilledAmount: ipAdmissionTotalAmount.toString(),
+                    totalCollectedAmount: ipAdmissionCollected.toString(),
+                    totalBalanceAmount: ipAdmissionBalanceAmount.toString(),
                     totalAmount: ipAdmissionCollected.toString(),
                     balance: balance.toString(),
                     fetchData: fetchData,
