@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 
 import '../../colors.dart';
 import '../snackBar/snakbar.dart';
@@ -23,57 +25,31 @@ class IpAdmitAdditionalAmount extends StatefulWidget {
 
 class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   TextEditingController additionalAmount = TextEditingController();
+  TextEditingController rate = TextEditingController();
+
   TextEditingController reasonForAdditionalAmount = TextEditingController();
+  TextEditingController quantity = TextEditingController();
 
   ScrollController _scrollController1 = ScrollController();
 
   final dateTime = DateTime.now();
   List<Map<String, dynamic>> amountTimeline = [];
 
-  Future<void> fetchAmountTimeline() async {
-    if (widget.docId == null || widget.docId!.isEmpty) return;
+  final List<String> ipAdditionalAmountHeader = [
+    'SL No',
+    'Description',
+    'Quantity',
+    'Amount'
+  ];
+  List<Map<String, dynamic>> ipAdditionalAmountData = [];
 
-    try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.docId)
-          .collection('ipAdmissionPayments')
-          .doc('payments${widget.ipTicket.toString()}')
-          .collection('additionalAmount')
-          .get();
-
-      List<Map<String, dynamic>> tempAmountTimeline = [];
-      for (var doc in querySnapshot.docs) {
-        if (doc.id == "payments") {
-          print("Skipping document: payment");
-          continue;
-        }
-
-        print("Fetched document: ${doc.id}");
-
-        tempAmountTimeline.add({
-          "time": doc["time"] ?? "00:00",
-          "date": doc["date"] ?? "1970-01-01", // default to epoch if missing
-          "reason": doc["reason"] ?? "Unknown",
-          "amount": doc["additionalAmount"] ?? "₹0",
-        });
-      }
-
-      tempAmountTimeline.sort((a, b) {
-        DateTime dateTimeA = DateTime.parse("${a["date"]} ${a["time"]}");
-        DateTime dateTimeB = DateTime.parse("${b["date"]} ${b["time"]}");
-        return dateTimeB.compareTo(dateTimeA);
-      });
-
-      setState(() {
-        amountTimeline = tempAmountTimeline;
-      });
-
-      print("Final sorted payment list: $amountTimeline");
-    } catch (error) {
-      print("Error fetching payments: $error");
-    }
-  }
+  final List<String> currentIpAdditionalAmountHeader = [
+    'SL No',
+    'Description',
+    'Quantity',
+    'Amount'
+  ];
+  List<Map<String, dynamic>> currentIpAdditionalAmountData = [];
 
   Future<void> additionalPaymentAmount(String docID, String? ipTicket) async {
     try {
@@ -105,6 +81,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
 
       await paymentDocRef.collection('additionalAmount').doc().set({
         'additionalAmount': additionalAmount.text,
+        'quantity': quantity.text,
         'reason': reasonForAdditionalAmount.text,
         'ipTicket': ipTicket,
         'collectedTillNow': existingCollectedAmount,
@@ -123,10 +100,27 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     }
   }
 
+  void _updateAmount() {
+    final qty = double.tryParse(quantity.text) ?? 0;
+    final rt = double.tryParse(rate.text) ?? 0;
+    final amount = qty * rt;
+
+    additionalAmount.text = amount.toStringAsFixed(2);
+  }
+
   @override
   void initState() {
-    fetchAmountTimeline();
+    quantity.addListener(_updateAmount);
+    rate.addListener(_updateAmount);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    quantity.dispose();
+    rate.dispose();
+    additionalAmount.dispose();
+    super.dispose();
   }
 
   @override
@@ -136,39 +130,63 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     return AlertDialog(
       title: Text('Add Payment Amount'),
       content: Container(
-        width: screenWidth * 0.25,
-        height: screenHeight * 0.4,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            CustomTextField(
-              controller: additionalAmount,
-              hintText: 'Amount',
-              width: screenWidth * 0.18,
-            ),
-            CustomTextField(
-              controller: reasonForAdditionalAmount,
-              hintText: 'Reason',
-              width: screenWidth * 0.18,
-            ),
-            SizedBox(height: screenHeight * 0.010),
-            if (widget.timeLine == true)
-              Center(
-                child: SizedBox(
-                  height: screenHeight * 0.175,
-                  width: screenWidth * 0.75,
-                  child: Scrollbar(
-                    controller: _scrollController1,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      controller: _scrollController1,
-                      child: _buildPaymentTimeline(),
-                    ),
-                  ),
+        width: screenWidth * 0.6,
+        height: screenHeight * 0.6,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+                CustomTextField(
+                  controller: reasonForAdditionalAmount,
+                  hintText: 'Description',
+                  width: screenWidth * 0.18,
                 ),
-              ),
-            SizedBox(height: screenHeight * 0.010),
-          ],
+                CustomTextField(
+                  controller: quantity,
+                  hintText: 'Quantity',
+                  width: screenWidth * 0.1,
+                ),
+                CustomTextField(
+                  controller: rate,
+                  hintText: 'Rate',
+                  width: screenWidth * 0.12,
+                ),
+                CustomTextField(
+                  controller: additionalAmount,
+                  hintText: 'Amount',
+                  width: screenWidth * 0.12,
+                  readOnly: true,
+                ),
+                CustomButton(
+                  label: 'Add',
+                  onPressed: () {
+                    setState(() {
+                      currentIpAdditionalAmountData.add({
+                        'SL No': currentIpAdditionalAmountData.length + 1,
+                        'Description': reasonForAdditionalAmount.text,
+                        'Quantity': quantity.text,
+                        'Amount': additionalAmount.text,
+                      });
+                      reasonForAdditionalAmount.clear();
+                      quantity.clear();
+                      rate.clear();
+                      additionalAmount.clear();
+                    });
+                  },
+                  width: screenWidth * 0.04,
+                  height: screenHeight * 0.05,
+                )
+              ]),
+              SizedBox(height: screenHeight * 0.04),
+              if (currentIpAdditionalAmountData.isNotEmpty) ...[
+                CustomDataTable(
+                    headers: currentIpAdditionalAmountHeader,
+                    tableData: currentIpAdditionalAmountData)
+              ],
+              SizedBox(height: screenHeight * 0.04),
+            ],
+          ),
         ),
       ),
       actions: <Widget>[
@@ -195,50 +213,5 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
         ),
       ],
     );
-  }
-
-  Widget _buildPaymentTimeline() {
-    return amountTimeline.isEmpty
-        ? const Center(child: CustomText(text: "No Additional Amount Found"))
-        : SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: amountTimeline.map((amount) {
-                return Row(
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.blue,
-                          child: Icon(
-                            Icons.money,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        CustomText(text: amount["date"]),
-                        CustomText(
-                          text: '₹' + amount["amount"],
-                        ),
-                        Expanded(
-                          child: CustomText(
-                            text: amount["reason"],
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (amount != amountTimeline.last)
-                      Container(
-                        width: 40,
-                        height: 5,
-                        color: Colors.grey,
-                      ),
-                  ],
-                );
-              }).toList(),
-            ),
-          );
   }
 }

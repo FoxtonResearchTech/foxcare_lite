@@ -34,6 +34,8 @@ class IpAdmit extends StatefulWidget {
 
 class _IpAdmit extends State<IpAdmit> {
   final dateTime = DateTime.now();
+  TextEditingController quantity = TextEditingController();
+  TextEditingController reasonForAmount = TextEditingController();
 
   int selectedIndex = 8;
   TextEditingController _dateController = TextEditingController();
@@ -98,7 +100,8 @@ class _IpAdmit extends State<IpAdmit> {
           .doc()
           .set({
         'additionalAmount': amount.text,
-        'reason': 'Initial Amount',
+        'reason': reasonForAmount.text,
+        'quantity': quantity.text,
         'ipTicket': ipTicket,
         'collectedTillNow': collected.text,
         'date': dateTime.year.toString() +
@@ -252,26 +255,48 @@ class _IpAdmit extends State<IpAdmit> {
                         builder: (_) => AlertDialog(
                           title: Text('Add Payment Amount'),
                           content: SizedBox(
-                            width: 300,
+                            width: 700,
                             height: 250,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                CustomTextField(
-                                  controller: amount,
-                                  hintText: 'Total Amount',
-                                  width: 250,
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    CustomTextField(
+                                      controller: reasonForAmount,
+                                      hintText: 'Description',
+                                      width: 300,
+                                    ),
+                                    CustomTextField(
+                                      controller: quantity,
+                                      hintText: 'Quantity',
+                                      width: 150,
+                                    ),
+                                    CustomTextField(
+                                      controller: amount,
+                                      hintText: 'Total Amount',
+                                      width: 200,
+                                    ),
+                                  ],
                                 ),
-                                CustomTextField(
-                                  controller: collected,
-                                  hintText: 'Collected',
-                                  width: 250,
-                                ),
-                                CustomTextField(
-                                  controller: balanceAmount,
-                                  hintText: 'Balance',
-                                  width: 250,
-                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    CustomTextField(
+                                      controller: collected,
+                                      hintText: 'Collected',
+                                      width: 250,
+                                    ),
+                                    CustomTextField(
+                                      controller: balanceAmount,
+                                      hintText: 'Balance',
+                                      width: 250,
+                                    ),
+                                  ],
+                                )
                               ],
                             ),
                           ),
