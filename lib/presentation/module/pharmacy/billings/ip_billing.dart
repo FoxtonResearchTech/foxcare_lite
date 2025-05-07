@@ -1272,13 +1272,13 @@ class _IpBilling extends State<IpBilling> {
                                       ),
                                     );
                                     //
-                                    // await Printing.layoutPdf(
-                                    //   onLayout: (format) async => pdf.save(),
-                                    // );
+                                    await Printing.layoutPdf(
+                                      onLayout: (format) async => pdf.save(),
+                                    );
 
-                                    await Printing.sharePdf(
-                                        bytes: await pdf.save(),
-                                        filename: '${_ipNumber.text}.pdf');
+                                    // await Printing.sharePdf(
+                                    //     bytes: await pdf.save(),
+                                    //     filename: '${_ipNumber.text}.pdf');
                                   },
                                   child: const Text('Print'),
                                 ),
