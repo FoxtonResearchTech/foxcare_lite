@@ -72,56 +72,6 @@ class _IpAdmit extends State<IpAdmit> {
     balanceAmount.text = balance.toStringAsFixed(2);
   }
 
-  Future<void> addPaymentAmount(String docID, String ipTicket) async {
-    try {
-      Map<String, dynamic> data = {
-        'ipAdmissionTotalAmount': amount.text,
-        'ipAdmissionCollected': collected.text,
-        'ipAdmissionBalance': balanceAmount.text,
-        'patientIpTicket': ipTicket,
-        'date': dateTime.year.toString() +
-            '-' +
-            dateTime.month.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.day.toString().padLeft(2, '0'),
-      };
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(docID)
-          .collection('ipAdmissionPayments')
-          .doc('payments$ipTicket')
-          .set(data);
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(docID)
-          .collection('ipAdmissionPayments')
-          .doc('payments$ipTicket')
-          .collection('additionalAmount')
-          .doc()
-          .set({
-        'additionalAmount': amount.text,
-        'reason': reasonForAmount.text,
-        'quantity': quantity.text,
-        'ipTicket': ipTicket,
-        'collectedTillNow': collected.text,
-        'date': dateTime.year.toString() +
-            '-' +
-            dateTime.month.toString().padLeft(2, '0') +
-            '-' +
-            dateTime.day.toString().padLeft(2, '0'),
-        'time': dateTime.hour.toString() +
-            ':' +
-            dateTime.minute.toString().padLeft(2, '0'),
-      });
-      CustomSnackBar(context,
-          message: 'Additional Fees Added Successfully',
-          backgroundColor: Colors.green);
-    } catch (e) {
-      CustomSnackBar(context,
-          message: 'Failed to Add Fees', backgroundColor: Colors.red);
-    }
-  }
-
   Future<void> fetchData({
     String? ipNumber,
     String? singleDate,
@@ -227,118 +177,26 @@ class _IpAdmit extends State<IpAdmit> {
             'Total Amount': ipAdmissionTotalAmount.toStringAsFixed(2),
             'Collected': ipAdmissionCollected.toStringAsFixed(2),
             'Balance': balance.toStringAsFixed(2),
-            'Pay': hasIpPayment
-                ? TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => PaymentDialog(
-                          timeLine: true,
-                          ipTicket: ipData['ipTicket'],
-                          patientID: data['opNumber'],
-                          firstName: data['firstName'],
-                          lastName: data['lastName'],
-                          city: data['city'],
-                          docId: doc.id,
-                          totalAmount: ipAdmissionCollected.toString(),
-                          balance: balance.toString(),
-                          fetchData: fetchData,
-                        ),
-                      );
-                    },
-                    child: CustomText(text: 'Pay'),
-                  )
-                : TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: Text('Add Payment Amount'),
-                          content: SizedBox(
-                            width: 700,
-                            height: 250,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    CustomTextField(
-                                      controller: reasonForAmount,
-                                      hintText: 'Description',
-                                      width: 300,
-                                    ),
-                                    CustomTextField(
-                                      controller: quantity,
-                                      hintText: 'Quantity',
-                                      width: 150,
-                                    ),
-                                    CustomTextField(
-                                      controller: amount,
-                                      hintText: 'Total Amount',
-                                      width: 200,
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    CustomTextField(
-                                      controller: collected,
-                                      hintText: 'Collected',
-                                      width: 250,
-                                    ),
-                                    CustomTextField(
-                                      controller: balanceAmount,
-                                      hintText: 'Balance',
-                                      width: 250,
-                                    ),
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                addPaymentAmount(
-                                    doc.id, ipData['ipTicket'].toString());
-                                fetchData(ipNumber: ipNumber);
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => IpAdmitPaymentDialog(
-                                    ipTicket: ipData['ipTicket'].toString(),
-                                    patientID: data['opNumber'],
-                                    firstName: data['firstName'],
-                                    lastName: data['lastName'],
-                                    city: data['city'],
-                                    balance: collected.text,
-                                    docId: doc.id,
-                                  ),
-                                );
-                              },
-                              child: CustomText(
-                                text: 'Submit',
-                                color: AppColors.secondaryColor,
-                                size: 15,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: CustomText(
-                                text: 'Cancel',
-                                color: AppColors.secondaryColor,
-                                size: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: CustomText(text: 'Add Payment'),
+            'Pay': TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => PaymentDialog(
+                    timeLine: true,
+                    ipTicket: ipData['ipTicket'],
+                    patientID: data['opNumber'],
+                    firstName: data['firstName'],
+                    lastName: data['lastName'],
+                    city: data['city'],
+                    docId: doc.id,
+                    totalAmount: ipAdmissionCollected.toString(),
+                    balance: balance.toString(),
+                    fetchData: fetchData,
                   ),
+                );
+              },
+              child: CustomText(text: 'Pay'),
+            ),
             'Add Amount': TextButton(
               onPressed: () {
                 showDialog(

@@ -30,6 +30,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   TextEditingController reasonForAdditionalAmount = TextEditingController();
   TextEditingController quantity = TextEditingController();
 
+  TextEditingController totalAmount = TextEditingController();
+
   ScrollController _scrollController1 = ScrollController();
 
   final dateTime = DateTime.now();
@@ -50,6 +52,67 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     'Amount'
   ];
   List<Map<String, dynamic>> currentIpAdditionalAmountData = [];
+  Future<void> handleIpPayment(String docID, String? ipTicket) async {
+    if (ipTicket == null) return;
+
+    DocumentReference paymentDocRef = FirebaseFirestore.instance
+        .collection('patients')
+        .doc(docID)
+        .collection('ipAdmissionPayments')
+        .doc('payments$ipTicket');
+
+    DocumentSnapshot snapshot = await paymentDocRef.get();
+
+    if (snapshot.exists) {
+      await additionalPaymentAmount(docID, ipTicket);
+    } else {
+      await initialAmount(docID, ipTicket);
+    }
+  }
+
+  Future<void> initialAmount(String docID, String? ipTicket) async {
+    try {
+      Map<String, dynamic> data = {
+        'ipAdmissionTotalAmount': totalAmount.text,
+        'ipAdmissionCollected': '0',
+        'ipAdmissionBalance': totalAmount.text,
+        'patientIpTicket': ipTicket,
+        'date': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+      };
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(docID)
+          .collection('ipAdmissionPayments')
+          .doc('payments$ipTicket')
+          .set(data);
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(docID)
+          .collection('ipAdmissionPayments')
+          .doc('payments$ipTicket')
+          .collection('additionalAmount')
+          .doc()
+          .set({
+        'details': currentIpAdditionalAmountData,
+        'totalAmount': totalAmount.text,
+        'ipTicket': ipTicket,
+        'collectedTillNow': '0',
+        'date':
+            "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}",
+        'time':
+            "${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}",
+      });
+      CustomSnackBar(context,
+          message: 'Fees Added Successfully', backgroundColor: Colors.green);
+    } catch (e) {
+      CustomSnackBar(context,
+          message: 'Failed to Add Fees', backgroundColor: Colors.red);
+    }
+  }
 
   Future<void> additionalPaymentAmount(String docID, String? ipTicket) async {
     try {
@@ -61,28 +124,34 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
 
       DocumentSnapshot paymentSnapshot = await paymentDocRef.get();
       double currentTotalAmount = 0.0;
+      double currentCollectedAmount;
+
       String existingCollectedAmount = "0";
 
       if (paymentSnapshot.exists && paymentSnapshot.data() != null) {
         var data = paymentSnapshot.data() as Map<String, dynamic>;
         String existingAmountStr = data['ipAdmissionTotalAmount'] ?? "0";
+
         existingCollectedAmount = data['ipAdmissionCollected'] ?? "0";
 
         currentTotalAmount = double.tryParse(existingAmountStr) ?? 0.0;
       }
 
-      double additionalAmt = double.tryParse(additionalAmount.text) ?? 0.0;
+      double additionalAmt = double.tryParse(totalAmount.text) ?? 0.0;
 
       String newTotalAmount = (currentTotalAmount + additionalAmt).toString();
+      String newBalance =
+          (double.parse(newTotalAmount) - double.parse(existingCollectedAmount))
+              .toString();
 
       await paymentDocRef.update({
         'ipAdmissionTotalAmount': newTotalAmount,
+        'ipAdmissionBalance': newBalance,
       });
 
       await paymentDocRef.collection('additionalAmount').doc().set({
-        'additionalAmount': additionalAmount.text,
-        'quantity': quantity.text,
-        'reason': reasonForAdditionalAmount.text,
+        'details': currentIpAdditionalAmountData,
+        'totalAmount': totalAmount.text,
         'ipTicket': ipTicket,
         'collectedTillNow': existingCollectedAmount,
         'date':
@@ -100,6 +169,24 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     }
   }
 
+  int _totalAmount() {
+    return currentIpAdditionalAmountData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Amount'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
+        }
+
+        return sum;
+      },
+    );
+  }
+
   void _updateAmount() {
     final qty = double.tryParse(quantity.text) ?? 0;
     final rt = double.tryParse(rate.text) ?? 0;
@@ -112,6 +199,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
   void initState() {
     quantity.addListener(_updateAmount);
     rate.addListener(_updateAmount);
+    totalAmount.addListener(_updateAmount);
+
     super.initState();
   }
 
@@ -172,6 +261,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
                       quantity.clear();
                       rate.clear();
                       additionalAmount.clear();
+                      _totalAmount();
+                      totalAmount.text = _totalAmount().toString();
                     });
                   },
                   width: screenWidth * 0.04,
@@ -185,14 +276,24 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
                     tableData: currentIpAdditionalAmountData)
               ],
               SizedBox(height: screenHeight * 0.04),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CustomTextField(
+                      controller: totalAmount,
+                      hintText: 'Total Amount ',
+                      width: screenWidth * 0.1),
+                ],
+              )
             ],
           ),
         ),
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () {
-            additionalPaymentAmount(widget.docId.toString(), widget.ipTicket);
+          onPressed: () async {
+            handleIpPayment(widget.docId.toString(), widget.ipTicket);
+
             widget.fetchData!();
           },
           child: CustomText(
