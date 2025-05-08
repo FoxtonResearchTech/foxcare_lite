@@ -82,6 +82,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
 
   String _selectedPaymentMethod = '';
   bool isNotPatient = false;
+  int billNo = 0;
 
   final List<String> ipAdditionalAmountHeader = [
     'SL No',
@@ -91,6 +92,39 @@ class _PaymentDialogState extends State<PaymentDialog> {
     'Amount'
   ];
   List<Map<String, dynamic>> ipAdditionalAmountData = [];
+  Future<int?> getAndIncrementIpAdmitBillNo() async {
+    try {
+      final docRef =
+          FirebaseFirestore.instance.collection('billNo').doc('ipAdmitBill');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['billNo'] ?? 0;
+        int newBillNo = currentBillNo + 1;
+
+        setState(() {
+          billNo = newBillNo;
+        });
+
+        return newBillNo;
+      } else {
+        print('Document /billNo/ipAdmitBill does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateIpAdmitBillNo(int newBillNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('billNo').doc('ipAdmitBill');
+
+    await docRef.set({'billNo': newBillNo});
+  }
+
   Future<void> fetchIpAdditionalAmountData(
       String docID, String ipTicket) async {
     try {
@@ -312,6 +346,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
         widget.patientID.toString(), widget.ipTicket.toString());
     balance.text = widget.balance ?? '0.00';
     fetchPayments();
+    getAndIncrementIpAdmitBillNo();
   }
 
   @override
@@ -704,7 +739,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   pw.Text(
-                                    'Bill No : ${''}',
+                                    'Bill No : $billNo',
                                     style: pw.TextStyle(
                                       fontSize: 10,
                                       font: ttf,
@@ -949,6 +984,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
 
             await Printing.sharePdf(
                 bytes: await pdf.save(), filename: '${widget.ipTicket}.pdf');
+            await updateIpAdmitBillNo(billNo);
           },
           child: CustomText(
             text: 'Print',

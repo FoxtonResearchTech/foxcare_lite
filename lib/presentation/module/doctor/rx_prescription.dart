@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
@@ -201,11 +202,40 @@ class _RxPrescription extends State<RxPrescription> {
   final dateTime = DateTime.timestamp();
 
   bool isLoading = false;
+
   bool isMedLoading = false;
+
+  bool isMedWidget = false;
+  bool isLabLoading = false;
+  bool isInvestLoading = false;
+  bool isAppointment = false;
+
+  void toggleMed(bool value) {
+    setState(() {
+      isMedWidget = value;
+    });
+  }
+
+  void toggleLab(bool value) {
+    setState(() {
+      isLabLoading = value;
+    });
+  }
+
+  void toggleInvest(bool value) {
+    setState(() {
+      isInvestLoading = value;
+    });
+  }
+
+  void toggleAppointment(bool value) {
+    setState(() {
+      isAppointment = value;
+    });
+  }
 
   bool _isSwitched = false;
 
-  bool isAppointment = false;
   List<String> medicineNames = [];
   List<String> _filteredMedicine = [];
   List<String> _selectedMedicine = [];
@@ -226,9 +256,6 @@ class _RxPrescription extends State<RxPrescription> {
     'Reference',
   ];
   List<Map<String, dynamic>> labTableData = [];
-  void _refreshTable() {
-    setState(() {});
-  }
 
   @override
   void initState() {
@@ -281,12 +308,6 @@ class _RxPrescription extends State<RxPrescription> {
     } catch (e) {
       print('Error fetching Medicine: $e');
     }
-  }
-
-  void isMedication(String value) {
-    setState(() {
-      isAppointment = value == 'Appointment';
-    });
   }
 
   Future<String> generateUniqueIpTicketId() async {
@@ -1543,7 +1564,7 @@ class _RxPrescription extends State<RxPrescription> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomText(
-                    text: 'Diagnosis Signs',
+                    text: 'Signs & Symptoms',
                     size: screenWidth * 0.02,
                     color: AppColors.blue,
                   ),
@@ -1561,7 +1582,7 @@ class _RxPrescription extends State<RxPrescription> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomText(
-                    text: 'Symptoms',
+                    text: 'Findings',
                     size: screenWidth * 0.02,
                     color: AppColors.blue,
                   ),
@@ -1595,470 +1616,573 @@ class _RxPrescription extends State<RxPrescription> {
                       thickness: 2,
                     ),
                   ),
-                  Row(
-                    children: [
-                      CustomText(
-                        text: 'Laboratory',
-                        size: screenWidth * 0.016,
-                        color: AppColors.blue,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: screenHeight * 0.015),
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return StatefulBuilder(
-                            builder: (context, setState) {
-                              return AlertDialog(
-                                title: CustomText(
-                                  text: 'Add Tests',
-                                  size: screenWidth * 0.013,
-                                ),
-                                content: SizedBox(
-                                  width: screenWidth * 0.5,
-                                  height: screenHeight * 0.8,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Wrap(
-                                          spacing: 8.0,
-                                          runSpacing: 4.0,
-                                          children: _selectedItems
-                                              .map((item) => Chip(
-                                                    shadowColor: Colors.white,
-                                                    backgroundColor: AppColors
-                                                        .secondaryColor,
-                                                    label: CustomText(
-                                                      text: item,
-                                                      color: Colors.white,
-                                                    ),
-                                                    deleteIcon: const Icon(
-                                                      Icons.close,
-                                                      color: Colors.white,
-                                                    ),
-                                                    onDeleted: () {
-                                                      setState(() {
-                                                        labTableData.removeWhere(
-                                                            (row) =>
-                                                                row['Test'] ==
-                                                                item);
-                                                        _selectedItems
-                                                            .remove(item);
-                                                      });
-                                                    },
-                                                  ))
-                                              .toList(),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        CustomTextField(
-                                          onChanged: _filterItems,
-                                          hintText: 'Search Tests',
-                                          width: screenWidth * 0.8,
-                                          verticalSize: screenHeight * 0.03,
-                                        ),
-                                        const SizedBox(height: 10),
-                                        SizedBox(
-                                          height: screenHeight * 0.3,
-                                          child: ListView.builder(
-                                            itemCount: _filteredItems.length,
-                                            itemBuilder: (context, index) {
-                                              final item =
-                                                  _filteredItems[index];
-                                              return ListTile(
-                                                title: Text(item),
-                                                onTap: () {
-                                                  if (!_selectedItems
-                                                      .contains(item)) {
-                                                    setState(() {
-                                                      _selectedItems.add(item);
-                                                      labTableData.add({
-                                                        'Test': item,
-                                                        'Results': '',
-                                                        'Reference': '',
-                                                      });
-                                                    });
-                                                  }
-                                                  print('Selected: $item');
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ).then((_) =>
-                          setState(() {})); // Refresh after dialog closes
-                    },
-                    child: Container(
-                      width: screenWidth * 0.85,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          width: screenWidth * 0.0015,
-                          color: AppColors.blue,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: _selectedItems.isEmpty
-                          ? const Text("Tap to add tests",
-                              style: TextStyle(color: Colors.grey))
-                          : Wrap(
-                              spacing: 8.0,
-                              runSpacing: 4.0,
-                              children: _selectedItems
-                                  .map((item) => Chip(
-                                        label: Text(item),
-                                        backgroundColor:
-                                            AppColors.secondaryColor,
-                                        labelStyle: const TextStyle(
-                                            color: Colors.white),
-                                      ))
-                                  .toList(),
+                  SizedBox(height: screenHeight * 0.01),
+                  if (isLabLoading)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomText(
+                              text: 'Laboratory',
+                              size: screenWidth * 0.016,
+                              color: AppColors.blue,
                             ),
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.015),
-                  Row(
-                    children: [
-                      CustomText(
-                        text: 'Medicine',
-                        size: screenWidth * 0.016,
-                        color: AppColors.blue,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: screenHeight * 0.015),
-                  GestureDetector(
-                    onTap: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return StatefulBuilder(
-                            builder: (context, setStateDialog) {
-                              return AlertDialog(
-                                title: CustomText(
-                                  text: 'Add Medicines',
-                                  size: screenWidth * 0.013,
-                                ),
-                                content: SizedBox(
-                                  width: screenWidth * 0.5,
-                                  height: screenHeight * 0.8,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Wrap(
-                                          spacing: 8.0,
-                                          runSpacing: 4.0,
-                                          children: _selectedMedicine
-                                              .map((item) => Chip(
-                                                    shadowColor: Colors.white,
-                                                    backgroundColor: AppColors
-                                                        .secondaryColor,
-                                                    label: CustomText(
-                                                        text: item,
-                                                        color: Colors.white),
-                                                    deleteIcon: const Icon(
-                                                        Icons.close,
-                                                        color: Colors.white),
-                                                    onDeleted: () {
-                                                      setStateDialog(() {
-                                                        _selectedMedicine
-                                                            .remove(item);
-                                                        medicineTableData
-                                                            .removeWhere((row) =>
-                                                                row['Medicine Name'] ==
-                                                                item);
-                                                        _updateSerialNumbers();
-                                                      });
-                                                    },
-                                                  ))
-                                              .toList(),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        CustomTextField(
-                                          onChanged: (query) {
-                                            setStateDialog(() {
-                                              if (query.isEmpty) {
-                                                _filteredMedicine =
-                                                    List.from(medicineNames);
-                                              } else {
-                                                _filteredMedicine =
-                                                    medicineNames
-                                                        .where((item) => item
-                                                            .toLowerCase()
-                                                            .contains(query
-                                                                .toLowerCase()))
-                                                        .toList();
-                                              }
-                                            });
-                                          },
-                                          hintText: 'Search Medicine',
-                                          width: screenWidth * 0.8,
-                                          verticalSize: screenHeight * 0.03,
-                                        ),
-                                        const SizedBox(height: 10),
-                                        SizedBox(
-                                          height: screenHeight * 0.2,
-                                          child: ListView.builder(
-                                            itemCount: _filteredMedicine.length,
-                                            itemBuilder: (context, index) {
-                                              final item =
-                                                  _filteredMedicine[index];
-                                              return ListTile(
-                                                title: Text(item),
-                                                onTap: () async {
-                                                  if (!_selectedMedicine
-                                                      .contains(item)) {
-                                                    setStateDialog(() {
-                                                      _selectedMedicine
-                                                          .add(item);
-                                                      isLoading = true;
-                                                      isMedLoading = true;
-                                                    });
-
-                                                    await Future.delayed(
-                                                        const Duration(
-                                                            milliseconds: 250));
-
-                                                    setStateDialog(() {
-                                                      medicineTableData.add({
-                                                        'SL No':
-                                                            medicineTableData
-                                                                    .length +
-                                                                1,
-                                                        'Medicine Name': item,
-                                                        'Morning': '',
-                                                        'Afternoon': '',
-                                                        'Evening': '',
-                                                        'Night': '',
-                                                        'Duration': '',
-                                                      });
-                                                      isLoading = false;
-                                                      isMedLoading = false;
-                                                    });
-                                                  }
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        if (medicineTableData.isNotEmpty)
-                                          isLoading
-                                              ? const CircularProgressIndicator()
-                                              : EditableDropDownTable(
-                                                  headerColor: Colors.white,
-                                                  headerBackgroundColor:
-                                                      AppColors.blue,
-                                                  editableColumns: const [
-                                                    'Morning',
-                                                    'Afternoon',
-                                                    'Evening',
-                                                    'Night',
-                                                    'Duration'
-                                                  ],
-                                                  dropdownValues: const {
-                                                    'Morning': [
-                                                      '0.5 ml',
-                                                      '1 ml',
-                                                      '1.5 ml',
-                                                      '2 ml',
-                                                      'ing',
-                                                    ],
-                                                    'Afternoon': [
-                                                      '0.5 ml',
-                                                      '1 ml',
-                                                      '1.5 ml',
-                                                      '2 ml',
-                                                      'ing',
-                                                    ],
-                                                    'Evening': [
-                                                      '0.5 ml',
-                                                      '1 ml',
-                                                      '1.5 ml',
-                                                      '2 ml',
-                                                      'ing',
-                                                    ],
-                                                    'Night': [
-                                                      '0.5 ml',
-                                                      '1 ml',
-                                                      '1.5 ml',
-                                                      '2 ml',
-                                                      'ing',
-                                                    ],
-                                                  },
-                                                  onValueChanged: (rowIndex,
-                                                      header, value) async {
-                                                    if (rowIndex <
-                                                        medicineTableData
-                                                            .length) {
-                                                      setStateDialog(() {
-                                                        medicineTableData[
-                                                                rowIndex]
-                                                            [header] = value;
-                                                      });
-                                                    }
-                                                  },
-                                                  headers: medicineHeaders,
-                                                  tableData: medicineTableData,
-                                                )
-                                        else
-                                          const Text(
-                                              "Invalid or incomplete medicine data"),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-
-                      setState(
-                          () {}); // Refresh outer table after dialog closes
-                    },
-                    child: isMedLoading
-                        ? const CircularProgressIndicator()
-                        : CustomDataTable(
-                            headers: medicineHeaders,
-                            tableData: medicineTableData,
-                          ),
-                  ),
-                  SizedBox(height: screenHeight * 0.035),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CustomText(
-                        text: 'Investigations',
-                        size: screenWidth * 0.02,
-                        color: AppColors.blue,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: screenHeight * 0.015),
-                  CustomTextField(
-                    controller: _notesController,
-                    hintText: '',
-                    width: screenWidth * 0.85,
-                    verticalSize: screenWidth * 0.03,
-                  ),
-                  SizedBox(height: screenHeight * 0.035),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.025),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 250,
-                    child: CustomDropdown(
-                      label: 'Proceed To',
-                      items: const [
-                        'None',
-                        'Appointment',
-                      ],
-                      selectedItem: selectedValue,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedValue = value!;
-                          isMedication(selectedValue!);
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(width: screenWidth * 0.05),
-                  if (isAppointment)
-                    CustomButton(
-                      label: 'Choose Next Appointment Date and Time',
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return StatefulBuilder(
-                              builder: (context, setState) {
-                                return AlertDialog(
-                                  title: CustomText(
-                                    text: 'Choose Next Appointment',
-                                    size: screenWidth * 0.013,
-                                  ),
-                                  content: SizedBox(
-                                    width: screenWidth * 0.3,
-                                    height: screenHeight * 0.2,
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(height: screenHeight * 0.1),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                            IconButton(
+                              onPressed: () {
+                                toggleLab(false);
+                                setState(() {
+                                  labTableData = [];
+                                  _selectedItems = [];
+                                });
+                              },
+                              icon: Icon(Icons.close),
+                              color: Colors.red,
+                            )
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return AlertDialog(
+                                      title: CustomText(
+                                        text: 'Add Tests',
+                                        size: screenWidth * 0.013,
+                                      ),
+                                      content: SizedBox(
+                                        width: screenWidth * 0.5,
+                                        height: screenHeight * 0.8,
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              CustomTextField(
-                                                onTap: () => _selectDate(
-                                                    context, _appointmentDate),
-                                                hintText: 'Select Date ',
-                                                width: screenWidth * 0.1,
-                                                controller: _appointmentDate,
-                                                icon: const Icon(
-                                                    Icons.date_range_outlined),
+                                              Wrap(
+                                                spacing: 8.0,
+                                                runSpacing: 4.0,
+                                                children: _selectedItems
+                                                    .map((item) => Chip(
+                                                          shadowColor:
+                                                              Colors.white,
+                                                          backgroundColor:
+                                                              AppColors
+                                                                  .secondaryColor,
+                                                          label: CustomText(
+                                                            text: item,
+                                                            color: Colors.white,
+                                                          ),
+                                                          deleteIcon:
+                                                              const Icon(
+                                                            Icons.close,
+                                                            color: Colors.white,
+                                                          ),
+                                                          onDeleted: () {
+                                                            setState(() {
+                                                              labTableData
+                                                                  .removeWhere(
+                                                                      (row) =>
+                                                                          row['Test'] ==
+                                                                          item);
+                                                              _selectedItems
+                                                                  .remove(item);
+                                                            });
+                                                          },
+                                                        ))
+                                                    .toList(),
                                               ),
+                                              const SizedBox(height: 20),
                                               CustomTextField(
-                                                onTap: () => _selectTime(
-                                                    context, _appointmentTime),
-                                                hintText: 'Select Time ',
-                                                width: screenWidth * 0.1,
-                                                controller: _appointmentTime,
-                                                icon: const Icon(Icons
-                                                    .access_time_filled_outlined),
+                                                onChanged: _filterItems,
+                                                hintText: 'Search Tests',
+                                                width: screenWidth * 0.8,
+                                                verticalSize:
+                                                    screenHeight * 0.03,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              SizedBox(
+                                                height: screenHeight * 0.7,
+                                                child: ListView.builder(
+                                                  itemCount:
+                                                      _filteredItems.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final item =
+                                                        _filteredItems[index];
+                                                    return ListTile(
+                                                      title: Text(item),
+                                                      onTap: () {
+                                                        if (!_selectedItems
+                                                            .contains(item)) {
+                                                          setState(() {
+                                                            _selectedItems
+                                                                .add(item);
+                                                            labTableData.add({
+                                                              'Test': item,
+                                                              'Results': '',
+                                                              'Reference': '',
+                                                            });
+                                                          });
+                                                        }
+                                                        print(
+                                                            'Selected: $item');
+                                                      },
+                                                    );
+                                                  },
+                                                ),
                                               ),
                                             ],
-                                          )
-                                        ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    );
+                                  },
+                                );
+                              },
+                            ).then((_) =>
+                                setState(() {})); // Refresh after dialog closes
+                          },
+                          child: Container(
+                            width: screenWidth * 0.85,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                width: screenWidth * 0.0015,
+                                color: AppColors.blue,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _selectedItems.isEmpty
+                                ? const Text("Tap to add tests",
+                                    style: TextStyle(color: Colors.grey))
+                                : Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    children: _selectedItems
+                                        .map((item) => Chip(
+                                              label: Text(item),
+                                              backgroundColor:
+                                                  AppColors.secondaryColor,
+                                              labelStyle: const TextStyle(
+                                                  color: Colors.white),
+                                            ))
+                                        .toList(),
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: CustomText(
-                                        text: 'OK',
-                                        color: AppColors.blue,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  if (isMedWidget)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomText(
+                              text: 'Medicine',
+                              size: screenWidth * 0.016,
+                              color: AppColors.blue,
+                            ),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    toggleMed(false);
+                                    medicineTableData = [];
+                                    _selectedMedicine = [];
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Colors.red,
+                                ))
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        GestureDetector(
+                          onTap: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                  builder: (context, setStateDialog) {
+                                    return AlertDialog(
+                                      title: CustomText(
+                                        text: 'Add Medicines',
+                                        size: screenWidth * 0.013,
                                       ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        _appointmentDate.clear();
-                                        _appointmentTime.clear();
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: CustomText(
-                                        text: 'Cancel',
-                                        color: AppColors.blue,
+                                      content: SizedBox(
+                                        width: screenWidth * 0.5,
+                                        height: screenHeight * 0.8,
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Wrap(
+                                                spacing: 8.0,
+                                                runSpacing: 4.0,
+                                                children: _selectedMedicine
+                                                    .map((item) => Chip(
+                                                          shadowColor:
+                                                              Colors.white,
+                                                          backgroundColor:
+                                                              AppColors
+                                                                  .secondaryColor,
+                                                          label: CustomText(
+                                                              text: item,
+                                                              color:
+                                                                  Colors.white),
+                                                          deleteIcon:
+                                                              const Icon(
+                                                                  Icons.close,
+                                                                  color: Colors
+                                                                      .white),
+                                                          onDeleted: () {
+                                                            setStateDialog(() {
+                                                              _selectedMedicine
+                                                                  .remove(item);
+                                                              medicineTableData
+                                                                  .removeWhere(
+                                                                      (row) =>
+                                                                          row['Medicine Name'] ==
+                                                                          item);
+                                                              _updateSerialNumbers();
+                                                            });
+                                                          },
+                                                        ))
+                                                    .toList(),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              CustomTextField(
+                                                onChanged: (query) {
+                                                  setStateDialog(() {
+                                                    if (query.isEmpty) {
+                                                      _filteredMedicine =
+                                                          List.from(
+                                                              medicineNames);
+                                                    } else {
+                                                      _filteredMedicine = medicineNames
+                                                          .where((item) => item
+                                                              .toLowerCase()
+                                                              .contains(query
+                                                                  .toLowerCase()))
+                                                          .toList();
+                                                    }
+                                                  });
+                                                },
+                                                hintText: 'Search Medicine',
+                                                width: screenWidth * 0.8,
+                                                verticalSize:
+                                                    screenHeight * 0.03,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              SizedBox(
+                                                height: screenHeight * 0.2,
+                                                child: ListView.builder(
+                                                  itemCount:
+                                                      _filteredMedicine.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final item =
+                                                        _filteredMedicine[
+                                                            index];
+                                                    return ListTile(
+                                                      title: Text(item),
+                                                      onTap: () async {
+                                                        if (!_selectedMedicine
+                                                            .contains(item)) {
+                                                          setStateDialog(() {
+                                                            _selectedMedicine
+                                                                .add(item);
+                                                            isLoading = true;
+                                                            isMedLoading = true;
+                                                          });
+
+                                                          await Future.delayed(
+                                                              const Duration(
+                                                                  milliseconds:
+                                                                      250));
+
+                                                          setStateDialog(() {
+                                                            medicineTableData
+                                                                .add({
+                                                              'SL No':
+                                                                  medicineTableData
+                                                                          .length +
+                                                                      1,
+                                                              'Medicine Name':
+                                                                  item,
+                                                              'Morning': '',
+                                                              'Afternoon': '',
+                                                              'Evening': '',
+                                                              'Night': '',
+                                                              'Duration': '',
+                                                            });
+                                                            isLoading = false;
+                                                            isMedLoading =
+                                                                false;
+                                                          });
+                                                        }
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              if (medicineTableData.isNotEmpty)
+                                                isLoading
+                                                    ? const CircularProgressIndicator()
+                                                    : EditableDropDownTable(
+                                                        headerColor:
+                                                            Colors.white,
+                                                        headerBackgroundColor:
+                                                            AppColors.blue,
+                                                        editableColumns: const [
+                                                          'Morning',
+                                                          'Afternoon',
+                                                          'Evening',
+                                                          'Night',
+                                                          'Duration'
+                                                        ],
+                                                        dropdownValues: const {
+                                                          'Morning': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml',
+                                                            'ing',
+                                                          ],
+                                                          'Afternoon': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml',
+                                                            'ing',
+                                                          ],
+                                                          'Evening': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml',
+                                                            'ing',
+                                                          ],
+                                                          'Night': [
+                                                            '0.5 ml',
+                                                            '1 ml',
+                                                            '1.5 ml',
+                                                            '2 ml',
+                                                            'ing',
+                                                          ],
+                                                        },
+                                                        onValueChanged:
+                                                            (rowIndex, header,
+                                                                value) async {
+                                                          if (rowIndex <
+                                                              medicineTableData
+                                                                  .length) {
+                                                            setStateDialog(() {
+                                                              medicineTableData[
+                                                                      rowIndex][
+                                                                  header] = value;
+                                                            });
+                                                          }
+                                                        },
+                                                        headers:
+                                                            medicineHeaders,
+                                                        tableData:
+                                                            medicineTableData,
+                                                      )
+                                              else
+                                                const Text(
+                                                    "Invalid or incomplete medicine data"),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    )
-                                  ],
+                                    );
+                                  },
                                 );
                               },
                             );
+
+                            setState(
+                                () {}); // Refresh outer table after dialog closes
                           },
-                        );
-                      },
-                      width: screenWidth * 0.2,
-                      height: screenHeight * 0.05,
+                          child: isMedLoading
+                              ? const CircularProgressIndicator()
+                              : CustomDataTable(
+                                  headers: medicineHeaders,
+                                  tableData: medicineTableData,
+                                ),
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
                     ),
+                  if (isInvestLoading)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomText(
+                              text: 'Investigations',
+                              size: screenWidth * 0.02,
+                              color: AppColors.blue,
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  toggleInvest(false);
+                                  _notesController.clear();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.close,
+                                color: Colors.red,
+                              ),
+                            )
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        CustomTextField(
+                          controller: _notesController,
+                          hintText: '',
+                          width: screenWidth * 0.85,
+                          verticalSize: screenWidth * 0.03,
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  if (isAppointment)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomButton(
+                              label: 'Choose Next Appointment Date and Time',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return StatefulBuilder(
+                                      builder: (context, setState) {
+                                        return AlertDialog(
+                                          title: CustomText(
+                                            text: 'Choose Next Appointment',
+                                            size: screenWidth * 0.013,
+                                          ),
+                                          content: SizedBox(
+                                            width: screenWidth * 0.3,
+                                            height: screenHeight * 0.2,
+                                            child: SingleChildScrollView(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  SizedBox(
+                                                      height:
+                                                          screenHeight * 0.1),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      CustomTextField(
+                                                        onTap: () => _selectDate(
+                                                            context,
+                                                            _appointmentDate),
+                                                        hintText:
+                                                            'Select Date ',
+                                                        width:
+                                                            screenWidth * 0.1,
+                                                        controller:
+                                                            _appointmentDate,
+                                                        icon: const Icon(Icons
+                                                            .date_range_outlined),
+                                                      ),
+                                                      CustomTextField(
+                                                        onTap: () => _selectTime(
+                                                            context,
+                                                            _appointmentTime),
+                                                        hintText:
+                                                            'Select Time ',
+                                                        width:
+                                                            screenWidth * 0.1,
+                                                        controller:
+                                                            _appointmentTime,
+                                                        icon: const Icon(Icons
+                                                            .access_time_filled_outlined),
+                                                      ),
+                                                    ],
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: CustomText(
+                                                text: 'OK',
+                                                color: AppColors.blue,
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                _appointmentDate.clear();
+                                                _appointmentTime.clear();
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: CustomText(
+                                                text: 'Cancel',
+                                                color: AppColors.blue,
+                                              ),
+                                            )
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                              width: screenWidth * 0.2,
+                              height: screenHeight * 0.05,
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  toggleAppointment(false);
+                                  _appointmentDate.clear();
+                                  _appointmentTime.clear();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.close,
+                                color: Colors.red,
+                              ),
+                            )
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ExpandableFAB(
+                        toggleMed,
+                        toggleLab,
+                        toggleInvest,
+                        toggleAppointment,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.035),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),
@@ -2502,6 +2626,120 @@ class _RxPrescription extends State<RxPrescription> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ExpandableFAB extends StatefulWidget {
+  final Function(bool) toggleMedLoading;
+  final Function(bool) toggleLabLoading;
+  final Function(bool) toggleInvestLoading;
+  final Function(bool) toggleAppointment;
+  ExpandableFAB(this.toggleMedLoading, this.toggleLabLoading,
+      this.toggleInvestLoading, this.toggleAppointment);
+  @override
+  _ExpandableFABState createState() => _ExpandableFABState();
+}
+
+class _ExpandableFABState extends State<ExpandableFAB> {
+  bool isExpanded = false;
+
+  void toggleFAB() {
+    setState(() {
+      isExpanded = !isExpanded;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final spacing = 10.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isExpanded)
+          Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab1',
+                mini: true,
+                onPressed: () {
+                  widget.toggleLabLoading(true);
+                },
+                child: Icon(
+                  Icons.check,
+                  color: Colors.white,
+                ),
+              ),
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab2',
+                mini: true,
+                onPressed: () {
+                  widget.toggleMedLoading(true);
+                },
+                child: Icon(
+                  Icons.medical_information,
+                  color: Colors.white,
+                ),
+              ),
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab3',
+                mini: true,
+                onPressed: () {
+                  widget.toggleInvestLoading(true);
+                },
+                child: Icon(
+                  Icons.child_care,
+                  color: Colors.white,
+                ),
+              ),
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab4',
+                mini: true,
+                onPressed: () {
+                  widget.toggleAppointment(true);
+                },
+                child: Icon(
+                  Icons.meeting_room,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        SizedBox(height: spacing),
+        GestureDetector(
+          onTap: toggleFAB,
+          child: DottedBorder(
+            borderType: BorderType.RRect,
+            radius: Radius.circular(25),
+            padding: EdgeInsets.all(5),
+            color: Colors.blue,
+            strokeWidth: 2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(25)),
+              child: Container(
+                height: screenHeight * 0.05,
+                width: screenWidth * 0.027,
+                color: Colors.blue,
+                child: Center(
+                    child: Icon(
+                  Icons.add_outlined,
+                  color: Colors.white,
+                  size: screenWidth * 0.02,
+                )),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

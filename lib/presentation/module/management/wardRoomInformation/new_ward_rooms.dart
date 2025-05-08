@@ -20,7 +20,6 @@ class NewWardRooms extends StatefulWidget {
 }
 
 class _NewWardRooms extends State<NewWardRooms> {
-  // To store the index of the selected drawer item
   int selectedIndex = 1;
   final TextEditingController _totalRoomsController = TextEditingController();
   final TextEditingController _bookedRoomsController = TextEditingController();
@@ -123,6 +122,55 @@ class _NewWardRooms extends State<NewWardRooms> {
 
     CustomSnackBar(context,
         message: 'Room Set Successfully', backgroundColor: Colors.green);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchInitialRoomData();
+  }
+
+  Future<void> fetchInitialRoomData() async {
+    try {
+      final docRef =
+          FirebaseFirestore.instance.collection('totalRoom').doc('status');
+      final docSnap = await docRef.get();
+
+      if (docSnap.exists) {
+        final data = docSnap.data() as Map<String, dynamic>;
+
+        List<String> roomStatus =
+            (data['roomStatus'] as List<dynamic>).cast<String>();
+        List<String> wardStatus =
+            (data['wardStatus'] as List<dynamic>).cast<String>();
+        List<String> vipRoomStatus =
+            (data['viproomStatus'] as List<dynamic>).cast<String>();
+        List<String> icuStatus =
+            (data['ICUStatus'] as List<dynamic>).cast<String>();
+
+        setState(() {
+          _totalRoomsController.text = roomStatus.length.toString();
+          _bookedRoomsController.text =
+              roomStatus.where((s) => s == "booked").length.toString();
+
+          _totalWardsController.text = wardStatus.length.toString();
+          _bookedWardsController.text =
+              wardStatus.where((s) => s == "booked").length.toString();
+
+          _totalVipRoomsController.text = vipRoomStatus.length.toString();
+          _bookedVipRoomsController.text =
+              vipRoomStatus.where((s) => s == "booked").length.toString();
+
+          _totalICUController.text = icuStatus.length.toString();
+          _bookedICUController.text =
+              icuStatus.where((s) => s == "booked").length.toString();
+        });
+      } else {
+        print('Room data not found.');
+      }
+    } catch (e) {
+      print('Error loading room data: $e');
+    }
   }
 
   void clearController() {
