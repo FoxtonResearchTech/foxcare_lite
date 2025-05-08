@@ -46,7 +46,6 @@ class _IpAdmit extends State<IpAdmit> {
   TextEditingController amount = TextEditingController();
   TextEditingController collected = TextEditingController();
   TextEditingController balanceAmount = TextEditingController();
-
   DateTime now = DateTime.now();
   final List<String> headers = [
     'IP Ticket',

@@ -186,13 +186,13 @@ class _OptionFieldState extends State<_OptionField> {
           height: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
           decoration: BoxDecoration(
-            color: isSelectedField ? AppColors.lightBlue : AppColors.appBar,
+            color: isSelectedField ? AppColors.appBar : AppColors.lightBlue,
           ),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(widget.icon, color: Colors.white, size: 22),
+                Icon(widget.icon, color: Colors.white, size: 35),
                 const SizedBox(height: 2),
                 CustomText(
                   text: widget.fieldName,
@@ -240,8 +240,8 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         decoration: BoxDecoration(
           color: widget.isSelected
-              ? AppColors.lightBlue
-              : (isHovered ? null : AppColors.appBar),
+              ? AppColors.blue
+              : (isHovered ? null : AppColors.lightBlue),
           gradient: isHovered && !widget.isSelected
               ? LinearGradient(
                   colors: [AppColors.lightBlue, AppColors.blue],
