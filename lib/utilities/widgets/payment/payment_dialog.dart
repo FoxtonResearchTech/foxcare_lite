@@ -365,7 +365,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     controller: balance,
                     hintText: '',
                     width: screenWidth * 0.08,
-                  )
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.015),
