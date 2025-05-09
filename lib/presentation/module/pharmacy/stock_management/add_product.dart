@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
@@ -20,8 +21,6 @@ class AddProduct extends StatefulWidget {
 class _AddProduct extends State<AddProduct> {
   final TextEditingController _productName = TextEditingController();
   final TextEditingController _composition = TextEditingController();
-  final TextEditingController _quantity = TextEditingController();
-  final TextEditingController _hsnCode = TextEditingController();
   final TextEditingController _companyName = TextEditingController();
   final TextEditingController _referredByDoctor = TextEditingController();
   final TextEditingController _additionalInformation = TextEditingController();
@@ -29,11 +28,9 @@ class _AddProduct extends State<AddProduct> {
 
   final List<String> headers = [
     'Product Name',
-    'HSN Code',
+    'Composition',
     'Category',
     'Company',
-    'Composition',
-    'Type',
   ];
   List<Map<String, dynamic>> allProducts = [];
 
@@ -90,21 +87,14 @@ class _AddProduct extends State<AddProduct> {
   String hsnCode = '';
 
   List<String> distributorsNames = [];
-  String? selectedType;
   String? selectedCategory;
-  String? selectedDistributor;
 
   Future<void> addProduct() async {
     try {
       Map<String, dynamic> data = {
         'productName': _productName.text,
         'composition': _composition.text,
-        'quantity': _quantity.text,
-        'fixedQuantity': _quantity.text,
-        'type': selectedType,
         'category': selectedCategory,
-        'distributor': selectedDistributor,
-        'hsnCode': _hsnCode.text,
         'companyName': _companyName.text,
         'referredByDoctor': _referredByDoctor.text,
         'additionalInformation': _additionalInformation.text,
@@ -153,8 +143,7 @@ class _AddProduct extends State<AddProduct> {
   void clearFields() {
     _productName.clear();
     _composition.clear();
-    _quantity.clear();
-    _hsnCode.clear();
+
     _companyName.clear();
     _referredByDoctor.clear();
     _additionalInformation.clear();
@@ -207,34 +196,8 @@ class _AddProduct extends State<AddProduct> {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Add Product",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              TimeDateWidget(text: 'Add Product'),
+              SizedBox(height: screenHeight * 0.08),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -263,7 +226,7 @@ class _AddProduct extends State<AddProduct> {
                             title: Text('Add Product'),
                             content: Container(
                               width: screenWidth * 0.5,
-                              height: screenHeight * 0.5,
+                              height: screenHeight * 0.35,
                               child: SingleChildScrollView(
                                 child: Column(
                                   children: [
@@ -273,7 +236,7 @@ class _AddProduct extends State<AddProduct> {
                                       children: [
                                         Container(
                                           width: screenWidth * 0.5,
-                                          height: screenHeight * 0.5,
+                                          height: screenHeight * 0.3,
                                           child: Column(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -290,53 +253,8 @@ class _AddProduct extends State<AddProduct> {
                                                     hintText: 'Product Name',
                                                     width: screenWidth * 0.25,
                                                   ),
-                                                  CustomTextField(
-                                                    controller: _quantity,
-                                                    hintText: 'Quantity',
-                                                    width: screenWidth * 0.15,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: _composition,
-                                                    hintText: 'Composition',
-                                                    width: screenWidth * 0.25,
-                                                  ),
                                                   SizedBox(
-                                                    width: screenWidth * 0.15,
-                                                    child: CustomDropdown(
-                                                      label: 'Type',
-                                                      items: const [
-                                                        'Tablet',
-                                                        'Device',
-                                                        'Injection'
-                                                      ],
-                                                      selectedItem:
-                                                          selectedType,
-                                                      onChanged: (value) {
-                                                        setState(
-                                                          () {
-                                                            selectedType =
-                                                                value;
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  SizedBox(
-                                                    width: screenWidth * 0.15,
+                                                    width: screenWidth * 0.2,
                                                     child: CustomDropdown(
                                                         label: 'Category',
                                                         items: const [
@@ -353,10 +271,22 @@ class _AddProduct extends State<AddProduct> {
                                                           });
                                                         }),
                                                   ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
                                                   CustomTextField(
-                                                    controller: _hsnCode,
-                                                    hintText: 'HSN Code',
-                                                    width: screenWidth * 0.15,
+                                                    controller: _composition,
+                                                    hintText: 'Composition',
+                                                    width: screenWidth * 0.25,
+                                                  ),
+                                                  CustomTextField(
+                                                    controller: _companyName,
+                                                    hintText: 'Company Name',
+                                                    width: screenWidth * 0.2,
                                                   ),
                                                 ],
                                               ),
@@ -366,41 +296,21 @@ class _AddProduct extends State<AddProduct> {
                                                         .spaceBetween,
                                                 children: [
                                                   CustomTextField(
-                                                    controller: _companyName,
-                                                    hintText: 'Company Name',
+                                                    controller:
+                                                        _referredByDoctor,
+                                                    hintText:
+                                                        'Referred by Doctor',
                                                     width: screenWidth * 0.25,
                                                   ),
-                                                  SizedBox(
-                                                    width: screenWidth * 0.15,
-                                                    child: CustomDropdown(
-                                                      label: 'Distributor',
-                                                      items: distributorsNames,
-                                                      selectedItem:
-                                                          selectedDistributor,
-                                                      onChanged: (value) {
-                                                        setState(
-                                                          () {
-                                                            selectedDistributor =
-                                                                value;
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
+                                                  CustomTextField(
+                                                    controller:
+                                                        _additionalInformation,
+                                                    hintText:
+                                                        'Additional Information',
+                                                    width: screenWidth * 0.2,
                                                   ),
                                                 ],
-                                              ),
-                                              CustomTextField(
-                                                controller: _referredByDoctor,
-                                                hintText: 'Referred by Doctor',
-                                                width: screenWidth * 0.25,
-                                              ),
-                                              CustomTextField(
-                                                controller:
-                                                    _additionalInformation,
-                                                hintText:
-                                                    'Additional Information',
-                                                width: screenWidth * 0.25,
-                                              ),
+                                              )
                                             ],
                                           ),
                                         ),
