@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
@@ -37,7 +40,9 @@ class _AddNewDistributor extends State<AddNewDistributor> {
   TextEditingController bankAccountName = TextEditingController();
   TextEditingController ifsc = TextEditingController();
   TextEditingController surfCode = TextEditingController();
-  TextEditingController representativeNumber = TextEditingController();
+  TextEditingController contactPerson = TextEditingController();
+  TextEditingController contactPersonNumber = TextEditingController();
+
   TextEditingController bankName = TextEditingController();
   TextEditingController branchName = TextEditingController();
   TextEditingController bankPhoneNo = TextEditingController();
@@ -64,7 +69,8 @@ class _AddNewDistributor extends State<AddNewDistributor> {
       'bankAccountName': bankAccountName.text,
       'ifsc': ifsc.text,
       'surfCode': surfCode.text,
-      'representativeNumber': representativeNumber.text,
+      'contactPerson': contactPerson.text,
+      'contactPersonNumber': contactPersonNumber.text,
       'bankName': bankName.text,
       'branchName': branchName.text,
       'bankPhoneNo': bankPhoneNo.text,
@@ -115,10 +121,11 @@ class _AddNewDistributor extends State<AddNewDistributor> {
     bankAccountName.clear();
     ifsc.clear();
     surfCode.clear();
-    representativeNumber.clear();
     bankName.clear();
     branchName.clear();
     bankPhoneNo.clear();
+    contactPerson.clear();
+    contactPersonNumber.clear();
   }
 
   @override
@@ -138,258 +145,460 @@ class _AddNewDistributor extends State<AddNewDistributor> {
           ),
           child: Column(
             children: [
+              TimeDateWidget(text: 'Add Distributor'),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Distributor Name',
+                        size: screenWidth * 0.012,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      PharmacyTextField(
+                        controller: distributorNameController,
+                        hintText: '',
+                        width: screenWidth * 0.3,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Distributor Information",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
+                  CustomText(
+                    text: 'Address',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
                   ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Lane 1',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: lane1,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
                       ),
-                    ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Lane 2',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: lane2,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Landmark',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: landMark,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'City',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: city,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'State',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: state,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Pin Code',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: pinCode,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone 1',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: phoneNo1,
+                            hintText: '',
+                            width: screenWidth * 0.175,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone 2',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: phoneNO2,
+                            hintText: '',
+                            width: screenWidth * 0.175,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Email-ID',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: emailId,
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
                 ],
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              SizedBox(height: screenHeight * 0.02),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CustomText(
-                    text: 'Distributor details ',
-                    size: screenWidth * 0.012,
+                    text: 'Licence',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
                   ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: distributorNameController,
-                    hintText: 'Distributor Name',
-                    width: screenWidth * 0.25,
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'DL NO 1',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: dlNo1Controller,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'DL NO 2',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: dlNo2Controller,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: dlNo1Controller,
-                    hintText: 'DL / No 1',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    controller: expiryDate1Controller,
-                    hintText: 'Expiry date',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: dlNo2Controller,
-                    hintText: 'DL / No 2',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    controller: expiryDate2Controller,
-                    hintText: 'Expiry date',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: gstNoController,
-                    hintText: 'GST NO',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomText(
-                    text: 'Pharmacy Address',
-                    size: screenWidth * 0.012,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: lane1,
-                    hintText: 'Lane 1',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    controller: lane2,
-                    hintText: 'Lane 2',
-                    width: screenWidth * 0.25,
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'GSTIN',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: gstNoController,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: landMark,
-                    hintText: 'Landmark',
-                    width: screenWidth * 0.61,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: city,
-                    hintText: 'City',
-                    width: screenWidth * 0.20,
-                  ),
-                  SizedBox(width: screenHeight * 0.1),
-                  CustomTextField(
-                    controller: state,
-                    hintText: 'State',
-                    width: screenWidth * 0.20,
-                  ),
-                  SizedBox(width: screenHeight * 0.1),
-                  CustomTextField(
-                    controller: pinCode,
-                    hintText: 'Pin code',
-                    width: screenWidth * 0.20,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: emailId,
-                    hintText: 'E-Mail ID',
-                    width: screenWidth * 0.20,
-                  ),
-                  SizedBox(width: screenHeight * 0.1),
-                  CustomTextField(
-                    controller: phoneNo1,
-                    hintText: 'Phone NO 1',
-                    width: screenWidth * 0.20,
-                  ),
-                  SizedBox(width: screenHeight * 0.1),
-                  CustomTextField(
-                    controller: phoneNO2,
-                    hintText: 'Phone Number 2',
-                    width: screenWidth * 0.20,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CustomText(
                     text: 'Bank Details',
-                    size: screenWidth * 0.012,
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
                   ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: bankAccountNumber,
-                    hintText: 'Bank Account Number',
-                    width: screenWidth * 0.25,
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Bank Account Number',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: bankAccountNumber,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Bank Account Name',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: bankAccountName,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    controller: bankAccountName,
-                    hintText: 'Bank Account Name',
-                    width: screenWidth * 0.25,
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'IFSC',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: ifsc,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Surf Code',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: surfCode,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Bank Name',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: bankName,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Branch Name',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: branchName,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone Number',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: bankPhoneNo,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.02),
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    controller: ifsc,
-                    hintText: 'IFSC',
-                    width: screenWidth * 0.25,
+                  CustomText(
+                    text: 'Contact Person',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
                   ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    controller: surfCode,
-                    hintText: 'Surf Code',
-                    width: screenWidth * 0.25,
+                  SizedBox(height: screenHeight * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Contact Person',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: contactPerson,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone Number',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: contactPersonNumber,
+                            hintText: '',
+                            width: screenWidth * 0.3,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: bankName,
-                    hintText: 'Bank Name',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                    controller: branchName,
-                    hintText: 'Branch Name',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: representativeNumber,
-                    hintText: 'Representative Number',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: bankPhoneNo,
-                    hintText: 'Phone No',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
               SizedBox(height: screenHeight * 0.08),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomButton(
+                  PharmacyButton(
+                    color: AppColors.blue,
+                    label: 'Cancel',
+                    onPressed: () => (),
+                    width: screenWidth * 0.08,
+                    height: screenHeight * 0.05,
+                  ),
+                  SizedBox(width: screenWidth * 0.05),
+                  PharmacyButton(
+                    color: AppColors.blue,
                     label: 'Create',
                     onPressed: () => _saveDistributorData(),
                     width: screenWidth * 0.08,

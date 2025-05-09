@@ -46,47 +46,52 @@ class _TimeDateWidgetState extends State<TimeDateWidget> {
     String formattedTime = DateFormat.jm().format(_now);
     String formattedDate = DateFormat('dd/MM/yyyy EEEE').format(_now);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: screenWidth * 0.008),
-          child: Column(
-            children: [
-              CustomText(
-                text: widget.text,
-                size: screenWidth * 0.0275,
-                color: AppColors.blue,
-              ),
-            ],
-          ),
-        ),
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CustomText(
-              text: formattedTime,
-              color: AppColors.blue,
-              size: screenWidth * 0.02,
+            Padding(
+              padding: EdgeInsets.only(top: screenWidth * 0.008),
+              child: Column(
+                children: [
+                  CustomText(
+                    text: widget.text,
+                    size: screenWidth * 0.0275,
+                    color: AppColors.blue,
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: screenHeight * 0.005),
-            CustomText(
-              text: formattedDate,
-              color: AppColors.blue,
-            )
+            Column(
+              children: [
+                CustomText(
+                  text: formattedTime,
+                  color: AppColors.blue,
+                  size: screenWidth * 0.02,
+                ),
+                SizedBox(height: screenHeight * 0.005),
+                CustomText(
+                  text: formattedDate,
+                  color: AppColors.blue,
+                )
+              ],
+            ),
+            Container(
+              width: screenWidth * 0.15,
+              height: screenWidth * 0.05,
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                image: const DecorationImage(
+                  image: AssetImage('assets/foxcare_lite_logo.png'),
+                ),
+              ),
+            ),
           ],
         ),
-        Container(
-          width: screenWidth * 0.15,
-          height: screenWidth * 0.05,
-          decoration: BoxDecoration(
-            shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.circular(screenWidth * 0.05),
-            image: const DecorationImage(
-              image: AssetImage('assets/foxcare_lite_logo.png'),
-            ),
-          ),
-        ),
+        SizedBox(height: screenHeight * 0.04),
       ],
     );
   }

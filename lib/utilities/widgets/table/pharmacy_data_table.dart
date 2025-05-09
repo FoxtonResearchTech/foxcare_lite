@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
+import '../text/primary_text.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Assuming you're using Firestore
+
+class PharmacyDataTable extends StatefulWidget {
+  final List<String> headers;
+  final List<Map<String, dynamic>> tableData;
+  final List<String>? editableColumns;
+  final Map<int, TableColumnWidth> columnWidths;
+  final Color headerBackgroundColor;
+  final Color headerColor;
+  final Map<String, List<String>>? dropdownValues;
+  final Color borderColor;
+  final Color Function(Map<String, dynamic>)? rowColorResolver;
+  final Function(int rowIndex, String header, String value)? onValueChanged;
+  final List<Map<String, TextEditingController>>? controllers;
+
+  PharmacyDataTable({
+    super.key,
+    required this.headers,
+    required this.tableData,
+    this.editableColumns,
+    this.columnWidths = const {},
+    Color? headerBackgroundColor,
+    this.borderColor = Colors.black,
+    this.rowColorResolver,
+    this.onValueChanged,
+    this.controllers,
+    this.headerColor = Colors.white,
+    this.dropdownValues,
+  }) : headerBackgroundColor = headerBackgroundColor ?? AppColors.blue;
+
+  @override
+  State<PharmacyDataTable> createState() => _PharmacyDataTable();
+}
+
+class _PharmacyDataTable extends State<PharmacyDataTable> {
+  late List<Map<String, TextEditingController>> controllers;
+  late List<List<Map<String, dynamic>>>
+      productSuggestions; // For storing matching products
+
+  @override
+  void initState() {
+    super.initState();
+
+    controllers = widget.tableData.map((row) {
+      return {
+        for (String header in widget.headers)
+          if (row[header] is! Widget)
+            header: TextEditingController(text: row[header]?.toString() ?? '')
+      };
+    }).toList();
+
+    // Initialize the productSuggestions list
+    productSuggestions = List.generate(widget.tableData.length, (_) => []);
+  }
+
+  @override
+  void dispose() {
+    // Dispose all controllers
+    for (var rowControllers in controllers) {
+      for (var controller in rowControllers.values) {
+        controller.dispose();
+      }
+    }
+    super.dispose();
+  }
+
+  // Fetch matching products for a given row index
+  Future<void> fetchMatchingProducts(int rowIndex, String query) async {
+    if (query.isEmpty) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('stock')
+        .doc('Products')
+        .collection('AddedProducts')
+        .where('productName', isGreaterThanOrEqualTo: query)
+        .where('productName', isLessThanOrEqualTo: query + '\uf8ff')
+        .limit(5)
+        .get();
+
+    List<Map<String, dynamic>> matches =
+        snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+
+    setState(() {
+      productSuggestions[rowIndex] = matches;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Table(
+      border: TableBorder.all(color: widget.borderColor),
+      columnWidths: widget.columnWidths.isNotEmpty
+          ? widget.columnWidths
+          : {
+              for (int i = 0; i < widget.headers.length; i++)
+                i: const FlexColumnWidth()
+            },
+      children: [
+        TableRow(
+          decoration: BoxDecoration(color: widget.headerBackgroundColor),
+          children: widget.headers
+              .map(
+                (header) => Center(
+                  child: CustomText(
+                    maxLines: 10,
+                    text: header,
+                    color: widget.headerColor,
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        // Data rows
+        ...widget.tableData.asMap().entries.map(
+          (entry) {
+            final rowIndex = entry.key;
+            final row = entry.value;
+            final rowColor =
+                widget.rowColorResolver?.call(row) ?? Colors.transparent;
+
+            return TableRow(
+              decoration: BoxDecoration(color: rowColor),
+              children: widget.headers.map(
+                (header) {
+                  final cellData = row[header];
+                  final isEditable =
+                      widget.editableColumns?.contains(header) ?? false;
+                  final dropdownOptions = widget.dropdownValues?[header];
+
+                  if (cellData is Widget) {
+                    return Center(child: cellData);
+                  } else if (isEditable && header == 'Product Name') {
+                    // Editable "Product Name" field with matching products
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: screenHeight * 0.045,
+                            child: TextField(
+                              controller: controllers[rowIndex][header],
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                  horizontal: 8.0,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                fetchMatchingProducts(rowIndex, value);
+                              },
+                            ),
+                          ),
+                          if (productSuggestions[rowIndex].isNotEmpty) ...[
+                            Container(
+                              height: 100,
+                              child: ListView.builder(
+                                itemCount: productSuggestions[rowIndex].length,
+                                itemBuilder: (context, index) {
+                                  Map<String, dynamic> product =
+                                      productSuggestions[rowIndex][index];
+                                  return ListTile(
+                                    title: Text(product['productName'] ?? ''),
+                                    onTap: () {
+                                      setState(() {
+                                        controllers[rowIndex][header]?.text =
+                                            product['productName'];
+                                        row[header] = product['productName'];
+                                        productSuggestions[rowIndex] = [];
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ]
+                        ],
+                      ),
+                    );
+                  } else if (isEditable && dropdownOptions != null) {
+                    // Show dropdown for editable columns
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        width: screenWidth * 0.2,
+                        height: screenHeight * 0.045,
+                        child: DropdownButton<String>(
+                          iconEnabledColor: AppColors.blue,
+                          iconDisabledColor: AppColors.blue,
+                          value: dropdownOptions.contains(row[header])
+                              ? row[header]?.toString()
+                              : null,
+                          isExpanded: true,
+                          items: dropdownOptions.map((String option) {
+                            return DropdownMenuItem<String>(
+                              value: option,
+                              child: CustomText(
+                                text: option,
+                                maxLines: 10,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              row[header] = value;
+                            });
+                            if (widget.onValueChanged != null) {
+                              widget.onValueChanged!(
+                                  rowIndex, header, value ?? '');
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  } else if (isEditable) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        width: screenWidth * 0.2,
+                        height: screenHeight * 0.045,
+                        child: TextField(
+                          controller: controllers[rowIndex][header],
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 8.0,
+                              horizontal: 8.0,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            row[header] = value;
+                            if (widget.onValueChanged != null) {
+                              widget.onValueChanged!(rowIndex, header, value);
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  } else if (header == 'Delete') {
+                    return IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          widget.tableData.removeAt(rowIndex);
+                          controllers.removeAt(rowIndex);
+                          productSuggestions.removeAt(rowIndex);
+                        });
+                      },
+                    );
+                  } else {
+                    return Center(
+                      child: CustomText(
+                        maxLines: 10,
+                        text: cellData?.toString() ?? '',
+                      ),
+                    );
+                  }
+                },
+              ).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}

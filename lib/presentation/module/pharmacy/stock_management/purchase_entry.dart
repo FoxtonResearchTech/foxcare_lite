@@ -2,14 +2,14 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
-import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
-import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
+import 'package:foxcare_lite/utilities/widgets/table/pharmacy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
-import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:intl/intl.dart';
-import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import 'dart:async';
 
 class PurchaseEntry extends StatefulWidget {
   const PurchaseEntry({super.key});
@@ -21,29 +21,115 @@ class PurchaseEntry extends StatefulWidget {
 class _PurchaseEntry extends State<PurchaseEntry> {
   TextEditingController _dateController = TextEditingController();
   TextEditingController _billNo = TextEditingController();
-  TextEditingController _entryNo = TextEditingController();
-  double totalAmount = 0.0;
+  TextEditingController address = TextEditingController();
+  TextEditingController phone = TextEditingController();
+  TextEditingController mail = TextEditingController();
+  TextEditingController dlNo1 = TextEditingController();
+  TextEditingController dlNo2 = TextEditingController();
+  TextEditingController gstIn = TextEditingController();
 
+  double totalAmount = 0.0;
+  bool isAdding = false;
   final List<String> headers = [
     'Product Name',
-    'HSN Code',
-    'Quantity',
-    'Batch Number',
+    'HSN',
+    'Batch',
     'Expiry',
+    'Quantity',
     'Free',
     'MRP',
     'Price',
-    'GST',
-    'Amount',
+    'Tax',
+    'SGST',
+    'CGST',
+    'Tax Total',
     'Product Total',
+    'Delete',
+  ];
+
+  final List<String> editableColumns = [
+    'Product Name',
+    'HSN',
+    'Batch',
+    'Expiry',
+    'Quantity',
+    'Free',
+    'MRP',
+    'Price',
+    'Tax',
   ];
 
   List<Map<String, dynamic>> allProducts = [];
-  List<Map<String, dynamic>> filteredProducts = [];
   List<Map<String, TextEditingController>> controllers = [];
+  List<List<Map<String, dynamic>>> productSuggestions = [];
 
   String? selectedDistributor;
   List<String> distributorsNames = [];
+  String rfNo = '';
+
+  Future<String> generateUniqueRfNo() async {
+    const chars = '0123456789';
+    Random random = Random.secure();
+    String no = '';
+
+    bool exists = true;
+
+    while (exists) {
+      String randomString =
+          List.generate(8, (index) => chars[random.nextInt(chars.length)])
+              .join();
+      no = 'RfNo$randomString';
+
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('PurchaseEntry')
+          .where('rfNo', isEqualTo: no)
+          .limit(1)
+          .get();
+
+      exists = querySnapshot.docs.isNotEmpty;
+    }
+
+    return no;
+  }
+
+  Future<void> initializeRfNo() async {
+    rfNo = await generateUniqueRfNo();
+    setState(() {});
+  }
+
+  Future<void> fetchMatchingProducts(int rowIndex, String query) async {
+    if (query.isEmpty) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('stock')
+        .doc('Products')
+        .collection('AddedProducts')
+        .where('productName', isGreaterThanOrEqualTo: query)
+        .where('productName', isLessThanOrEqualTo: query + '\uf8ff')
+        .get();
+
+    List<Map<String, dynamic>> matches = snapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .where((product) {
+      String productName = product['productName'] as String;
+      return productName.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      productSuggestions[rowIndex] = matches;
+    });
+  }
+
+  void addNewRow() {
+    setState(() {
+      allProducts.add({
+        for (var header in headers) header: '',
+      });
+    });
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -57,80 +143,6 @@ class _PurchaseEntry extends State<PurchaseEntry> {
         _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
       });
     }
-  }
-
-  Future<void> fetchData() async {
-    try {
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .get();
-
-      List<Map<String, dynamic>> fetchedData = stockSnapshot.docs
-          .map((doc) {
-            final data = doc.data();
-
-            if (data.containsKey('price') && data.containsKey('amount')) {
-              return null;
-            }
-
-            return {
-              'Product Name': data['productName'] ?? '',
-              'HSN Code': data['hsnCode'] ?? '',
-              'Quantity': data['quantity'] ?? '',
-              'Batch Number': '',
-              'Expiry': '',
-              'Free': '',
-              'MRP': '',
-              'Price': '',
-              'GST': '',
-              'Amount': '',
-              'Product Total': '',
-              'Distributor': data['distributor'] ?? ''
-            };
-          })
-          .whereType<Map<String, dynamic>>()
-          .toList(); // Remove null values
-
-      setState(() {
-        allProducts = fetchedData;
-        filterProducts();
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
-    }
-  }
-
-  void filterProducts() {
-    List<Map<String, dynamic>> newFilteredProducts =
-        allProducts.where((product) {
-      final String productDistributor =
-          (product['Distributor'] ?? '').toString().trim().toLowerCase();
-      final String selected = (selectedDistributor ?? '').trim().toLowerCase();
-      return selected.isEmpty || productDistributor == selected;
-    }).toList();
-
-    setState(() {
-      filteredProducts = newFilteredProducts;
-      controllers = filteredProducts.map((row) {
-        return {
-          for (String header in headers)
-            if ([
-              'Batch Number',
-              'Expiry',
-              'Free',
-              'MRP',
-              'Price',
-              'GST',
-              'Amount',
-              'Product Total',
-            ].contains(header))
-              header: TextEditingController(text: row[header]?.toString() ?? '')
-        };
-      }).toList();
-    });
   }
 
   Future<void> fetchDistributors() async {
@@ -151,39 +163,25 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     }
   }
 
-  Future<void> fetchEntryNo() async {
+  Future<void> getDistributorDetails({required String distributorName}) async {
     try {
-      DocumentSnapshot<Map<String, dynamic>> documentSnapshot =
+      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
           await FirebaseFirestore.instance
-              .collection('counters')
-              .doc('entry')
+              .collection('pharmacy')
+              .doc('distributors')
+              .collection('distributor')
+              .where('distributorName', isEqualTo: distributorName)
               .get();
-
-      if (documentSnapshot.exists) {
-        int entry = (documentSnapshot.data()?['entryValue'] ?? 0) + 1;
-
-        // Set the incremented entry number in UI (but not updating Firestore yet)
-        setState(() {
-          _entryNo.text = entry.toString();
-        });
-      } else {}
+      setState(() {
+        address.text = distributorsSnapshot.docs[0]['lane1'].toString();
+        phone.text = distributorsSnapshot.docs[0]['phoneNo1'].toString();
+        mail.text = distributorsSnapshot.docs[0]['emailId'].toString();
+        dlNo1.text = distributorsSnapshot.docs[0]['dlNo1'].toString();
+        dlNo2.text = distributorsSnapshot.docs[0]['dlNo2'].toString();
+        gstIn.text = distributorsSnapshot.docs[0]['gstNo'].toString();
+      });
     } catch (e) {
-      print('Error fetching entry number: $e');
-    }
-  }
-
-  Future<void> updateEntryNo() async {
-    try {
-      int entry = int.tryParse(_entryNo.text) ?? 1;
-
-      await FirebaseFirestore.instance
-          .collection('counters')
-          .doc('entry')
-          .update({'entryValue': entry});
-
-      print('Entry number updated successfully!');
-    } catch (e) {
-      print('Error updating entry number: $e');
+      print('Error fetching distributors: $e');
     }
   }
 
@@ -191,8 +189,10 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   void initState() {
     super.initState();
     fetchDistributors();
-    fetchData();
-    fetchEntryNo();
+    initializeRfNo();
+    productSuggestions = List.generate(allProducts.length, (_) => []);
+
+    addNewRow();
   }
 
   @override
@@ -215,10 +215,20 @@ class _PurchaseEntry extends State<PurchaseEntry> {
       appBar: AppBar(
         backgroundColor: AppColors.appBar,
         title: Center(
-            child: CustomText(
-                text: 'Purchase Entry',
-                size: screenWidth * 0.012,
-                color: Colors.white)),
+          child: CustomText(
+              text: 'Purchase Entry',
+              size: screenWidth * 0.012,
+              color: Colors.white),
+        ),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+            )),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -226,200 +236,218 @@ class _PurchaseEntry extends State<PurchaseEntry> {
               horizontal: screenWidth * 0.08, vertical: screenHeight * 0.05),
           child: Column(
             children: [
-              Row(children: [
-                CustomText(text: 'Purchase Entry ', size: screenWidth * 0.012)
-              ]),
+              const TimeDateWidget(text: 'Purchase Entry'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Bill No ',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.008),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                        controller: _billNo,
+                      )
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Date ',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.008),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                        controller: _dateController,
+                        icon: const Icon(Icons.date_range),
+                        onTap: () => _selectDate(context),
+                      )
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Reference No',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.008),
+                      PharmacyTextField(
+                        readOnly: true,
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                        controller: TextEditingController(text: rfNo),
+                      )
+                    ],
+                  ),
+                ],
+              ),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(
-                    width: screenWidth * 0.15,
-                    child: CustomDropdown(
-                      label: 'Distributor',
-                      items: distributorsNames,
-                      selectedItem: selectedDistributor,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedDistributor = value;
-                          filterProducts();
-                        });
-                      },
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Distributor Name',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.008),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: screenWidth * 0.15,
+                            child: PharmacyDropDown(
+                              label: '',
+                              items: distributorsNames,
+                              selectedItem: selectedDistributor,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedDistributor = value;
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(width: screenWidth * 0.01),
+                          PharmacyButton(
+                            label: 'Select',
+                            onPressed: () {
+                              getDistributorDetails(
+                                  distributorName:
+                                      selectedDistributor.toString());
+                            },
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.05,
+                          )
+                        ],
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                      controller: _billNo,
-                      hintText: 'Bill NO',
-                      width: screenWidth * 0.10),
-                  CustomTextField(
-                    controller: _dateController,
-                    hintText: 'Report Date',
-                    width: screenWidth * 0.125,
-                    icon: const Icon(Icons.date_range),
-                    onTap: () => _selectDate(context),
-                  ),
-                  CustomTextField(
-                      controller: TextEditingController(text: _entryNo.text),
-                      hintText: 'Entry No',
-                      width: screenWidth * 0.10),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              if (filteredProducts.isNotEmpty) ...[
-                CustomDataTable(
-                  tableData: filteredProducts,
-                  headers: headers,
-                  controllers: controllers,
-                  editableColumns: const [
-                    'Batch Number',
-                    'Expiry',
-                    'Free',
-                    'MRP',
-                    'Price',
-                    'GST',
-                  ],
-                  onValueChanged: (rowIndex, header, value) {
-                    setState(() {
-                      filteredProducts[rowIndex][header] = value;
-                      controllers[rowIndex][header]?.text = value;
-
-                      if (header == 'Price' || header == 'GST') {
-                        double price = double.tryParse(
-                                controllers[rowIndex]['Price']?.text ?? '0') ??
-                            0;
-                        double gst = double.tryParse(
-                                controllers[rowIndex]['GST']?.text ?? '0') ??
-                            0;
-
-                        double amount = price * (1 + (gst / 100));
-
-                        // Update Amount field
-                        controllers[rowIndex]['Amount']?.text =
-                            amount.toStringAsFixed(2);
-                        filteredProducts[rowIndex]['Amount'] =
-                            amount.toStringAsFixed(2);
-                      }
-
-                      // Calculate Product Total = Quantity * Amount
-                      double quantity = double.tryParse(
-                              filteredProducts[rowIndex]['Quantity'] ?? '0') ??
-                          0;
-                      double amount = double.tryParse(
-                              filteredProducts[rowIndex]['Amount'] ?? '0') ??
-                          0;
-                      double productTotal = quantity * amount;
-
-                      controllers[rowIndex]['Product Total']?.text =
-                          productTotal.toStringAsFixed(2);
-                      filteredProducts[rowIndex]['Product Total'] =
-                          productTotal.toStringAsFixed(2);
-
-                      // Update totalAmount
-                      totalAmount = filteredProducts.fold(
-                        0.0,
-                        (sum, item) =>
-                            sum +
-                            (double.tryParse(item['Product Total'] ?? '0') ??
-                                0),
-                      );
-                    });
-                  },
-                ),
-                Container(
-                  width: screenWidth,
-                  height: screenHeight * 0.030,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Row(
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(width: screenWidth * 0.73),
                       CustomText(
-                          text:
-                              'Grand Total :    ${totalAmount.toStringAsFixed(2)}'),
+                        text: 'Distributor Name : ${selectedDistributor}',
+                        size: screenWidth * 0.012,
+                      ),
+                      CustomText(
+                        text: 'Address : ${address.text}',
+                        size: screenWidth * 0.012,
+                      ),
+                      CustomText(
+                        text: 'Phone : ${phone.text}',
+                        size: screenWidth * 0.012,
+                      ),
+                      CustomText(
+                        text: 'Mail : ${mail.text}',
+                        size: screenWidth * 0.012,
+                      ),
                     ],
                   ),
-                ),
-              ] else ...[
-                const Center(child: Text('No products available.')),
-              ],
-              SizedBox(height: screenHeight * 0.05),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomButton(
-                      label: 'Update',
-                      onPressed: () async {
-                        try {
-                          for (int i = 0; i < filteredProducts.length; i++) {
-                            String productName =
-                                filteredProducts[i]['Product Name'];
-                            String hsnCode = filteredProducts[i]['HSN Code'];
-                            String distributor =
-                                filteredProducts[i]['Distributor'];
-                            String amount = filteredProducts[i]['Amount'];
-
-                            QuerySnapshot<Map<String, dynamic>> querySnapshot =
-                                await FirebaseFirestore.instance
-                                    .collection('stock')
-                                    .doc('Products')
-                                    .collection('AddedProducts')
-                                    .where('productName',
-                                        isEqualTo: productName)
-                                    .where('hsnCode', isEqualTo: hsnCode)
-                                    .where('distributor',
-                                        isEqualTo: distributor)
-                                    .get();
-
-                            if (querySnapshot.docs.isNotEmpty) {
-                              DocumentReference productRef =
-                                  querySnapshot.docs.first.reference;
-
-                              await productRef.update({
-                                'reportDate': _dateController.text ?? '',
-                                'billNo': _billNo.text ?? '',
-                                'entryNo': _entryNo.text ?? '',
-                                'batchNumber':
-                                    controllers[i]['Batch Number']?.text ?? '',
-                                'expiry': controllers[i]['Expiry']?.text ?? '',
-                                'free': controllers[i]['Free']?.text ?? '',
-                                'mrp': controllers[i]['MRP']?.text ?? '',
-                                'price': controllers[i]['Price']?.text ?? '',
-                                'gst': controllers[i]['GST']?.text ?? '',
-                                'amount': amount ?? '',
-                              });
-                            }
-                          }
-                          await FirebaseFirestore.instance
-                              .collection('stock')
-                              .doc('Products')
-                              .collection('PurchaseEntry')
-                              .doc()
-                              .set({
-                            'reportDate': _dateController.text ?? '',
-                            'billNo': _billNo.text ?? '',
-                            'entryNo': _entryNo.text ?? '',
-                            'amount': totalAmount.toStringAsFixed(2) ?? '',
-                            'entryProducts': filteredProducts,
-                            'distributor': selectedDistributor,
-                          });
-                          updateEntryNo();
-                          fetchEntryNo();
-                          CustomSnackBar(context,
-                              message: 'Products updated successfully',
-                              backgroundColor: Colors.green);
-                        } catch (e) {
-                          print('Error updating products: $e');
-                          CustomSnackBar(context,
-                              message: 'Failed to update products',
-                              backgroundColor: Colors.red);
-                        }
-                      },
-                      width: screenWidth * 0.1),
+                  SizedBox(width: screenWidth * 0.2),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'DL NO 1 : ${dlNo1.text}',
+                        size: screenWidth * 0.012,
+                      ),
+                      CustomText(
+                        text: 'DL NO 2 : ${dlNo2.text}',
+                        size: screenWidth * 0.012,
+                      ),
+                      CustomText(
+                        text: 'GSTIN : ${gstIn.text}',
+                        size: screenWidth * 0.012,
+                      ),
+                    ],
+                  ),
                 ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              isAdding
+                  ? const CircularProgressIndicator()
+                  : Row(
+                      children: [
+                        SizedBox(
+                          width: screenWidth * 0.8,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              PharmacyDataTable(
+                                headers: headers,
+                                tableData: allProducts,
+                                editableColumns: editableColumns,
+                                dropdownValues: const {
+                                  'Tax': ['6', '12', '18', '24'],
+                                },
+                                onValueChanged: (rowIndex, header, value) {
+                                  setState(() {
+                                    allProducts[rowIndex][header] = value;
+                                    fetchMatchingProducts(rowIndex, value);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            setState(() {
+                              isAdding = true;
+                            });
+                            await Future.delayed(
+                                const Duration(milliseconds: 100));
+                            setState(() {
+                              addNewRow();
+                              isAdding = false;
+                            });
+                          },
+                          icon: Icon(
+                            Icons.add,
+                            color: AppColors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
+              SizedBox(height: screenHeight * 0.05),
+              Padding(
+                padding: EdgeInsets.only(
+                    left: screenWidth * 0.09, right: screenWidth * 0.09),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PharmacyButton(
+                        color: AppColors.blue,
+                        label: 'Cancel',
+                        onPressed: () {},
+                        width: screenWidth * 0.1),
+                    PharmacyButton(
+                        color: AppColors.blue,
+                        label: 'Print',
+                        onPressed: () {},
+                        width: screenWidth * 0.1),
+                    PharmacyButton(
+                        color: AppColors.blue,
+                        label: 'Submit',
+                        onPressed: () {},
+                        width: screenWidth * 0.1),
+                  ],
+                ),
               ),
             ],
           ),
