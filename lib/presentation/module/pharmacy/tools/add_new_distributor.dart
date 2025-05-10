@@ -291,10 +291,11 @@ class _AddNewDistributor extends State<AddNewDistributor> {
                           PharmacyTextField(
                             controller: phoneNo1,
                             hintText: '',
-                            width: screenWidth * 0.175,
+                            width: screenWidth * 0.2,
                           ),
                         ],
                       ),
+                      SizedBox(width: screenWidth * 0.05),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -306,10 +307,11 @@ class _AddNewDistributor extends State<AddNewDistributor> {
                           PharmacyTextField(
                             controller: phoneNO2,
                             hintText: '',
-                            width: screenWidth * 0.175,
+                            width: screenWidth * 0.2,
                           ),
                         ],
                       ),
+                      SizedBox(),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

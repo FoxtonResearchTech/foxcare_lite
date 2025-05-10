@@ -11,6 +11,8 @@ import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dar
 import 'package:intl/intl.dart';
 import 'dart:async';
 
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
+
 class PurchaseEntry extends StatefulWidget {
   const PurchaseEntry({super.key});
 
@@ -27,8 +29,11 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   TextEditingController dlNo1 = TextEditingController();
   TextEditingController dlNo2 = TextEditingController();
   TextEditingController gstIn = TextEditingController();
+  TextEditingController discount = TextEditingController();
 
   double totalAmount = 0.0;
+  double discountAmount = 0.0;
+
   bool isAdding = false;
   final List<String> headers = [
     'Product Name',
@@ -38,7 +43,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     'Quantity',
     'Free',
     'MRP',
-    'Price',
+    'Rate',
     'Tax',
     'SGST',
     'CGST',
@@ -55,7 +60,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     'Quantity',
     'Free',
     'MRP',
-    'Price',
+    'Rate',
     'Tax',
   ];
 
@@ -66,61 +71,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   String? selectedDistributor;
   List<String> distributorsNames = [];
   String rfNo = '';
-
-  Future<String> generateUniqueRfNo() async {
-    const chars = '0123456789';
-    Random random = Random.secure();
-    String no = '';
-
-    bool exists = true;
-
-    while (exists) {
-      String randomString =
-          List.generate(8, (index) => chars[random.nextInt(chars.length)])
-              .join();
-      no = 'RfNo$randomString';
-
-      var querySnapshot = await FirebaseFirestore.instance
-          .collection('stock')
-          .doc('Products')
-          .collection('PurchaseEntry')
-          .where('rfNo', isEqualTo: no)
-          .limit(1)
-          .get();
-
-      exists = querySnapshot.docs.isNotEmpty;
-    }
-
-    return no;
-  }
-
-  Future<void> initializeRfNo() async {
-    rfNo = await generateUniqueRfNo();
-    setState(() {});
-  }
-
-  Future<void> fetchMatchingProducts(int rowIndex, String query) async {
-    if (query.isEmpty) return;
-
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('stock')
-        .doc('Products')
-        .collection('AddedProducts')
-        .where('productName', isGreaterThanOrEqualTo: query)
-        .where('productName', isLessThanOrEqualTo: query + '\uf8ff')
-        .get();
-
-    List<Map<String, dynamic>> matches = snapshot.docs
-        .map((doc) => doc.data() as Map<String, dynamic>)
-        .where((product) {
-      String productName = product['productName'] as String;
-      return productName.toLowerCase().contains(query.toLowerCase());
-    }).toList();
-
-    setState(() {
-      productSuggestions[rowIndex] = matches;
-    });
-  }
+  int newRfNo = 0;
 
   void addNewRow() {
     setState(() {
@@ -163,6 +114,20 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     }
   }
 
+  void onDiscountChanged(String value) {
+    setState(() {
+      double discountValue = double.tryParse(value) ?? 0.0;
+      double totalWithoutDiscount = _allProductTotal().toDouble();
+
+      double discountAmt = totalWithoutDiscount * (discountValue / 100);
+
+      double netTotal = totalWithoutDiscount - discountAmt;
+
+      discountAmount = discountAmt;
+      totalAmount = netTotal;
+    });
+  }
+
   Future<void> getDistributorDetails({required String distributorName}) async {
     try {
       QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
@@ -185,14 +150,187 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     }
   }
 
+  Future<void> submitBill() async {
+    try {
+      while (controllers.length < allProducts.length) {
+        controllers.add({
+          'HSN': TextEditingController(),
+          'Quantity': TextEditingController(),
+          'Batch': TextEditingController(),
+          'Expiry': TextEditingController(),
+          'Free': TextEditingController(),
+          'MRP': TextEditingController(),
+          'Rate': TextEditingController(),
+          'GST': TextEditingController(),
+          'SGST': TextEditingController(),
+          'CGST': TextEditingController(),
+          'Tax': TextEditingController(),
+        });
+
+        int index = controllers.length - 1;
+        controllers[index]['HSN']?.text = allProducts[index]['HSN'] ?? '';
+        controllers[index]['Quantity']?.text =
+            allProducts[index]['Quantity'] ?? '';
+        controllers[index]['Batch']?.text = allProducts[index]['Batch'] ?? '';
+        controllers[index]['Expiry']?.text = allProducts[index]['Expiry'] ?? '';
+        controllers[index]['Free']?.text = allProducts[index]['Free'] ?? '';
+        controllers[index]['MRP']?.text = allProducts[index]['MRP'] ?? '';
+        controllers[index]['Rate']?.text = allProducts[index]['Rate'] ?? '';
+        controllers[index]['GST']?.text = allProducts[index]['GST'] ?? '';
+        controllers[index]['SGST']?.text = allProducts[index]['SGST'] ?? '';
+        controllers[index]['CGST']?.text = allProducts[index]['CGST'] ?? '';
+        controllers[index]['Tax']?.text = allProducts[index]['Tax'] ?? '';
+      }
+
+      for (int i = 0; i < allProducts.length; i++) {
+        String docId = allProducts[i]['productDocId'];
+        print("Updating docId: $docId");
+
+        DocumentSnapshot<Map<String, dynamic>> docSnapshot =
+            await FirebaseFirestore.instance
+                .collection('stock')
+                .doc('Products')
+                .collection('AddedProducts')
+                .doc(docId)
+                .get();
+
+        if (docSnapshot.exists) {
+          DocumentReference productRef = docSnapshot.reference;
+          await productRef.update({
+            'reportDate': _dateController.text,
+            'billNo': _billNo.text,
+            'rfNo': rfNo,
+            'hsn': controllers[i]['HSN']?.text,
+            'quantity': controllers[i]['Quantity']?.text,
+            'fixedQuantity': controllers[i]['Quantity']?.text,
+            'batchNumber': controllers[i]['Batch']?.text,
+            'expiry': controllers[i]['Expiry']?.text,
+            'free': controllers[i]['Free']?.text,
+            'mrp': controllers[i]['MRP']?.text,
+            'rate': controllers[i]['Rate']?.text,
+            'gst': controllers[i]['GST']?.text,
+            'sgst': controllers[i]['SGST']?.text,
+            'cgst': controllers[i]['CGST']?.text,
+            'tax': controllers[i]['Tax']?.text,
+          });
+        }
+      }
+
+      await FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('PurchaseEntry')
+          .doc()
+          .set({
+        'billDate': _dateController.text,
+        'billNo': _billNo.text,
+        'rfNo': rfNo,
+        'entryProducts': allProducts,
+        'distributor': selectedDistributor,
+        'discountPercentage': discount.text,
+        'discountAmount': discountAmount.toStringAsFixed(2),
+        'taxTotal': _taxTotal().toStringAsFixed(2),
+        'totalBeforeDiscount': _allProductTotal().toStringAsFixed(2),
+        'netTotalAmount': totalAmount.toStringAsFixed(2),
+        'address': address.text,
+        'phone': phone.text,
+        'mail': mail.text,
+        'dlNo1': dlNo1.text,
+        'dlNo2': dlNo2.text,
+        'gstIn': gstIn.text,
+      });
+      await updateIpAdmitBillNo(newRfNo);
+      CustomSnackBar(context,
+          message: 'Products updated successfully',
+          backgroundColor: Colors.green);
+    } catch (e) {
+      print('Error updating products: $e');
+      CustomSnackBar(context,
+          message: 'Failed to update products', backgroundColor: Colors.red);
+    }
+  }
+
+  Future<String?> getAndIncrementIpAdmitBillNo() async {
+    try {
+      final docRef =
+          FirebaseFirestore.instance.collection('billNo').doc('pharmacyRfNo');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['rfno'] ?? 0;
+        int newBillNo = currentBillNo + 1;
+
+        setState(() {
+          rfNo = 'RfNo${newBillNo}';
+          newRfNo = newBillNo;
+        });
+
+        return rfNo;
+      } else {
+        print('Document /billNo/ipAdmitBill does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateIpAdmitBillNo(int newBillNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('billNo').doc('pharmacyRfNo');
+
+    await docRef.set({'rfno': newBillNo});
+  }
+
   @override
   void initState() {
     super.initState();
     fetchDistributors();
-    initializeRfNo();
+    getAndIncrementIpAdmitBillNo();
     productSuggestions = List.generate(allProducts.length, (_) => []);
-
     addNewRow();
+  }
+
+  double _taxTotal() {
+    double sum = allProducts.fold<double>(
+      0.0,
+      (sum, entry) {
+        var value = entry['Tax Total'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value) ?? 0.0);
+        } else if (value is num) {
+          return sum + value.toDouble();
+        }
+
+        return sum;
+      },
+    );
+
+    return double.parse(sum.toStringAsFixed(2));
+  }
+
+  double _allProductTotal() {
+    double sum = allProducts.fold<double>(
+      0.0,
+      (sum, entry) {
+        var value = entry['Product Total'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value) ?? 0.0);
+        } else if (value is num) {
+          return sum + value.toDouble();
+        }
+
+        return sum;
+      },
+    );
+
+    return double.parse(sum.toStringAsFixed(2));
   }
 
   @override
@@ -233,7 +371,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.08, vertical: screenHeight * 0.05),
+              horizontal: screenWidth * 0.06, vertical: screenHeight * 0.04),
           child: Column(
             children: [
               const TimeDateWidget(text: 'Purchase Entry'),
@@ -284,7 +422,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                         readOnly: true,
                         hintText: '',
                         width: screenWidth * 0.2,
-                        controller: TextEditingController(text: rfNo),
+                        controller:
+                            TextEditingController(text: rfNo.toString()),
                       )
                     ],
                   ),
@@ -382,29 +521,9 @@ class _PurchaseEntry extends State<PurchaseEntry> {
               isAdding
                   ? const CircularProgressIndicator()
                   : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: screenWidth * 0.8,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              PharmacyDataTable(
-                                headers: headers,
-                                tableData: allProducts,
-                                editableColumns: editableColumns,
-                                dropdownValues: const {
-                                  'Tax': ['6', '12', '18', '24'],
-                                },
-                                onValueChanged: (rowIndex, header, value) {
-                                  setState(() {
-                                    allProducts[rowIndex][header] = value;
-                                    fetchMatchingProducts(rowIndex, value);
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
                         IconButton(
                           onPressed: () async {
                             setState(() {
@@ -422,8 +541,177 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                             color: AppColors.blue,
                           ),
                         ),
+                        SizedBox(
+                          width: screenWidth * 0.85,
+                          child: PharmacyDataTable(
+                            headers: headers,
+                            tableData: allProducts,
+                            editableColumns: editableColumns,
+                            dropdownValues: const {
+                              'Tax': ['6.0', '12.0', '18.0', '24.0'],
+                            },
+                            onValueChanged: (rowIndex, header, value) {
+                              setState(() {
+                                allProducts[rowIndex][header] = value;
+
+                                if (header == 'Tax') {
+                                  final tax = double.tryParse(value);
+                                  final quantity = double.tryParse(
+                                          allProducts[rowIndex]['Quantity'] ??
+                                              '0') ??
+                                      0;
+                                  final price = double.tryParse(
+                                          allProducts[rowIndex]['Rate'] ??
+                                              '0') ??
+                                      0;
+                                  final totalQuantity = quantity;
+                                  final totalWithoutTax = totalQuantity * price;
+
+                                  if (tax != null) {
+                                    final splitValue =
+                                        (tax / 2).toStringAsFixed(1);
+                                    allProducts[rowIndex]['SGST'] = splitValue;
+                                    allProducts[rowIndex]['CGST'] = splitValue;
+
+                                    final taxAmount =
+                                        totalWithoutTax * (tax / 100);
+                                    final totalWithTax =
+                                        totalWithoutTax + taxAmount;
+
+                                    allProducts[rowIndex]['Tax Total'] =
+                                        taxAmount.toStringAsFixed(2);
+                                    allProducts[rowIndex]['Product Total'] =
+                                        totalWithTax.toStringAsFixed(2);
+                                  } else {
+                                    allProducts[rowIndex]['SGST'] = '';
+                                    allProducts[rowIndex]['CGST'] = '';
+                                    allProducts[rowIndex]['Tax Total'] = '';
+                                    allProducts[rowIndex]['Product Total'] = '';
+                                  }
+                                }
+
+                                if (header == 'Price') {
+                                  final tax = double.tryParse(
+                                          allProducts[rowIndex]['Tax'] ??
+                                              '0') ??
+                                      0;
+                                  final quantity = double.tryParse(
+                                          allProducts[rowIndex]['Quantity'] ??
+                                              '0') ??
+                                      0;
+                                  final price = double.tryParse(value);
+                                  final totalQuantity = quantity;
+
+                                  if (price != null) {
+                                    final totalWithoutTax =
+                                        totalQuantity * price;
+                                    final taxAmount =
+                                        totalWithoutTax * (tax / 100);
+                                    final totalWithTax =
+                                        totalWithoutTax + taxAmount;
+
+                                    allProducts[rowIndex]['Tax Total'] =
+                                        taxAmount.toStringAsFixed(2);
+                                    allProducts[rowIndex]['Product Total'] =
+                                        totalWithTax.toStringAsFixed(2);
+                                  }
+                                }
+                                _taxTotal();
+                                _allProductTotal();
+                                onDiscountChanged(discount.text);
+                              });
+                            },
+                          ),
+                        ),
                       ],
                     ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.395),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.030,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      CustomText(
+                        text: 'Tax Total  : ',
+                      ),
+                      CustomText(
+                        text: " ${_taxTotal()}",
+                      ),
+                      SizedBox(width: screenWidth * 0.05),
+                      CustomText(
+                        text: 'Total  : ',
+                      ),
+                      CustomText(
+                        text: " ${_allProductTotal()}",
+                      ),
+                      SizedBox(width: screenWidth * 0.05),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.04,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Discount ',
+                      ),
+                      PharmacyTextField(
+                        controller: discount,
+                        hintText: '',
+                        width: screenWidth * 0.05,
+                        onChanged: onDiscountChanged,
+                      ),
+                      CustomText(
+                        text: '  % :  ',
+                      ),
+                      CustomText(
+                        text: '${discountAmount.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.04,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Net Total : ${totalAmount.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               SizedBox(height: screenHeight * 0.05),
               Padding(
                 padding: EdgeInsets.only(
@@ -444,7 +732,9 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                     PharmacyButton(
                         color: AppColors.blue,
                         label: 'Submit',
-                        onPressed: () {},
+                        onPressed: () {
+                          submitBill();
+                        },
                         width: screenWidth * 0.1),
                   ],
                 ),
