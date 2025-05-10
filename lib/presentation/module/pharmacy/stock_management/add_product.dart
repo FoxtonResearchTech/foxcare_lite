@@ -204,10 +204,16 @@ class _AddProduct extends State<AddProduct> {
                   CustomDropdown(
                     label: 'Select Category',
                     items: const [
-                      'All',
-                      'Medicine',
-                      'Equipment',
-                      'Supplements',
+                      'Tablets',
+                      'Capsules',
+                      'Powders',
+                      'Solutions',
+                      'Suspensions',
+                      'Topical Medicines',
+                      'Suppository',
+                      'Injections',
+                      'Inhales',
+                      'Patches',
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -258,9 +264,16 @@ class _AddProduct extends State<AddProduct> {
                                                     child: CustomDropdown(
                                                         label: 'Category',
                                                         items: const [
-                                                          'Medicine',
-                                                          'Equipment',
-                                                          'Supplements'
+                                                          'Tablets',
+                                                          'Capsules',
+                                                          'Powders',
+                                                          'Solutions',
+                                                          'Suspensions',
+                                                          'Topical Medicines',
+                                                          'Suppository',
+                                                          'Injections',
+                                                          'Inhales',
+                                                          'Patches',
                                                         ],
                                                         selectedItem:
                                                             selectedCategory,

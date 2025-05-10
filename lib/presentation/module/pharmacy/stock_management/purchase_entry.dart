@@ -10,6 +10,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
@@ -35,6 +36,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   double discountAmount = 0.0;
 
   bool isAdding = false;
+  bool isSubmitting = false;
   final List<String> headers = [
     'Product Name',
     'HSN',
@@ -150,36 +152,46 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     }
   }
 
-  Future<void> submitBill() async {
-    try {
-      while (controllers.length < allProducts.length) {
-        controllers.add({
-          'HSN': TextEditingController(),
-          'Quantity': TextEditingController(),
-          'Batch': TextEditingController(),
-          'Expiry': TextEditingController(),
-          'Free': TextEditingController(),
-          'MRP': TextEditingController(),
-          'Rate': TextEditingController(),
-          'GST': TextEditingController(),
-          'SGST': TextEditingController(),
-          'CGST': TextEditingController(),
-          'Tax': TextEditingController(),
-        });
+  void initializeControllers() {
+    controllers.clear();
+    for (int index = 0; index < allProducts.length; index++) {
+      final product = allProducts[index];
+      controllers.add({
+        'HSN': TextEditingController(text: product['HSN'] ?? ''),
+        'Batch': TextEditingController(text: product['Batch'] ?? ''),
+        'Expiry': TextEditingController(text: product['Expiry'] ?? ''),
+        'Quantity': TextEditingController(text: product['Quantity'] ?? ''),
+        'Free': TextEditingController(text: product['Free'] ?? ''),
+        'MRP': TextEditingController(text: product['MRP'] ?? ''),
+        'Rate': TextEditingController(text: product['Rate'] ?? ''),
+        'Tax': TextEditingController(text: product['Tax'] ?? ''),
+        'SGST': TextEditingController(text: product['SGST'] ?? ''),
+        'CGST': TextEditingController(text: product['CGST'] ?? ''),
+      });
+    }
+  }
 
-        int index = controllers.length - 1;
-        controllers[index]['HSN']?.text = allProducts[index]['HSN'] ?? '';
-        controllers[index]['Quantity']?.text =
-            allProducts[index]['Quantity'] ?? '';
-        controllers[index]['Batch']?.text = allProducts[index]['Batch'] ?? '';
-        controllers[index]['Expiry']?.text = allProducts[index]['Expiry'] ?? '';
-        controllers[index]['Free']?.text = allProducts[index]['Free'] ?? '';
-        controllers[index]['MRP']?.text = allProducts[index]['MRP'] ?? '';
-        controllers[index]['Rate']?.text = allProducts[index]['Rate'] ?? '';
-        controllers[index]['GST']?.text = allProducts[index]['GST'] ?? '';
-        controllers[index]['SGST']?.text = allProducts[index]['SGST'] ?? '';
-        controllers[index]['CGST']?.text = allProducts[index]['CGST'] ?? '';
-        controllers[index]['Tax']?.text = allProducts[index]['Tax'] ?? '';
+  Future<void> submitBill() async {
+    setState(() {
+      isSubmitting = true;
+      initializeControllers();
+    });
+    try {
+      for (int i = 0; i < controllers.length; i++) {
+        var ctrl = controllers[i];
+        for (var key in ctrl.keys) {
+          if (ctrl[key]?.text.trim().isEmpty ?? true) {
+            CustomSnackBar(
+              context,
+              message: "Product ${i + 1} field '$key' is empty.",
+              backgroundColor: Colors.red,
+            );
+            setState(() {
+              isSubmitting = false;
+            });
+            return;
+          }
+        }
       }
 
       for (int i = 0; i < allProducts.length; i++) {
@@ -208,7 +220,6 @@ class _PurchaseEntry extends State<PurchaseEntry> {
             'free': controllers[i]['Free']?.text,
             'mrp': controllers[i]['MRP']?.text,
             'rate': controllers[i]['Rate']?.text,
-            'gst': controllers[i]['GST']?.text,
             'sgst': controllers[i]['SGST']?.text,
             'cgst': controllers[i]['CGST']?.text,
             'tax': controllers[i]['Tax']?.text,
@@ -240,6 +251,9 @@ class _PurchaseEntry extends State<PurchaseEntry> {
         'gstIn': gstIn.text,
       });
       await updateIpAdmitBillNo(newRfNo);
+      setState(() {
+        isSubmitting = false;
+      });
       CustomSnackBar(context,
           message: 'Products updated successfully',
           backgroundColor: Colors.green);
@@ -729,13 +743,16 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                         label: 'Print',
                         onPressed: () {},
                         width: screenWidth * 0.1),
-                    PharmacyButton(
-                        color: AppColors.blue,
-                        label: 'Submit',
-                        onPressed: () {
-                          submitBill();
-                        },
-                        width: screenWidth * 0.1),
+                    isSubmitting
+                        ? Lottie.asset('assets/button_loading.json',
+                            height: 150, width: 150)
+                        : PharmacyButton(
+                            color: AppColors.blue,
+                            label: 'Submit',
+                            onPressed: () {
+                              submitBill();
+                            },
+                            width: screenWidth * 0.1),
                   ],
                 ),
               ),
