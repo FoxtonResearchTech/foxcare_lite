@@ -233,7 +233,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.08, vertical: screenHeight * 0.05),
+              horizontal: screenWidth * 0.06, vertical: screenHeight * 0.04),
           child: Column(
             children: [
               const TimeDateWidget(text: 'Purchase Entry'),
@@ -382,29 +382,9 @@ class _PurchaseEntry extends State<PurchaseEntry> {
               isAdding
                   ? const CircularProgressIndicator()
                   : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: screenWidth * 0.8,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              PharmacyDataTable(
-                                headers: headers,
-                                tableData: allProducts,
-                                editableColumns: editableColumns,
-                                dropdownValues: const {
-                                  'Tax': ['6', '12', '18', '24'],
-                                },
-                                onValueChanged: (rowIndex, header, value) {
-                                  setState(() {
-                                    allProducts[rowIndex][header] = value;
-                                    fetchMatchingProducts(rowIndex, value);
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
                         IconButton(
                           onPressed: () async {
                             setState(() {
@@ -422,8 +402,156 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                             color: AppColors.blue,
                           ),
                         ),
+                        SizedBox(
+                          width: screenWidth * 0.85,
+                          child: PharmacyDataTable(
+                            headers: headers,
+                            tableData: allProducts,
+                            editableColumns: editableColumns,
+                            dropdownValues: const {
+                              'Tax': ['6.0', '12.0', '18.0', '24.0'],
+                            },
+                            onValueChanged: (rowIndex, header, value) {
+                              setState(() {
+                                allProducts[rowIndex][header] = value;
+                                fetchMatchingProducts(rowIndex, value);
+
+                                if (header == 'Tax') {
+                                  final tax = double.tryParse(value);
+                                  final quantity = double.tryParse(
+                                          allProducts[rowIndex]['Quantity'] ??
+                                              '0') ??
+                                      0;
+                                  final price = double.tryParse(
+                                          allProducts[rowIndex]['Price'] ??
+                                              '0') ??
+                                      0;
+                                  final totalQuantity = quantity;
+                                  final totalWithoutTax = totalQuantity * price;
+
+                                  if (tax != null) {
+                                    final splitValue =
+                                        (tax / 2).toStringAsFixed(1);
+                                    allProducts[rowIndex]['SGST'] = splitValue;
+                                    allProducts[rowIndex]['CGST'] = splitValue;
+
+                                    final taxAmount =
+                                        totalWithoutTax * (tax / 100);
+                                    final totalWithTax =
+                                        totalWithoutTax + taxAmount;
+
+                                    allProducts[rowIndex]['Tax Total'] =
+                                        taxAmount.toStringAsFixed(2);
+                                    allProducts[rowIndex]['Product Total'] =
+                                        totalWithTax.toStringAsFixed(2);
+                                  } else {
+                                    allProducts[rowIndex]['SGST'] = '';
+                                    allProducts[rowIndex]['CGST'] = '';
+                                    allProducts[rowIndex]['Tax Total'] = '';
+                                    allProducts[rowIndex]['Product Total'] = '';
+                                  }
+                                }
+
+                                if (header == 'Price') {
+                                  final tax = double.tryParse(
+                                          allProducts[rowIndex]['Tax'] ??
+                                              '0') ??
+                                      0;
+                                  final quantity = double.tryParse(
+                                          allProducts[rowIndex]['Quantity'] ??
+                                              '0') ??
+                                      0;
+                                  final price = double.tryParse(value);
+                                  final totalQuantity = quantity;
+
+                                  if (price != null) {
+                                    final totalWithoutTax =
+                                        totalQuantity * price;
+                                    final taxAmount =
+                                        totalWithoutTax * (tax / 100);
+                                    final totalWithTax =
+                                        totalWithoutTax + taxAmount;
+
+                                    allProducts[rowIndex]['Tax Total'] =
+                                        taxAmount.toStringAsFixed(2);
+                                    allProducts[rowIndex]['Product Total'] =
+                                        totalWithTax.toStringAsFixed(2);
+                                  }
+                                }
+                              });
+                            },
+                          ),
+                        ),
                       ],
                     ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.395),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.030,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Total : ',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.04,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Discount ',
+                      ),
+                      PharmacyTextField(
+                          hintText: '', width: screenWidth * 0.05),
+                      CustomText(
+                        text: '  % :',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.04,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Net Total : ',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               SizedBox(height: screenHeight * 0.05),
               Padding(
                 padding: EdgeInsets.only(

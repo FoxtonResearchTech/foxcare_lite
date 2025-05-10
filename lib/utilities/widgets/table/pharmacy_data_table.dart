@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import '../text/primary_text.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Assuming you're using Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PharmacyDataTable extends StatefulWidget {
   final List<String> headers;
@@ -37,13 +37,14 @@ class PharmacyDataTable extends StatefulWidget {
 
 class _PharmacyDataTable extends State<PharmacyDataTable> {
   late List<Map<String, TextEditingController>> controllers;
-  late List<List<Map<String, dynamic>>>
-      productSuggestions; // For storing matching products
+  late List<List<Map<String, dynamic>>> productSuggestions;
+  int? focusedRowIndex;
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
     super.initState();
-
     controllers = widget.tableData.map((row) {
       return {
         for (String header in widget.headers)
@@ -51,14 +52,59 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
             header: TextEditingController(text: row[header]?.toString() ?? '')
       };
     }).toList();
-
-    // Initialize the productSuggestions list
     productSuggestions = List.generate(widget.tableData.length, (_) => []);
+  }
+
+  void showSuggestionsOverlay(BuildContext context) {
+    hideSuggestionsOverlay();
+    _overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          width: 400,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: const Offset(0, 50),
+            child: Material(
+              elevation: 4.0,
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 250),
+                child: ListView.builder(
+                  itemCount: productSuggestions[focusedRowIndex!].length,
+                  itemBuilder: (context, index) {
+                    final product = productSuggestions[focusedRowIndex!][index];
+                    return ListTile(
+                      title: Text(product['productName'] ?? ''),
+                      onTap: () {
+                        setState(() {
+                          controllers[focusedRowIndex!]['Product Name']?.text =
+                              product['productName'];
+                          widget.tableData[focusedRowIndex!]['Product Name'] =
+                              product['productName'];
+                          productSuggestions[focusedRowIndex!] = [];
+                          hideSuggestionsOverlay();
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void hideSuggestionsOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   @override
   void dispose() {
-    // Dispose all controllers
+    hideSuggestionsOverlay();
     for (var rowControllers in controllers) {
       for (var controller in rowControllers.values) {
         controller.dispose();
@@ -67,10 +113,8 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
     super.dispose();
   }
 
-  // Fetch matching products for a given row index
   Future<void> fetchMatchingProducts(int rowIndex, String query) async {
     if (query.isEmpty) return;
-
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('stock')
         .doc('Products')
@@ -116,7 +160,6 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
               )
               .toList(),
         ),
-        // Data rows
         ...widget.tableData.asMap().entries.map(
           (entry) {
             final rowIndex = entry.key;
@@ -136,55 +179,31 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
                   if (cellData is Widget) {
                     return Center(child: cellData);
                   } else if (isEditable && header == 'Product Name') {
-                    // Editable "Product Name" field with matching products
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: screenHeight * 0.045,
-                            child: TextField(
-                              controller: controllers[rowIndex][header],
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                  horizontal: 8.0,
-                                ),
+                      child: CompositedTransformTarget(
+                        link: _layerLink,
+                        child: SizedBox(
+                          height: screenHeight * 0.045,
+                          child: TextField(
+                            controller: controllers[rowIndex][header],
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 8.0,
+                                horizontal: 8.0,
                               ),
-                              onChanged: (value) {
-                                fetchMatchingProducts(rowIndex, value);
-                              },
                             ),
+                            onChanged: (value) async {
+                              focusedRowIndex = rowIndex;
+                              await fetchMatchingProducts(rowIndex, value);
+                              showSuggestionsOverlay(context);
+                            },
                           ),
-                          if (productSuggestions[rowIndex].isNotEmpty) ...[
-                            Container(
-                              height: 100,
-                              child: ListView.builder(
-                                itemCount: productSuggestions[rowIndex].length,
-                                itemBuilder: (context, index) {
-                                  Map<String, dynamic> product =
-                                      productSuggestions[rowIndex][index];
-                                  return ListTile(
-                                    title: Text(product['productName'] ?? ''),
-                                    onTap: () {
-                                      setState(() {
-                                        controllers[rowIndex][header]?.text =
-                                            product['productName'];
-                                        row[header] = product['productName'];
-                                        productSuggestions[rowIndex] = [];
-                                      });
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                          ]
-                        ],
+                        ),
                       ),
                     );
                   } else if (isEditable && dropdownOptions != null) {
-                    // Show dropdown for editable columns
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
