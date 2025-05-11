@@ -51,6 +51,18 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   final TextEditingController phone2 = TextEditingController();
   final TextEditingController opAmount = TextEditingController();
   final TextEditingController opAmountCollected = TextEditingController();
+  final TextEditingController opAmountBalance = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+
+  String? paymentMode;
+
+  void _updateBalance() {
+    double totalAmount = double.tryParse(opAmount.text) ?? 0.0;
+    double paidAmount = double.tryParse(opAmountCollected.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    opAmountBalance.text = balance.toStringAsFixed(0);
+  }
 
   Future<String> generateUniquePatientId() async {
     const chars = '0123456789';
@@ -132,6 +144,9 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       'bloodGroup': selectedBloodGroup,
       'opAmount': opAmount.text,
       'opAmountCollected': opAmountCollected.text,
+      'opAmountBalance': opAmountBalance.text,
+      'paymentMode': paymentMode,
+      'paymentDetails': paymentDetails.text,
       'opAdmissionDate': dateTime.year.toString() +
           '-' +
           dateTime.month.toString().padLeft(2, '0') +
@@ -158,7 +173,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
               size: 20,
             ),
             content: Container(
-              width: 325,
+              width: 340,
               padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -189,6 +204,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                         const Divider(),
                         _infoRow('Amount', opAmount.text),
                         _infoRow('Collected', opAmountCollected.text),
+                        _infoRow('Balance', opAmountBalance.text),
                       ],
                     ),
                   ),
@@ -446,7 +462,9 @@ class _PatientRegistrationState extends State<PatientRegistration> {
   }
 
   bool validateForm3() {
-    if (opAmount.text.isEmpty || opAmountCollected.text.isEmpty) {
+    if (opAmount.text.isEmpty ||
+        opAmountCollected.text.isEmpty ||
+        opAmountBalance.text.isEmpty) {
       CustomSnackBar(
         context,
         message: 'Please fill all required fields',
@@ -522,6 +540,8 @@ class _PatientRegistrationState extends State<PatientRegistration> {
     initializeUid();
     phone1.addListener(_validatePhone1);
     phone2.addListener(_validatePhone2);
+    opAmount.addListener(_updateBalance);
+    opAmountCollected.addListener(_updateBalance);
   }
 
   int currentStep = 0;
@@ -1439,12 +1459,11 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                           ),
                         ],
                       ),
-                      SizedBox(width: screenWidth * 0.2),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CustomText(
-                            text: 'OP Amount Collected : ',
+                            text: 'Collected : ',
                             size: screenWidth * 0.0125,
                           ),
                           SizedBox(height: screenHeight * 0.01),
@@ -1455,6 +1474,112 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                                 hintText: '',
                                 width: screenWidth * 0.2,
                                 controller: opAmountCollected,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Balance : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: opAmountBalance,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Payment Mode : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              SecondaryDropdown(
+                                verticalSize: screenHeight * 0.02,
+                                width: screenWidth * 0.2,
+                                hintText: '',
+                                items: const [
+                                  'UPI',
+                                  'Credit Card',
+                                  'Debit Card',
+                                  'Net Banking',
+                                  'Cash'
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    paymentMode = value!;
+                                  });
+                                },
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Payment Details : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: paymentDetails,
                               ),
                               Padding(
                                 padding: EdgeInsets.only(

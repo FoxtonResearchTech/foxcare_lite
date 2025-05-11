@@ -42,6 +42,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
 
   final TextEditingController opTicketTotalAmount = TextEditingController();
   final TextEditingController opTicketCollectedAmount = TextEditingController();
+  final TextEditingController opTicketBalance = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
 
   final TextEditingController searchOpNumber = TextEditingController();
   final TextEditingController searchPhoneNumber = TextEditingController();
@@ -50,6 +52,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
   List<Map<String, String>> searchResults = [];
   Map<String, String>? selectedPatient;
   String? selectedCounter;
+  String? selectedPaymentMode;
+
   bool isGeneratingToken = false;
 
   int tokenNumber = 0;
@@ -58,6 +62,16 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
+    opTicketTotalAmount.addListener(_updateBalance);
+    opTicketCollectedAmount.addListener(_updateBalance);
+  }
+
+  void _updateBalance() {
+    double totalAmount = double.tryParse(opTicketTotalAmount.text) ?? 0.0;
+    double paidAmount = double.tryParse(opTicketCollectedAmount.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    opTicketBalance.text = balance.toStringAsFixed(0);
   }
 
   Future<String> generateUniqueOpTicketId(String selectedPatientId) async {
@@ -175,6 +189,9 @@ class _OpTicketPageState extends State<OpTicketPage> {
         'temperature': temperature.text,
         'opTicketTotalAmount': opTicketTotalAmount.text,
         'opTicketCollectedAmount': opTicketCollectedAmount.text,
+        'opTicketBalance': opTicketBalance.text,
+        'paymentDetails': paymentDetails.text,
+        'paymentMode': selectedPaymentMode,
         'otherComments': otherComments.text,
       });
       showDialog(
@@ -786,7 +803,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '') ?? 'N/A')
                 .trim(),
         'age': doc['age'] ?? 'N/A',
+        'dob': doc['dob'] ?? 'N/A',
+        'sex': doc['sex'] ?? 'N/A',
         'phone': doc['phone1'] ?? 'N/A',
+        'phone2': doc['phone2'] ?? 'N/A',
         'address': doc['address1'] ?? 'N/A',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
@@ -865,7 +885,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(0.0),
+              padding: const EdgeInsets.all(4.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth > 600) {
@@ -888,7 +908,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Container(
-        height: screenHeight * 1.75,
+        height: screenHeight * 2.5,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -902,8 +922,17 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   child: Column(
                     children: [
                       CustomText(
-                        text: "Search Patient",
+                        text: "OP Ticket Generation",
                         size: screenWidth * 0.025,
+                        color: AppColors.blue,
+                      ),
+                      Row(
+                        children: [
+                          CustomText(
+                            text: "Search Patients",
+                            size: screenWidth * 0.015,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -921,93 +950,110 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ),
             Container(
               padding: EdgeInsets.only(
-                  left: screenWidth * 0.08, right: screenWidth * 0.08),
+                  left: screenWidth * 0.04, right: screenWidth * 0.08),
               child: Column(
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      const CustomText(
-                        text: 'Enter OP Number            :',
-                        size: 18,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(text: 'OP Number Search '),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: searchOpNumber,
+                            width: 200,
+                          ),
+                        ],
                       ),
-                      const SizedBox(
-                        width: 25,
-                      ),
-                      SizedBox(
-                        width: 250,
-                        child: CustomTextField(
-                          hintText: '',
-                          controller: searchOpNumber,
-                          width: null,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 25),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            CustomButton(
+                              width: 125,
+                              height: 35,
+                              label: 'Search',
+                              onPressed: () async {
+                                final searchResultsFetched =
+                                    await searchPatients(
+                                  searchOpNumber.text,
+                                  searchPhoneNumber.text,
+                                );
+                                setState(() {
+                                  searchResults =
+                                      searchResultsFetched; // Update searchResults
+                                  isSearchPerformed =
+                                      true; // Show the table after search
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(text: 'Phone Number Search '),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            controller: searchPhoneNumber,
+                            hintText: '',
+                            width: 200,
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 25),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            CustomButton(
+                              width: 125,
+                              height: 35,
+                              label: 'Search',
+                              onPressed: () async {
+                                final searchResultsFetched =
+                                    await searchPatients(
+                                  searchOpNumber.text,
+                                  searchPhoneNumber.text,
+                                );
+                                setState(() {
+                                  searchResults =
+                                      searchResultsFetched; // Update searchResults
+                                  isSearchPerformed =
+                                      true; // Show the table after search
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const CustomText(
-                        text: 'Enter Phone Number      : ',
-                        size: 18,
-                      ),
-                      const SizedBox(width: 25),
-                      SizedBox(
-                        width: 250,
-                        child: CustomTextField(
-                          controller: searchPhoneNumber,
-                          hintText: '',
-                          width: null,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const SizedBox(width: 200),
-                      CustomButton(
-                        width: 125,
-                        height: 35,
-                        label: 'Search',
-                        onPressed: () async {
-                          final searchResultsFetched = await searchPatients(
-                            searchOpNumber.text,
-                            searchPhoneNumber.text,
-                          );
-                          setState(() {
-                            searchResults =
-                                searchResultsFetched; // Update searchResults
-                            isSearchPerformed =
-                                true; // Show the table after search
-                          });
-                        },
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
             const SizedBox(height: 40),
             if (isSearchPerformed) ...[
-              const Text('Search Results: ',
-                  style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
+              CustomText(
+                text: 'Search Results: ',
+                color: AppColors.blue,
+                size: screenWidth * 0.025,
+              ),
               Center(
                 child: DataTable(
                   columnSpacing: 180,
                   columns: [
-                    const DataColumn(label: Text('OP Number')),
-                    const DataColumn(label: Text('Name')),
-                    const DataColumn(label: Text('Age')),
-                    const DataColumn(label: Text('Phone')),
-                    const DataColumn(label: Text('Address')),
+                    const DataColumn(label: CustomText(text: 'OP Number')),
+                    const DataColumn(label: CustomText(text: 'Name')),
+                    const DataColumn(label: CustomText(text: 'Age')),
+                    const DataColumn(label: CustomText(text: 'Phone')),
+                    const DataColumn(label: CustomText(text: 'Address')),
                   ],
                   rows: searchResults.map((result) {
                     return DataRow(
@@ -1038,130 +1084,89 @@ class _OpTicketPageState extends State<OpTicketPage> {
   }
 
   Widget buildPatientDetailsForm() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'OP Ticket Generation :',
-            style: TextStyle(
-                fontFamily: 'SanFrancisco',
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
+          CustomText(
+            text: 'Patient Info',
+            color: AppColors.blue,
+            size: screenWidth * 0.025,
           ),
           const SizedBox(
             height: 20,
           ),
           Container(
-            padding: const EdgeInsets.only(left: 200),
+            padding: const EdgeInsets.only(left: 50),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const SizedBox(
-                      width: 100,
-                      child: Text(
-                        'OP Number : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
-                      ),
+                    CustomText(
+                      text: 'Name : ${selectedPatient?['name']}',
+                      size: screenWidth * 0.012,
                     ),
-                    SizedBox(
-                      width: 200,
-                      child: CustomText(
-                        text: "${selectedPatient?['opNumber']}",
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    const SizedBox(
-                      width: 80,
-                      child: Text(
-                        'Name : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 200,
-                      child: CustomText(text: "${selectedPatient?['name']}"),
+                    SizedBox(width: screenWidth * 0.2),
+                    CustomText(
+                      text: 'OP Number : ${selectedPatient?['opNumber']}',
+                      size: screenWidth * 0.012,
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.02),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const SizedBox(
-                      width: 100,
-                      child: Text(
-                        'AGE : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
-                      ),
+                    CustomText(
+                      text: 'Age : ${selectedPatient?['age']}',
+                      size: screenWidth * 0.012,
                     ),
-                    SizedBox(
-                      width: 200,
-                      child: CustomText(text: "${selectedPatient?['age']}"),
+                    SizedBox(width: screenWidth * 0.1),
+                    CustomText(
+                      text: 'DOB : ${selectedPatient?['dob']}',
+                      size: screenWidth * 0.012,
                     ),
-                    const SizedBox(
-                      width: 20,
+                    SizedBox(width: screenWidth * 0.1),
+                    CustomText(
+                      text: 'Sex : ${selectedPatient?['sex']}',
+                      size: screenWidth * 0.012,
                     ),
-                    const SizedBox(
-                      width: 80,
-                      child: Text(
-                        'Phone : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
-                      ),
+                    SizedBox(width: screenWidth * 0.1),
+                    CustomText(
+                      text: ' Blood Group : ${selectedPatient?['bloodGroup']}',
+                      size: screenWidth * 0.012,
                     ),
-                    SizedBox(
-                      width: 200,
-                      child: CustomText(text: "${selectedPatient?['phone']}"),
+                    SizedBox(width: screenWidth * 0.1),
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CustomText(
+                      text: 'Phone 1 : ${selectedPatient?['phone']}',
+                      size: screenWidth * 0.012,
+                    ),
+                    SizedBox(width: screenWidth * 0.2),
+                    CustomText(
+                      text: 'Phone 2 : ${selectedPatient?['phone2']}',
+                      size: screenWidth * 0.012,
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.02),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const SizedBox(
-                      width: 100,
-                      child: Text(
-                        'Address : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 200,
-                      child: CustomText(text: "${selectedPatient?['address']}"),
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    const SizedBox(
-                      width: 80,
-                      child: Text(
-                        'Last OP Date : ',
-                        style: TextStyle(
-                          fontFamily: 'SanFrancisco',
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 200,
-                      child:
-                          CustomText(text: "${selectedPatient?['lastOpDate']}"),
+                    CustomText(
+                      text: 'Address : ${selectedPatient?['address']}',
+                      size: screenWidth * 0.012,
                     ),
                   ],
                 ),
@@ -1170,147 +1175,225 @@ class _OpTicketPageState extends State<OpTicketPage> {
           ),
           const SizedBox(height: 20),
           Container(
-            height: 200,
             width: 1200,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CustomText(
-                  text: 'Token Infomation',
-                  size: 24,
+                CustomText(
+                  text: 'Counter Setup',
+                  size: screenWidth * 0.025,
+                  color: AppColors.blue,
                 ),
                 Container(
-                  padding: const EdgeInsets.only(left: 40),
+                  padding: const EdgeInsets.only(left: 50),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      const CustomText(
-                        text: 'Date : ',
-                        size: 16,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Date ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: TextEditingController(
+                                text: dateTime.year.toString() +
+                                    '-' +
+                                    dateTime.month.toString().padLeft(2, '0') +
+                                    '-' +
+                                    dateTime.day.toString().padLeft(2, '0')),
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
                       ),
-                      CustomTextField(
-                        hintText: '',
-                        controller: TextEditingController(
-                            text: dateTime.year.toString() +
-                                '-' +
-                                dateTime.month.toString().padLeft(2, '0') +
-                                '-' +
-                                dateTime.day.toString().padLeft(2, '0')),
-                        width: 150,
+                      SizedBox(width: screenWidth * 0.1),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Counter ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          SizedBox(
+                            width: screenWidth * 0.2,
+                            child: CustomDropdown(
+                              width: screenWidth * 0.05,
+                              label: '',
+                              items: const ['1', '2', '3', '4', '5'],
+                              onChanged: (value) {
+                                setState(
+                                  () {
+                                    selectedCounter = value;
+                                    fetchDoctorAndSpecialization();
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      const CustomText(
-                        text: 'Counter : ',
-                        size: 16,
-                      ),
-                      CustomDropdown(
-                        width: 0.05,
-                        label: '',
-                        items: const ['1', '2', '3', '4', '5'],
-                        onChanged: (value) {
-                          setState(
-                            () {
-                              selectedCounter = value;
-                              fetchDoctorAndSpecialization();
-                            },
-                          );
-                        },
-                      ),
-                      const CustomText(
-                        text: 'Doctor : ',
-                        size: 16,
-                      ),
-                      CustomTextField(
-                        hintText: '',
-                        width: 200,
-                        controller: doctorName,
-                      ),
-                      const CustomText(
-                        text: 'Specialization : ',
-                        size: 16,
-                      ),
-                      CustomTextField(
-                        hintText: '',
-                        width: 180,
-                        controller: specialization,
-                      )
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.only(left: 150),
+                  padding: const EdgeInsets.only(left: 50),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      const CustomText(
-                        text: 'OP Ticket Amount : ',
-                        size: 16,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Doctor ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: doctorName,
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
                       ),
-                      CustomTextField(
-                        hintText: '',
-                        controller: opTicketTotalAmount,
-                        width: 250,
-                      ),
-                      const CustomText(
-                        text: 'Collected : ',
-                        size: 16,
-                      ),
-                      CustomTextField(
-                        hintText: '',
-                        controller: opTicketCollectedAmount,
-                        width: 250,
+                      SizedBox(width: screenWidth * 0.1),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Specialization ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: specialization,
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
           const SizedBox(
-            height: 75,
+            height: 40,
           ),
           Container(
-            height: 200,
-            width: 1100,
+            width: 1200,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CustomText(
-                  text: 'General Information',
-                  size: 24,
+                CustomText(
+                  text: 'Basic Diagnosis',
+                  color: AppColors.blue,
+                  size: screenWidth * 0.025,
+                ),
+                const SizedBox(
+                  height: 20,
                 ),
                 Container(
-                  padding: const EdgeInsets.only(left: 100),
+                  padding: const EdgeInsets.only(left: 50, right: 50),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const CustomText(
-                        text: 'Temperature : ',
-                        size: 16,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Temperature ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: temperature,
+                            width: screenWidth * 0.2,
+                          ),
+                          SizedBox(height: 4),
+                          CustomText(
+                            text: 'Ranges ',
+                            size: screenWidth * 0.011,
+                          ),
+                          SizedBox(height: 1),
+                          CustomText(
+                            text: 'Babies and Children 95.9°F - 99.5°F',
+                            size: screenWidth * 0.008,
+                          ),
+                          SizedBox(height: 1),
+                          CustomText(
+                            text:
+                                'Average Normal Body Temeperature : 98.6°F (37°C)',
+                            size: screenWidth * 0.008,
+                          ),
+                        ],
                       ),
-                      CustomTextField(
-                        hintText: '',
-                        controller: temperature,
-                        width: 175,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Blood Pressure ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: bloodPressure,
+                            width: screenWidth * 0.2,
+                          ),
+                          SizedBox(height: 4),
+                          CustomText(
+                            text: 'Ranges ',
+                            size: screenWidth * 0.011,
+                          ),
+                          SizedBox(height: 1),
+                          CustomText(
+                            text: 'Around 120/180mg Hg',
+                            size: screenWidth * 0.008,
+                          ),
+                          SizedBox(height: 1),
+                          CustomText(
+                            text: ' ',
+                            size: screenWidth * 0.008,
+                          ),
+                        ],
                       ),
-                      const CustomText(
-                        text: 'Blood Pressure : ',
-                        size: 16,
-                      ),
-                      CustomTextField(
-                        hintText: '',
-                        controller: bloodPressure,
-                        width: 175,
-                      ),
-                      const CustomText(
-                        text: 'Blood Sugar : ',
-                        size: 16,
-                      ),
-                      CustomTextField(
-                        hintText: '',
-                        controller: bloodSugarLevel,
-                        width: 175,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Blood Sugar Level ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: bloodSugarLevel,
+                            width: screenWidth * 0.2,
+                          ),
+                          SizedBox(height: 4),
+                          CustomText(
+                            text: 'Ranges ',
+                            size: screenWidth * 0.011,
+                          ),
+                          SizedBox(height: 1),
+                          CustomText(
+                            text: 'Before meals 80-130 mg/dl',
+                            size: screenWidth * 0.008,
+                          ),
+                          SizedBox(height: 1),
+                          CustomText(
+                            text: 'After meals(1-2 hours later) 180 mg/dl',
+                            size: screenWidth * 0.008,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1319,32 +1402,163 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   height: 20,
                 ),
                 Container(
-                  padding: const EdgeInsets.only(left: 100),
+                  padding: const EdgeInsets.only(left: 50),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CustomText(text: 'Other Comments : '),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      CustomTextField(
-                        controller: otherComments,
-                        hintText: '',
-                        width: 800,
-                        verticalSize: 30,
-                      ),
-                      const SizedBox(
-                        width: 20,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Presenting Complaints ',
+                            size: screenWidth * 0.013,
+                          ),
+                          SizedBox(height: 7),
+                          CustomTextField(
+                            hintText: '',
+                            controller: otherComments,
+                            width: screenWidth * 0.72,
+                            verticalSize: screenHeight * 0.07,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
           const SizedBox(
-            height: 75,
+            height: 40,
+          ),
+          Container(
+            width: 1200,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomText(
+                  text: 'Basic Diagnosis',
+                  color: AppColors.blue,
+                  size: screenWidth * 0.025,
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  padding: const EdgeInsets.only(left: 50, right: 50),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                text: 'OP Ticket Amount ',
+                                size: screenWidth * 0.013,
+                              ),
+                              SizedBox(height: 7),
+                              CustomTextField(
+                                hintText: '',
+                                controller: opTicketTotalAmount,
+                                width: screenWidth * 0.2,
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                text: 'Collected ',
+                                size: screenWidth * 0.013,
+                              ),
+                              SizedBox(height: 7),
+                              CustomTextField(
+                                hintText: '',
+                                controller: opTicketCollectedAmount,
+                                width: screenWidth * 0.2,
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                text: 'Balance ',
+                                size: screenWidth * 0.013,
+                              ),
+                              SizedBox(height: 7),
+                              CustomTextField(
+                                hintText: '',
+                                controller: opTicketBalance,
+                                width: screenWidth * 0.2,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: screenWidth * 0.02),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                text: 'Payment Mode ',
+                                size: screenWidth * 0.013,
+                              ),
+                              SizedBox(height: 7),
+                              SizedBox(
+                                width: screenWidth * 0.2,
+                                child: CustomDropdown(
+                                  width: screenWidth * 0.05,
+                                  label: '',
+                                  items: const [
+                                    'UPI',
+                                    'Credit Card',
+                                    'Debit Card',
+                                    'Net Banking',
+                                    'Cash'
+                                  ],
+                                  onChanged: (value) {
+                                    setState(
+                                      () {
+                                        selectedPaymentMode = value;
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                text: 'Payment Details ',
+                                size: screenWidth * 0.013,
+                              ),
+                              SizedBox(height: 7),
+                              CustomTextField(
+                                hintText: '',
+                                controller: paymentDetails,
+                                width: screenWidth * 0.2,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: 50,
           ),
           Row(
             children: [

@@ -12,6 +12,7 @@ import 'package:foxcare_lite/utilities/widgets/textField/secondary_text_field.da
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -79,6 +80,8 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
   String? selectedSex;
   String? selectedBloodGroup;
   bool isEditing = false;
+  bool isRegisterLoading = false;
+
   final TextEditingController firstname = TextEditingController();
   final TextEditingController lastname = TextEditingController();
   final TextEditingController middlename = TextEditingController();
@@ -94,6 +97,18 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
   final TextEditingController phone2 = TextEditingController();
   final TextEditingController opAmount = TextEditingController();
   final TextEditingController opAmountCollected = TextEditingController();
+  final TextEditingController opAmountBalance = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+
+  String? paymentMode;
+
+  void _updateBalance() {
+    double totalAmount = double.tryParse(opAmount.text) ?? 0.0;
+    double paidAmount = double.tryParse(opAmountCollected.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    opAmountBalance.text = balance.toStringAsFixed(0);
+  }
 
   Future<String> generateUniquePatientId() async {
     const chars = '0123456789';
@@ -148,6 +163,9 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
       'bloodGroup': selectedBloodGroup,
       'opAmount': opAmount.text,
       'opAmountCollected': opAmountCollected.text,
+      'opAmountBalance': opAmountBalance.text,
+      'paymentMode': paymentMode,
+      'paymentDetails': paymentDetails.text,
       'opAdmissionDate': dateTime.year.toString() +
           '-' +
           dateTime.month.toString().padLeft(2, '0') +
@@ -205,6 +223,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                         const Divider(),
                         _infoRow('Amount', opAmount.text),
                         _infoRow('Collected', opAmountCollected.text),
+                        _infoRow('Balance', opAmountBalance.text),
                       ],
                     ),
                   ),
@@ -460,7 +479,9 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
   }
 
   bool validateForm3() {
-    if (opAmount.text.isEmpty || opAmountCollected.text.isEmpty) {
+    if (opAmount.text.isEmpty ||
+        opAmountCollected.text.isEmpty ||
+        opAmountBalance.text.isEmpty) {
       CustomSnackBar(
         context,
         message: 'Please fill all required fields',
@@ -563,6 +584,8 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     initializeUid();
     phone1.addListener(_validatePhone1);
     phone2.addListener(_validatePhone2);
+    opAmount.addListener(_updateBalance);
+    opAmountCollected.addListener(_updateBalance);
   }
 
   int currentStep = 0;
@@ -1430,7 +1453,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     return Container(
       width: screenWidth * 2,
       height: screenHeight * 0.8,
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.047),
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(
@@ -1490,12 +1513,11 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                           ),
                         ],
                       ),
-                      SizedBox(width: screenWidth * 0.2),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CustomText(
-                            text: 'OP Amount Collected : ',
+                            text: 'Collected : ',
                             size: screenWidth * 0.0125,
                           ),
                           SizedBox(height: screenHeight * 0.01),
@@ -1506,6 +1528,112 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                                 hintText: '',
                                 width: screenWidth * 0.2,
                                 controller: opAmountCollected,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Balance : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: opAmountBalance,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Payment Mode : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              SecondaryDropdown(
+                                verticalSize: screenHeight * 0.02,
+                                width: screenWidth * 0.2,
+                                hintText: '',
+                                items: const [
+                                  'UPI',
+                                  'Credit Card',
+                                  'Debit Card',
+                                  'Net Banking',
+                                  'Cash'
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    paymentMode = value!;
+                                  });
+                                },
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: screenWidth * 0.008,
+                                    bottom: screenHeight * 0.05),
+                                child: CustomText(
+                                  text: '*',
+                                  size: screenWidth * 0.015,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Payment Details : ',
+                            size: screenWidth * 0.0125,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Row(
+                            children: [
+                              FormTextField(
+                                verticalSize: screenHeight * 0.02,
+                                hintText: '',
+                                width: screenWidth * 0.2,
+                                controller: paymentDetails,
                               ),
                               Padding(
                                 padding: EdgeInsets.only(
@@ -1544,27 +1672,30 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                           },
                           width: screenWidth * 0.2),
                       SizedBox(width: screenWidth * 0.22),
-                      CustomButton(
-                          label: 'Register',
-                          onPressed: () async {
-                            if (validateForm3()) {
-                              setState(() {
-                                isLoading = true;
-                                previousProgress = progress;
-                                currentStep++;
-                              });
+                      isRegisterLoading
+                          ? Lottie.asset('assets/button_loading.json',
+                              height: 150, width: 150)
+                          : CustomButton(
+                              label: 'Register',
+                              onPressed: () async {
+                                if (validateForm3()) {
+                                  setState(() {
+                                    isLoading = true;
+                                    previousProgress = progress;
+                                    currentStep++;
+                                  });
 
-                              await Future.delayed(
-                                  const Duration(milliseconds: 600));
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 600));
 
-                              await savePatientDetails();
+                                  await savePatientDetails();
 
-                              setState(() {
-                                isLoading = false;
-                              });
-                            }
-                          },
-                          width: screenWidth * 0.2),
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              },
+                              width: screenWidth * 0.2),
                       SizedBox(width: screenWidth * 0.015),
                     ],
                   ),
