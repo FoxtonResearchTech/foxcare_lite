@@ -55,6 +55,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
   String? selectedPaymentMode;
 
   bool isGeneratingToken = false;
+  int lastToken = 0;
 
   int tokenNumber = 0;
   String lastSavedDate = '';
@@ -97,6 +98,29 @@ class _OpTicketPageState extends State<OpTicketPage> {
     }
 
     return opTicketId;
+  }
+
+  Future<int> fetchCounterValue() async {
+    final docRef =
+        FirebaseFirestore.instance.collection('counters').doc('counterDoc');
+    final snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      throw Exception('counterDoc does not exist');
+    }
+
+    final data = snapshot.data()!;
+    final Timestamp lastResetTimestamp = data['lastReset'];
+    final int value = data['value'];
+
+    DateTime lastResetDate = lastResetTimestamp.toDate().toLocal();
+    DateTime now = DateTime.now();
+
+    bool isSameDay = lastResetDate.year == now.year &&
+        lastResetDate.month == now.month &&
+        lastResetDate.day == now.day;
+
+    return isSameDay ? value : 0;
   }
 
   Future<void> initializeOpTicketID(String selectedPatientId) async {
@@ -983,12 +1007,16 @@ class _OpTicketPageState extends State<OpTicketPage> {
                                   searchOpNumber.text,
                                   searchPhoneNumber.text,
                                 );
+                                final token = await fetchCounterValue();
+
                                 setState(() {
+                                  lastToken = token + 1;
                                   searchResults =
                                       searchResultsFetched; // Update searchResults
                                   isSearchPerformed =
                                       true; // Show the table after search
                                 });
+                                print('Fetched token: $lastToken');
                               },
                             ),
                           ],
@@ -1021,12 +1049,16 @@ class _OpTicketPageState extends State<OpTicketPage> {
                                   searchOpNumber.text,
                                   searchPhoneNumber.text,
                                 );
+                                final token = await fetchCounterValue();
+
                                 setState(() {
+                                  lastToken = token + 1;
                                   searchResults =
                                       searchResultsFetched; // Update searchResults
                                   isSearchPerformed =
                                       true; // Show the table after search
                                 });
+                                print('Fetched token: $lastToken');
                               },
                             ),
                           ],
@@ -1185,99 +1217,133 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   size: screenWidth * 0.025,
                   color: AppColors.blue,
                 ),
-                Container(
-                  padding: const EdgeInsets.only(left: 50),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                            text: 'Date ',
-                            size: screenWidth * 0.013,
+                Row(
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.only(left: 50),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Date ',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: TextEditingController(
+                                        text: dateTime.year.toString() +
+                                            '-' +
+                                            dateTime.month
+                                                .toString()
+                                                .padLeft(2, '0') +
+                                            '-' +
+                                            dateTime.day
+                                                .toString()
+                                                .padLeft(2, '0')),
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(width: screenWidth * 0.1),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Counter ',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  SizedBox(height: 7),
+                                  SizedBox(
+                                    width: screenWidth * 0.2,
+                                    child: CustomDropdown(
+                                      width: screenWidth * 0.05,
+                                      label: '',
+                                      items: const ['1', '2', '3', '4', '5'],
+                                      onChanged: (value) {
+                                        setState(
+                                          () {
+                                            selectedCounter = value;
+                                            fetchDoctorAndSpecialization();
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 7),
-                          CustomTextField(
-                            hintText: '',
-                            controller: TextEditingController(
-                                text: dateTime.year.toString() +
-                                    '-' +
-                                    dateTime.month.toString().padLeft(2, '0') +
-                                    '-' +
-                                    dateTime.day.toString().padLeft(2, '0')),
-                            width: screenWidth * 0.2,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.only(left: 50),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Doctor ',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: doctorName,
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(width: screenWidth * 0.1),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Specialization ',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: specialization,
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      SizedBox(width: screenWidth * 0.1),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                            text: 'Counter ',
-                            size: screenWidth * 0.013,
-                          ),
-                          SizedBox(height: 7),
-                          SizedBox(
-                            width: screenWidth * 0.2,
-                            child: CustomDropdown(
-                              width: screenWidth * 0.05,
-                              label: '',
-                              items: const ['1', '2', '3', '4', '5'],
-                              onChanged: (value) {
-                                setState(
-                                  () {
-                                    selectedCounter = value;
-                                    fetchDoctorAndSpecialization();
-                                  },
-                                );
-                              },
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    Row(
+                      children: [
+                        Column(
+                          children: [
+                            CustomText(
+                              text: 'Previous',
+                              size: screenWidth * 0.02,
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.only(left: 50),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                            text: 'Doctor ',
-                            size: screenWidth * 0.013,
-                          ),
-                          SizedBox(height: 7),
-                          CustomTextField(
-                            hintText: '',
-                            controller: doctorName,
-                            width: screenWidth * 0.2,
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: screenWidth * 0.1),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                            text: 'Specialization ',
-                            size: screenWidth * 0.013,
-                          ),
-                          SizedBox(height: 7),
-                          CustomTextField(
-                            hintText: '',
-                            controller: specialization,
-                            width: screenWidth * 0.2,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                            CustomText(
+                              text: 'Token',
+                              size: screenWidth * 0.023,
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: screenWidth * 0.02),
+                        CustomText(
+                          text: lastToken.toString(),
+                          size: screenWidth * 0.055,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
