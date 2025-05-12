@@ -1492,7 +1492,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomText(
-                  text: 'Basic Diagnosis',
+                  text: 'Payments',
                   color: AppColors.blue,
                   size: screenWidth * 0.025,
                 ),

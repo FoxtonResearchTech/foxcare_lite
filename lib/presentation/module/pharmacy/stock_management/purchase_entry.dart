@@ -32,6 +32,13 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   TextEditingController gstIn = TextEditingController();
   TextEditingController discount = TextEditingController();
 
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
+
   double totalAmount = 0.0;
   double discountAmount = 0.0;
 
@@ -74,6 +81,14 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   List<String> distributorsNames = [];
   String rfNo = '';
   int newRfNo = 0;
+
+  void _updateBalance() {
+    double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
+    double paidAmount = double.tryParse(collectedAmountController.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    balanceController.text = balance.toStringAsFixed(2);
+  }
 
   void addNewRow() {
     setState(() {
@@ -127,6 +142,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
 
       discountAmount = discountAmt;
       totalAmount = netTotal;
+      totalAmountController.text = totalAmount.toStringAsFixed(2);
     });
   }
 
@@ -249,6 +265,11 @@ class _PurchaseEntry extends State<PurchaseEntry> {
         'dlNo1': dlNo1.text,
         'dlNo2': dlNo2.text,
         'gstIn': gstIn.text,
+        'paymentDetails': paymentDetails.text,
+        'paymentMode': selectedPaymentMode,
+        'totalAmount': totalAmountController.text,
+        'collectedAmount': collectedAmountController.text,
+        'balance': balanceController.text,
       });
       await updateIpAdmitBillNo(newRfNo);
       setState(() {
@@ -305,6 +326,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     getAndIncrementIpAdmitBillNo();
     productSuggestions = List.generate(allProducts.length, (_) => []);
     addNewRow();
+    totalAmountController.addListener(_updateBalance);
+    collectedAmountController.addListener(_updateBalance);
   }
 
   double _taxTotal() {
@@ -725,6 +748,122 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                     ],
                   ),
                 ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: screenWidth * 0.05, right: screenWidth * 0.05),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Total Amount ',
+                                  size: screenWidth * 0.013,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: totalAmountController,
+                                  width: screenWidth * 0.15,
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Collected ',
+                                  size: screenWidth * 0.013,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: collectedAmountController,
+                                  width: screenWidth * 0.2,
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Balance ',
+                                  size: screenWidth * 0.013,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: balanceController,
+                                  width: screenWidth * 0.2,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: screenWidth * 0.02),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Payment Mode ',
+                                  size: screenWidth * 0.013,
+                                ),
+                                SizedBox(height: 7),
+                                SizedBox(
+                                  width: screenWidth * 0.2,
+                                  child: PharmacyDropDown(
+                                    width: screenWidth * 0.05,
+                                    label: '',
+                                    items: const [
+                                      'UPI',
+                                      'Credit Card',
+                                      'Debit Card',
+                                      'Net Banking',
+                                      'Cash'
+                                    ],
+                                    onChanged: (value) {
+                                      setState(
+                                        () {
+                                          selectedPaymentMode = value;
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Payment Details ',
+                                  size: screenWidth * 0.013,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: paymentDetails,
+                                  width: screenWidth * 0.2,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: screenHeight * 0.05),
               Padding(

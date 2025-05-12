@@ -1504,7 +1504,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomText(
-                  text: 'Basic Diagnosis',
+                  text: 'Payments',
                   color: AppColors.blue,
                   size: screenWidth * 0.025,
                 ),

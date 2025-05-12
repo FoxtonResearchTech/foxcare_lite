@@ -112,7 +112,7 @@ class AuthGate extends StatelessWidget {
               case 'Management':
                 return ManagementDashboard();
               case 'Pharmacist':
-                return SalesChartScreen();
+                return const SalesChartScreen();
               case 'Receptionist':
                 return ReceptionDashboard();
               case 'Lab Assistance':
@@ -120,9 +120,9 @@ class AuthGate extends StatelessWidget {
               case 'X-Ray Technician':
                 return PatientRegistration();
               case 'Doctor':
-                return DoctorDashboard();
+                return const DoctorDashboard();
               case 'Manager':
-                return ManagerDashboard();
+                return const ManagerDashboard();
               default:
                 return Scaffold(
                   body: Center(

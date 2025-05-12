@@ -4,6 +4,7 @@ import 'package:foxcare_lite/presentation/module/pharmacy/stock_management/purch
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
@@ -25,9 +26,12 @@ class _Purchase extends State<Purchase> {
   final List<String> headers = [
     'Bill NO',
     'Bill Date',
-    'Distributor Name',
-    'Bill Amount',
-    'Due Date',
+    'Ref No',
+    'Distributor',
+    'Amount',
+    'Paid',
+    'Balance',
+    'Action'
   ];
   List<Map<String, dynamic>> tableData = [];
   Future<void> fetchData({String? purchaseBillNo, String? billNo}) async {
@@ -58,13 +62,46 @@ class _Purchase extends State<Purchase> {
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
-        fetchedData.add({
-          'Bill NO': data['billNo']?.toString() ?? 'N/A',
-          'Bill Date': data['reportDate']?.toString() ?? 'N/A',
-          'Distributor Name': '${data['distributor'] ?? 'N/A'}'.trim(),
-          'Bill Amount': data['amount']?.toString() ?? 'N/A',
-          'Due Date': data['DueDate']?.toString() ?? 'N/A',
-        });
+        fetchedData.add(
+          {
+            'Bill NO': data['billNo']?.toString() ?? 'N/A',
+            'Bill Date': data['billDate']?.toString() ?? 'N/A',
+            'Ref No': data['rfNo']?.toString() ?? 'N/A',
+            'Distributor': '${data['distributor'] ?? 'N/A'}'.trim(),
+            'Amount': data['totalAmount']?.toString() ?? 'N/A',
+            'Paid': data['collectedAmount']?.toString() ?? 'N/A',
+            'Balance': data['balance']?.toString() ?? 'N/A',
+            'Action': Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () {},
+                  child: CustomText(
+                    text: 'Pay',
+                    color: AppColors.blue,
+                    size: 14,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {},
+                  child: CustomText(
+                    text: 'Open',
+                    color: AppColors.blue,
+                    size: 14,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {},
+                  child: CustomText(
+                    text: 'Abscond',
+                    color: AppColors.blue,
+                    size: 14,
+                  ),
+                ),
+              ],
+            ),
+          },
+        );
       }
 
       setState(() {
@@ -101,40 +138,13 @@ class _Purchase extends State<Purchase> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.02,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
+            left: screenWidth * 0.05,
+            right: screenWidth * 0.05,
             bottom: screenWidth * 0.05,
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Purchase",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              TimeDateWidget(text: 'Purchase'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -188,6 +198,9 @@ class _Purchase extends State<Purchase> {
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
+                columnWidths: {
+                  7: FixedColumnWidth(screenWidth * 0.15),
+                },
                 tableData: tableData,
                 headers: headers,
               ),
