@@ -3,7 +3,7 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import '../text/primary_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PharmacyDataTable extends StatefulWidget {
+class PurchaseEntryDataTable extends StatefulWidget {
   final List<String> headers;
   final List<Map<String, dynamic>> tableData;
   final List<String>? editableColumns;
@@ -16,7 +16,7 @@ class PharmacyDataTable extends StatefulWidget {
   final Function(int rowIndex, String header, String value)? onValueChanged;
   final List<Map<String, TextEditingController>>? controllers;
 
-  PharmacyDataTable({
+  PurchaseEntryDataTable({
     super.key,
     required this.headers,
     required this.tableData,
@@ -32,10 +32,10 @@ class PharmacyDataTable extends StatefulWidget {
   }) : headerBackgroundColor = headerBackgroundColor ?? AppColors.blue;
 
   @override
-  State<PharmacyDataTable> createState() => _PharmacyDataTable();
+  State<PurchaseEntryDataTable> createState() => _PurchaseEntryDataTable();
 }
 
-class _PharmacyDataTable extends State<PharmacyDataTable> {
+class _PurchaseEntryDataTable extends State<PurchaseEntryDataTable> {
   late List<Map<String, TextEditingController>> controllers;
   late List<List<Map<String, dynamic>>> productSuggestions;
   int? focusedRowIndex;
@@ -61,7 +61,7 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
     _overlayEntry = OverlayEntry(
       builder: (context) {
         return Positioned(
-          width: 400,
+          width: 500,
           child: CompositedTransformFollower(
             link: _layerLink,
             showWhenUnlinked: false,
@@ -81,7 +81,9 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
                           final product =
                               productSuggestions[focusedRowIndex!][index];
                           return ListTile(
-                            title: Text(product['productName'] ?? ''),
+                            title: CustomText(
+                                text:
+                                    'Product Name : ${product['productName'] ?? ''}'),
                             onTap: () {
                               setState(() {
                                 controllers[focusedRowIndex!]['Product Name']
@@ -135,14 +137,23 @@ class _PharmacyDataTable extends State<PharmacyDataTable> {
         .collection('AddedProducts')
         .where('productName', isGreaterThanOrEqualTo: query)
         .where('productName', isLessThanOrEqualTo: query + '\uf8ff')
-        .limit(5)
         .get();
 
-    List<Map<String, dynamic>> matches = snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      data['productDocId'] = doc.id; // Add document ID
-      return data;
-    }).toList();
+    List<Map<String, dynamic>> matches = snapshot.docs
+        .map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          if (data.containsKey('mrp') ||
+              data.containsKey('rate') ||
+              data.containsKey('quantity')) {
+            return null;
+          }
+
+          data['productDocId'] = doc.id;
+          return data;
+        })
+        .whereType<Map<String, dynamic>>()
+        .toList();
 
     setState(() {
       productSuggestions[rowIndex] = matches;

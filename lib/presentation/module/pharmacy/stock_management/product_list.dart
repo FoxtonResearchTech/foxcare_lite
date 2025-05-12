@@ -19,8 +19,6 @@ class ProductList extends StatefulWidget {
 class _ProductListState extends State<ProductList> {
   final TextEditingController _productName = TextEditingController();
   final TextEditingController _composition = TextEditingController();
-  final TextEditingController _quantity = TextEditingController();
-  final TextEditingController _hsnCode = TextEditingController();
   final TextEditingController _companyName = TextEditingController();
   final TextEditingController _referredByDoctor = TextEditingController();
   final TextEditingController _additionalInformation = TextEditingController();
@@ -42,42 +40,14 @@ class _ProductListState extends State<ProductList> {
   List<Map<String, dynamic>> allProducts = [];
 
   List<Map<String, dynamic>> filteredProducts = [];
-  String? selectedType;
   String? selectedCategory;
-
-  String? selectedDistributor;
-  List<String> distributorsNames = [];
-  Future<void> fetchDistributors() async {
-    try {
-      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('pharmacy')
-              .doc('distributors')
-              .collection('distributor')
-              .get();
-      List<String> distributors = [];
-
-      for (var doc in distributorsSnapshot.docs) {
-        distributors.add(doc['distributorName']);
-      }
-      setState(() {
-        distributorsNames = distributors;
-      });
-    } catch (e) {
-      print('Error fetching distributors: $e');
-    }
-  }
 
   Future<void> updateProduct(String docId) async {
     try {
       Map<String, dynamic> data = {
         'productName': _productName.text,
         'composition': _composition.text,
-        'quantity': _quantity.text,
-        'type': selectedType,
         'category': selectedCategory,
-        'distributor': selectedDistributor,
-        'hsnCode': _hsnCode.text,
         'companyName': _companyName.text,
         'referredByDoctor': _referredByDoctor.text,
         'additionalInformation': _additionalInformation.text,
@@ -125,21 +95,15 @@ class _ProductListState extends State<ProductList> {
                 final docId = doc.id;
 
                 _productName.text = selectedProduct['productName'] ?? '';
-                _hsnCode.text = selectedProduct['hsnCode'] ?? '';
                 _composition.text = selectedProduct['composition'] ?? '';
                 _companyName.text = selectedProduct['companyName'] ?? '';
-                _quantity.text = selectedProduct['quantity'] ?? '';
                 _referredByDoctor.text =
                     selectedProduct['referredByDoctor'] ?? '';
                 _additionalInformation.text =
                     selectedProduct['additionalInformation'] ?? '';
 
-                // Assign dropdown values
                 setState(() {
-                  selectedType = selectedProduct['type'] ?? 'Tablet';
                   selectedCategory = selectedProduct['category'] ?? 'Medicine';
-                  selectedDistributor =
-                      selectedProduct['distributor'] ?? distributorsNames.first;
                 });
 
                 showDialog(
@@ -149,7 +113,7 @@ class _ProductListState extends State<ProductList> {
                       title: Text('Add Product'),
                       content: Container(
                         width: 600,
-                        height: 400,
+                        height: 350,
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
@@ -158,7 +122,7 @@ class _ProductListState extends State<ProductList> {
                                 children: [
                                   Container(
                                     width: 550,
-                                    height: 400,
+                                    height: 300,
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -174,10 +138,29 @@ class _ProductListState extends State<ProductList> {
                                               hintText: 'Product Name',
                                               width: 200,
                                             ),
-                                            CustomTextField(
-                                              controller: _quantity,
-                                              hintText: 'Quantity',
+                                            SizedBox(
                                               width: 200,
+                                              child: CustomDropdown(
+                                                  label: 'Category',
+                                                  items: const [
+                                                    'Tablets',
+                                                    'Capsules',
+                                                    'Powders',
+                                                    'Solutions',
+                                                    'Suspensions',
+                                                    'Topical Medicines',
+                                                    'Suppository',
+                                                    'Injections',
+                                                    'Inhales',
+                                                    'Patches',
+                                                  ],
+                                                  selectedItem:
+                                                      selectedCategory,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      selectedCategory = value;
+                                                    });
+                                                  }),
                                             ),
                                           ],
                                         ),
@@ -190,92 +173,30 @@ class _ProductListState extends State<ProductList> {
                                               hintText: 'Composition',
                                               width: 200,
                                             ),
-                                            SizedBox(
-                                              width: 200,
-                                              child: CustomDropdown(
-                                                label: 'Type',
-                                                items: const [
-                                                  'Tablet',
-                                                  'Device',
-                                                  'Injection'
-                                                ],
-                                                selectedItem: selectedType,
-                                                onChanged: (value) {
-                                                  setState(
-                                                    () {
-                                                      selectedType = value;
-                                                    },
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            SizedBox(
-                                              width: 200,
-                                              child: CustomDropdown(
-                                                  label: 'Category',
-                                                  items: const [
-                                                    'Medicine',
-                                                    'Equipment',
-                                                    'Supplements'
-                                                  ],
-                                                  selectedItem:
-                                                      selectedCategory,
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      selectedCategory = value;
-                                                    });
-                                                  }),
-                                            ),
-                                            CustomTextField(
-                                              controller: _hsnCode,
-                                              hintText: 'HSN Code',
-                                              width: 200,
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
                                             CustomTextField(
                                               controller: _companyName,
                                               hintText: 'Company Name',
                                               width: 200,
                                             ),
-                                            SizedBox(
-                                              width: 200,
-                                              child: CustomDropdown(
-                                                label: 'Distributor',
-                                                items: distributorsNames,
-                                                selectedItem:
-                                                    selectedDistributor,
-                                                onChanged: (value) {
-                                                  setState(
-                                                    () {
-                                                      selectedDistributor =
-                                                          value;
-                                                    },
-                                                  );
-                                                },
-                                              ),
-                                            ),
                                           ],
                                         ),
-                                        CustomTextField(
-                                          controller: _referredByDoctor,
-                                          hintText: 'Referred by Doctor',
-                                          width: 300,
-                                        ),
-                                        CustomTextField(
-                                          controller: _additionalInformation,
-                                          hintText: 'Additional Information',
-                                          width: 300,
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            CustomTextField(
+                                              controller: _referredByDoctor,
+                                              hintText: 'Referred by Doctor',
+                                              width: 200,
+                                            ),
+                                            CustomTextField(
+                                              controller:
+                                                  _additionalInformation,
+                                              hintText:
+                                                  'Additional Information',
+                                              width: 200,
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -330,7 +251,6 @@ class _ProductListState extends State<ProductList> {
   void initState() {
     super.initState();
     fetchData();
-    fetchDistributors();
 
     filteredProducts = List.from(allProducts);
   }
@@ -338,8 +258,7 @@ class _ProductListState extends State<ProductList> {
   void clearFields() {
     _productName.clear();
     _composition.clear();
-    _quantity.clear();
-    _hsnCode.clear();
+
     _companyName.clear();
     _referredByDoctor.clear();
     _additionalInformation.clear();

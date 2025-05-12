@@ -6,6 +6,7 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/purchase_entry_data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/stock_return_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:intl/intl.dart';
@@ -14,16 +15,15 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
-class PurchaseEntry extends StatefulWidget {
-  const PurchaseEntry({super.key});
+class StockReturnEntry extends StatefulWidget {
+  const StockReturnEntry({super.key});
 
   @override
-  State<PurchaseEntry> createState() => _PurchaseEntry();
+  State<StockReturnEntry> createState() => _StockReturnEntry();
 }
 
-class _PurchaseEntry extends State<PurchaseEntry> {
+class _StockReturnEntry extends State<StockReturnEntry> {
   TextEditingController _dateController = TextEditingController();
-  TextEditingController _billNo = TextEditingController();
   TextEditingController address = TextEditingController();
   TextEditingController phone = TextEditingController();
   TextEditingController mail = TextEditingController();
@@ -61,17 +61,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     'Delete',
   ];
 
-  final List<String> editableColumns = [
-    'Product Name',
-    'HSN',
-    'Batch',
-    'Expiry',
-    'Quantity',
-    'Free',
-    'MRP',
-    'Rate',
-    'Tax',
-  ];
+  final List<String> editableColumns = ['Product Name', 'Quantity', 'Free'];
 
   List<Map<String, dynamic>> allProducts = [];
   List<Map<String, TextEditingController>> controllers = [];
@@ -173,19 +163,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     for (int index = 0; index < allProducts.length; index++) {
       final product = allProducts[index];
       controllers.add({
-        'HSN': TextEditingController(text: product['HSN'] ?? ''),
-        'Batch': TextEditingController(text: product['Batch'] ?? ''),
-        'Expiry': TextEditingController(text: product['Expiry'] ?? ''),
         'Quantity': TextEditingController(text: product['Quantity'] ?? ''),
         'Free': TextEditingController(text: product['Free'] ?? ''),
-        'MRP': TextEditingController(text: product['MRP'] ?? ''),
-        'Rate': TextEditingController(text: product['Rate'] ?? ''),
-        'Tax': TextEditingController(text: product['Tax'] ?? ''),
-        'SGST': TextEditingController(text: product['SGST'] ?? ''),
-        'CGST': TextEditingController(text: product['CGST'] ?? ''),
-        'Tax Total': TextEditingController(text: product['Tax Total'] ?? ''),
-        'Product Total':
-            TextEditingController(text: product['Product Total'] ?? ''),
       });
     }
   }
@@ -215,7 +194,6 @@ class _PurchaseEntry extends State<PurchaseEntry> {
 
       for (int i = 0; i < allProducts.length; i++) {
         String docId = allProducts[i]['productDocId'];
-        print("Updating docId: $docId");
 
         DocumentSnapshot<Map<String, dynamic>> docSnapshot =
             await FirebaseFirestore.instance
@@ -226,22 +204,27 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                 .get();
 
         if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+
+          int currentQty =
+              int.tryParse(data?['quantity']?.toString() ?? '0') ?? 0;
+          int currentFree = int.tryParse(data?['free']?.toString() ?? '0') ?? 0;
+
+          int returnQty =
+              int.tryParse(controllers[i]['Quantity']?.text ?? '0') ?? 0;
+          int returnFree =
+              int.tryParse(controllers[i]['Free']?.text ?? '0') ?? 0;
+
+          int newQty = currentQty - returnQty;
+          int newFree = currentFree - returnFree;
+
+          if (newQty < 0) newQty = 0;
+          if (newFree < 0) newFree = 0;
+
           DocumentReference productRef = docSnapshot.reference;
           await productRef.update({
-            'reportDate': _dateController.text,
-            'billNo': _billNo.text,
-            'rfNo': rfNo,
-            'hsn': controllers[i]['HSN']?.text,
-            'quantity': controllers[i]['Quantity']?.text,
-            'fixedQuantity': controllers[i]['Quantity']?.text,
-            'batchNumber': controllers[i]['Batch']?.text,
-            'expiry': controllers[i]['Expiry']?.text,
-            'free': controllers[i]['Free']?.text,
-            'mrp': controllers[i]['MRP']?.text,
-            'rate': controllers[i]['Rate']?.text,
-            'sgst': controllers[i]['SGST']?.text,
-            'cgst': controllers[i]['CGST']?.text,
-            'tax': controllers[i]['Tax']?.text,
+            'quantity': newQty.toString(),
+            'free': newFree.toString(),
           });
         }
       }
@@ -249,11 +232,10 @@ class _PurchaseEntry extends State<PurchaseEntry> {
       await FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
-          .collection('PurchaseEntry')
+          .collection('StockReturn')
           .doc()
           .set({
-        'billDate': _dateController.text,
-        'billNo': _billNo.text,
+        'returnDate': _dateController.text,
         'rfNo': rfNo,
         'entryProducts': allProducts,
         'distributor': selectedDistributor,
@@ -414,7 +396,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
               horizontal: screenWidth * 0.06, vertical: screenHeight * 0.04),
           child: Column(
             children: [
-              const TimeDateWidget(text: 'Purchase Entry'),
+              const TimeDateWidget(text: 'Stock Return Entry'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -422,22 +404,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(
-                        text: 'Bill No ',
-                        size: screenWidth * 0.013,
-                      ),
-                      SizedBox(height: screenHeight * 0.008),
-                      PharmacyTextField(
-                        hintText: '',
-                        width: screenWidth * 0.2,
-                        controller: _billNo,
-                      )
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'Date ',
+                        text: 'Return Date ',
                         size: screenWidth * 0.013,
                       ),
                       SizedBox(height: screenHeight * 0.008),
@@ -583,54 +550,15 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                         ),
                         SizedBox(
                           width: screenWidth * 0.85,
-                          child: PurchaseEntryDataTable(
+                          child: StockReturnDataTable(
                             headers: headers,
                             tableData: allProducts,
                             editableColumns: editableColumns,
-                            dropdownValues: const {
-                              'Tax': ['6.0', '12.0', '18.0', '24.0'],
-                            },
                             onValueChanged: (rowIndex, header, value) {
                               setState(() {
                                 allProducts[rowIndex][header] = value;
 
-                                if (header == 'Tax') {
-                                  final tax = double.tryParse(value);
-                                  final quantity = double.tryParse(
-                                          allProducts[rowIndex]['Quantity'] ??
-                                              '0') ??
-                                      0;
-                                  final price = double.tryParse(
-                                          allProducts[rowIndex]['Rate'] ??
-                                              '0') ??
-                                      0;
-                                  final totalQuantity = quantity;
-                                  final totalWithoutTax = totalQuantity * price;
-
-                                  if (tax != null) {
-                                    final splitValue =
-                                        (tax / 2).toStringAsFixed(1);
-                                    allProducts[rowIndex]['SGST'] = splitValue;
-                                    allProducts[rowIndex]['CGST'] = splitValue;
-
-                                    final taxAmount =
-                                        totalWithoutTax * (tax / 100);
-                                    final totalWithTax =
-                                        totalWithoutTax + taxAmount;
-
-                                    allProducts[rowIndex]['Tax Total'] =
-                                        taxAmount.toStringAsFixed(2);
-                                    allProducts[rowIndex]['Product Total'] =
-                                        totalWithTax.toStringAsFixed(2);
-                                  } else {
-                                    allProducts[rowIndex]['SGST'] = '';
-                                    allProducts[rowIndex]['CGST'] = '';
-                                    allProducts[rowIndex]['Tax Total'] = '';
-                                    allProducts[rowIndex]['Product Total'] = '';
-                                  }
-                                }
-
-                                if (header == 'Price') {
+                                if (header == 'Quantity') {
                                   final tax = double.tryParse(
                                           allProducts[rowIndex]['Tax'] ??
                                               '0') ??
@@ -639,7 +567,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                                           allProducts[rowIndex]['Quantity'] ??
                                               '0') ??
                                       0;
-                                  final price = double.tryParse(value);
+                                  final price = double.tryParse(
+                                      allProducts[rowIndex]['Rate'] ?? '0');
                                   final totalQuantity = quantity;
 
                                   if (price != null) {
@@ -656,6 +585,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                                         totalWithTax.toStringAsFixed(2);
                                   }
                                 }
+
                                 _taxTotal();
                                 _allProductTotal();
                                 onDiscountChanged(discount.text);
