@@ -7,6 +7,7 @@ import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
@@ -25,6 +26,8 @@ class StockReturn extends StatefulWidget {
 class _StockReturn extends State<StockReturn> {
   TextEditingController _distributor = TextEditingController();
   TextEditingController _refNo = TextEditingController();
+  List<String> distributorsNames = [];
+  String? selectedDistributor;
 
   final List<String> headers = [
     'Ref No',
@@ -115,10 +118,28 @@ class _StockReturn extends State<StockReturn> {
     }
   }
 
+  Future<void> fetchDistributors() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('pharmacy')
+              .doc('distributors')
+              .collection('distributor')
+              .get();
+      setState(() {
+        distributorsNames = distributorsSnapshot.docs
+            .map((doc) => doc['distributorName'].toString())
+            .toList();
+      });
+    } catch (e) {
+      print('Error fetching distributors: $e');
+    }
+  }
+
   @override
   void initState() {
     fetchData();
-
+    fetchDistributors();
     super.initState();
   }
 
@@ -181,19 +202,27 @@ class _StockReturn extends State<StockReturn> {
                       },
                       width: screenWidth * 0.08),
                   SizedBox(width: screenHeight * 0.2),
-                  PharmacyTextField(
-                    controller: _distributor,
-                    hintText: 'Distributor',
-                    width: screenWidth * 0.25,
-                    verticalSize: screenHeight * 0.02,
+                  SizedBox(
+                    width: screenWidth * 0.15,
+                    child: PharmacyDropDown(
+                      label: '',
+                      items: distributorsNames,
+                      selectedItem: selectedDistributor,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedDistributor = value;
+                        });
+                      },
+                    ),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        fetchData(distributor: _distributor.text);
-                      },
-                      width: screenWidth * 0.08),
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(distributor: selectedDistributor);
+                    },
+                    width: screenWidth * 0.08,
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
