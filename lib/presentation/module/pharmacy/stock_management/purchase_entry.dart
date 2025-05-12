@@ -41,6 +41,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
 
   double totalAmount = 0.0;
   double discountAmount = 0.0;
+  DateTime dateTime = DateTime.now();
 
   bool isAdding = false;
   bool isSubmitting = false;
@@ -227,13 +228,41 @@ class _PurchaseEntry extends State<PurchaseEntry> {
 
         if (docSnapshot.exists) {
           DocumentReference productRef = docSnapshot.reference;
+
+          final data = docSnapshot.data();
+          final oldQuantity =
+              int.tryParse(data?['quantity'].toString() ?? '0') ?? 0;
+          final oldFixedQuantity =
+              int.tryParse(data?['fixedQuantity'].toString() ?? '0') ?? 0;
+
+          final newQuantity =
+              int.tryParse(controllers[i]['Quantity']?.text ?? '0') ?? 0;
+          final free = int.tryParse(controllers[i]['Free']?.text ?? '0') ?? 0;
+
           await productRef.update({
+            'quantity': oldQuantity + newQuantity + free,
+            'fixedQuantity': oldFixedQuantity + newQuantity + free,
+          });
+          await productRef.collection('currentQty').doc().set({
+            'quantity': oldQuantity + newQuantity + free,
+            'date':
+                "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}",
+            'time': dateTime.hour.toString() +
+                ':' +
+                dateTime.minute.toString().padLeft(2, '0'),
+          });
+          final enteredQty =
+              int.tryParse(controllers[i]['Quantity']?.text ?? '0') ?? 0;
+          final enteredFree =
+              int.tryParse(controllers[i]['Free']?.text ?? '0') ?? 0;
+          final totalQty = enteredQty + enteredFree;
+          await productRef.collection('purchaseEntry').add({
             'reportDate': _dateController.text,
             'billNo': _billNo.text,
             'rfNo': rfNo,
             'hsn': controllers[i]['HSN']?.text,
-            'quantity': controllers[i]['Quantity']?.text,
-            'fixedQuantity': controllers[i]['Quantity']?.text,
+            'quantity': totalQty.toString(),
+            'fixedQuantity': totalQty.toString(),
             'batchNumber': controllers[i]['Batch']?.text,
             'expiry': controllers[i]['Expiry']?.text,
             'free': controllers[i]['Free']?.text,

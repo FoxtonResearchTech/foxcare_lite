@@ -101,9 +101,12 @@ class _StockReturnDataTable extends State<StockReturnDataTable> {
                                     ?.text = product['productName'];
                                 widget.tableData[focusedRowIndex!]
                                     ['Product Name'] = product['productName'];
+
                                 widget.tableData[focusedRowIndex!]
                                     ['productDocId'] = product['productDocId'];
-
+                                widget.tableData[focusedRowIndex!]
+                                        ['purchaseEntryDocId'] =
+                                    product['purchaseEntryDocId'];
                                 widget.onValueChanged?.call(focusedRowIndex!,
                                     'Product Name', product['productName']);
                                 controllers[focusedRowIndex!]['HSN']?.text =
@@ -182,38 +185,49 @@ class _StockReturnDataTable extends State<StockReturnDataTable> {
   Future<void> fetchMatchingProducts(int rowIndex, String query) async {
     if (query.isEmpty) return;
 
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
+    QuerySnapshot productSnapshots = await FirebaseFirestore.instance
         .collection('stock')
         .doc('Products')
         .collection('AddedProducts')
-        .where('productName', isGreaterThanOrEqualTo: query)
-        .where('productName', isLessThanOrEqualTo: query + '\uf8ff')
+        .where('productName', isGreaterThanOrEqualTo: '')
+        .where('productName', isLessThanOrEqualTo: 'z\uf8ff')
         .get();
 
-    List<Map<String, dynamic>> matches = snapshot.docs
-        .map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
+    List<Map<String, dynamic>> matches = [];
 
-          if (data.containsKey('mrp') &&
-              data.containsKey('rate') &&
-              data.containsKey('quantity')) {
-            data['productDocId'] = doc.id;
-            data['expiry'] = doc.get('expiry');
-            data['batchNumber'] = doc.get('batchNumber');
-            data['hsn'] = doc.get('hsn');
-            data['quantity'] = doc.get('quantity');
-            data['free'] = doc.get('free');
-            data['mrp'] = doc.get('mrp');
-            data['rate'] = doc.get('rate');
-            data['sgst'] = doc.get('sgst');
-            data['cgst'] = doc.get('cgst');
-            data['tax'] = doc.get('tax');
-            return data;
-          }
-          return null;
-        })
-        .whereType<Map<String, dynamic>>()
-        .toList();
+    for (var doc in productSnapshots.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final productDocId = doc.id;
+      final productName = data['productName']?.toString() ?? '';
+
+      if (!productName.toLowerCase().contains(query.toLowerCase())) continue;
+
+      QuerySnapshot entrySnapshots =
+          await doc.reference.collection('purchaseEntry').get();
+
+      for (var entryDoc in entrySnapshots.docs) {
+        final entryData = entryDoc.data() as Map<String, dynamic>;
+        final qty = int.tryParse(entryData['quantity'] ?? '0') ?? 0;
+        final free = int.tryParse(entryData['free'] ?? '0') ?? 0;
+        final totalQty = qty - free;
+        matches.add({
+          'productDocId': productDocId,
+          'purchaseEntryDocId': entryDoc.id,
+          'productName': data['productName'],
+          'quantity': totalQty.toString(),
+          'batchNumber': entryData['batchNumber'],
+          'expiry': entryData['expiry'],
+          'hsn': entryData['hsn'],
+          'free': entryData['free'],
+          'mrp': entryData['mrp'],
+          'rate': entryData['rate'],
+          'sgst': entryData['sgst'],
+          'cgst': entryData['cgst'],
+          'tax': entryData['tax'],
+        });
+      }
+    }
+
     setState(() {
       productSuggestions[rowIndex] = matches;
     });
@@ -345,8 +359,13 @@ class _StockReturnDataTable extends State<StockReturnDataTable> {
                                 focusedRowIndex = rowIndex;
                               }
 
-                              await fetchMatchingProducts(rowIndex, value);
-                              showSuggestionsOverlay(context);
+                              if (header == 'Product Name') {
+                                focusedRowIndex = rowIndex;
+                                await fetchMatchingProducts(rowIndex, value);
+                                showSuggestionsOverlay(context);
+                              } else {
+                                hideSuggestionsOverlay();
+                              }
 
                               // Callback
                               widget.onValueChanged

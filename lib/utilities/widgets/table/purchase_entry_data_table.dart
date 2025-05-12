@@ -130,30 +130,25 @@ class _PurchaseEntryDataTable extends State<PurchaseEntryDataTable> {
 
   Future<void> fetchMatchingProducts(int rowIndex, String query) async {
     if (query.isEmpty) return;
-
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('stock')
         .doc('Products')
         .collection('AddedProducts')
-        .where('productName', isGreaterThanOrEqualTo: query)
-        .where('productName', isLessThanOrEqualTo: query + '\uf8ff')
         .get();
 
     List<Map<String, dynamic>> matches = snapshot.docs
         .map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-
-          if (data.containsKey('mrp') ||
-              data.containsKey('rate') ||
-              data.containsKey('quantity')) {
-            return null;
-          }
-
           data['productDocId'] = doc.id;
           return data;
         })
         .whereType<Map<String, dynamic>>()
         .toList();
+
+    matches = matches.where((product) {
+      final productName = product['productName'] as String;
+      return productName.toLowerCase().contains(query.toLowerCase());
+    }).toList();
 
     setState(() {
       productSuggestions[rowIndex] = matches;
@@ -223,9 +218,15 @@ class _PurchaseEntryDataTable extends State<PurchaseEntryDataTable> {
                                 ),
                               ),
                               onChanged: (value) async {
-                                focusedRowIndex = rowIndex;
-                                await fetchMatchingProducts(rowIndex, value);
-                                showSuggestionsOverlay(context);
+                                if (header == 'Product Name') {
+                                  focusedRowIndex = rowIndex;
+                                  await fetchMatchingProducts(rowIndex, value);
+                                  showSuggestionsOverlay(context);
+                                } else {
+                                  setState(() {
+                                    productSuggestions[rowIndex] = [];
+                                  });
+                                }
                                 widget.onValueChanged
                                     ?.call(rowIndex, header, value);
                               }),
@@ -286,8 +287,13 @@ class _PurchaseEntryDataTable extends State<PurchaseEntryDataTable> {
                                 focusedRowIndex = rowIndex;
                               }
 
-                              await fetchMatchingProducts(rowIndex, value);
-                              showSuggestionsOverlay(context);
+                              if (header == 'Product Name') {
+                                focusedRowIndex = rowIndex;
+                                await fetchMatchingProducts(rowIndex, value);
+                                showSuggestionsOverlay(context);
+                              } else {
+                                hideSuggestionsOverlay();
+                              }
 
                               // Callback
                               widget.onValueChanged

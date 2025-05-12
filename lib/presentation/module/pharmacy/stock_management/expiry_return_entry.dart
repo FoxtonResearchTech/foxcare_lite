@@ -41,6 +41,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
 
   double totalAmount = 0.0;
   double discountAmount = 0.0;
+  DateTime dateTime = DateTime.now();
 
   bool isAdding = false;
   bool isSubmitting = false;
@@ -174,6 +175,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
       isSubmitting = true;
       initializeControllers();
     });
+
     try {
       for (int i = 0; i < controllers.length; i++) {
         var ctrl = controllers[i];
@@ -194,41 +196,76 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
 
       for (int i = 0; i < allProducts.length; i++) {
         String docId = allProducts[i]['productDocId'];
+        String purchaseEntryDocId = allProducts[i]['purchaseEntryDocId'];
 
-        DocumentSnapshot<Map<String, dynamic>> docSnapshot =
-            await FirebaseFirestore.instance
-                .collection('stock')
-                .doc('Products')
-                .collection('AddedProducts')
-                .doc(docId)
-                .get();
+        DocumentReference productRef = FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .doc(docId);
 
-        if (docSnapshot.exists) {
-          final data = docSnapshot.data();
+        DocumentSnapshot mainProductSnapshot = await productRef.get();
+        final mainProductData =
+            mainProductSnapshot.data() as Map<String, dynamic>?;
 
-          int currentQty =
-              int.tryParse(data?['quantity']?.toString() ?? '0') ?? 0;
-          int currentFree = int.tryParse(data?['free']?.toString() ?? '0') ?? 0;
+        // Fetch purchase entry doc
+        DocumentSnapshot purchaseEntrySnapshot = await productRef
+            .collection('purchaseEntry')
+            .doc(purchaseEntryDocId)
+            .get();
+        final purchaseEntryData =
+            purchaseEntrySnapshot.data() as Map<String, dynamic>?;
 
+        if (mainProductSnapshot.exists && purchaseEntrySnapshot.exists) {
+          // Quantities before return
+          int entryQty =
+              int.tryParse(purchaseEntryData?['quantity']?.toString() ?? '0') ??
+                  0;
+          int entryFree =
+              int.tryParse(purchaseEntryData?['free']?.toString() ?? '0') ?? 0;
+          int mainQty =
+              int.tryParse(mainProductData?['quantity']?.toString() ?? '0') ??
+                  0;
+
+          // Returned quantities
           int returnQty =
               int.tryParse(controllers[i]['Quantity']?.text ?? '0') ?? 0;
           int returnFree =
               int.tryParse(controllers[i]['Free']?.text ?? '0') ?? 0;
 
-          int newQty = currentQty - returnQty;
-          int newFree = currentFree - returnFree;
+          // Updated values
+          int newEntryQty = entryQty - returnQty - returnFree;
+          int newEntryFree = entryFree - returnFree;
+          if (newEntryQty < 0) newEntryQty = 0;
+          if (newEntryFree < 0) newEntryFree = 0;
 
-          if (newQty < 0) newQty = 0;
-          if (newFree < 0) newFree = 0;
+          int newMainQty = mainQty - returnQty - returnFree;
+          if (newMainQty < 0) newMainQty = 0;
 
-          DocumentReference productRef = docSnapshot.reference;
+          // Update purchase entry document
+          await purchaseEntrySnapshot.reference.update({
+            'quantity': newEntryQty.toString(),
+            'free': newEntryFree.toString(),
+          });
+
+          // Update main product document
           await productRef.update({
-            'quantity': newQty.toString(),
-            'free': newFree.toString(),
+            'quantity': newMainQty.toString(),
+          });
+
+          // Log updated quantity
+          await productRef.collection('currentQty').doc().set({
+            'quantity': newMainQty.toString(),
+            'date':
+                "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}",
+            'time': dateTime.hour.toString() +
+                ':' +
+                dateTime.minute.toString().padLeft(2, '0'),
           });
         }
       }
 
+      // Save stock return document
       await FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
@@ -256,17 +293,28 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
         'collectedAmount': collectedAmountController.text,
         'balance': balanceController.text,
       });
+
       await updateIpAdmitBillNo(newRfNo);
+
       setState(() {
         isSubmitting = false;
       });
-      CustomSnackBar(context,
-          message: 'Products updated successfully',
-          backgroundColor: Colors.green);
+
+      CustomSnackBar(
+        context,
+        message: 'Products updated successfully',
+        backgroundColor: Colors.green,
+      );
     } catch (e) {
       print('Error updating products: $e');
-      CustomSnackBar(context,
-          message: 'Failed to update products', backgroundColor: Colors.red);
+      CustomSnackBar(
+        context,
+        message: 'Failed to update products',
+        backgroundColor: Colors.red,
+      );
+      setState(() {
+        isSubmitting = false;
+      });
     }
   }
 
