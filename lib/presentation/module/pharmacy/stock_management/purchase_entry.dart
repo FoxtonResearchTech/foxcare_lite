@@ -263,6 +263,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
             'hsn': controllers[i]['HSN']?.text,
             'quantity': totalQty.toString(),
             'fixedQuantity': totalQty.toString(),
+            'qtyWithoutFree': controllers[i]['Quantity']?.text,
+            'fixedFree': controllers[i]['Free']?.text,
             'batchNumber': controllers[i]['Batch']?.text,
             'expiry': controllers[i]['Expiry']?.text,
             'free': controllers[i]['Free']?.text,

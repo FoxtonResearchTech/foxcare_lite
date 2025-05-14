@@ -16,7 +16,7 @@ import '../../../presentation/module/pharmacy/reports/expiry_return_statement.da
 import '../../../presentation/module/pharmacy/reports/non_moving_stock.dart';
 import '../../../presentation/module/pharmacy/reports/party_wise_statement.dart';
 import '../../../presentation/module/pharmacy/reports/pending_payment_report.dart';
-import '../../../presentation/module/pharmacy/reports/product_wise_statement.dart';
+import '../../../presentation/module/pharmacy/reports/sales_wise_statement.dart';
 import '../../../presentation/module/pharmacy/reports/stock_return_statement.dart';
 import '../../../presentation/module/pharmacy/stock_management/add_product.dart';
 import '../../../presentation/module/pharmacy/stock_management/damage_return.dart';
@@ -215,8 +215,8 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
                         const BrokenOrDamagedStatement(),
                     'Party Wise Statement': (context) =>
                         const PartyWiseStatement(),
-                    'Product Wise Statement': (context) =>
-                        const ProductWiseStatement(),
+                    'Sales Wise Statement': (context) =>
+                        const SalesWiseStatement(),
                     'Non Moving Statement': (context) => const NonMovingStock(),
                     'Pending Return Statement': (context) =>
                         const PendingPaymentReport(),
