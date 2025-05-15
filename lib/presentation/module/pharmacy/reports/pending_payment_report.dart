@@ -3,6 +3,7 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
@@ -25,47 +26,33 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
     'Total Amount',
     'Bill Details',
   ];
-  final List<Map<String, dynamic>> tableData = [
-    {
-      'SL No': '',
-      'Distributor Pending Payment Report': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Distributor Pending Payment Report': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-    {
-      'SL No': '',
-      'Distributor Pending Payment Report': '',
-      'Bill Number': '',
-      'Bill Date': '',
-      'Total Amount': '',
-      'Bill Details': CustomButton(
-        label: 'Open',
-        onPressed: () {},
-        width: 100,
-        height: 25,
-      ),
-    },
-  ];
+  List<Map<String, dynamic>> tableData = [];
+
+  void _addRow() {
+    List<Map<String, dynamic>> fetchedData = [];
+    int n = 5;
+    for (int i = 1; i <= n; i++) {
+      fetchedData.add({
+        'SL No': i,
+        'Distributor Pending Payment Report': '',
+        'Bill Number': '',
+        'Bill Date': '',
+        'Total Amount': '',
+        'Bill Details': '',
+      });
+    }
+
+    setState(() {
+      tableData = fetchedData;
+    });
+  }
+
+  @override
+  void initState() {
+    _addRow();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -134,7 +121,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
                 children: [CustomText(text: 'Total Pending Payment List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),
