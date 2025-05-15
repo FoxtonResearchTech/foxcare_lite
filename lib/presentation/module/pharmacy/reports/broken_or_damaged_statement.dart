@@ -41,26 +41,31 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
   TextEditingController totalReturnAmount = TextEditingController();
   double totalAmount = 0.0;
   final List<String> headers = [
-    'Bill No',
+    'Ref No',
     'Bill date',
     'Distributor Name',
-    'Return value',
+    'Total Amount',
+    'Collected',
+    'Balance',
     'Bill details',
   ];
   List<Map<String, dynamic>> tableData = [];
+
   final List<String> headers2 = [
     'Product Name',
     'Batch',
     'Expiry',
-    'Quantity',
     'Return Quantity',
     'Free',
     'MRP',
-    'Price',
+    'Rate',
     'Tax',
-    'Amount',
-    'Return Amount',
+    'CGST',
+    'SGST',
+    'Total Tax',
+    'Product Total',
   ];
+
   List<Map<String, dynamic>> tableData2 = [];
 
   Future<void> fetchData({
@@ -75,11 +80,11 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
           .collection('DamageReturn');
 
       if (singleDate != null) {
-        query = query.where('date', isEqualTo: singleDate);
+        query = query.where('returnDate', isEqualTo: singleDate);
       } else if (fromDate != null && toDate != null) {
         query = query
-            .where('date', isGreaterThanOrEqualTo: fromDate)
-            .where('date', isLessThanOrEqualTo: toDate);
+            .where('returnDate', isGreaterThanOrEqualTo: fromDate)
+            .where('returnDate', isLessThanOrEqualTo: toDate);
       }
       final QuerySnapshot snapshot = await query.get();
 
@@ -97,47 +102,48 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
         final data = doc.data() as Map<String, dynamic>;
 
         fetchedData.add({
-          'Bill No': data['returnNo']?.toString() ?? 'N/A',
+          'Ref No': data['rfNo']?.toString() ?? 'N/A',
           'Bill date': data['returnDate']?.toString() ?? 'N/A',
           'Distributor Name': data['distributor']?.toString() ?? 'N/A',
-          'Return value': data['totalReturnAmount']?.toString() ?? 'N/A',
+          'Total Amount': data['netTotalAmount']?.toString() ?? 'N/A',
+          'Collected': data['collectedAmount']?.toString() ?? 'N/A',
+          'Balance': data['balance']?.toString() ?? 'N/A',
           'Bill details': TextButton(
             onPressed: () {
               distributorNameController.text =
                   data['distributor']?.toString() ?? 'N/A';
               dlNo1Controller.text = data['dlNo1']?.toString() ?? 'N/A';
-              expiryDate1Controller.text =
-                  data['expiryDate1']?.toString() ?? 'N/A';
-              dlNo2Controller.text = data['dlNo2']?.toString() ?? 'N/A';
-              expiryDate2Controller.text =
-                  data['expiryDate1']?.toString() ?? 'N/A';
+
+              dlNo2Controller.text = data['dlNo1']?.toString() ?? 'N/A';
+
               lane1.text = data['lane1']?.toString() ?? 'N/A';
               lane2.text = data['lane2']?.toString() ?? 'N/A';
               city.text = data['city']?.toString() ?? 'N/A';
               state.text = data['state']?.toString() ?? 'N/A';
               pinCode.text = data['pinCode']?.toString() ?? 'N/A';
-              emailId.text = data['emailId']?.toString() ?? 'N/A';
+              emailId.text = data['mail']?.toString() ?? 'N/A';
               phoneNo1.text = data['phoneNo1']?.toString() ?? 'N/A';
               phoneNO2.text = data['phoneNO2']?.toString() ?? 'N/A';
               returnNo.text = data['returnNo']?.toString() ?? 'N/A';
               returnDate.text = data['returnDate']?.toString() ?? 'N/A';
               totalReturnAmount.text =
-                  data['totalReturnAmount']?.toString() ?? 'N/A';
+                  data['netTotalAmount']?.toString() ?? 'N/A';
               print(totalReturnAmount);
 
-              for (var product in data['products']) {
+              for (var product in data['entryProducts']) {
                 tableData2.add({
                   'Product Name': product['Product Name'],
                   'Batch': product['Batch'],
                   'Expiry': product['Expiry'],
-                  'Quantity': product['Quantity'],
                   'Free': product['Free'],
                   'MRP': product['MRP'],
-                  'Price': product['Price'],
+                  'Rate': product['Rate'],
                   'Tax': product['Tax'],
-                  'Amount': product['Amount'],
-                  'Return Quantity': product['Return Quantity'],
-                  'Return Amount': product['Return Amount'],
+                  'CGST': product['CGST'],
+                  'SGST': product['SGST'],
+                  'Total Tax': product['Tax Total'],
+                  'Return Quantity': product['Quantity'],
+                  'Product Total': product['Product Total'],
                   'HSN Code': product['HSN Code'],
                   'Category': product['Category'],
                   'Company': product['Company'],
@@ -203,25 +209,8 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
                                               width: 250,
                                             ),
                                             CustomTextField(
-                                              controller: expiryDate1Controller,
-                                              hintText: 'Expiry date',
-                                              width: 250,
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomTextField(
                                               controller: dlNo2Controller,
                                               hintText: 'DL / No 2',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: expiryDate2Controller,
-                                              hintText: 'Expiry date',
                                               width: 250,
                                             ),
                                           ],
@@ -303,7 +292,7 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
                                           children: [
                                             CustomTextField(
                                               controller: returnNo,
-                                              hintText: 'Damage Return Number',
+                                              hintText: 'Expiry Return Number',
                                               width: 250,
                                             ),
                                           ],
