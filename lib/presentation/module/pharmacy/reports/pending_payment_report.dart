@@ -121,7 +121,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
                 children: [CustomText(text: 'Total Pending Payment List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),
