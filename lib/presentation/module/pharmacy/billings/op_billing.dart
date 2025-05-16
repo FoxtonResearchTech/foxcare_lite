@@ -8,7 +8,7 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 
 import 'package:intl/intl.dart';
-
+import 'op_billing_entry.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
@@ -124,7 +124,25 @@ class _OpBilling extends State<OpBilling> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
-                      onPressed: () {}, child: const CustomText(text: 'Open')),
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (
+                          context,
+                        ) =>
+                                OpBillingEntry(
+                                  patientName:
+                                      '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                                          .trim(),
+                                  opTicket: opTicketData['opTicket'],
+                                  opNumber: patientData['opNumber'],
+                                  place: patientData['city'],
+                                  phone: patientData['phone1'],
+                                  doctorName: opTicketData['doctorName'],
+                                  specialization:
+                                      opTicketData['specialization'],
+                                )));
+                      },
+                      child: const CustomText(text: 'Open')),
                   TextButton(
                       onPressed: () async {
                         try {

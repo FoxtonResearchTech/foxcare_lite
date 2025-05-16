@@ -5,7 +5,7 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
-import 'package:foxcare_lite/utilities/widgets/table/purchase_entry_data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/billing_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/stock_return_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
@@ -15,21 +15,30 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
-class StockReturnEntry extends StatefulWidget {
-  const StockReturnEntry({super.key});
+class OpBillingEntry extends StatefulWidget {
+  final String? patientName;
+  final String? opTicket;
+  final String? opNumber;
+  final String? place;
+  final String? phone;
+  final String? doctorName;
+  final String? specialization;
+
+  const OpBillingEntry(
+      {this.patientName,
+      this.opTicket,
+      this.opNumber,
+      this.place,
+      this.phone,
+      this.doctorName,
+      this.specialization,
+      super.key});
 
   @override
-  State<StockReturnEntry> createState() => _StockReturnEntry();
+  State<OpBillingEntry> createState() => _OpBillingEntry();
 }
 
-class _StockReturnEntry extends State<StockReturnEntry> {
-  TextEditingController _dateController = TextEditingController();
-  TextEditingController address = TextEditingController();
-  TextEditingController phone = TextEditingController();
-  TextEditingController mail = TextEditingController();
-  TextEditingController dlNo1 = TextEditingController();
-  TextEditingController dlNo2 = TextEditingController();
-  TextEditingController gstIn = TextEditingController();
+class _OpBillingEntry extends State<OpBillingEntry> {
   TextEditingController discount = TextEditingController();
   DateTime dateTime = DateTime.now();
 
@@ -51,7 +60,6 @@ class _StockReturnEntry extends State<StockReturnEntry> {
     'Batch',
     'Expiry',
     'Quantity',
-    'Free',
     'MRP',
     'Rate',
     'Tax',
@@ -62,16 +70,14 @@ class _StockReturnEntry extends State<StockReturnEntry> {
     'Delete',
   ];
 
-  final List<String> editableColumns = ['Product Name', 'Quantity', 'Free'];
+  final List<String> editableColumns = ['Product Name', 'Quantity'];
 
   List<Map<String, dynamic>> allProducts = [];
   List<Map<String, TextEditingController>> controllers = [];
   List<List<Map<String, dynamic>>> productSuggestions = [];
 
-  String? selectedDistributor;
-  List<String> distributorsNames = [];
-  String rfNo = '';
-  int newRfNo = 0;
+  String billNO = '';
+  int newBillNo = 0;
 
   void _updateBalance() {
     double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
@@ -89,39 +95,6 @@ class _StockReturnEntry extends State<StockReturnEntry> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      setState(() {
-        _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-      });
-    }
-  }
-
-  Future<void> fetchDistributors() async {
-    try {
-      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('pharmacy')
-              .doc('distributors')
-              .collection('distributor')
-              .get();
-      setState(() {
-        distributorsNames = distributorsSnapshot.docs
-            .map((doc) => doc['distributorName'].toString())
-            .toList();
-      });
-    } catch (e) {
-      print('Error fetching distributors: $e');
-    }
-  }
-
   void onDiscountChanged(String value) {
     setState(() {
       double discountValue = double.tryParse(value) ?? 0.0;
@@ -137,28 +110,6 @@ class _StockReturnEntry extends State<StockReturnEntry> {
     });
   }
 
-  Future<void> getDistributorDetails({required String distributorName}) async {
-    try {
-      QuerySnapshot<Map<String, dynamic>> distributorsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('pharmacy')
-              .doc('distributors')
-              .collection('distributor')
-              .where('distributorName', isEqualTo: distributorName)
-              .get();
-      setState(() {
-        address.text = distributorsSnapshot.docs[0]['lane1'].toString();
-        phone.text = distributorsSnapshot.docs[0]['phoneNo1'].toString();
-        mail.text = distributorsSnapshot.docs[0]['emailId'].toString();
-        dlNo1.text = distributorsSnapshot.docs[0]['dlNo1'].toString();
-        dlNo2.text = distributorsSnapshot.docs[0]['dlNo2'].toString();
-        gstIn.text = distributorsSnapshot.docs[0]['gstNo'].toString();
-      });
-    } catch (e) {
-      print('Error fetching distributors: $e');
-    }
-  }
-
   void initializeControllers() {
     controllers.clear();
     for (int index = 0; index < allProducts.length; index++) {
@@ -171,6 +122,9 @@ class _StockReturnEntry extends State<StockReturnEntry> {
   }
 
   Future<void> submitBill() async {
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     setState(() {
       isSubmitting = true;
       initializeControllers();
@@ -221,8 +175,7 @@ class _StockReturnEntry extends State<StockReturnEntry> {
           int entryQty =
               int.tryParse(purchaseEntryData?['quantity']?.toString() ?? '0') ??
                   0;
-          int entryFree =
-              int.tryParse(purchaseEntryData?['free']?.toString() ?? '0') ?? 0;
+
           int mainQty =
               int.tryParse(mainProductData?['quantity']?.toString() ?? '0') ??
                   0;
@@ -230,22 +183,17 @@ class _StockReturnEntry extends State<StockReturnEntry> {
           // Returned quantities
           int returnQty =
               int.tryParse(controllers[i]['Quantity']?.text ?? '0') ?? 0;
-          int returnFree =
-              int.tryParse(controllers[i]['Free']?.text ?? '0') ?? 0;
 
           // Updated values
-          int newEntryQty = entryQty - returnQty - returnFree;
-          int newEntryFree = entryFree - returnFree;
+          int newEntryQty = entryQty - returnQty;
           if (newEntryQty < 0) newEntryQty = 0;
-          if (newEntryFree < 0) newEntryFree = 0;
 
-          int newMainQty = mainQty - returnQty - returnFree;
+          int newMainQty = mainQty - returnQty;
           if (newMainQty < 0) newMainQty = 0;
 
           // Update purchase entry document
           await purchaseEntrySnapshot.reference.update({
             'quantity': newEntryQty.toString(),
-            'free': newEntryFree.toString(),
           });
 
           // Update main product document
@@ -267,26 +215,26 @@ class _StockReturnEntry extends State<StockReturnEntry> {
 
       // Save stock return document
       await FirebaseFirestore.instance
-          .collection('stock')
-          .doc('Products')
-          .collection('StockReturn')
+          .collection('pharmacy')
+          .doc('billings')
+          .collection('opBillings')
           .doc()
           .set({
-        'returnDate': _dateController.text,
-        'rfNo': rfNo,
+        'billDate': todayString,
+        'billNo': billNO,
+        'opTicket': widget.opTicket,
+        'opNumber': widget.opNumber,
+        'patientName': widget.patientName,
+        'place': widget.place,
+        'phone': widget.phone,
+        'doctorName': widget.doctorName,
+        'specialization': widget.specialization,
         'entryProducts': allProducts,
-        'distributor': selectedDistributor,
         'discountPercentage': discount.text,
         'discountAmount': discountAmount.toStringAsFixed(2),
         'taxTotal': _taxTotal().toStringAsFixed(2),
         'totalBeforeDiscount': _allProductTotal().toStringAsFixed(2),
         'netTotalAmount': totalAmount.toStringAsFixed(2),
-        'address': address.text,
-        'phone': phone.text,
-        'mail': mail.text,
-        'dlNo1': dlNo1.text,
-        'dlNo2': dlNo2.text,
-        'gstIn': gstIn.text,
         'paymentDetails': paymentDetails.text,
         'paymentMode': selectedPaymentMode,
         'totalAmount': totalAmountController.text,
@@ -294,7 +242,7 @@ class _StockReturnEntry extends State<StockReturnEntry> {
         'balance': balanceController.text,
       });
 
-      await updateBillNo(newRfNo);
+      await updateBillNo(newBillNo);
 
       setState(() {
         isSubmitting = false;
@@ -320,21 +268,22 @@ class _StockReturnEntry extends State<StockReturnEntry> {
 
   Future<String?> getAndIncrementBillNo() async {
     try {
-      final docRef =
-          FirebaseFirestore.instance.collection('billNo').doc('pharmacyRfNo');
+      final docRef = FirebaseFirestore.instance
+          .collection('billNo')
+          .doc('pharmacyBillings');
 
       final docSnapshot = await docRef.get();
       if (docSnapshot.exists) {
         final data = docSnapshot.data();
-        int currentBillNo = data?['rfno'] ?? 0;
-        int newBillNo = currentBillNo + 1;
+        int currentBillNo = data?['billNo'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
 
         setState(() {
-          rfNo = 'RfNo${newBillNo}';
-          newRfNo = newBillNo;
+          billNO = '${currentNewBillNo}';
+          newBillNo = currentNewBillNo;
         });
 
-        return rfNo;
+        return billNO;
       } else {
         print('Document does not exist.');
         return null;
@@ -347,15 +296,14 @@ class _StockReturnEntry extends State<StockReturnEntry> {
 
   Future<void> updateBillNo(int newBillNo) async {
     final docRef =
-        FirebaseFirestore.instance.collection('billNo').doc('pharmacyRfNo');
+        FirebaseFirestore.instance.collection('billNo').doc('pharmacyBillings');
 
-    await docRef.set({'rfno': newBillNo});
+    await docRef.set({'billNo': newBillNo});
   }
 
   @override
   void initState() {
     super.initState();
-    fetchDistributors();
     getAndIncrementBillNo();
     productSuggestions = List.generate(allProducts.length, (_) => []);
     addNewRow();
@@ -410,7 +358,6 @@ class _StockReturnEntry extends State<StockReturnEntry> {
         controller.dispose();
       }
     }
-    _dateController.dispose();
     super.dispose();
   }
 
@@ -418,13 +365,15 @@ class _StockReturnEntry extends State<StockReturnEntry> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.appBar,
         title: Center(
           child: CustomText(
-              text: 'Stock Return Entry',
+              text: 'OP Billing',
               size: screenWidth * 0.012,
               color: Colors.white),
         ),
@@ -444,132 +393,86 @@ class _StockReturnEntry extends State<StockReturnEntry> {
               horizontal: screenWidth * 0.06, vertical: screenHeight * 0.04),
           child: Column(
             children: [
-              const TimeDateWidget(text: 'Stock Return Entry'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const TimeDateWidget(text: 'OP Billings'),
+              SizedBox(height: screenHeight * 0.02),
+              Column(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CustomText(
-                        text: 'Return Date ',
-                        size: screenWidth * 0.013,
-                      ),
-                      SizedBox(height: screenHeight * 0.008),
-                      PharmacyTextField(
-                        hintText: '',
-                        width: screenWidth * 0.2,
-                        controller: _dateController,
-                        icon: const Icon(Icons.date_range),
-                        onTap: () => _selectDate(context),
-                      )
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'Reference No',
-                        size: screenWidth * 0.013,
-                      ),
-                      SizedBox(height: screenHeight * 0.008),
-                      PharmacyTextField(
-                        readOnly: true,
-                        hintText: '',
-                        width: screenWidth * 0.2,
-                        controller:
-                            TextEditingController(text: rfNo.toString()),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'Distributor Name',
-                        size: screenWidth * 0.013,
-                      ),
-                      SizedBox(height: screenHeight * 0.008),
-                      Row(
+                      SizedBox(width: screenWidth * 0.005),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: screenWidth * 0.15,
-                            child: PharmacyDropDown(
-                              label: '',
-                              items: distributorsNames,
-                              selectedItem: selectedDistributor,
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedDistributor = value;
-                                });
-                              },
-                            ),
+                          CustomText(
+                            text: 'Bill No : $billNO',
+                            size: screenWidth * 0.015,
                           ),
-                          SizedBox(width: screenWidth * 0.01),
-                          PharmacyButton(
-                            label: 'Select',
-                            onPressed: () {
-                              getDistributorDetails(
-                                  distributorName:
-                                      selectedDistributor.toString());
-                            },
-                            width: screenWidth * 0.1,
-                            height: screenHeight * 0.05,
-                          )
+                          SizedBox(height: screenHeight * 0.03),
+                          CustomText(
+                            text: 'Date : $todayString',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          CustomText(
+                            text: 'OP Ticket Number : ${widget.opTicket}',
+                            size: screenWidth * 0.015,
+                          ),
                         ],
                       ),
+                      SizedBox(width: screenWidth * 0.02),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Patient Name : ${widget.patientName}',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          CustomText(
+                            text: 'OP Number : ${widget.opNumber}',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          CustomText(
+                            text: 'Place: ${widget.place}',
+                            size: screenWidth * 0.015,
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.02),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone : ${widget.phone}',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          CustomText(
+                            text: 'Doctor Name : ${widget.doctorName}',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          CustomText(
+                            text: 'Specialization : ${widget.specialization}',
+                            size: screenWidth * 0.015,
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.005),
                     ],
-                  ),
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'Distributor Name : ${selectedDistributor}',
-                        size: screenWidth * 0.012,
-                      ),
-                      CustomText(
-                        text: 'Address : ${address.text}',
-                        size: screenWidth * 0.012,
-                      ),
-                      CustomText(
-                        text: 'Phone : ${phone.text}',
-                        size: screenWidth * 0.012,
-                      ),
-                      CustomText(
-                        text: 'Mail : ${mail.text}',
-                        size: screenWidth * 0.012,
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: screenWidth * 0.2),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'DL NO 1 : ${dlNo1.text}',
-                        size: screenWidth * 0.012,
-                      ),
-                      CustomText(
-                        text: 'DL NO 2 : ${dlNo2.text}',
-                        size: screenWidth * 0.012,
-                      ),
-                      CustomText(
-                        text: 'GSTIN : ${gstIn.text}',
-                        size: screenWidth * 0.012,
-                      ),
-                    ],
-                  ),
+                  CustomText(
+                    text: '     Products',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
@@ -598,7 +501,7 @@ class _StockReturnEntry extends State<StockReturnEntry> {
                         ),
                         SizedBox(
                           width: screenWidth * 0.85,
-                          child: StockReturnDataTable(
+                          child: BillingDataTable(
                             headers: headers,
                             tableData: allProducts,
                             editableColumns: editableColumns,

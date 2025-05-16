@@ -294,7 +294,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
         'balance': balanceController.text,
       });
 
-      await updateIpAdmitBillNo(newRfNo);
+      await updateBillNo(newRfNo);
 
       setState(() {
         isSubmitting = false;
@@ -318,7 +318,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
     }
   }
 
-  Future<String?> getAndIncrementIpAdmitBillNo() async {
+  Future<String?> getAndIncrementBillNo() async {
     try {
       final docRef =
           FirebaseFirestore.instance.collection('billNo').doc('pharmacyRfNo');
@@ -336,7 +336,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
 
         return rfNo;
       } else {
-        print('Document /billNo/ipAdmitBill does not exist.');
+        print('Document does not exist.');
         return null;
       }
     } catch (e) {
@@ -345,7 +345,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
     }
   }
 
-  Future<void> updateIpAdmitBillNo(int newBillNo) async {
+  Future<void> updateBillNo(int newBillNo) async {
     final docRef =
         FirebaseFirestore.instance.collection('billNo').doc('pharmacyRfNo');
 
@@ -356,7 +356,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
   void initState() {
     super.initState();
     fetchDistributors();
-    getAndIncrementIpAdmitBillNo();
+    getAndIncrementBillNo();
     productSuggestions = List.generate(allProducts.length, (_) => []);
     addNewRow();
     totalAmountController.addListener(_updateBalance);
@@ -424,7 +424,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
         backgroundColor: AppColors.appBar,
         title: Center(
           child: CustomText(
-              text: 'Expiry Entry',
+              text: 'Expiry Return Entry',
               size: screenWidth * 0.012,
               color: Colors.white),
         ),
