@@ -267,6 +267,46 @@ class _PurchaseEntryDataTable extends State<PurchaseEntryDataTable> {
                         ),
                       ),
                     );
+                  } else if (isEditable && header == 'Expiry') {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: InkWell(
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          if (pickedDate != null) {
+                            String formattedDate =
+                                "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+
+                            setState(() {
+                              widget.tableData[rowIndex][header] =
+                                  formattedDate;
+                            });
+
+                            widget.onValueChanged
+                                ?.call(rowIndex, header, formattedDate);
+                          }
+                        },
+                        child: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          width: screenWidth * 0.2,
+                          height: screenHeight * 0.045,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: Text(
+                            row[header]?.toString() ?? 'Select date',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ),
+                    );
                   } else if (isEditable) {
                     return Padding(
                       padding: const EdgeInsets.all(8.0),

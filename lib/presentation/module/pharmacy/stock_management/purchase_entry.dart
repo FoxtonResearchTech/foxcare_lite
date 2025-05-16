@@ -32,6 +32,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
   TextEditingController gstIn = TextEditingController();
   TextEditingController discount = TextEditingController();
 
+  TextEditingController expiryDate = TextEditingController();
+
   final TextEditingController totalAmountController = TextEditingController();
   final TextEditingController collectedAmountController =
       TextEditingController();
@@ -99,7 +101,8 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -108,8 +111,9 @@ class _PurchaseEntry extends State<PurchaseEntry> {
     );
 
     if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
       setState(() {
-        _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+        controller.text = formattedDate;
       });
     }
   }
@@ -477,7 +481,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                         width: screenWidth * 0.2,
                         controller: _dateController,
                         icon: const Icon(Icons.date_range),
-                        onTap: () => _selectDate(context),
+                        onTap: () => _selectDate(context, _dateController),
                       )
                     ],
                   ),
@@ -615,6 +619,12 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                         SizedBox(
                           width: screenWidth * 0.85,
                           child: PurchaseEntryDataTable(
+                            columnWidths: {
+                              3: FixedColumnWidth(screenWidth * 0.08),
+                              9: FixedColumnWidth(screenWidth * 0.035),
+                              10: FixedColumnWidth(screenWidth * 0.035),
+                              13: FixedColumnWidth(screenWidth * 0.035)
+                            },
                             headers: headers,
                             tableData: allProducts,
                             editableColumns: editableColumns,
@@ -687,6 +697,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                                         totalWithTax.toStringAsFixed(2);
                                   }
                                 }
+
                                 _taxTotal();
                                 _allProductTotal();
                                 onDiscountChanged(discount.text);
