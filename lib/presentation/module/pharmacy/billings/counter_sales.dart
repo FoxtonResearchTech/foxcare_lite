@@ -48,7 +48,7 @@ class _CounterSales extends State<CounterSales> {
 
   String? patientNameError;
   String? doctorNameError;
-
+  bool isPrinting = false;
   bool isAdding = false;
   bool isSubmitting = false;
   final List<String> headers = [
@@ -89,6 +89,35 @@ class _CounterSales extends State<CounterSales> {
 
   String billNO = '';
   int newBillNo = 0;
+
+  void clearAll() {
+    setState(() {
+      patientName.clear();
+      opNumber.clear();
+      place.clear();
+      doctorName.clear();
+      hospitalName.clear();
+      phoneNumber.clear();
+      discount.clear();
+      totalAmountController.clear();
+      collectedAmountController.clear();
+      balanceController.clear();
+      paymentDetails.clear();
+      selectedPaymentMode = null;
+      totalAmount = 0.0;
+      discountAmount = 0.0;
+      patientNameError = null;
+      doctorNameError = null;
+      isAdding = false;
+      isSubmitting = false;
+      isPrinting = false;
+      allProducts = [];
+      controllers.clear();
+      productSuggestions.clear();
+      billNO = '';
+      newBillNo = 0;
+    });
+  }
 
   void printInvoice() {
     final today = DateTime.now();
@@ -751,6 +780,7 @@ class _CounterSales extends State<CounterSales> {
 
       setState(() {
         isSubmitting = false;
+        isPrinting = true;
       });
 
       CustomSnackBar(
@@ -1352,15 +1382,19 @@ class _CounterSales extends State<CounterSales> {
                     PharmacyButton(
                         color: AppColors.blue,
                         label: 'Cancel',
-                        onPressed: () {},
-                        width: screenWidth * 0.1),
-                    PharmacyButton(
-                        color: AppColors.blue,
-                        label: 'Print',
                         onPressed: () {
-                          printInvoice();
+                          clearAll();
                         },
                         width: screenWidth * 0.1),
+                    isPrinting
+                        ? PharmacyButton(
+                            color: AppColors.blue,
+                            label: 'Print',
+                            onPressed: () {
+                              printInvoice();
+                            },
+                            width: screenWidth * 0.1)
+                        : SizedBox(),
                     isSubmitting
                         ? Lottie.asset('assets/button_loading.json',
                             height: 150, width: 150)

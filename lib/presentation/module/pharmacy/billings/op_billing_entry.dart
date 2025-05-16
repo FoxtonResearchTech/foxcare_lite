@@ -51,6 +51,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
 
   double totalAmount = 0.0;
   double discountAmount = 0.0;
+  bool isPrinting = false;
 
   bool isAdding = false;
   bool isSubmitting = false;
@@ -78,6 +79,28 @@ class _OpBillingEntry extends State<OpBillingEntry> {
 
   String billNO = '';
   int newBillNo = 0;
+
+  void clearAll() {
+    setState(() {
+      discount.clear();
+      totalAmountController.clear();
+      collectedAmountController.clear();
+      balanceController.clear();
+      paymentDetails.clear();
+      selectedPaymentMode = null;
+      totalAmount = 0.0;
+      discountAmount = 0.0;
+      isAdding = false;
+      isSubmitting = false;
+      isPrinting = false;
+
+      allProducts = [];
+      controllers.clear();
+      productSuggestions.clear();
+      billNO = '';
+      newBillNo = 0;
+    });
+  }
 
   void _updateBalance() {
     double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
@@ -762,7 +785,9 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                     PharmacyButton(
                         color: AppColors.blue,
                         label: 'Cancel',
-                        onPressed: () {},
+                        onPressed: () {
+                          clearAll();
+                        },
                         width: screenWidth * 0.1),
                     PharmacyButton(
                         color: AppColors.blue,

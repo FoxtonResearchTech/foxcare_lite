@@ -80,6 +80,29 @@ class _IpBillingEntry extends State<IpBillingEntry> {
 
   String billNO = '';
   int newBillNo = 0;
+  bool isPrinting = false;
+
+  void clearAll() {
+    setState(() {
+      discount.clear();
+      totalAmountController.clear();
+      collectedAmountController.clear();
+      balanceController.clear();
+      paymentDetails.clear();
+      selectedPaymentMode = null;
+      totalAmount = 0.0;
+      discountAmount = 0.0;
+      isAdding = false;
+      isSubmitting = false;
+      isPrinting = false;
+
+      allProducts = [];
+      controllers.clear();
+      productSuggestions.clear();
+      billNO = '';
+      newBillNo = 0;
+    });
+  }
 
   void _updateBalance() {
     double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
@@ -778,7 +801,9 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                     PharmacyButton(
                         color: AppColors.blue,
                         label: 'Cancel',
-                        onPressed: () {},
+                        onPressed: () {
+                          clearAll();
+                        },
                         width: screenWidth * 0.1),
                     PharmacyButton(
                         color: AppColors.blue,
