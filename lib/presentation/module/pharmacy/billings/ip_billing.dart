@@ -1,22 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
-import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
-import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
+import 'package:foxcare_lite/presentation/module/pharmacy/billings/ip_billing_entry.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
+import 'dart:async';
+
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
-import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
-import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
+
 import 'package:intl/intl.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
-import '../../../../utilities/constants.dart';
+import 'op_billing_entry.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
-import '../tools/manage_pharmacy_info.dart';
-import 'counter_sales.dart';
-import 'medicine_return.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../../utilities/widgets/text/primary_text.dart';
 
 class IpBilling extends StatefulWidget {
   const IpBilling({super.key});
@@ -26,370 +22,216 @@ class IpBilling extends StatefulWidget {
 }
 
 class _IpBilling extends State<IpBilling> {
-  TextEditingController _dateController = TextEditingController();
-  TextEditingController _ipNumber = TextEditingController();
-  TextEditingController patientName = TextEditingController();
-  TextEditingController age = TextEditingController();
-  TextEditingController place = TextEditingController();
-  TextEditingController gender = TextEditingController();
-  TextEditingController phoneNumber = TextEditingController();
-  TextEditingController billNo = TextEditingController();
-  TextEditingController doctorName = TextEditingController();
-  TextEditingController roomNo = TextEditingController();
-  TextEditingController roomType = TextEditingController();
-  TextEditingController ipAdmissionDate = TextEditingController();
-
-  TextEditingController specialization = TextEditingController();
-  TextEditingController opNumber = TextEditingController();
-  TextEditingController bloodGroup = TextEditingController();
-  TextEditingController address = TextEditingController();
-  final TextEditingController totalAmountController = TextEditingController();
-  final TextEditingController paidController = TextEditingController();
-  final TextEditingController balanceController = TextEditingController();
-
-  double totalAmount = 0.0;
-  double taxPercentage = 12;
-  double gstPercentage = 10;
-  double taxAmount = 0.00;
-  double gstAmount = 0.00;
-  double totalGst = 0.00;
-  double grandTotal = 0.00;
+  final TextEditingController _ipTicket = TextEditingController();
+  final TextEditingController _phoneNumber = TextEditingController();
 
   final List<String> headers = [
-    'Product Name',
-    'Type',
-    'Batch',
-    'EXP',
-    'HSN',
-    'Quantity',
-    'MPS',
-    'Price',
-    'Gst',
-    'Amount',
+    'Token No',
+    'IP Ticket',
+    'OP Number',
+    'Name',
+    'Place',
+    'Doctor Name',
+    'Specialization',
+    'Actions',
   ];
-
   List<Map<String, dynamic>> tableData = [];
 
-  Future<void> fetchData({String? ipTicket}) async {
+  Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
+    print('Fetching data with OP Number: $ipNumber');
+
     try {
-      final patientsSnapshot =
+      List<Map<String, dynamic>> fetchedData = [];
+      bool hasIpPrescription = false;
+      final today = DateTime.now();
+      final todayString =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+      final QuerySnapshot<Map<String, dynamic>> patientSnapshot =
           await FirebaseFirestore.instance.collection('patients').get();
 
-      if (patientsSnapshot.docs.isEmpty) {
-        print("No patient records found.");
-        setState(() {
-          tableData = [];
-          resetTotals();
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> fetchedData = [];
-      bool found = false;
-
-      String todayDate = DateTime.now().toIso8601String().split('T').first;
-
-      for (var patientDoc in patientsSnapshot.docs) {
+      for (var patientDoc in patientSnapshot.docs) {
         final patientId = patientDoc.id;
         final patientData = patientDoc.data();
 
-        final ipTicketsSnapshot = await FirebaseFirestore.instance
+        final opTicketsSnapshot = await FirebaseFirestore.instance
             .collection('patients')
             .doc(patientId)
             .collection('ipTickets')
             .get();
 
-        for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+        bool found = false;
+
+        for (var ipTicketDoc in opTicketsSnapshot.docs) {
           final ipTicketData = ipTicketDoc.data();
+          print(
+              'opTicketData: ${ipTicketData['opTicket']}'); // Debugging print statement
 
-          if ((ipTicketData['ipTicket'] ?? '') == ipTicket) {
-            found = true;
+          bool matches = false;
 
-            // Fetch ipAdmission details
-            final detailsDoc = await FirebaseFirestore.instance
+          if (patientData['isIP'] == true) {
+            if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+              matches = true;
+            } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+              if (patientData['phone1'] == phoneNumber ||
+                  patientData['phone2'] == phoneNumber) {
+                matches = true;
+              }
+            } else if (ipNumber == null &&
+                (phoneNumber == null || phoneNumber.isEmpty)) {
+              matches = true;
+            }
+          }
+
+          if (matches) {
+            String tokenNo = '';
+            String tokenDate = '';
+
+            try {
+              final tokenSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('tokens')
+                  .doc('currentToken')
+                  .get();
+
+              if (tokenSnapshot.exists) {
+                final tokenData = tokenSnapshot.data();
+                if (tokenData != null && tokenData['tokenNumber'] != null) {
+                  tokenNo = tokenData['tokenNumber'].toString();
+                }
+                if (tokenData != null && tokenData['date'] != null) {
+                  tokenDate = tokenData['date'];
+                }
+              }
+            } catch (e) {
+              print('Error fetching tokenNo for patient $patientId: $e');
+            }
+            if (ipTicketData['discharged'] == true) {
+              print(
+                  'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
+              continue;
+            }
+            DocumentSnapshot ipPrescriptionSnapshot = await FirebaseFirestore
+                .instance
                 .collection('patients')
                 .doc(patientId)
                 .collection('ipPrescription')
                 .doc('details')
                 .get();
+            Map<String, dynamic>? detailsData = ipPrescriptionSnapshot.exists
+                ? ipPrescriptionSnapshot.data() as Map<String, dynamic>?
+                : null;
 
-            final ipAdmission = detailsDoc.data()?['ipAdmission'] ?? {};
+            fetchedData.add({
+              'Token No': tokenNo,
+              'OP Number': patientData['opNumber'] ?? 'N/A',
+              'IP Ticket': ipTicketData['ipTicket'] ?? 'N/A',
+              'Name':
+                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'Place': patientData['city'] ?? 'N/A',
+              'Doctor Name': ipTicketData['doctorName'] ?? 'N/A',
+              'Specialization': ipTicketData['specialization'] ?? 'N/A',
+              'Actions': Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => IpBillingEntry(
+                              opNumber: patientData['opNumber'] ?? 'N/A',
+                              patientName:
+                                  '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                      .trim(),
+                              roomWard: detailsData?['ipAdmission']
+                                              ?['roomType'] !=
+                                          null &&
+                                      detailsData?['ipAdmission']
+                                              ?['roomNumber'] !=
+                                          null
+                                  ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
+                                  : 'N/A',
+                              place: patientData['city'] ?? 'N/A',
+                              phone: patientData['phone1'],
+                              ipTicket: ipTicketData['ipTicket'],
+                              doctorName: ipTicketData['doctorName'],
+                              specialization: ipTicketData['specialization'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: const CustomText(text: 'Open')),
+                  TextButton(
+                      onPressed: () async {
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('patients')
+                              .doc(patientId)
+                              .collection('ipTickets')
+                              .doc(ipTicketData['ipTicket'])
+                              .update({'status': 'abscond'});
 
-            setState(() {
-              gender.text = patientData['sex'] ?? 'N/A';
-              patientName.text = (patientData['firstName'] ?? '') +
-                  ' ' +
-                  (patientData['lastName'] ?? 'N/A');
-              age.text = patientData['age'] ?? 'N/A';
-              place.text = patientData['city'] ?? 'N/A';
-              phoneNumber.text = patientData['phoneNumber'] ?? 'N/A';
-              roomNo.text = ipAdmission['roomNumber'] ?? 'N/A';
-              roomType.text = ipAdmission['roomType'] ?? 'N/A';
-              doctorName.text = ipTicketData['doctorName'] ?? 'N/A';
-              specialization.text = ipTicketData['specialization'] ?? 'N/A';
-              opNumber.text = ipTicketData['opNumber'] ?? 'N/A';
-              bloodGroup.text = patientData['bloodGroup'] ?? 'N/A';
-              address.text = patientData['address1'] ?? 'N/A';
-              ipAdmissionDate.text = ipAdmission['ipAdmitDate'] ?? 'N/A';
+                          CustomSnackBar(context,
+                              message: 'Status updated to abscond');
+                        } catch (e) {
+                          print('Error updating status: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Failed to update status')),
+                          );
+                        }
+                      },
+                      child: const CustomText(text: 'Abort')),
+                ],
+              ),
             });
 
-            final medicationSnapshot = await FirebaseFirestore.instance
-                .collection('patients')
-                .doc(patientId)
-                .collection('ipTickets')
-                .doc(ipTicketDoc.id)
-                .collection('Medication')
-                .get();
-
-            for (var medDoc in medicationSnapshot.docs) {
-              final medData = medDoc.data();
-
-              if ((medData['date'] ?? '') == todayDate) {
-                List<dynamic> medicineNames = medData['items'] ?? [];
-
-                for (var medicineName in medicineNames) {
-                  final stockSnapshot = await FirebaseFirestore.instance
-                      .collection('stock')
-                      .doc('Products')
-                      .collection('AddedProducts')
-                      .where('productName', isEqualTo: medicineName)
-                      .get();
-
-                  for (var medicineDoc in stockSnapshot.docs) {
-                    var medicineData = medicineDoc.data();
-
-                    fetchedData.add({
-                      'Product Name': medicineData['productName'] ?? 'N/A',
-                      'Type': medicineData['type'] ?? 'N/A',
-                      'Batch': medicineData['batchNumber'] ?? 'N/A',
-                      'EXP': medicineData['expiry'] ?? 'N/A',
-                      'HSN': medicineData['hsnCode'] ?? 'N/A',
-                      'Quantity': '',
-                      'MPS': medicineData['mrp'] ?? 'N/A',
-                      'Price': medicineData['price'] ?? 'N/A',
-                      'Gst': (medicineData['gst'] ?? 0).toString() + '%',
-                      'Amount': medicineData['amount'] ?? 'N/A',
-                    });
-                  }
-                }
-              }
-            }
-
-            break; // Exit inner loop after matching ipTicket
+            found = true;
+            break;
           }
         }
-
-        if (found) break;
       }
+
+      fetchedData.sort((a, b) {
+        int tokenA = int.tryParse(a['Token NO']) ?? 0;
+        int tokenB = int.tryParse(b['Token NO']) ?? 0;
+        return tokenA.compareTo(tokenB);
+      });
 
       setState(() {
         tableData = fetchedData;
-        if (found) {
-          calculateTotals();
-        } else {
-          resetTotals();
-        }
       });
-
-      print(tableData);
     } catch (e) {
       print('Error fetching data: $e');
     }
   }
 
-  void calculateTotals() {
-    totalAmount = tableData.fold(
-      0.0,
-      (sum, item) =>
-          sum + (double.tryParse(item['Amount']?.toString() ?? '0') ?? 0),
-    );
+  late Timer? _timer;
 
-    taxAmount = (totalAmount * taxPercentage) / 100;
-    gstAmount = (totalAmount * gstPercentage) / 100;
-    totalGst = taxAmount + gstAmount;
-    grandTotal = totalAmount + totalGst;
-
-    totalAmount = double.parse(totalAmount.toStringAsFixed(2));
-    taxAmount = double.parse(taxAmount.toStringAsFixed(2));
-    gstAmount = double.parse(gstAmount.toStringAsFixed(2));
-    totalGst = double.parse(totalGst.toStringAsFixed(2));
-    grandTotal = double.parse(grandTotal.toStringAsFixed(2));
-    totalAmountController.text = grandTotal.toString();
-  }
-
-  void resetTotals() {
-    totalAmount = 0.00;
-    taxAmount = 0.00;
-    gstAmount = 0.00;
-    totalGst = 0.00;
-    grandTotal = 0.00;
-    patientName.clear();
-    age.clear();
-    place.clear();
-    gender.clear();
-    phoneNumber.clear();
-    doctorName.clear();
-    roomNo.clear();
-    roomType.clear();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      setState(() {
-        _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-      });
-    }
-  }
-
-  Future<void> submitBillingData() async {
-    try {
-      DocumentReference billingRef = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('billing')
-          .collection('ipbilling')
-          .doc();
-      List<Map<String, dynamic>> updatedTableData = tableData.map((item) {
-        return {
-          'Product Name': item['Product Name'] ?? 'N/A',
-          'Type': item['Type'] ?? 'N/A',
-          'Batch': item['Batch'] ?? 'N/A',
-          'EXP': item['EXP'] ?? 'N/A',
-          'HSN': item['HSN'] ?? 'N/A',
-          'Quantity': item['Quantity'] ?? '0',
-          'MPS': item['MPS'] ?? 'N/A',
-          'Price': item['Price'] ?? 'N/A',
-          'Gst': item['Gst'] ?? '0%',
-          'Amount': item['Amount'] ?? '0.00',
-        };
-      }).toList();
-
-      Map<String, dynamic> billingData = {
-        'billNo': billNo.text,
-        'ipNumber': _ipNumber.text,
-        'billDate': _dateController.text,
-        'patientName': patientName.text,
-        'age': age.text,
-        'place': place.text,
-        'gender': gender.text,
-        'phoneNumber': phoneNumber.text,
-        'totalAmount': totalAmount,
-        'taxAmount': taxAmount,
-        'gstAmount': gstAmount,
-        'totalGst': totalGst,
-        'grandTotal': grandTotal,
-        'doctorName': doctorName.text,
-        'collectedAmount': paidController.text,
-        'balance': balanceController.text,
-        'roomNo': roomNo.text,
-        'roomType': roomType.text,
-        'items': updatedTableData,
-      };
-
-      await billingRef.set(billingData);
-      for (var product in tableData) {
-        String productName = product['Product Name'];
-        String batch = product['Batch'];
-        String hsn = product['HSN'];
-
-        double Quantity = double.tryParse(product['Quantity'].toString()) ?? 0;
-
-        print('Return Quantity: $Quantity');
-
-        if (Quantity > 0) {
-          QuerySnapshot<Map<String, dynamic>> productSnapshot =
-              await FirebaseFirestore.instance
-                  .collection('stock')
-                  .doc('Products')
-                  .collection('AddedProducts')
-                  .where('productName', isEqualTo: productName)
-                  .where('batchNumber', isEqualTo: batch)
-                  .where('hsnCode', isEqualTo: hsn)
-                  .get();
-
-          if (productSnapshot.docs.isEmpty) {
-            print(
-                'No matching product found for $productName, Batch: $batch, HSN: $hsn');
-          } else {
-            print('Found ${productSnapshot.docs.length} matching products.');
-
-            for (var doc in productSnapshot.docs) {
-              double currentQuantity =
-                  double.tryParse(doc['quantity'].toString()) ?? 0;
-
-              double rawUpdatedQuantity =
-                  (currentQuantity - Quantity).clamp(0, double.infinity);
-              int updatedQuantity = rawUpdatedQuantity.floor();
-              print(
-                  'Current Quantity: $currentQuantity, Updated Quantity: $updatedQuantity');
-
-              await FirebaseFirestore.instance
-                  .collection('stock')
-                  .doc('Products')
-                  .collection('AddedProducts')
-                  .doc(doc.id)
-                  .update({
-                'quantity': updatedQuantity.toString(),
-              });
-            }
-          }
-        }
-      }
-
-      CustomSnackBar(context,
-          message: 'Billing data submitted successfully',
-          backgroundColor: Colors.green);
-    } catch (e) {
-      CustomSnackBar(context,
-          message: 'Failed to submit billing data',
-          backgroundColor: Colors.red);
-
-      print('Error submitting billing data: $e');
-    }
-  }
-
-  void _updateBalance() {
-    double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
-    double paidAmount = double.tryParse(paidController.text) ?? 0.0;
-
-    if (totalAmount == 0.0 || paidAmount == 0.0) {
-      balanceController.text = '0.00';
-    } else {
-      double balance = totalAmount - paidAmount;
-      balanceController.text = balance.toStringAsFixed(2);
+  void onSearchPressed() {
+    if (_timer != null && _timer!.isActive) {
+      _timer!.cancel();
+      _timer = null;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    totalAmountController.addListener(_updateBalance);
-    paidController.addListener(_updateBalance);
+    fetchData();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      fetchData();
+    });
   }
 
   @override
   void dispose() {
-    totalAmountController.removeListener(_updateBalance);
-    paidController.removeListener(_updateBalance);
-    _dateController.dispose();
-    totalAmountController.dispose();
-    paidController.dispose();
-    _ipNumber.dispose();
-    patientName.dispose();
-    age.dispose();
-    place.dispose();
-    gender.dispose();
-    phoneNumber.dispose();
-    billNo.dispose();
-    doctorName.dispose();
-    specialization.dispose();
-
+    _ipTicket.dispose();
+    _phoneNumber.dispose();
     super.dispose();
   }
 
@@ -410,898 +252,55 @@ class _IpBilling extends State<IpBilling> {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "IP Billing",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: billNo,
-                    hintText: 'Bill No',
-                    width: screenWidth * 0.25,
-                  ),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                    controller: _ipNumber,
-                    hintText: 'IP Number',
-                    width: screenWidth * 0.25,
-                    onChanged: (value) {
-                      fetchData(ipTicket: value);
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                      controller: patientName,
-                      hintText: 'Patient name',
-                      width: screenWidth * 0.25),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                      controller: age,
-                      hintText: 'Age',
-                      width: screenWidth * 0.25)
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                      controller: place,
-                      hintText: 'Place',
-                      width: screenWidth * 0.25),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: _dateController,
-                    hintText: 'Bill Date',
-                    width: screenWidth * 0.15,
-                    icon: const Icon(Icons.date_range),
-                    onTap: () => _selectDate(context),
-                  ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                      controller: gender,
-                      hintText: 'Gender',
-                      width: screenWidth * 0.20),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                      controller: phoneNumber,
-                      hintText: 'Phone Number',
-                      width: screenWidth * 0.20),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                      controller: doctorName,
-                      hintText: 'Doctor Name',
-                      width: screenWidth * 0.2),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                      controller: roomNo,
-                      hintText: 'Room Number',
-                      width: screenWidth * 0.2),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                      controller: roomType,
-                      hintText: 'Room Type',
-                      width: screenWidth * 0.22),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              if (tableData.isNotEmpty) ...[
-                CustomDataTable(
-                    tableData: tableData,
-                    headers: headers,
-                    editableColumns: ['Quantity'],
-                    onValueChanged: (rowIndex, header, value) async {
-                      if (header == 'Quantity') {
-                        if (rowIndex >= 0 && rowIndex < tableData.length) {
-                          setState(() {
-                            tableData[rowIndex]['Quantity'] = value;
-
-                            double quantity =
-                                double.tryParse(value.toString()) ?? 0;
-                            double amountPerUnit = double.tryParse(
-                                    tableData[rowIndex]['Amount']?.toString() ??
-                                        '0') ??
-                                0;
-                            double gstRate = double.tryParse(tableData[rowIndex]
-                                            ['Gst']
-                                        ?.replaceAll('%', '') ??
-                                    '0') ??
-                                0;
-
-                            double totalAmountForItem =
-                                quantity * amountPerUnit;
-                            double itemGst =
-                                (totalAmountForItem * gstRate) / 100;
-
-                            tableData[rowIndex]['Amount'] =
-                                totalAmountForItem.toStringAsFixed(2);
-                            calculateTotals();
-                          });
-                        } else {
-                          print("Error: rowIndex $rowIndex is out of range.");
-                        }
-                      }
-                    }),
-                Container(
-                  padding: EdgeInsets.only(right: screenWidth * 0.03),
-                  width: screenWidth,
-                  height: screenHeight * 0.030,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      CustomText(
-                        text: 'Total : $totalAmount',
-                      )
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.only(right: screenWidth * 0.08),
-                  width: screenWidth,
-                  height: screenHeight * 0.025,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CustomText(text: '12% TAX :$taxAmount '),
-                      CustomText(text: '10% GST : $gstAmount'),
-                      CustomText(text: 'Total GST :$totalGst '),
-                      CustomText(text: 'Grand Total :$grandTotal '),
-                    ],
-                  ),
-                ),
-              ],
-              SizedBox(height: screenHeight * 0.04),
+              TimeDateWidget(text: 'IP Billings'),
+              SizedBox(height: screenHeight * 0.05),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomTextField(
-                      controller: totalAmountController,
-                      hintText: 'Total Amount',
-                      width: screenWidth * 0.2),
-                  SizedBox(width: screenWidth * 0.03),
-                  CustomTextField(
-                      controller: paidController,
-                      hintText: 'Paid',
-                      width: screenWidth * 0.2),
-                  SizedBox(width: screenWidth * 0.03),
-                  CustomText(
-                    text: 'Balance : ',
-                    size: screenWidth * 0.012,
+                  PharmacyTextField(
+                    hintText: 'IP Ticket Number',
+                    width: screenWidth * 0.15,
+                    controller: _ipTicket,
                   ),
-                  SizedBox(width: screenWidth * 0.01),
-                  CustomTextField(
-                      controller: balanceController,
-                      hintText: '',
-                      width: screenWidth * 0.2),
+                  SizedBox(width: screenHeight * 0.02),
+                  PharmacyButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(ipNumber: _ipTicket.text);
+                      onSearchPressed();
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.05),
+                  PharmacyTextField(
+                    hintText: 'Phone Number',
+                    width: screenWidth * 0.15,
+                    controller: _phoneNumber,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  PharmacyButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(phoneNumber: _phoneNumber.text);
+                      onSearchPressed();
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              Container(
-                padding: EdgeInsets.only(
-                  left: screenWidth * 0.15,
-                  right: screenWidth * 0.15,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CustomButton(
-                      label: 'Payment',
-                      onPressed: () {},
-                      width: screenWidth * 0.10,
-                    ),
-                    CustomButton(
-                      label: 'Print',
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Rx Prescription'),
-                              content: Container(
-                                width: 125,
-                                height: 50,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    CustomText(text: 'Do you want to print ?'),
-                                    const SizedBox(height: 8),
-                                  ],
-                                ),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () async {
-                                    final pdf = pw.Document();
-                                    const blue = PdfColor.fromInt(0xFF106ac2);
-                                    const lightBlue =
-                                        PdfColor.fromInt(0xFF21b0d1);
+              SizedBox(height: screenHeight * 0.05),
+              CustomDataTable(
+                headers: headers,
+                tableData: tableData,
+                rowColorResolver: (row) {
+                  if (row['Status'] == 'abscond') {
+                    return Colors.red.shade200;
+                  }
 
-                                    final font = await rootBundle.load(
-                                        'Fonts/Poppins/Poppins-Regular.ttf');
-                                    final ttf = pw.Font.ttf(font);
-
-                                    final topImage = pw.MemoryImage(
-                                      (await rootBundle.load(
-                                              'assets/opAssets/OP_Bill_Top.png'))
-                                          .buffer
-                                          .asUint8List(),
-                                    );
-
-                                    final bottomImage = pw.MemoryImage(
-                                      (await rootBundle.load(
-                                              'assets/opAssets/OP_Card_back_original.png'))
-                                          .buffer
-                                          .asUint8List(),
-                                    );
-                                    List<pw.Widget> buildPaginatedTable({
-                                      required List<String> headers,
-                                      required List<Map<String, dynamic>> data,
-                                      required pw.Font ttf,
-                                      required PdfColor headerColor,
-                                      required double rowHeight,
-                                    }) {
-                                      final List<List<String>> tableData = [
-                                        headers,
-                                        ...data.map((row) => headers
-                                            .map(
-                                                (h) => row[h]?.toString() ?? '')
-                                            .toList()),
-                                      ];
-
-                                      return [
-                                        pw.TableHelper.fromTextArray(
-                                          headers: headers,
-                                          data: data
-                                              .map((row) => headers
-                                                  .map((h) =>
-                                                      row[h]?.toString() ?? '')
-                                                  .toList())
-                                              .toList(),
-                                          headerStyle: pw.TextStyle(
-                                            font: ttf,
-                                            fontSize: 7,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.white,
-                                          ),
-                                          headerDecoration: pw.BoxDecoration(
-                                              color: headerColor),
-                                          cellStyle: pw.TextStyle(
-                                              font: ttf, fontSize: 7),
-                                          cellHeight: rowHeight > 12
-                                              ? rowHeight - 10
-                                              : rowHeight,
-                                          border: pw.TableBorder.all(
-                                              color: headerColor),
-                                        ),
-                                        pw.SizedBox(height: 6),
-                                      ];
-                                    }
-
-                                    final List<List<String>> dataRows =
-                                        tableData.map((data) {
-                                      return headers
-                                          .map((header) =>
-                                              data[header]?.toString() ?? '')
-                                          .toList();
-                                    }).toList();
-
-                                    pdf.addPage(
-                                      pw.MultiPage(
-                                        pageFormat: PdfPageFormat.a4,
-                                        header: (context) => pw.Stack(
-                                          children: [
-                                            pw.Image(
-                                              topImage,
-                                              fit: pw.BoxFit.cover,
-                                            ),
-                                          ],
-                                        ),
-                                        footer: (context) => pw.Stack(
-                                          children: [
-                                            // Background Image
-                                            pw.Positioned.fill(
-                                              child: pw.Image(bottomImage,
-                                                  fit: pw.BoxFit.cover,
-                                                  height: 225,
-                                                  width: 500),
-                                            ),
-                                            // Footer Content
-                                            pw.Padding(
-                                              padding: const pw.EdgeInsets.only(
-                                                  left: 8,
-                                                  right: 8,
-                                                  bottom: 8,
-                                                  top: 20),
-                                              child: pw.Column(
-                                                mainAxisAlignment:
-                                                    pw.MainAxisAlignment.end,
-                                                crossAxisAlignment:
-                                                    pw.CrossAxisAlignment.start,
-                                                children: [
-                                                  pw.Row(
-                                                    mainAxisAlignment: pw
-                                                        .MainAxisAlignment
-                                                        .spaceBetween,
-                                                    crossAxisAlignment: pw
-                                                        .CrossAxisAlignment
-                                                        .start,
-                                                    children: [
-                                                      // Left Column
-                                                      pw.Column(
-                                                        crossAxisAlignment: pw
-                                                            .CrossAxisAlignment
-                                                            .start,
-                                                        children: [
-                                                          pw.Text(
-                                                            'Emergency No: ${Constants.emergencyNo}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              color: PdfColors
-                                                                  .white,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Appointments: ${Constants.appointmentNo}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              color: PdfColors
-                                                                  .white,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.Padding(
-                                                        padding:
-                                                            pw.EdgeInsets.only(
-                                                                top: 20),
-                                                        child: pw.Row(
-                                                          crossAxisAlignment: pw
-                                                              .CrossAxisAlignment
-                                                              .end,
-                                                          children: [
-                                                            pw.Text(
-                                                              'Mail: ${Constants.mail}',
-                                                              style:
-                                                                  pw.TextStyle(
-                                                                fontSize: 8,
-                                                                font: ttf,
-                                                                color: PdfColors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                            pw.SizedBox(
-                                                                width: 15),
-                                                            pw.Text(
-                                                              'For more info visit: ${Constants.website}',
-                                                              style:
-                                                                  pw.TextStyle(
-                                                                fontSize: 8,
-                                                                font: ttf,
-                                                                color: PdfColors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        build: (context) => [
-                                          pw.Padding(
-                                            padding: const pw.EdgeInsets.only(
-                                                left: 190, right: 0),
-                                            child: pw.Container(
-                                              child: pw.Column(
-                                                children: [
-                                                  pw.Column(
-                                                    children: [
-                                                      pw.Text(
-                                                        'Bill Receipt',
-                                                        style: pw.TextStyle(
-                                                          fontSize: 20,
-                                                          font: ttf,
-                                                          fontWeight: pw
-                                                              .FontWeight.bold,
-                                                          color:
-                                                              PdfColors.black,
-                                                        ),
-                                                      ),
-                                                      pw.SizedBox(
-                                                        width: 100,
-                                                        child: pw.Divider(
-                                                          color: blue,
-                                                          thickness: 2,
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          pw.Padding(
-                                            padding: const pw.EdgeInsets.only(
-                                                left: 8, right: 0),
-                                            child: pw.Container(
-                                              child: pw.Column(
-                                                children: [
-                                                  pw.Row(
-                                                    mainAxisAlignment: pw
-                                                        .MainAxisAlignment
-                                                        .spaceBetween,
-                                                    children: [
-                                                      pw.Column(
-                                                        crossAxisAlignment: pw
-                                                            .CrossAxisAlignment
-                                                            .start,
-                                                        children: [
-                                                          pw.Text(
-                                                            '${Constants.hospitalName}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 16,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: blue,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            '${Constants.hospitalAddress}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            '${Constants.state + ' - ' + Constants.pincode}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Mail : ${Constants.mail}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Web : ${Constants.website}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 8,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.Column(
-                                                        crossAxisAlignment: pw
-                                                            .CrossAxisAlignment
-                                                            .start,
-                                                        children: [
-                                                          pw.Text(
-                                                            'Bill No : ${billNo.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Bill Date : ${_dateController.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.SizedBox(width: 40),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          pw.Padding(
-                                            padding: const pw.EdgeInsets.only(
-                                                left: 8, right: 8),
-                                            child: pw.Container(
-                                              child: pw.Column(
-                                                children: [
-                                                  pw.SizedBox(height: 10),
-                                                  pw.Column(
-                                                    mainAxisAlignment: pw
-                                                        .MainAxisAlignment
-                                                        .spaceBetween,
-                                                    children: [
-                                                      pw.Row(
-                                                        mainAxisAlignment: pw
-                                                            .MainAxisAlignment
-                                                            .spaceBetween,
-                                                        children: [
-                                                          pw.Text(
-                                                            'IP Ticket No : ${_ipNumber.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Room / Ward No : ${roomType.text + ' ' + roomNo.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Admission Date : ${ipAdmissionDate.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.SizedBox(height: 6),
-                                                      pw.Row(
-                                                        mainAxisAlignment: pw
-                                                            .MainAxisAlignment
-                                                            .spaceBetween,
-                                                        children: [
-                                                          pw.Text(
-                                                            'Doctor : ${doctorName.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Specialization : ${specialization.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.SizedBox(height: 6),
-                                                      pw.Row(
-                                                        mainAxisAlignment: pw
-                                                            .MainAxisAlignment
-                                                            .spaceBetween,
-                                                        children: [
-                                                          pw.Text(
-                                                            'Name : ${patientName.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'OP Number : ${opNumber.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.SizedBox(height: 6),
-                                                      pw.Row(
-                                                        mainAxisAlignment: pw
-                                                            .MainAxisAlignment
-                                                            .spaceBetween,
-                                                        children: [
-                                                          pw.Text(
-                                                            'Age : ${age.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Blood Group : ${bloodGroup.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Place : ${place.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                          pw.Text(
-                                                            'Phone : ${phoneNumber.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      pw.SizedBox(height: 6),
-                                                      pw.Row(
-                                                        mainAxisAlignment: pw
-                                                            .MainAxisAlignment
-                                                            .start,
-                                                        crossAxisAlignment: pw
-                                                            .CrossAxisAlignment
-                                                            .start,
-                                                        children: [
-                                                          pw.Text(
-                                                            'Address : ${address.text}',
-                                                            style: pw.TextStyle(
-                                                              fontSize: 10,
-                                                              font: ttf,
-                                                              fontWeight: pw
-                                                                  .FontWeight
-                                                                  .bold,
-                                                              color: PdfColors
-                                                                  .black,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          pw.SizedBox(height: 10),
-                                          ...buildPaginatedTable(
-                                            headers: headers,
-                                            data: tableData,
-                                            ttf: ttf,
-                                            headerColor: lightBlue,
-                                            rowHeight: 15,
-                                          ),
-                                          pw.Padding(
-                                            padding: const pw.EdgeInsets.only(
-                                                left: 350, right: 8),
-                                            child: pw.Container(
-                                              child: pw.Column(
-                                                children: [
-                                                  pw.SizedBox(height: 10),
-                                                  pw.Column(
-                                                    mainAxisAlignment: pw
-                                                        .MainAxisAlignment
-                                                        .start,
-                                                    crossAxisAlignment: pw
-                                                        .CrossAxisAlignment
-                                                        .start,
-                                                    children: [
-                                                      pw.Text(
-                                                        'Total Amount : ${grandTotal}',
-                                                        style: pw.TextStyle(
-                                                          fontSize: 8,
-                                                          font: ttf,
-                                                          fontWeight: pw
-                                                              .FontWeight.bold,
-                                                          color:
-                                                              PdfColors.black,
-                                                        ),
-                                                      ),
-                                                      pw.Text(
-                                                        'Patient Paid Amount : ${paidController.text}',
-                                                        style: pw.TextStyle(
-                                                          fontSize: 8,
-                                                          font: ttf,
-                                                          fontWeight: pw
-                                                              .FontWeight.bold,
-                                                          color:
-                                                              PdfColors.black,
-                                                        ),
-                                                      ),
-                                                      pw.Text(
-                                                        'Balance : ${balanceController.text}',
-                                                        style: pw.TextStyle(
-                                                          fontSize: 8,
-                                                          font: ttf,
-                                                          fontWeight: pw
-                                                              .FontWeight.bold,
-                                                          color:
-                                                              PdfColors.black,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    //
-                                    await Printing.layoutPdf(
-                                      onLayout: (format) async => pdf.save(),
-                                    );
-
-                                    // await Printing.sharePdf(
-                                    //     bytes: await pdf.save(),
-                                    //     filename: '${_ipNumber.text}.pdf');
-                                  },
-                                  child: const Text('Print'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Close'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      width: screenWidth * 0.10,
-                    ),
-                    CustomButton(
-                      label: 'Submit',
-                      onPressed: () => submitBillingData(),
-                      width: screenWidth * 0.10,
-                    ),
-                  ],
-                ),
+                  return Colors.transparent;
+                },
               ),
             ],
           ),

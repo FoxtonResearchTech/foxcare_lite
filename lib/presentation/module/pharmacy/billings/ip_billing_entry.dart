@@ -15,18 +15,20 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
-class OpBillingEntry extends StatefulWidget {
+class IpBillingEntry extends StatefulWidget {
   final String? patientName;
-  final String? opTicket;
+  final String? ipTicket;
   final String? opNumber;
   final String? place;
   final String? phone;
   final String? doctorName;
   final String? specialization;
+  final String? roomWard;
 
-  const OpBillingEntry(
+  const IpBillingEntry(
       {this.patientName,
-      this.opTicket,
+      this.roomWard,
+      this.ipTicket,
       this.opNumber,
       this.place,
       this.phone,
@@ -35,10 +37,10 @@ class OpBillingEntry extends StatefulWidget {
       super.key});
 
   @override
-  State<OpBillingEntry> createState() => _OpBillingEntry();
+  State<IpBillingEntry> createState() => _IpBillingEntry();
 }
 
-class _OpBillingEntry extends State<OpBillingEntry> {
+class _IpBillingEntry extends State<IpBillingEntry> {
   TextEditingController discount = TextEditingController();
   DateTime dateTime = DateTime.now();
 
@@ -217,12 +219,13 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       await FirebaseFirestore.instance
           .collection('pharmacy')
           .doc('billings')
-          .collection('opbilling')
+          .collection('ipbillings')
           .doc()
           .set({
         'billDate': todayString,
         'billNo': billNO,
-        'opTicket': widget.opTicket,
+        'ipTicket': widget.ipTicket,
+        'roomWard': widget.roomWard,
         'opNumber': widget.opNumber,
         'patientName': widget.patientName,
         'place': widget.place,
@@ -373,7 +376,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
         backgroundColor: AppColors.appBar,
         title: Center(
           child: CustomText(
-              text: 'OP Billing',
+              text: 'IP Billing',
               size: screenWidth * 0.012,
               color: Colors.white),
         ),
@@ -393,7 +396,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
               horizontal: screenWidth * 0.06, vertical: screenHeight * 0.04),
           child: Column(
             children: [
-              const TimeDateWidget(text: 'OP Billings'),
+              const TimeDateWidget(text: 'IP Billings'),
               SizedBox(height: screenHeight * 0.02),
               Column(
                 children: [
@@ -415,7 +418,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                           ),
                           SizedBox(height: screenHeight * 0.03),
                           CustomText(
-                            text: 'OP Ticket Number : ${widget.opTicket}',
+                            text: 'IP Ticket Number : ${widget.ipTicket}',
                             size: screenWidth * 0.015,
                           ),
                         ],
@@ -464,6 +467,19 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                     ],
                   )
                 ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.045),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomText(
+                      text: 'Room Ward : ${widget.roomWard}',
+                      size: screenWidth * 0.015,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: screenHeight * 0.04),
               Row(
