@@ -93,7 +93,6 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       isAdding = false;
       isSubmitting = false;
       isPrinting = false;
-
       allProducts = [];
       controllers.clear();
       productSuggestions.clear();

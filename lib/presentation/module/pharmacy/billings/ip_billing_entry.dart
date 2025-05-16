@@ -53,6 +53,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
 
   double totalAmount = 0.0;
   double discountAmount = 0.0;
+  bool isPrinting = false;
 
   bool isAdding = false;
   bool isSubmitting = false;
@@ -80,7 +81,6 @@ class _IpBillingEntry extends State<IpBillingEntry> {
 
   String billNO = '';
   int newBillNo = 0;
-  bool isPrinting = false;
 
   void clearAll() {
     setState(() {
@@ -95,7 +95,6 @@ class _IpBillingEntry extends State<IpBillingEntry> {
       isAdding = false;
       isSubmitting = false;
       isPrinting = false;
-
       allProducts = [];
       controllers.clear();
       productSuggestions.clear();
