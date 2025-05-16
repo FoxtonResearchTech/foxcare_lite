@@ -90,6 +90,35 @@ class _CounterSales extends State<CounterSales> {
   String billNO = '';
   int newBillNo = 0;
 
+  void clearAll() {
+    setState(() {
+      patientName.clear();
+      opNumber.clear();
+      place.clear();
+      doctorName.clear();
+      hospitalName.clear();
+      phoneNumber.clear();
+      discount.clear();
+      totalAmountController.clear();
+      collectedAmountController.clear();
+      balanceController.clear();
+      paymentDetails.clear();
+      selectedPaymentMode = null;
+      totalAmount = 0.0;
+      discountAmount = 0.0;
+
+      patientNameError = null;
+      doctorNameError = null;
+      isAdding = false;
+      isSubmitting = false;
+      allProducts = [];
+      controllers.clear();
+      productSuggestions.clear();
+      billNO = '';
+      newBillNo = 0;
+    });
+  }
+
   void printInvoice() {
     final today = DateTime.now();
     final todayString =
@@ -1352,7 +1381,9 @@ class _CounterSales extends State<CounterSales> {
                     PharmacyButton(
                         color: AppColors.blue,
                         label: 'Cancel',
-                        onPressed: () {},
+                        onPressed: () {
+                          clearAll();
+                        },
                         width: screenWidth * 0.1),
                     PharmacyButton(
                         color: AppColors.blue,

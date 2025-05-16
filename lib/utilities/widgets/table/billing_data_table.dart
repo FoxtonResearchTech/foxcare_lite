@@ -121,10 +121,7 @@ class _BillingDataTable extends State<BillingDataTable> {
                                     product['expiry'];
                                 widget.tableData[focusedRowIndex!]['Expiry'] =
                                     product['expiry'];
-                                controllers[focusedRowIndex!]['Quantity']
-                                    ?.text = product['quantity'];
-                                widget.tableData[focusedRowIndex!]['Quantity'] =
-                                    product['quantity'];
+
                                 controllers[focusedRowIndex!]['Free']?.text =
                                     product['free'];
                                 widget.tableData[focusedRowIndex!]['Free'] =
