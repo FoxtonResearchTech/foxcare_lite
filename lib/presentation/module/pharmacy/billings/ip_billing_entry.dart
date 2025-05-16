@@ -140,7 +140,6 @@ class _IpBillingEntry extends State<IpBillingEntry> {
       final product = allProducts[index];
       controllers.add({
         'Quantity': TextEditingController(text: product['Quantity'] ?? ''),
-        'Free': TextEditingController(text: product['Free'] ?? ''),
       });
     }
   }

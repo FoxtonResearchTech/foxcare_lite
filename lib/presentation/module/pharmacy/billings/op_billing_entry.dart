@@ -138,7 +138,6 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       final product = allProducts[index];
       controllers.add({
         'Quantity': TextEditingController(text: product['Quantity'] ?? ''),
-        'Free': TextEditingController(text: product['Free'] ?? ''),
       });
     }
   }

@@ -650,7 +650,6 @@ class _CounterSales extends State<CounterSales> {
       final product = allProducts[index];
       controllers.add({
         'Quantity': TextEditingController(text: product['Quantity'] ?? ''),
-        'Free': TextEditingController(text: product['Free'] ?? ''),
       });
     }
   }
