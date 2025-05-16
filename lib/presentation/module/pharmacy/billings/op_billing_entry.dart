@@ -250,14 +250,14 @@ class _OpBillingEntry extends State<OpBillingEntry> {
 
       CustomSnackBar(
         context,
-        message: 'Products updated successfully',
+        message: 'Bill Submitted and Product updated successfully',
         backgroundColor: Colors.green,
       );
     } catch (e) {
       print('Error updating products: $e');
       CustomSnackBar(
         context,
-        message: 'Failed to update products',
+        message: 'Failed to submit Bill update products',
         backgroundColor: Colors.red,
       );
       setState(() {
@@ -633,6 +633,19 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                   ),
                 ),
               ),
+              SizedBox(height: screenHeight * 0.04),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.05),
+                child: Row(
+                  children: [
+                    CustomText(
+                      text: 'Payment',
+                      size: screenWidth * 0.02,
+                      color: AppColors.blue,
+                    )
+                  ],
+                ),
+              ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,14 +662,9 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 CustomText(
-                                  text: 'Total Amount ',
-                                  size: screenWidth * 0.013,
-                                ),
-                                SizedBox(height: 7),
-                                PharmacyTextField(
-                                  hintText: '',
-                                  controller: totalAmountController,
-                                  width: screenWidth * 0.15,
+                                  text:
+                                      'Net Total : ${totalAmountController.text}',
+                                  size: screenWidth * 0.0125,
                                 ),
                               ],
                             ),
@@ -665,13 +673,13 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                               children: [
                                 CustomText(
                                   text: 'Collected ',
-                                  size: screenWidth * 0.013,
+                                  size: screenWidth * 0.011,
                                 ),
                                 SizedBox(height: 7),
                                 PharmacyTextField(
                                   hintText: '',
                                   controller: collectedAmountController,
-                                  width: screenWidth * 0.2,
+                                  width: screenWidth * 0.15,
                                 ),
                               ],
                             ),
@@ -680,34 +688,29 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                               children: [
                                 CustomText(
                                   text: 'Balance ',
-                                  size: screenWidth * 0.013,
+                                  size: screenWidth * 0.011,
                                 ),
                                 SizedBox(height: 7),
                                 PharmacyTextField(
                                   hintText: '',
                                   controller: balanceController,
-                                  width: screenWidth * 0.2,
+                                  width: screenWidth * 0.15,
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        SizedBox(height: screenWidth * 0.02),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 CustomText(
                                   text: 'Payment Mode ',
-                                  size: screenWidth * 0.013,
+                                  size: screenWidth * 0.011,
                                 ),
                                 SizedBox(height: 7),
                                 SizedBox(
-                                  width: screenWidth * 0.2,
+                                  height: screenHeight * 0.04,
+                                  width: screenWidth * 0.15,
                                   child: PharmacyDropDown(
-                                    width: screenWidth * 0.05,
+                                    width: screenWidth * 0.04,
                                     label: '',
                                     items: const [
                                       'UPI',
@@ -732,13 +735,13 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                               children: [
                                 CustomText(
                                   text: 'Payment Details ',
-                                  size: screenWidth * 0.013,
+                                  size: screenWidth * 0.011,
                                 ),
                                 SizedBox(height: 7),
                                 PharmacyTextField(
                                   hintText: '',
                                   controller: paymentDetails,
-                                  width: screenWidth * 0.2,
+                                  width: screenWidth * 0.15,
                                 ),
                               ],
                             ),

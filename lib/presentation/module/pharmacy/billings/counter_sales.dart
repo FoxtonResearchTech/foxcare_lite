@@ -6,9 +6,16 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
+import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/buttons/pharmacy_button.dart';
+import '../../../../utilities/widgets/date_time.dart';
+import '../../../../utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../../utilities/widgets/table/billing_data_table.dart';
+import '../../../../utilities/widgets/textField/pharmacy_text_field.dart';
 
 class CounterSales extends StatefulWidget {
   const CounterSales({super.key});
@@ -18,584 +25,795 @@ class CounterSales extends StatefulWidget {
 }
 
 class _CounterSales extends State<CounterSales> {
-  TextEditingController _dateController = TextEditingController();
   TextEditingController patientName = TextEditingController();
-  TextEditingController age = TextEditingController();
+  TextEditingController opNumber = TextEditingController();
   TextEditingController place = TextEditingController();
-  TextEditingController gender = TextEditingController();
+  TextEditingController doctorName = TextEditingController();
+  TextEditingController hospitalName = TextEditingController();
   TextEditingController phoneNumber = TextEditingController();
-  TextEditingController billNo = TextEditingController();
-  final TextEditingController _productName = TextEditingController();
-  final TextEditingController _composition = TextEditingController();
-  final TextEditingController _quantity = TextEditingController();
-  final TextEditingController _hsnCode = TextEditingController();
-  final TextEditingController _companyName = TextEditingController();
-  final TextEditingController _referredByDoctor = TextEditingController();
-  final TextEditingController _additionalInformation = TextEditingController();
-  String? selectedCategoryFilter;
-  String productName = '';
-  String companyName = '';
-  String hsnCode = '';
-  bool isLoading = false;
+
+  TextEditingController discount = TextEditingController();
+  DateTime dateTime = DateTime.now();
+
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
 
   double totalAmount = 0.0;
-  double taxPercentage = 12;
-  double gstPercentage = 10;
-  double taxAmount = 0.00;
-  double gstAmount = 0.00;
-  double totalGst = 0.00;
-  double grandTotal = 0.00;
+  double discountAmount = 0.0;
+
+  bool isAdding = false;
+  bool isSubmitting = false;
   final List<String> headers = [
     'Product Name',
-    'HSN Code',
-    'Category',
-    'Company',
-    'Composition',
-    'Type',
-    'Action',
-  ];
-  final List<String> header = [
-    'Product Name',
-    'Type',
-    'Batch',
-    'EXP',
     'HSN',
+    'Batch',
+    'Expiry',
     'Quantity',
     'MRP',
-    'Price',
-    'Gst',
-    'Amount',
+    'Rate',
+    'Tax',
+    'SGST',
+    'CGST',
+    'Tax Total',
+    'Product Total',
+    'Delete',
   ];
 
-  List<Map<String, dynamic>> tableData = [];
+  final List<String> editableColumns = ['Product Name', 'Quantity'];
 
-  void calculateTotals() {
-    totalAmount = tableData.fold(
-      0.0,
-      (sum, item) =>
-          sum + (double.tryParse(item['Amount']?.toString() ?? '0') ?? 0),
-    );
+  List<Map<String, dynamic>> allProducts = [];
+  List<Map<String, TextEditingController>> controllers = [];
+  List<List<Map<String, dynamic>>> productSuggestions = [];
 
-    taxAmount = (totalAmount * taxPercentage) / 100;
-    gstAmount = (totalAmount * gstPercentage) / 100;
-    totalGst = taxAmount + gstAmount;
-    grandTotal = totalAmount + totalGst;
+  String billNO = '';
+  int newBillNo = 0;
 
-    totalAmount = double.parse(totalAmount.toStringAsFixed(2));
-    taxAmount = double.parse(taxAmount.toStringAsFixed(2));
-    gstAmount = double.parse(gstAmount.toStringAsFixed(2));
-    totalGst = double.parse(totalGst.toStringAsFixed(2));
-    grandTotal = double.parse(grandTotal.toStringAsFixed(2));
+  void _updateBalance() {
+    double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
+    double paidAmount = double.tryParse(collectedAmountController.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    balanceController.text = balance.toStringAsFixed(2);
   }
 
-  void resetTotals() {
-    totalAmount = 0.00;
-    taxAmount = 0.00;
-    gstAmount = 0.00;
-    totalGst = 0.00;
-    grandTotal = 0.00;
-    patientName.clear();
-    age.clear();
-    place.clear();
-    gender.clear();
-    phoneNumber.clear();
+  void addNewRow() {
+    setState(() {
+      allProducts.add({
+        for (var header in headers) header: '',
+      });
+    });
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
+  void onDiscountChanged(String value) {
+    setState(() {
+      double discountValue = double.tryParse(value) ?? 0.0;
+      double totalWithoutDiscount = _allProductTotal().toDouble();
 
-    if (pickedDate != null) {
-      setState(() {
-        _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+      double discountAmt = totalWithoutDiscount * (discountValue / 100);
+
+      double netTotal = totalWithoutDiscount - discountAmt;
+
+      discountAmount = discountAmt;
+      totalAmount = netTotal;
+      totalAmountController.text = totalAmount.toStringAsFixed(2);
+    });
+  }
+
+  void initializeControllers() {
+    controllers.clear();
+    for (int index = 0; index < allProducts.length; index++) {
+      final product = allProducts[index];
+      controllers.add({
+        'Quantity': TextEditingController(text: product['Quantity'] ?? ''),
+        'Free': TextEditingController(text: product['Free'] ?? ''),
       });
     }
   }
 
-  Future<void> submitBillingData() async {
+  Future<void> submitBill() async {
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    setState(() {
+      isSubmitting = true;
+      initializeControllers();
+    });
+
     try {
-      DocumentReference billingRef = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('billing')
-          .collection('countersales')
-          .doc();
-      List<Map<String, dynamic>> updatedTableData = tableData.map((item) {
-        return {
-          'Product Name': item['Product Name'] ?? 'N/A',
-          'Type': item['Type'] ?? 'N/A',
-          'Batch': item['Batch'] ?? 'N/A',
-          'EXP': item['EXP'] ?? 'N/A',
-          'HSN': item['HSN'] ?? 'N/A',
-          'Quantity': item['Quantity'] ?? '0',
-          'MPS': item['MRP'] ?? 'N/A',
-          'Price': item['Price'] ?? 'N/A',
-          'Gst': item['Gst'] ?? '0%',
-          'Amount': item['Amount'] ?? '0.00',
-        };
-      }).toList();
-      Map<String, dynamic> billingData = {
-        'billNo': billNo.text,
-        'billDate': _dateController.text,
-        'patientName': patientName.text,
-        'age': age.text,
-        'place': place.text,
-        'gender': gender.text,
-        'phoneNumber': phoneNumber.text,
-        'totalAmount': totalAmount,
-        'taxAmount': taxAmount,
-        'gstAmount': gstAmount,
-        'totalGst': totalGst,
-        'grandTotal': grandTotal,
-        'items': updatedTableData,
-      };
-
-      await billingRef.set(billingData);
-      for (var product in tableData) {
-        String productName = product['Product Name'];
-        String batch = product['Batch'];
-        String hsn = product['HSN'];
-
-        double Quantity = double.tryParse(product['Quantity'].toString()) ?? 0;
-
-        print('Return Quantity: $Quantity');
-
-        if (Quantity > 0) {
-          QuerySnapshot<Map<String, dynamic>> productSnapshot =
-              await FirebaseFirestore.instance
-                  .collection('stock')
-                  .doc('Products')
-                  .collection('AddedProducts')
-                  .where('productName', isEqualTo: productName)
-                  .where('batchNumber', isEqualTo: batch)
-                  .where('hsnCode', isEqualTo: hsn)
-                  .get();
-
-          if (productSnapshot.docs.isEmpty) {
-            print(
-                'No matching product found for $productName, Batch: $batch, HSN: $hsn');
-          } else {
-            print('Found ${productSnapshot.docs.length} matching products.');
-
-            for (var doc in productSnapshot.docs) {
-              double currentQuantity =
-                  double.tryParse(doc['quantity'].toString()) ?? 0;
-
-              double rawUpdatedQuantity =
-                  (currentQuantity - Quantity).clamp(0, double.infinity);
-              int updatedQuantity = rawUpdatedQuantity.floor();
-
-              print(
-                  'Current Quantity: $currentQuantity, Updated Quantity: $updatedQuantity');
-
-              await FirebaseFirestore.instance
-                  .collection('stock')
-                  .doc('Products')
-                  .collection('AddedProducts')
-                  .doc(doc.id)
-                  .update({
-                'quantity': updatedQuantity.toString(),
-              });
-            }
+      for (int i = 0; i < controllers.length; i++) {
+        var ctrl = controllers[i];
+        for (var key in ctrl.keys) {
+          if (ctrl[key]?.text.trim().isEmpty ?? true) {
+            CustomSnackBar(
+              context,
+              message: "Product ${i + 1} field '$key' is empty.",
+              backgroundColor: Colors.red,
+            );
+            setState(() {
+              isSubmitting = false;
+            });
+            return;
           }
         }
       }
 
-      CustomSnackBar(context,
-          message: 'Billing data submitted successfully',
-          backgroundColor: Colors.green);
-    } catch (e) {
-      CustomSnackBar(context,
-          message: 'Failed to submit billing data',
-          backgroundColor: Colors.red);
+      for (int i = 0; i < allProducts.length; i++) {
+        String docId = allProducts[i]['productDocId'];
+        String purchaseEntryDocId = allProducts[i]['purchaseEntryDocId'];
 
-      print('Error submitting billing data: $e');
+        DocumentReference productRef = FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .doc(docId);
+
+        DocumentSnapshot mainProductSnapshot = await productRef.get();
+        final mainProductData =
+            mainProductSnapshot.data() as Map<String, dynamic>?;
+
+        // Fetch purchase entry doc
+        DocumentSnapshot purchaseEntrySnapshot = await productRef
+            .collection('purchaseEntry')
+            .doc(purchaseEntryDocId)
+            .get();
+        final purchaseEntryData =
+            purchaseEntrySnapshot.data() as Map<String, dynamic>?;
+
+        if (mainProductSnapshot.exists && purchaseEntrySnapshot.exists) {
+          // Quantities before return
+          int entryQty =
+              int.tryParse(purchaseEntryData?['quantity']?.toString() ?? '0') ??
+                  0;
+
+          int mainQty =
+              int.tryParse(mainProductData?['quantity']?.toString() ?? '0') ??
+                  0;
+
+          // Returned quantities
+          int returnQty =
+              int.tryParse(controllers[i]['Quantity']?.text ?? '0') ?? 0;
+
+          // Updated values
+          int newEntryQty = entryQty - returnQty;
+          if (newEntryQty < 0) newEntryQty = 0;
+
+          int newMainQty = mainQty - returnQty;
+          if (newMainQty < 0) newMainQty = 0;
+
+          // Update purchase entry document
+          await purchaseEntrySnapshot.reference.update({
+            'quantity': newEntryQty.toString(),
+          });
+
+          // Update main product document
+          await productRef.update({
+            'quantity': newMainQty.toString(),
+          });
+
+          // Log updated quantity
+          await productRef.collection('currentQty').doc().set({
+            'quantity': newMainQty.toString(),
+            'date':
+                "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}",
+            'time': dateTime.hour.toString() +
+                ':' +
+                dateTime.minute.toString().padLeft(2, '0'),
+          });
+        }
+      }
+
+      // Save stock return document
+      await FirebaseFirestore.instance
+          .collection('pharmacy')
+          .doc('billings')
+          .collection('countersales')
+          .doc()
+          .set({
+        'billDate': todayString,
+        'billNo': billNO,
+        'opNumber': opNumber.text,
+        'patientName': patientName.text,
+        'place': place.text,
+        'phone': phoneNumber.text,
+        'doctorName': doctorName.text,
+        'hospitalName': hospitalName.text,
+        'entryProducts': allProducts,
+        'discountPercentage': discount.text,
+        'discountAmount': discountAmount.toStringAsFixed(2),
+        'taxTotal': _taxTotal().toStringAsFixed(2),
+        'totalBeforeDiscount': _allProductTotal().toStringAsFixed(2),
+        'netTotalAmount': totalAmount.toStringAsFixed(2),
+        'paymentDetails': paymentDetails.text,
+        'paymentMode': selectedPaymentMode,
+        'totalAmount': totalAmountController.text,
+        'collectedAmount': collectedAmountController.text,
+        'balance': balanceController.text,
+      });
+
+      await updateBillNo(newBillNo);
+
+      setState(() {
+        isSubmitting = false;
+      });
+
+      CustomSnackBar(
+        context,
+        message: 'Bill Submitted and Product updated successfully',
+        backgroundColor: Colors.green,
+      );
+    } catch (e) {
+      print('Error updating products: $e');
+      CustomSnackBar(
+        context,
+        message: 'Failed to submit Bill update products',
+        backgroundColor: Colors.red,
+      );
+      setState(() {
+        isSubmitting = false;
+      });
     }
   }
 
-  List<Map<String, dynamic>> allProducts = [];
-
-  List<Map<String, dynamic>> filteredProducts = [];
-  Future<void> fetchData() async {
+  Future<String?> getAndIncrementBillNo() async {
     try {
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .get();
+      final docRef = FirebaseFirestore.instance
+          .collection('billNo')
+          .doc('pharmacyBillings');
 
-      List<Map<String, dynamic>> fetchedData = [];
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['billNo'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
 
-      for (var doc in stockSnapshot.docs) {
-        final data = doc.data();
-        fetchedData.add({
-          'Product Name': data['productName'],
-          'HSN Code': data['hsnCode'],
-          'Category': data['category'],
-          'Company': data['companyName'],
-          'Composition': data['composition'],
-          'Type': data['type'],
-          'Action': TextButton(
-            onPressed: () async {
-              setState(() {
-                isLoading = true;
-              });
-
-              await Future.delayed(const Duration(seconds: 1));
-
-              setState(() {
-                tableData.add({
-                  'Product Name': data['productName'],
-                  'Type': data['type'],
-                  'Batch': data['batchNumber'],
-                  'EXP': data['expiry'],
-                  'HSN': data['hsnCode'],
-                  'Quantity': '',
-                  'MRP': data['mrp'],
-                  'Price': data['price'],
-                  'Gst': data['gst'],
-                  'Amount': '',
-                });
-
-                isLoading = false;
-              });
-            },
-            child: const CustomText(text: 'Add'),
-          ),
+        setState(() {
+          billNO = '${currentNewBillNo}';
+          newBillNo = currentNewBillNo;
         });
-      }
 
-      setState(() {
-        allProducts = fetchedData;
-        filteredProducts = List.from(allProducts);
-      });
+        return billNO;
+      } else {
+        print('Document does not exist.');
+        return null;
+      }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching or incrementing billNo: $e');
+      return null;
     }
+  }
+
+  Future<void> updateBillNo(int newBillNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('billNo').doc('pharmacyBillings');
+
+    await docRef.set({'billNo': newBillNo});
   }
 
   @override
   void initState() {
     super.initState();
-    fetchData();
-
-    filteredProducts = List.from(allProducts);
+    getAndIncrementBillNo();
+    productSuggestions = List.generate(allProducts.length, (_) => []);
+    addNewRow();
+    totalAmountController.addListener(_updateBalance);
+    collectedAmountController.addListener(_updateBalance);
   }
 
-  void clearFields() {
-    _productName.clear();
-    _composition.clear();
-    _quantity.clear();
-    _hsnCode.clear();
-    _companyName.clear();
-    _referredByDoctor.clear();
-    _additionalInformation.clear();
+  double _taxTotal() {
+    double sum = allProducts.fold<double>(
+      0.0,
+      (sum, entry) {
+        var value = entry['Tax Total'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value) ?? 0.0);
+        } else if (value is num) {
+          return sum + value.toDouble();
+        }
+
+        return sum;
+      },
+    );
+
+    return double.parse(sum.toStringAsFixed(2));
   }
 
-  void filterProducts() {
-    setState(() {
-      filteredProducts = allProducts.where((product) {
-        return (selectedCategoryFilter == null ||
-                selectedCategoryFilter == 'All' ||
-                product['Category'] == selectedCategoryFilter) &&
-            (productName.isEmpty ||
-                product['Product Name']!
-                    .toLowerCase()
-                    .contains(productName.toLowerCase())) &&
-            (companyName.isEmpty ||
-                product['Company']!
-                    .toLowerCase()
-                    .contains(companyName.toLowerCase())) &&
-            (hsnCode.isEmpty ||
-                product['HSN Code']!
-                    .toLowerCase()
-                    .contains(hsnCode.toLowerCase()));
-      }).toList();
-    });
+  double _allProductTotal() {
+    double sum = allProducts.fold<double>(
+      0.0,
+      (sum, entry) {
+        var value = entry['Product Total'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value) ?? 0.0);
+        } else if (value is num) {
+          return sum + value.toDouble();
+        }
+
+        return sum;
+      },
+    );
+
+    return double.parse(sum.toStringAsFixed(2));
+  }
+
+  @override
+  void dispose() {
+    for (var rowControllers in controllers) {
+      for (var controller in rowControllers.values) {
+        controller.dispose();
+      }
+    }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     return Scaffold(
       appBar: const FoxCareLiteAppBar(),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.02,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
+            left: screenWidth * 0.04,
+            right: screenWidth * 0.04,
             bottom: screenWidth * 0.05,
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const TimeDateWidget(text: 'Counter Sales'),
+              SizedBox(height: screenHeight * 0.02),
+              Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
+                    padding: EdgeInsets.only(left: screenWidth * 0.078),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CustomText(
-                          text: "CounterSales",
-                          size: screenWidth * 0.0275,
+                          text: 'Bill No : $billNO',
+                          size: screenWidth * 0.015,
+                        ),
+                        SizedBox(width: screenWidth * 0.21),
+                        CustomText(
+                          text: 'Date : $todayString',
+                          size: screenWidth * 0.015,
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: billNo,
-                    hintText: 'Bill No',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                      controller: patientName,
-                      hintText: 'Patient Name',
-                      width: screenWidth * 0.25),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                      controller: age,
-                      hintText: 'Age',
-                      width: screenWidth * 0.25)
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                      controller: place,
-                      hintText: 'Place',
-                      width: screenWidth * 0.25),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: _dateController,
-                    hintText: 'Bill Date',
-                    width: screenWidth * 0.15,
-                    icon: const Icon(Icons.date_range),
-                    onTap: () => _selectDate(context),
-                  ),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                      controller: gender,
-                      hintText: 'Gender',
-                      width: screenWidth * 0.20),
-                  SizedBox(width: screenHeight * 0.2),
-                  CustomTextField(
-                      controller: phoneNumber,
-                      hintText: 'Phone Number',
-                      width: screenWidth * 0.20),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomDropdown(
-                    label: 'Select Category',
-                    items: const [
-                      'All',
-                      'Medicine',
-                      'Equipment',
-                      'Supplements',
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategoryFilter = value;
-                      });
-                      filterProducts();
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                children: [
-                  CustomTextField(
-                    hintText: 'Product Name',
-                    width: screenWidth * 0.20,
-                    onChanged: (value) {
-                      productName = value;
-                      filterProducts();
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
-                    hintText: 'Company Name',
-                    width: screenWidth * 0.20,
-                    onChanged: (value) {
-                      companyName = value;
-                      filterProducts();
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
-                    hintText: 'HSN Code',
-                    width: screenWidth * 0.10,
-                    onChanged: (value) {
-                      hsnCode = value;
-                      filterProducts();
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.045),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: filterProducts,
-                    width: screenWidth * 0.1,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(headers: headers, tableData: filteredProducts),
-              SizedBox(height: screenHeight * 0.06),
-              if (tableData.isNotEmpty) ...[
-                isLoading
-                    ? CircularProgressIndicator()
-                    : Column(
+                  SizedBox(height: screenHeight * 0.05),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CustomDataTable(
-                              tableData: tableData,
-                              headers: header,
-                              editableColumns: const [
-                                'Quantity',
-                              ],
-                              onValueChanged: (rowIndex, header, value) async {
-                                if (rowIndex >= 0 &&
-                                    rowIndex < tableData.length) {
-                                  setState(() {
-                                    tableData[rowIndex][header] = value;
-
-                                    double quantity = double.tryParse(
-                                            tableData[rowIndex]['Quantity']
-                                                    ?.toString() ??
-                                                '0') ??
-                                        0;
-                                    double price = double.tryParse(
-                                            tableData[rowIndex]['Price']
-                                                    ?.toString() ??
-                                                '0') ??
-                                        0;
-                                    double gstRate = double.tryParse(
-                                            tableData[rowIndex]['Gst']
-                                                    ?.replaceAll('%', '') ??
-                                                '0') ??
-                                        0;
-
-                                    if (tableData.isNotEmpty &&
-                                        rowIndex < tableData.length) {
-                                      double totalAmountForItem =
-                                          quantity * price;
-                                      double itemGst =
-                                          (totalAmountForItem * gstRate) / 100;
-
-                                      tableData[rowIndex]['Amount'] =
-                                          (totalAmountForItem + itemGst)
-                                              .toStringAsFixed(2);
-                                      calculateTotals();
-                                    }
-                                  });
-                                } else {
-                                  print(
-                                      "Error: rowIndex $rowIndex is out of range. Table length: ${tableData.length}");
-                                }
-                              }),
-                          Container(
-                            padding: EdgeInsets.only(right: screenWidth * 0.03),
-                            width: screenWidth,
-                            height: screenHeight * 0.030,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.black,
-                                width: 0.5,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                CustomText(
-                                  text: 'Total : $totalAmount',
-                                )
-                              ],
-                            ),
+                          CustomText(
+                            text: 'Patient Name',
+                            size: screenHeight * 0.03,
                           ),
-                          Container(
-                            padding: EdgeInsets.only(right: screenWidth * 0.08),
-                            width: screenWidth,
-                            height: screenHeight * 0.025,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.black,
-                                width: 0.5,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                CustomText(text: '12% TAX :$taxAmount '),
-                                CustomText(text: '10% GST : $gstAmount'),
-                                CustomText(text: 'Total GST :$totalGst '),
-                                CustomText(text: 'Grand Total :$grandTotal '),
-                              ],
-                            ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: patientName,
+                            hintText: '',
+                            width: screenWidth * 0.2,
                           ),
                         ],
                       ),
-              ],
-              SizedBox(height: screenHeight * 0.08),
-              Container(
-                padding: EdgeInsets.only(
-                  left: screenWidth * 0.15,
-                  right: screenWidth * 0.15,
-                ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone Number',
+                            size: screenHeight * 0.03,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: phoneNumber,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Place',
+                            size: screenHeight * 0.03,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: place,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.05),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Doctor Name',
+                            size: screenHeight * 0.03,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: doctorName,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'OP Number',
+                            size: screenHeight * 0.03,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: opNumber,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Hospital Name',
+                            size: screenHeight * 0.03,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          PharmacyTextField(
+                            controller: hospitalName,
+                            hintText: '',
+                            width: screenWidth * 0.2,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.04),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CustomButton(
-                      label: 'Payment',
-                      onPressed: () {},
-                      width: screenWidth * 0.10,
+                    CustomText(
+                      text: '     Products',
+                      size: screenWidth * 0.02,
+                      color: AppColors.blue,
+                    )
+                  ],
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              isAdding
+                  ? const CircularProgressIndicator()
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        IconButton(
+                          onPressed: () async {
+                            setState(() {
+                              isAdding = true;
+                            });
+                            await Future.delayed(
+                                const Duration(milliseconds: 100));
+                            setState(() {
+                              addNewRow();
+                              isAdding = false;
+                            });
+                          },
+                          icon: Icon(
+                            Icons.add,
+                            color: AppColors.blue,
+                          ),
+                        ),
+                        SizedBox(
+                          width: screenWidth * 0.85,
+                          child: BillingDataTable(
+                            headers: headers,
+                            tableData: allProducts,
+                            editableColumns: editableColumns,
+                            onValueChanged: (rowIndex, header, value) {
+                              setState(() {
+                                allProducts[rowIndex][header] = value;
+
+                                if (header == 'Quantity') {
+                                  final tax = double.tryParse(
+                                          allProducts[rowIndex]['Tax'] ??
+                                              '0') ??
+                                      0;
+                                  final quantity = double.tryParse(
+                                          allProducts[rowIndex]['Quantity'] ??
+                                              '0') ??
+                                      0;
+                                  final price = double.tryParse(
+                                      allProducts[rowIndex]['Rate'] ?? '0');
+                                  final totalQuantity = quantity;
+
+                                  if (price != null) {
+                                    final totalWithoutTax =
+                                        totalQuantity * price;
+                                    final taxAmount =
+                                        totalWithoutTax * (tax / 100);
+                                    final totalWithTax =
+                                        totalWithoutTax + taxAmount;
+
+                                    allProducts[rowIndex]['Tax Total'] =
+                                        taxAmount.toStringAsFixed(2);
+                                    allProducts[rowIndex]['Product Total'] =
+                                        totalWithTax.toStringAsFixed(2);
+                                  }
+                                }
+
+                                _taxTotal();
+                                _allProductTotal();
+                                onDiscountChanged(discount.text);
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    CustomButton(
-                      label: 'Print',
-                      onPressed: () => submitBillingData(),
-                      width: screenWidth * 0.10,
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.395),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.030,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
                     ),
-                    CustomButton(
-                      label: 'Submit',
-                      onPressed: () => submitBillingData(),
-                      width: screenWidth * 0.10,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      CustomText(
+                        text: 'Tax Total  : ',
+                      ),
+                      CustomText(
+                        text: " ${_taxTotal()}",
+                      ),
+                      SizedBox(width: screenWidth * 0.05),
+                      CustomText(
+                        text: 'Total  : ',
+                      ),
+                      CustomText(
+                        text: " ${_allProductTotal()}",
+                      ),
+                      SizedBox(width: screenWidth * 0.05),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.04,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Discount ',
+                      ),
+                      PharmacyTextField(
+                        controller: discount,
+                        hintText: '',
+                        width: screenWidth * 0.05,
+                        onChanged: onDiscountChanged,
+                      ),
+                      CustomText(
+                        text: '  % :  ',
+                      ),
+                      CustomText(
+                        text: '${discountAmount.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
+                child: Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.02),
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.04,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CustomText(
+                        text: 'Net Total : ${totalAmount.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.05),
+                child: Row(
+                  children: [
+                    CustomText(
+                      text: 'Payment',
+                      size: screenWidth * 0.02,
+                      color: AppColors.blue,
+                    )
+                  ],
+                ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: screenWidth * 0.05, right: screenWidth * 0.05),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text:
+                                      'Net Total : ${totalAmountController.text}',
+                                  size: screenWidth * 0.0125,
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Collected ',
+                                  size: screenWidth * 0.011,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: collectedAmountController,
+                                  width: screenWidth * 0.15,
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Balance ',
+                                  size: screenWidth * 0.011,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: balanceController,
+                                  width: screenWidth * 0.15,
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Payment Mode ',
+                                  size: screenWidth * 0.011,
+                                ),
+                                SizedBox(height: 7),
+                                SizedBox(
+                                  height: screenHeight * 0.04,
+                                  width: screenWidth * 0.15,
+                                  child: PharmacyDropDown(
+                                    width: screenWidth * 0.04,
+                                    label: '',
+                                    items: const [
+                                      'UPI',
+                                      'Credit Card',
+                                      'Debit Card',
+                                      'Net Banking',
+                                      'Cash'
+                                    ],
+                                    onChanged: (value) {
+                                      setState(
+                                        () {
+                                          selectedPaymentMode = value;
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                  text: 'Payment Details ',
+                                  size: screenWidth * 0.011,
+                                ),
+                                SizedBox(height: 7),
+                                PharmacyTextField(
+                                  hintText: '',
+                                  controller: paymentDetails,
+                                  width: screenWidth * 0.15,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.05),
+              Padding(
+                padding: EdgeInsets.only(
+                    left: screenWidth * 0.09, right: screenWidth * 0.09),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PharmacyButton(
+                        color: AppColors.blue,
+                        label: 'Cancel',
+                        onPressed: () {},
+                        width: screenWidth * 0.1),
+                    PharmacyButton(
+                        color: AppColors.blue,
+                        label: 'Print',
+                        onPressed: () {},
+                        width: screenWidth * 0.1),
+                    isSubmitting
+                        ? Lottie.asset('assets/button_loading.json',
+                            height: 150, width: 150)
+                        : PharmacyButton(
+                            color: AppColors.blue,
+                            label: 'Submit',
+                            onPressed: () {
+                              submitBill();
+                            },
+                            width: screenWidth * 0.1),
                   ],
                 ),
               ),
