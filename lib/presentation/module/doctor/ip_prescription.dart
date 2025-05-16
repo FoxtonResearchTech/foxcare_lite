@@ -328,12 +328,7 @@ class _IpPrescription extends State<IpPrescription> {
       for (var doc in distributorsSnapshot.docs) {
         Map<String, dynamic> data = doc.data();
 
-        // Convert quantity to integer safely
-        int quantity = int.tryParse(data['quantity'].toString()) ?? 0;
-
-        if (data.containsKey('mrp') && quantity > 0) {
-          validMedicines.add(data['productName'].toString());
-        }
+        validMedicines.add(data['productName'].toString());
       }
       print(validMedicines);
 

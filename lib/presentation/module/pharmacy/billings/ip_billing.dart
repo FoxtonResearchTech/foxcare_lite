@@ -38,7 +38,7 @@ class _IpBilling extends State<IpBilling> {
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
-    print('Fetching data with OP Number: $ipNumber');
+    print('Fetching data with IP Number: $ipNumber');
 
     try {
       List<Map<String, dynamic>> fetchedData = [];
@@ -196,8 +196,8 @@ class _IpBilling extends State<IpBilling> {
       }
 
       fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Token NO']) ?? 0;
-        int tokenB = int.tryParse(b['Token NO']) ?? 0;
+        int tokenA = int.tryParse(a['Token No']) ?? 0;
+        int tokenB = int.tryParse(b['Token No']) ?? 0;
         return tokenA.compareTo(tokenB);
       });
 
@@ -222,7 +222,6 @@ class _IpBilling extends State<IpBilling> {
   void initState() {
     super.initState();
     fetchData();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       fetchData();
     });

@@ -40,14 +40,10 @@ class _PharmacyStocks extends State<PharmacyStocks> {
 
   final List<String> headers = [
     'Product Name',
-    'HSN Code',
-    'Quantity',
+    'Composition',
     'Category',
     'Company',
-    'Composition',
-    'Type',
   ];
-
   List<Map<String, dynamic>> allProducts = [];
 
   List<Map<String, dynamic>> filteredProducts = [];
@@ -244,10 +240,16 @@ class _PharmacyStocks extends State<PharmacyStocks> {
                   CustomDropdown(
                     label: 'Select Category',
                     items: const [
-                      'All',
-                      'Medicine',
-                      'Equipment',
-                      'Supplements',
+                      'Tablets',
+                      'Capsules',
+                      'Powders',
+                      'Solutions',
+                      'Suspensions',
+                      'Topical Medicines',
+                      'Suppository',
+                      'Injections',
+                      'Inhales',
+                      'Patches',
                     ],
                     onChanged: (value) {
                       setState(() {
