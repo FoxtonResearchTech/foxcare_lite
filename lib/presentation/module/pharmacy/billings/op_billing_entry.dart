@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
@@ -6,10 +5,9 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/billing_data_table.dart';
-import 'package:foxcare_lite/utilities/widgets/table/stock_return_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
-import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 
@@ -23,6 +21,7 @@ class OpBillingEntry extends StatefulWidget {
   final String? phone;
   final String? doctorName;
   final String? specialization;
+  final List<dynamic>? medications;
 
   const OpBillingEntry(
       {this.patientName,
@@ -32,7 +31,8 @@ class OpBillingEntry extends StatefulWidget {
       this.phone,
       this.doctorName,
       this.specialization,
-      super.key});
+      super.key,
+      this.medications});
 
   @override
   State<OpBillingEntry> createState() => _OpBillingEntry();
@@ -322,6 +322,15 @@ class _OpBillingEntry extends State<OpBillingEntry> {
     await docRef.set({'billNo': newBillNo});
   }
 
+  double _getTextWidth(String text, double maxWidth) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: maxWidth);
+    return textPainter.size.width + 75;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -441,7 +450,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                           ),
                         ],
                       ),
-                      SizedBox(width: screenWidth * 0.02),
+                      SizedBox(width: screenWidth * 0.01),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -461,7 +470,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                           ),
                         ],
                       ),
-                      SizedBox(width: screenWidth * 0.02),
+                      SizedBox(width: screenWidth * 0.01),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -486,7 +495,45 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                   )
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  CustomText(
+                    text: '     Prescribed Medications',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
+                  )
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Container(
+                padding: EdgeInsets.only(left: screenWidth * 0.05),
+                width: double.infinity,
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  spacing: screenWidth * 0.01,
+                  runSpacing: 8.0,
+                  children: widget.medications?.map((med) {
+                        final String medText = med.toString();
+                        final double textWidth =
+                            _getTextWidth(medText, screenWidth * 0.8);
+                        final double fieldWidth =
+                            textWidth.clamp(60, screenWidth * 0.3);
+
+                        return SizedBox(
+                          width: fieldWidth,
+                          child: PharmacyTextField(
+                            hintText: '',
+                            readOnly: true,
+                            controller: TextEditingController(text: medText),
+                            width: null,
+                          ),
+                        );
+                      }).toList() ??
+                      [],
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 children: [
                   CustomText(
@@ -496,7 +543,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                   )
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               isAdding
                   ? const CircularProgressIndicator()
                   : Row(
@@ -654,7 +701,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                   ),
                 ),
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Padding(
                 padding: EdgeInsets.only(left: screenWidth * 0.05),
                 child: Row(

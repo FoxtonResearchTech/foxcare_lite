@@ -63,6 +63,7 @@ class _OpBilling extends State<OpBilling> {
 
         for (var opTicketDoc in opTicketsSnapshot.docs) {
           final opTicketData = opTicketDoc.data();
+          if (!opTicketData.containsKey('medicinePrescribedDate')) continue;
           print(
               'opTicketData: ${opTicketData['opTicket']}'); // Debugging print statement
 
@@ -108,8 +109,24 @@ class _OpBilling extends State<OpBilling> {
               print('Error fetching tokenNo for patient $patientId: $e');
             }
             isAbscond = opTicketData['status'] == 'abscond';
+            DateTime? latestMedicineDate;
 
-            // if (tokenDate == todayString) {}
+            for (var opTicketDoc in opTicketsSnapshot.docs) {
+              final data = opTicketDoc.data();
+              if (data['medicinePrescribedDate'] != null) {
+                try {
+                  final date = DateTime.parse(data['medicinePrescribedDate']);
+                  if (latestMedicineDate == null ||
+                      date.isAfter(latestMedicineDate)) {
+                    latestMedicineDate = date;
+                  }
+                } catch (e) {
+                  print(
+                      'Invalid date format in medicinePrescribedDate: ${data['medicinePrescribedDate']}');
+                }
+              }
+            }
+
             fetchedData.add({
               'Token No': tokenNo,
               'OP Number': patientData['opNumber'] ?? 'N/A',
@@ -120,6 +137,7 @@ class _OpBilling extends State<OpBilling> {
               'Place': patientData['city'] ?? 'N/A',
               'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
               'Specialization': opTicketData['specialization'] ?? 'N/A',
+              'Medication': opTicketData['Medication'] ?? [],
               'Actions': Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -133,13 +151,15 @@ class _OpBilling extends State<OpBilling> {
                                   patientName:
                                       '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
                                           .trim(),
-                                  opTicket: opTicketData['opTicket'],
-                                  opNumber: patientData['opNumber'],
-                                  place: patientData['city'],
-                                  phone: patientData['phone1'],
-                                  doctorName: opTicketData['doctorName'],
+                                  opTicket: opTicketData['opTicket'] ?? 'N/A',
+                                  opNumber: patientData['opNumber'] ?? 'N/A',
+                                  place: patientData['city'] ?? 'N/A',
+                                  phone: patientData['phone1'] ?? 'N/A',
+                                  doctorName:
+                                      opTicketData['doctorName'] ?? 'N/A',
                                   specialization:
-                                      opTicketData['specialization'],
+                                      opTicketData['specialization'] ?? 'N/A',
+                                  medications: opTicketData['Medication'] ?? [],
                                 )));
                       },
                       child: const CustomText(text: 'Open')),

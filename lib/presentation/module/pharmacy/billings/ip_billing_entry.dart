@@ -444,7 +444,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                           ),
                         ],
                       ),
-                      SizedBox(width: screenWidth * 0.02),
+                      SizedBox(width: screenWidth * 0.01),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -464,7 +464,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                           ),
                         ],
                       ),
-                      SizedBox(width: screenWidth * 0.02),
+                      SizedBox(width: screenWidth * 0.01),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -502,7 +502,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                   ],
                 ),
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 children: [
                   CustomText(
@@ -512,7 +512,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                   )
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               isAdding
                   ? const CircularProgressIndicator()
                   : Row(
@@ -670,7 +670,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                   ),
                 ),
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Padding(
                 padding: EdgeInsets.only(left: screenWidth * 0.05),
                 child: Row(

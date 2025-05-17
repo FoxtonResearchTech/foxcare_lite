@@ -935,7 +935,7 @@ class _CounterSales extends State<CounterSales> {
                       ],
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.05),
+                  SizedBox(height: screenHeight * 0.02),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -946,7 +946,7 @@ class _CounterSales extends State<CounterSales> {
                             text: 'Patient Name',
                             size: screenHeight * 0.03,
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.001),
                           Row(
                             children: [
                               PharmacyTextField(
@@ -982,7 +982,7 @@ class _CounterSales extends State<CounterSales> {
                             text: 'Phone Number',
                             size: screenHeight * 0.03,
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.005),
                           PharmacyTextField(
                             controller: phoneNumber,
                             hintText: '',
@@ -997,7 +997,7 @@ class _CounterSales extends State<CounterSales> {
                             text: 'Place',
                             size: screenHeight * 0.03,
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.005),
                           PharmacyTextField(
                             controller: place,
                             hintText: '',
@@ -1007,7 +1007,7 @@ class _CounterSales extends State<CounterSales> {
                       )
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.05),
+                  SizedBox(height: screenHeight * 0.01),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -1018,7 +1018,7 @@ class _CounterSales extends State<CounterSales> {
                             text: 'Doctor Name',
                             size: screenHeight * 0.03,
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.001),
                           Row(
                             children: [
                               PharmacyTextField(
@@ -1054,7 +1054,7 @@ class _CounterSales extends State<CounterSales> {
                             text: 'OP Number',
                             size: screenHeight * 0.03,
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.005),
                           PharmacyTextField(
                             controller: opNumber,
                             hintText: '',
@@ -1069,7 +1069,7 @@ class _CounterSales extends State<CounterSales> {
                             text: 'Hospital Name',
                             size: screenHeight * 0.03,
                           ),
-                          SizedBox(height: screenHeight * 0.01),
+                          SizedBox(height: screenHeight * 0.005),
                           PharmacyTextField(
                             controller: hospitalName,
                             hintText: '',
@@ -1081,7 +1081,7 @@ class _CounterSales extends State<CounterSales> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Padding(
                 padding: EdgeInsets.only(left: screenWidth * 0.04),
                 child: Row(
@@ -1094,7 +1094,7 @@ class _CounterSales extends State<CounterSales> {
                   ],
                 ),
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               isAdding
                   ? const CircularProgressIndicator()
                   : Row(
@@ -1252,7 +1252,7 @@ class _CounterSales extends State<CounterSales> {
                   ),
                 ),
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Padding(
                 padding: EdgeInsets.only(left: screenWidth * 0.05),
                 child: Row(
