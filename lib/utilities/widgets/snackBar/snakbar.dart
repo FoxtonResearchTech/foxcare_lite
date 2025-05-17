@@ -10,30 +10,136 @@ void CustomSnackBar(
   double fontSize = 16.0,
   FontWeight fontWeight = FontWeight.bold,
   Duration duration = const Duration(seconds: 3),
-  SnackBarBehavior behavior = SnackBarBehavior.floating,
 }) {
-  final snackBar = SnackBar(
-    content: Row(
-      children: [
-        if (icon != null) Icon(icon, color: Colors.white, size: iconSize),
-        if (icon != null) SizedBox(width: 10),
-        Expanded(
-          child: Center(
-            child: CustomText(
-              text: message,
-              color: Colors.white,
-            ),
+  final overlay = Overlay.of(context);
+  late OverlayEntry overlayEntry;
+
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+
+  overlayEntry = OverlayEntry(
+    builder: (context) {
+      return Positioned(
+        top: MediaQuery.of(context).padding.top + 10,
+        left: screenWidth * 0.2,
+        right: screenWidth * 0.2,
+        child: Material(
+          color: Colors.transparent,
+          child: SlideDownSnackBar(
+            message: message,
+            backgroundColor: backgroundColor,
+            icon: icon,
+            iconSize: iconSize,
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+            onDismiss: () => overlayEntry.remove(),
+            duration: duration,
           ),
         ),
-      ],
-    ),
-    backgroundColor: backgroundColor,
-    behavior: behavior,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-    duration: duration,
+      );
+    },
   );
 
-  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  overlay.insert(overlayEntry);
+}
+
+class SlideDownSnackBar extends StatefulWidget {
+  final String message;
+  final Color backgroundColor;
+  final IconData? icon;
+  final double iconSize;
+  final double fontSize;
+  final FontWeight fontWeight;
+  final VoidCallback onDismiss;
+  final Duration duration;
+
+  const SlideDownSnackBar({
+    super.key,
+    required this.message,
+    required this.backgroundColor,
+    required this.onDismiss,
+    this.icon,
+    this.iconSize = 24.0,
+    this.fontSize = 16.0,
+    this.fontWeight = FontWeight.bold,
+    this.duration = const Duration(seconds: 3),
+  });
+
+  @override
+  State<SlideDownSnackBar> createState() => _SlideDownSnackBarState();
+}
+
+class _SlideDownSnackBarState extends State<SlideDownSnackBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _controller.forward();
+
+    Future.delayed(widget.duration, () {
+      _controller.reverse().then((_) => widget.onDismiss());
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: widget.backgroundColor,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(color: Colors.black26, blurRadius: 8),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              if (widget.icon != null)
+                Icon(widget.icon, color: Colors.white, size: widget.iconSize),
+              if (widget.icon != null) const SizedBox(width: 10),
+              Expanded(
+                child: Center(
+                  child: CustomText(
+                    text: widget.message,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

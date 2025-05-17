@@ -150,10 +150,10 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
       for (var doc in purchaseSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final String? reportDate = data['reportDate'];
+        final String? reportDate = data['billDate'];
         if (isInRange(reportDate)) {
           double value =
-              double.tryParse(data['amount']?.toString() ?? '0') ?? 0;
+              double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
           total += value;
         }
       }
@@ -174,12 +174,11 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
         for (var doc in returnSnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          final String? dateStr = data['date'];
+          final String? dateStr = data['returnDate'];
 
           if (isInRange(dateStr)) {
             double returnValue =
-                double.tryParse(data['totalReturnAmount']?.toString() ?? '0') ??
-                    0;
+                double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
             total -= returnValue;
           }
         }
@@ -205,7 +204,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
     try {
       final QuerySnapshot patientSnapshot =
-      await fireStore.collection('patients').get();
+          await fireStore.collection('patients').get();
 
       setState(() {
         isTotalIncomeLoading = true;
@@ -290,8 +289,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
               }
             } catch (e) {
               print(
-                  'Error fetching labCollection for ipTicket ${ipDoc
-                      .id} of patient ${doc.id}: $e');
+                  'Error fetching labCollection for ipTicket ${ipDoc.id} of patient ${doc.id}: $e');
             }
 
             // ipAdmissionPayments/payments
@@ -463,7 +461,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
     try {
       final QuerySnapshot patientSnapshot =
-      await fireStore.collection('patients').get();
+          await fireStore.collection('patients').get();
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -524,7 +522,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
     try {
       final QuerySnapshot patientSnapshot =
-      await fireStore.collection('patients').get();
+          await fireStore.collection('patients').get();
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -569,7 +567,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
     try {
       final QuerySnapshot patientSnapshot =
-      await fireStore.collection('patients').get();
+          await fireStore.collection('patients').get();
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -632,8 +630,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context,
-      TextEditingController controller) async {
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -715,31 +713,28 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-        title: const CustomText(
-          text: 'Management Dashboard',
-        ),
-      )
+              title: const CustomText(
+                text: 'Management Dashboard',
+              ),
+            )
           : null,
       drawer: isMobile
           ? Drawer(
-        child: ManagementModuleDrawer(
-          selectedIndex: selectedIndex,
-          onItemSelected: (index) {
-            setState(() {
-              selectedIndex = index;
-            });
-          },
-        ),
-      )
+              child: ManagementModuleDrawer(
+                selectedIndex: selectedIndex,
+                onItemSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+            )
           : null,
       body: Row(
         children: [
@@ -768,14 +763,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
   }
 
   Widget dashboard() {
-    double screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-    final screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     bool isMobile = screenWidth < 600;
 
@@ -873,68 +862,68 @@ class _ManagementDashboard extends State<ManagementDashboard> {
               status == 'All Good'
                   ? SizedBox()
                   : Container(
-                padding: EdgeInsets.all(16),
-                margin: EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: backgroundColor, // Dynamic background color
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: borderColor), // Dynamic border color
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          icon, // Dynamic icon based on status
-                          color: borderColor,
-                        ),
-                        SizedBox(width: 8), // Space between icon and text
-                        Expanded(
-                          child: Text(
-                            '${message} ', // Dynamic message
-                            style: TextStyle(
-                              color:
-                              borderColor, // Apply dynamic color here
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                        height:
-                        8), // Space between message and contact info
-                    Align(
-                      alignment:
-                      Alignment.centerRight, // Align to the right
-                      child: TextButton(
-                        onPressed: () async {
-                          // Launch the URL when the button is pressed
-                          final Uri url =
-                          Uri.parse('https://foxtonresearch.com/');
-                          if (await canLaunch(url.toString())) {
-                            await launch(url.toString());
-                          } else {
-                            throw 'Could not launch $url';
-                          }
-                        },
-                        child: Text(
-                          "If you have any queries, contact us",
-                          // Contact information
-                          style: TextStyle(
-                            color:
-                            Colors.blue, // Apply dynamic color here
-                            fontWeight: FontWeight.bold,
-                            // Underline the text
-                          ),
-                        ),
+                      padding: EdgeInsets.all(16),
+                      margin: EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: backgroundColor, // Dynamic background color
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: borderColor), // Dynamic border color
                       ),
-                    )
-                  ],
-                ),
-              ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                icon, // Dynamic icon based on status
+                                color: borderColor,
+                              ),
+                              SizedBox(width: 8), // Space between icon and text
+                              Expanded(
+                                child: Text(
+                                  '${message} ', // Dynamic message
+                                  style: TextStyle(
+                                    color:
+                                        borderColor, // Apply dynamic color here
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  8), // Space between message and contact info
+                          Align(
+                            alignment:
+                                Alignment.centerRight, // Align to the right
+                            child: TextButton(
+                              onPressed: () async {
+                                // Launch the URL when the button is pressed
+                                final Uri url =
+                                    Uri.parse('https://foxtonresearch.com/');
+                                if (await canLaunch(url.toString())) {
+                                  await launch(url.toString());
+                                } else {
+                                  throw 'Could not launch $url';
+                                }
+                              },
+                              child: Text(
+                                "If you have any queries, contact us",
+                                // Contact information
+                                style: TextStyle(
+                                  color:
+                                      Colors.blue, // Apply dynamic color here
+                                  fontWeight: FontWeight.bold,
+                                  // Underline the text
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
               SizedBox(height: screenHeight * 0.075),
               Row(
                 children: [
@@ -1052,14 +1041,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
   }) {
     color ??= AppColors.blue;
 
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-    final screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
       padding: EdgeInsets.all(screenWidth * 0.01),

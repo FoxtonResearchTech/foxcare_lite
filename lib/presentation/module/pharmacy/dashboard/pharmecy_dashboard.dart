@@ -238,7 +238,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       for (String collection in subcollections) {
         final QuerySnapshot snapshot = await firestore
             .collection('pharmacy')
-            .doc('billing')
+            .doc('billings')
             .collection(collection)
             .where('billDate', isEqualTo: today)
             .get();
@@ -246,7 +246,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
           double value =
-              double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
+              double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
           total += value;
         }
       }
@@ -283,7 +283,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
     try {
       final QuerySnapshot patientSnapshot = await fireStore
           .collection('pharmacy')
-          .doc('billing')
+          .doc('billings')
           .collection('opbilling')
           .where('billDate', isEqualTo: today)
           .get();
@@ -299,9 +299,9 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
         if (!data.containsKey('opNumber')) continue;
 
         fetchedData.add({
-          'Bill No': data['billNumber'] ?? 'N/A',
+          'Bill No': data['billNo'] ?? 'N/A',
           'Patient Name': data['patientName'] ?? 'N/A',
-          'Amount': data['grandTotal'] ?? 'N/A',
+          'Amount': data['netTotalAmount'] ?? 'N/A',
         });
 
         count++;
@@ -331,7 +331,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       for (String subcollection in subcollections) {
         final QuerySnapshot snapshot = await fireStore
             .collection('pharmacy')
-            .doc('billing')
+            .doc('billings')
             .collection(subcollection)
             .where('billDate', isEqualTo: today)
             .get();
@@ -356,7 +356,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('pharmacy')
-          .doc('billing')
+          .doc('billings')
           .collection('opbilling')
           .where('billDate', isEqualTo: today)
           .get();
@@ -380,7 +380,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('pharmacy')
-          .doc('billing')
+          .doc('billings')
           .collection('ipbilling')
           .where('billDate', isEqualTo: today)
           .get();
@@ -404,7 +404,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
     try {
       final QuerySnapshot snapshot = await fireStore
           .collection('pharmacy')
-          .doc('billing')
+          .doc('billings')
           .collection('countersales')
           .where('billDate', isEqualTo: today)
           .get();
