@@ -1,16 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/billing_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
-
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 
+import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
 class OpBillingEntry extends StatefulWidget {
@@ -69,6 +73,20 @@ class _OpBillingEntry extends State<OpBillingEntry> {
     'Tax Total',
     'Product Total',
     'Delete',
+  ];
+  final List<String> pdfHeaders = [
+    'Product Name',
+    'HSN',
+    'Batch',
+    'Expiry',
+    'Quantity',
+    'MRP',
+    'Rate',
+    'Tax',
+    'SGST',
+    'CGST',
+    'Tax Total',
+    'Product Total',
   ];
 
   final List<String> editableColumns = ['Product Name', 'Quantity'];
@@ -283,6 +301,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       );
       setState(() {
         isSubmitting = false;
+        isPrinting = true;
       });
     }
   }
@@ -329,6 +348,491 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: maxWidth);
     return textPainter.size.width + 75;
+  }
+
+  void printInvoice() {
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Invoice'),
+          content: Container(
+            width: 125,
+            height: 50,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                CustomText(text: 'Do you want to print ?'),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                final pdf = pw.Document();
+                const blue = PdfColor.fromInt(0xFF106ac2);
+                const lightBlue = PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
+
+                final font =
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                final ttf = pw.Font.ttf(font);
+
+                final topImage = pw.MemoryImage(
+                  (await rootBundle.load('assets/opAssets/OP_Ticket_Top.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+
+                final bottomImage = pw.MemoryImage(
+                  (await rootBundle
+                          .load('assets/opAssets/OP_Card_back_original.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+                List<pw.Widget> buildPaginatedTable({
+                  required List<String> headers,
+                  required List<Map<String, dynamic>> data,
+                  required pw.Font ttf,
+                  required PdfColor headerColor,
+                  required double rowHeight,
+                }) {
+                  final List<List<String>> tableData = [
+                    headers,
+                    ...data.map((row) =>
+                        headers.map((h) => row[h]?.toString() ?? '').toList()),
+                  ];
+
+                  return [
+                    pw.TableHelper.fromTextArray(
+                      headers: headers,
+                      data: data
+                          .map((row) => headers
+                              .map((h) => row[h]?.toString() ?? '')
+                              .toList())
+                          .toList(),
+                      headerStyle: pw.TextStyle(
+                        font: ttf,
+                        fontSize: 7,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white,
+                      ),
+                      headerDecoration: pw.BoxDecoration(color: headerColor),
+                      cellStyle: pw.TextStyle(font: ttf, fontSize: 7),
+                      cellHeight: rowHeight - 10,
+                      border: pw.TableBorder.all(color: headerColor),
+                    ),
+                  ];
+                }
+
+                pdf.addPage(
+                  pw.MultiPage(
+                    pageFormat: PdfPageFormat.a4,
+                    header: (context) => pw.Column(
+                      children: [
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text(
+                              'Invoice',
+                              style: pw.TextStyle(
+                                fontSize: 40,
+                                font: ttf,
+                                color: PdfColors.black,
+                              ),
+                            ),
+                            pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Text(
+                                  'Invoice No : $billNO',
+                                  style: pw.TextStyle(
+                                    fontSize: 12,
+                                    font: ttf,
+                                    color: PdfColors.black,
+                                  ),
+                                ),
+                                pw.Text(
+                                  'Date : $todayString',
+                                  style: pw.TextStyle(
+                                    fontSize: 12,
+                                    font: ttf,
+                                    color: PdfColors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        pw.Divider(color: blue, thickness: 2),
+                      ],
+                    ),
+                    footer: (context) => pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Divider(color: blue, thickness: 2),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Text(
+                                  '${Constants.hospitalName}',
+                                  style: pw.TextStyle(
+                                    fontSize: 16,
+                                    font: ttf,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: blue,
+                                  ),
+                                ),
+                                pw.Text(
+                                  '${Constants.hospitalAddress}',
+                                  style: pw.TextStyle(
+                                    fontSize: 8,
+                                    font: ttf,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: PdfColors.black,
+                                  ),
+                                ),
+                                pw.Text(
+                                  '${Constants.state + ' - ' + Constants.pincode}',
+                                  style: pw.TextStyle(
+                                    fontSize: 8,
+                                    font: ttf,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: PdfColors.black,
+                                  ),
+                                ),
+                                pw.Text(
+                                  'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
+                                  style: pw.TextStyle(
+                                    fontSize: 8,
+                                    font: ttf,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: PdfColors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Text(
+                                  'For Surya Pharmacy',
+                                  style: pw.TextStyle(
+                                    fontSize: 24,
+                                    font: ttf,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: blue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    build: (context) => [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Row(
+                            children: [
+                              pw.Text(
+                                'Surya Pharmacy',
+                                style: pw.TextStyle(
+                                  fontSize: 24,
+                                  font: ttf,
+                                  color: blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                          pw.Row(
+                            mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Text(
+                                    '${Constants.hospitalAddress}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    '${Constants.state + ' - ' + Constants.pincode}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'DL : ',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'GSTIN : ',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Text(
+                                    'Patient Name : ${widget.patientName}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'OP Number : ${widget.opNumber}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'OP Ticket : ${widget.opTicket}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'Phone No : ${widget.phone}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'Doctor Name : ${widget.doctorName}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'Specialization : ${widget.specialization}',
+                                    style: pw.TextStyle(
+                                      fontSize: 8,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      pw.SizedBox(height: 15),
+                      ...buildPaginatedTable(
+                        headers: pdfHeaders,
+                        data: allProducts,
+                        ttf: ttf,
+                        headerColor: blue,
+                        rowHeight: 15,
+                      ),
+                      pw.Padding(
+                        padding: pw.EdgeInsets.only(left: 231),
+                        child: pw.Container(
+                          padding: pw.EdgeInsets.only(left: 1),
+                          width: 270,
+                          height: 20,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                              color: blue,
+                              width: 1,
+                            ),
+                          ),
+                          child: pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Text(
+                                'Tax Total : ',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.Text(
+                                '${_taxTotal().toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.SizedBox(width: 20),
+                              pw.Text(
+                                'Total : ',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.Text(
+                                '${_allProductTotal().toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.SizedBox(width: 15),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: pw.EdgeInsets.only(left: 340),
+                        child: pw.Container(
+                          padding: pw.EdgeInsets.only(left: 5),
+                          width: 150,
+                          height: 20,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                              color: blue,
+                              width: 1,
+                            ),
+                          ),
+                          child: pw.Row(
+                            children: [
+                              pw.Text(
+                                'Discount ${discount.text}% : ',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.Text(
+                                '${discountAmount.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.SizedBox(width: 5),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: pw.EdgeInsets.only(left: 340),
+                        child: pw.Container(
+                          padding: pw.EdgeInsets.only(left: 5),
+                          width: 150,
+                          height: 20,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                              color: blue,
+                              width: 1,
+                            ),
+                          ),
+                          child: pw.Row(
+                            children: [
+                              pw.Text(
+                                'Net Total : ',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.Text(
+                                '${totalAmountController.text}',
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.black,
+                                ),
+                              ),
+                              pw.SizedBox(width: 5),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                //
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
+                // );
+
+                await Printing.sharePdf(
+                    bytes: await pdf.save(), filename: '${billNO}.pdf');
+              },
+              child: const Text('Print'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {});
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -834,11 +1338,15 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                           clearAll();
                         },
                         width: screenWidth * 0.1),
-                    PharmacyButton(
-                        color: AppColors.blue,
-                        label: 'Print',
-                        onPressed: () {},
-                        width: screenWidth * 0.1),
+                    isPrinting
+                        ? PharmacyButton(
+                            color: AppColors.blue,
+                            label: 'Print',
+                            onPressed: () {
+                              printInvoice();
+                            },
+                            width: screenWidth * 0.1)
+                        : SizedBox(),
                     isSubmitting
                         ? Lottie.asset('assets/button_loading.json',
                             height: 150, width: 150)

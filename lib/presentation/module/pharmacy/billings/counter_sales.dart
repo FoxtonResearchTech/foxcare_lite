@@ -466,7 +466,7 @@ class _CounterSales extends State<CounterSales> {
                                 ),
                               ),
                               pw.Text(
-                                '${_taxTotal().toString()}',
+                                '${_taxTotal().toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                   fontSize: 8,
                                   font: ttf,
@@ -485,7 +485,7 @@ class _CounterSales extends State<CounterSales> {
                                 ),
                               ),
                               pw.Text(
-                                '${_allProductTotal().toString()}',
+                                '${_allProductTotal().toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                   fontSize: 8,
                                   font: ttf,
@@ -522,7 +522,7 @@ class _CounterSales extends State<CounterSales> {
                                 ),
                               ),
                               pw.Text(
-                                '${discountAmount.toString()}',
+                                '${discountAmount.toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                   fontSize: 8,
                                   font: ttf,
