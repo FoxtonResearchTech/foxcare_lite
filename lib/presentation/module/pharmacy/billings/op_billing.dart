@@ -137,12 +137,17 @@ class _OpBilling extends State<OpBilling> {
               'Place': patientData['city'] ?? 'N/A',
               'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
               'Specialization': opTicketData['specialization'] ?? 'N/A',
-              'Medication': opTicketData['Medication'] ?? [],
+              'Medication': opTicketData['Medications'] ?? [],
               'Actions': Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
                       onPressed: () {
+                        final List<Map<String, dynamic>> medications =
+                            List<Map<String, dynamic>>.from(
+                          opTicketData['prescribedMedicines'] ?? [],
+                        );
+
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (
                           context,
@@ -159,7 +164,7 @@ class _OpBilling extends State<OpBilling> {
                                       opTicketData['doctorName'] ?? 'N/A',
                                   specialization:
                                       opTicketData['specialization'] ?? 'N/A',
-                                  medications: opTicketData['Medication'] ?? [],
+                                  medications: medications,
                                 )));
                       },
                       child: const CustomText(text: 'Open')),
