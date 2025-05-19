@@ -259,7 +259,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
       await FirebaseFirestore.instance
           .collection('pharmacy')
           .doc('billings')
-          .collection('ipbillings')
+          .collection('ipbilling')
           .doc()
           .set({
         'billDate': todayString,

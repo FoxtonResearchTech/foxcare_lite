@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
@@ -16,6 +17,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../utilities/constants.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/table/editable_drop_down_table.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../../login/fetch_user.dart';
@@ -198,10 +200,37 @@ class _IpPrescription extends State<IpPrescription> {
   bool isLoading = false;
 
   bool _isSwitched = false;
-  bool isInvestigation = false;
+  bool isMedLoading = false;
+
+  bool isMedWidget = false;
+  bool isLabLoading = false;
+  bool isInvestLoading = false;
   bool isAppointment = false;
-  bool isMed = false;
-  bool isLabTest = false;
+
+  void toggleMed(bool value) {
+    setState(() {
+      isMedWidget = value;
+    });
+  }
+
+  void toggleLab(bool value) {
+    setState(() {
+      isLabLoading = value;
+    });
+  }
+
+  void toggleInvest(bool value) {
+    setState(() {
+      isInvestLoading = value;
+    });
+  }
+
+  void toggleAppointment(bool value) {
+    setState(() {
+      isAppointment = value;
+    });
+  }
+
   List<String> medicineNames = [];
   List<String> _filteredMedicine = [];
   List<String> _selectedMedicine = [];
@@ -340,15 +369,6 @@ class _IpPrescription extends State<IpPrescription> {
     }
   }
 
-  void isMedication(String value) {
-    setState(() {
-      isMed = value == 'Medication';
-      isLabTest = value == 'Examination';
-      isInvestigation = value == 'Investigation';
-      isAppointment = value == 'Appointment';
-    });
-  }
-
   void _updateSerialNumbers() {
     for (int i = 0; i < medicineTableData.length; i++) {
       medicineTableData[i]['SL No'] = i + 1;
@@ -432,742 +452,6 @@ class _IpPrescription extends State<IpPrescription> {
           'date': formattedDate,
         });
       }
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Rx Prescription'),
-            content: Container(
-              width: 125,
-              height: 50,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  CustomText(text: 'Do you want to print ?'),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () async {
-                  final pdf = pw.Document();
-                  const blue = PdfColor.fromInt(0xFF106ac2);
-                  const lightBlue = PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
-
-                  final font = await rootBundle
-                      .load('Fonts/Poppins/Poppins-Regular.ttf');
-                  final ttf = pw.Font.ttf(font);
-
-                  final topImage = pw.MemoryImage(
-                    (await rootBundle.load('assets/opAssets/OP_Ticket_Top.png'))
-                        .buffer
-                        .asUint8List(),
-                  );
-
-                  final bottomImage = pw.MemoryImage(
-                    (await rootBundle
-                            .load('assets/opAssets/OP_Card_back_original.png'))
-                        .buffer
-                        .asUint8List(),
-                  );
-                  List<pw.Widget> buildPaginatedTable({
-                    required List<String> headers,
-                    required List<Map<String, dynamic>> data,
-                    required pw.Font ttf,
-                    required PdfColor headerColor,
-                    required double rowHeight,
-                  }) {
-                    final List<List<String>> tableData = [
-                      headers,
-                      ...data.map((row) => headers
-                          .map((h) => row[h]?.toString() ?? '')
-                          .toList()),
-                    ];
-
-                    return [
-                      pw.TableHelper.fromTextArray(
-                        headers: headers,
-                        data: data
-                            .map((row) => headers
-                                .map((h) => row[h]?.toString() ?? '')
-                                .toList())
-                            .toList(),
-                        headerStyle: pw.TextStyle(
-                          font: ttf,
-                          fontSize: 7,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.white,
-                        ),
-                        headerDecoration: pw.BoxDecoration(color: headerColor),
-                        cellStyle: pw.TextStyle(font: ttf, fontSize: 7),
-                        cellHeight: rowHeight - 10,
-                        border: pw.TableBorder.all(color: headerColor),
-                      ),
-                      pw.SizedBox(height: 6),
-                    ];
-                  }
-
-                  pdf.addPage(
-                    pw.MultiPage(
-                      pageFormat: PdfPageFormat.a4,
-                      header: (context) => pw.Column(
-                        children: [
-                          pw.Stack(
-                            children: [
-                              pw.Positioned.fill(
-                                child: pw.Image(topImage,
-                                    fit: pw.BoxFit.cover,
-                                    width: 300,
-                                    height: 50),
-                              ),
-                              pw.Padding(
-                                padding: const pw.EdgeInsets.only(
-                                    left: 8, right: 8, top: 16),
-                                child: pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.end,
-                                      children: [
-                                        pw.Text(
-                                          'ABC Hospital',
-                                          style: pw.TextStyle(
-                                            fontSize: 30,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.red,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          pw.SizedBox(height: 20),
-                        ],
-                      ),
-                      footer: (context) => pw.Stack(
-                        children: [
-                          // Background Image
-                          pw.Positioned.fill(
-                            child: pw.Image(bottomImage,
-                                fit: pw.BoxFit.cover, height: 225, width: 500),
-                          ),
-                          // Footer Content
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.only(
-                                left: 8, right: 8, bottom: 8, top: 20),
-                            child: pw.Column(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  children: [
-                                    // Left Column
-                                    pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          'Emergency No: ${Constants.emergencyNo}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            color: PdfColors.white,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Appointments: ${Constants.appointmentNo}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            color: PdfColors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.Padding(
-                                      padding: pw.EdgeInsets.only(top: 20),
-                                      child: pw.Row(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.end,
-                                        children: [
-                                          pw.Text(
-                                            'Mail: ${Constants.mail}',
-                                            style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white,
-                                            ),
-                                          ),
-                                          pw.SizedBox(width: 15),
-                                          pw.Text(
-                                            'For more info visit: ${Constants.website}',
-                                            style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      build: (context) => [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Text(
-                                      'IP Ticket No : ${widget.ipNumber}',
-                                      style: pw.TextStyle(
-                                        fontSize: 10,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.black,
-                                      ),
-                                    ),
-                                    pw.Text(
-                                      'Room / Ward No : ${widget.roomWard}',
-                                      style: pw.TextStyle(
-                                        fontSize: 10,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                pw.SizedBox(height: 6),
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Text(
-                                      'Doctor : Dr. ${widget.doctorName}',
-                                      style: pw.TextStyle(
-                                        fontSize: 10,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.black,
-                                      ),
-                                    ),
-                                    pw.Text(
-                                      'Specialization : ${widget.specialization}',
-                                      style: pw.TextStyle(
-                                        fontSize: 10,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                pw.SizedBox(height: 6),
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Text(
-                                      'Admission Date : ${widget.ipAdmitDate}',
-                                      style: pw.TextStyle(
-                                        fontSize: 10,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                pw.SizedBox(height: 6),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          'OP Ticket No : ${widget.ipNumber}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Name : ${widget.name}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'OP Number : ${widget.patientID}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Age : ${widget.age}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Blood Group : ${widget.bloodGroup}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Place : ${widget.city}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Phone : ${widget.phone1}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Basic Diagnosis',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'BP : ${widget.bloodPressure}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Temp : ${widget.temperature}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Blood Sugar : ${widget.sugarLevel}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Signs ',
-                                          style: pw.TextStyle(
-                                            fontSize: 16,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.start,
-                                      children: [
-                                        pw.SizedBox(width: 40),
-                                        pw.Text(
-                                          '*${_diagnosisSignsController.text} ',
-                                          style: pw.TextStyle(
-                                            fontSize: 12,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Symptoms ',
-                                          style: pw.TextStyle(
-                                            fontSize: 16,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.start,
-                                      children: [
-                                        pw.SizedBox(width: 40),
-                                        pw.Text(
-                                          '*${_symptomsController.text} ',
-                                          style: pw.TextStyle(
-                                            fontSize: 12,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Lab Investigations ',
-                                          style: pw.TextStyle(
-                                            fontSize: 16,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.SizedBox(height: 10),
-                        ...buildPaginatedTable(
-                          headers: labHeaders,
-                          data: labTableData,
-                          ttf: ttf,
-                          headerColor: lightBlue,
-                          rowHeight: 15,
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Medications ',
-                                          style: pw.TextStyle(
-                                            fontSize: 16,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.SizedBox(height: 10),
-                        ...buildPaginatedTable(
-                          headers: medicineHeaders,
-                          data: medicineTableData,
-                          ttf: ttf,
-                          headerColor: lightBlue,
-                          rowHeight: 15,
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Investigations ',
-                                          style: pw.TextStyle(
-                                            fontSize: 16,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.start,
-                                      children: [
-                                        pw.SizedBox(width: 40),
-                                        pw.Text(
-                                          '*${_notesController.text} ',
-                                          style: pw.TextStyle(
-                                            fontSize: 12,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.SizedBox(height: 20),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Container(
-                                      child: pw.Row(
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          pw.Column(
-                                            children: [
-                                              pw.Text(
-                                                'Date : ${dateTime.year.toString() + '/' + dateTime.month.toString().padLeft(2, '0') + '/' + dateTime.day.toString().padLeft(2, '0')}',
-                                                style: pw.TextStyle(
-                                                  fontSize: 10,
-                                                  font: ttf,
-                                                  fontWeight:
-                                                      pw.FontWeight.bold,
-                                                  color: PdfColors.black,
-                                                ),
-                                              ),
-                                              pw.Text(
-                                                'Place : ${Constants.hospitalCity}',
-                                                style: pw.TextStyle(
-                                                  fontSize: 10,
-                                                  font: ttf,
-                                                  fontWeight:
-                                                      pw.FontWeight.bold,
-                                                  color: PdfColors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          pw.Column(
-                                            children: [
-                                              pw.Text(
-                                                'Dr. ${widget.doctorName}',
-                                                style: pw.TextStyle(
-                                                  fontSize: 10,
-                                                  font: ttf,
-                                                  fontWeight:
-                                                      pw.FontWeight.bold,
-                                                  color: PdfColors.black,
-                                                ),
-                                              ),
-                                              pw.Text(
-                                                '${currentUser!.degree}[General Medicine]',
-                                                style: pw.TextStyle(
-                                                  fontSize: 10,
-                                                  font: ttf,
-                                                  fontWeight:
-                                                      pw.FontWeight.bold,
-                                                  color: PdfColors.black,
-                                                ),
-                                              ),
-                                              pw.Text(
-                                                '${widget.specialization}',
-                                                style: pw.TextStyle(
-                                                  fontSize: 10,
-                                                  font: ttf,
-                                                  fontWeight:
-                                                      pw.FontWeight.bold,
-                                                  color: PdfColors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                  //
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
-                  //
-                  // // await Printing.sharePdf(
-                  // //     bytes: await pdf.save(),
-                  // //     filename: '${widget.ipNumber}.pdf');
-                },
-                child: const Text('Print'),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {});
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        },
-      );
 
       await clearPrescriptionDraft(widget.ipNumber);
 
@@ -1183,6 +467,734 @@ class _IpPrescription extends State<IpPrescription> {
         backgroundColor: Colors.red,
       );
     }
+  }
+
+  void printPrescription() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Rx Prescription'),
+          content: Container(
+            width: 125,
+            height: 50,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                CustomText(text: 'Do you want to print ?'),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                final pdf = pw.Document();
+                const blue = PdfColor.fromInt(0xFF106ac2);
+                const lightBlue = PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
+
+                final font =
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                final ttf = pw.Font.ttf(font);
+
+                final topImage = pw.MemoryImage(
+                  (await rootBundle.load('assets/opAssets/OP_Ticket_Top.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+
+                final bottomImage = pw.MemoryImage(
+                  (await rootBundle
+                          .load('assets/opAssets/OP_Card_back_original.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+                List<pw.Widget> buildPaginatedTable({
+                  required List<String> headers,
+                  required List<Map<String, dynamic>> data,
+                  required pw.Font ttf,
+                  required PdfColor headerColor,
+                  required double rowHeight,
+                }) {
+                  final List<List<String>> tableData = [
+                    headers,
+                    ...data.map((row) =>
+                        headers.map((h) => row[h]?.toString() ?? '').toList()),
+                  ];
+
+                  return [
+                    pw.TableHelper.fromTextArray(
+                      headers: headers,
+                      data: data
+                          .map((row) => headers
+                              .map((h) => row[h]?.toString() ?? '')
+                              .toList())
+                          .toList(),
+                      headerStyle: pw.TextStyle(
+                        font: ttf,
+                        fontSize: 7,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white,
+                      ),
+                      headerDecoration: pw.BoxDecoration(color: headerColor),
+                      cellStyle: pw.TextStyle(font: ttf, fontSize: 7),
+                      cellHeight: rowHeight - 10,
+                      border: pw.TableBorder.all(color: headerColor),
+                    ),
+                    pw.SizedBox(height: 6),
+                  ];
+                }
+
+                pdf.addPage(
+                  pw.MultiPage(
+                    pageFormat: PdfPageFormat.a4,
+                    header: (context) => pw.Column(
+                      children: [
+                        pw.Stack(
+                          children: [
+                            pw.Positioned.fill(
+                              child: pw.Image(topImage,
+                                  fit: pw.BoxFit.cover, width: 300, height: 50),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.only(
+                                  left: 8, right: 8, top: 16),
+                              child: pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                                    children: [
+                                      pw.Text(
+                                        'ABC Hospital',
+                                        style: pw.TextStyle(
+                                          fontSize: 30,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.SizedBox(height: 20),
+                      ],
+                    ),
+                    footer: (context) => pw.Stack(
+                      children: [
+                        // Background Image
+                        pw.Positioned.fill(
+                          child: pw.Image(bottomImage,
+                              fit: pw.BoxFit.cover, height: 225, width: 500),
+                        ),
+                        // Footer Content
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(
+                              left: 8, right: 8, bottom: 8, top: 20),
+                          child: pw.Column(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Row(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  // Left Column
+                                  pw.Column(
+                                    crossAxisAlignment:
+                                        pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        'Emergency No: ${Constants.emergencyNo}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          color: PdfColors.white,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Appointments: ${Constants.appointmentNo}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          color: PdfColors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.Padding(
+                                    padding: pw.EdgeInsets.only(top: 20),
+                                    child: pw.Row(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.end,
+                                      children: [
+                                        pw.Text(
+                                          'Mail: ${Constants.mail}',
+                                          style: pw.TextStyle(
+                                            fontSize: 8,
+                                            font: ttf,
+                                            color: PdfColors.white,
+                                          ),
+                                        ),
+                                        pw.SizedBox(width: 15),
+                                        pw.Text(
+                                          'For more info visit: ${Constants.website}',
+                                          style: pw.TextStyle(
+                                            fontSize: 8,
+                                            font: ttf,
+                                            color: PdfColors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    build: (context) => [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Row(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(
+                                    'IP Ticket No : ${widget.ipNumber}',
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'Room / Ward No : ${widget.roomWard}',
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.SizedBox(height: 6),
+                              pw.Row(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(
+                                    'Doctor : Dr. ${widget.doctorName}',
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                  pw.Text(
+                                    'Specialization : ${widget.specialization}',
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.SizedBox(height: 6),
+                              pw.Row(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(
+                                    'Admission Date : ${widget.ipAdmitDate}',
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      font: ttf,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.SizedBox(height: 6),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        'OP Ticket No : ${widget.ipNumber}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Name : ${widget.name}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'OP Number : ${widget.patientID}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Age : ${widget.age}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Blood Group : ${widget.bloodGroup}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Place : ${widget.city}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Phone : ${widget.phone1}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Basic Diagnosis',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'BP : ${widget.bloodPressure}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Temp : ${widget.temperature}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Blood Sugar : ${widget.sugarLevel}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Signs ',
+                                        style: pw.TextStyle(
+                                          fontSize: 16,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.start,
+                                    children: [
+                                      pw.SizedBox(width: 40),
+                                      pw.Text(
+                                        '*${_diagnosisSignsController.text} ',
+                                        style: pw.TextStyle(
+                                          fontSize: 12,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Symptoms ',
+                                        style: pw.TextStyle(
+                                          fontSize: 16,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.start,
+                                    children: [
+                                      pw.SizedBox(width: 40),
+                                      pw.Text(
+                                        '*${_symptomsController.text} ',
+                                        style: pw.TextStyle(
+                                          fontSize: 12,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Lab Investigations ',
+                                        style: pw.TextStyle(
+                                          fontSize: 16,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.SizedBox(height: 10),
+                      ...buildPaginatedTable(
+                        headers: labHeaders,
+                        data: labTableData,
+                        ttf: ttf,
+                        headerColor: lightBlue,
+                        rowHeight: 15,
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Medications ',
+                                        style: pw.TextStyle(
+                                          fontSize: 16,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.SizedBox(height: 10),
+                      ...buildPaginatedTable(
+                        headers: medicineHeaders,
+                        data: medicineTableData,
+                        ttf: ttf,
+                        headerColor: lightBlue,
+                        rowHeight: 15,
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Investigations ',
+                                        style: pw.TextStyle(
+                                          fontSize: 16,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.start,
+                                    children: [
+                                      pw.SizedBox(width: 40),
+                                      pw.Text(
+                                        '*${_notesController.text} ',
+                                        style: pw.TextStyle(
+                                          fontSize: 12,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.SizedBox(height: 20),
+                              pw.Column(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Container(
+                                    child: pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        pw.Column(
+                                          children: [
+                                            pw.Text(
+                                              'Date : ${dateTime.year.toString() + '/' + dateTime.month.toString().padLeft(2, '0') + '/' + dateTime.day.toString().padLeft(2, '0')}',
+                                              style: pw.TextStyle(
+                                                fontSize: 10,
+                                                font: ttf,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColors.black,
+                                              ),
+                                            ),
+                                            pw.Text(
+                                              'Place : ${Constants.hospitalCity}',
+                                              style: pw.TextStyle(
+                                                fontSize: 10,
+                                                font: ttf,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        pw.Column(
+                                          children: [
+                                            pw.Text(
+                                              'Dr. ${widget.doctorName}',
+                                              style: pw.TextStyle(
+                                                fontSize: 10,
+                                                font: ttf,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColors.black,
+                                              ),
+                                            ),
+                                            pw.Text(
+                                              '${currentUser!.degree}[General Medicine]',
+                                              style: pw.TextStyle(
+                                                fontSize: 10,
+                                                font: ttf,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColors.black,
+                                              ),
+                                            ),
+                                            pw.Text(
+                                              '${widget.specialization}',
+                                              style: pw.TextStyle(
+                                                fontSize: 10,
+                                                font: ttf,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                //
+                await Printing.layoutPdf(
+                  onLayout: (format) async => pdf.save(),
+                );
+                //
+                // // await Printing.sharePdf(
+                // //     bytes: await pdf.save(),
+                // //     filename: '${widget.ipNumber}.pdf');
+              },
+              child: const Text('Print'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {});
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _selectDate(
@@ -1311,398 +1323,534 @@ class _IpPrescription extends State<IpPrescription> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.05,
-            left: screenWidth * 0.05,
-            right: screenWidth * 0.05,
+            left: screenWidth * 0.10,
+            right: screenWidth * 0.08,
             bottom: screenWidth * 0.05,
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'RX',
+                        size: screenWidth * .05,
+                        color: AppColors.blue,
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: screenWidth * 0.18,
+                    height: screenWidth * 0.06,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.05),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomText(
-                    text: 'Dr. ${widget.doctorName}',
+                    text: 'IP Ticket No : ${widget.ipNumber}',
+                    size: screenWidth * 0.012,
+                  ),
+                  CustomText(
+                    text: 'Room Type / No : ${widget.roomWard}',
+                    size: screenWidth * 0.012,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.025),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Name : ${widget.name}',
+                    size: screenWidth * 0.012,
+                  ),
+                  CustomText(
+                    text: 'OP No : ${widget.patientID}',
+                    size: screenWidth * 0.012,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.025),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Age : ${widget.age}',
+                    size: screenWidth * 0.012,
+                  ),
+                  CustomText(
+                    text: 'Blood Group : ${widget.bloodGroup}',
+                    size: screenWidth * 0.012,
+                  ),
+                  CustomText(
+                    text: 'Place : ${widget.city}',
+                    size: screenWidth * 0.012,
+                  ),
+                  CustomText(
+                    text: 'Phone : ${widget.phone1}',
+                    size: screenWidth * 0.012,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.025),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Address : ${widget.address}',
+                    size: screenWidth * 0.012,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.035),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Basic Diagnosis',
                     size: screenWidth * 0.02,
+                    color: AppColors.blue,
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 35,
-              ),
+              SizedBox(height: screenHeight * 0.025),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  CustomTextField(
-                    readOnly: true,
-                    controller: TextEditingController(text: widget.ipNumber),
-                    hintText: 'IP Ticket Number',
-                    obscureText: false,
-                    width: screenWidth * 0.5,
+                  CustomText(
+                    text: 'BP : ${widget.bloodPressure}',
+                    size: screenWidth * 0.012,
                   ),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.date),
-                    hintText: 'Date',
-                    readOnly: true,
-                    obscureText: false,
-                    width: screenWidth * 0.35,
+                  CustomText(
+                    text: 'Temp : ${widget.temperature}',
+                    size: screenWidth * 0.012,
                   ),
-                ],
-              ),
-              const SizedBox(height: 26),
-
-              // Row 2: Full Name and Age
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.name),
-                    hintText: 'Full Name',
-                    obscureText: false,
-                    readOnly: true,
-                    width: screenWidth * 0.5,
+                  CustomText(
+                    text: 'Blood Sugar : ${widget.sugarLevel}',
+                    size: screenWidth * 0.012,
                   ),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.age),
-                    hintText: 'Age',
-                    obscureText: false,
-                    readOnly: true,
-                    width: screenWidth * 0.35,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 26),
-              // Row 3: Address and Pincode
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.address),
-                    hintText: 'Address',
-                    readOnly: true,
-                    obscureText: false,
-                    width: screenWidth * 0.5,
-                    verticalSize: screenWidth * 0.01,
-                  ),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.pincode),
-                    hintText: 'Pincode',
-                    readOnly: true,
-                    obscureText: false,
-                    width: screenWidth * 0.35,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 26),
-              CustomTextField(
-                controller: TextEditingController(text: widget.primaryInfo),
-                readOnly: true,
-                obscureText: false,
-                hintText: 'Basic Info',
-                width: screenWidth * 0.9,
-                verticalSize: screenWidth * 0.03,
-              ),
-              const SizedBox(
-                height: 35,
-              ),
-              const Text(
-                'Basic Diagnosis :',
-                style: TextStyle(
-                  fontFamily: 'SanFrancisco',
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
                   CustomButton(
                     label: 'Patient History',
                     onPressed: () {
                       showPatientHistoryDialog(context);
                     },
-                    width: screenWidth * 0.12,
+                    width: screenWidth * 0.15,
                     height: screenHeight * 0.05,
-                  ),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.temperature),
-                    hintText: 'Temperature ',
-                    width: screenWidth * 0.085,
-                    readOnly: true,
-                    obscureText: false,
-                  ),
-                  CustomTextField(
-                    hintText: 'Blood Pressure ',
-                    width: screenWidth * 0.1,
-                    readOnly: true,
-                    controller:
-                        TextEditingController(text: widget.bloodPressure),
-                    obscureText: false,
-                  ),
-                  CustomTextField(
-                    hintText: 'Sugar Level ',
-                    width: screenWidth * 0.085,
-                    readOnly: true,
-                    controller: TextEditingController(text: widget.sugarLevel),
-                    obscureText: false,
+                  )
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.035),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Basic Info',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 20,
-              ),
-              CustomTextField(
-                controller: _diagnosisSignsController,
-                hintText: 'Diagnosis Sign',
-                width: screenWidth * 0.9,
-                verticalSize: screenWidth * 0.03,
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-
-              // Row 4: Basic Info
-              CustomTextField(
-                controller: _symptomsController,
-                hintText: 'Symptoms',
-                width: screenWidth * 0.9,
-                verticalSize: screenWidth * 0.03,
-              ),
-              const SizedBox(
-                height: 35,
-              ),
+              SizedBox(height: screenHeight * 0.025),
               Row(
                 children: [
+                  SizedBox(width: screenWidth * 0.05),
+                  CustomText(
+                    text: ''
+                        '* ${widget.primaryInfo}',
+                    size: screenWidth * 0.012,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.035),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Signs & Symptoms',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.015),
+              CustomTextField(
+                controller: _diagnosisSignsController,
+                hintText: '',
+                width: screenWidth * 0.85,
+                verticalSize: screenWidth * 0.03,
+              ),
+              SizedBox(height: screenHeight * 0.035),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: 'Findings',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.015),
+              CustomTextField(
+                controller: _symptomsController,
+                hintText: '',
+                width: screenWidth * 0.85,
+                verticalSize: screenWidth * 0.03,
+              ),
+              SizedBox(height: screenHeight * 0.035),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Treatments',
+                        size: screenWidth * 0.022,
+                        color: AppColors.blue,
+                      ),
+                    ],
+                  ),
                   SizedBox(
-                    width: 250,
-                    child: CustomDropdown(
-                      label: 'Proceed To',
-                      items: const [
-                        'Medication',
-                        'Examination',
-                        // 'Appointment',
-                        'Investigation',
-                      ],
-                      selectedItem: selectedValue,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedValue = value!;
-                          isMedication(selectedValue!);
-                        });
-                      },
+                    width: screenWidth * 0.11,
+                    child: Divider(
+                      color: AppColors.blue,
+                      thickness: 2,
                     ),
                   ),
-                  SizedBox(width: screenWidth * 0.05),
-                  if (isAppointment)
-                    CustomButton(
-                      label: 'Choose Next Appointment Date and Time',
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return StatefulBuilder(
-                              builder: (context, setState) {
-                                return AlertDialog(
-                                  title: CustomText(
-                                    text: 'Choose Next Appointment',
-                                    size: screenWidth * 0.013,
-                                  ),
-                                  content: SizedBox(
-                                    width: screenWidth * 0.3,
-                                    height: screenHeight * 0.2,
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(height: screenHeight * 0.1),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                  SizedBox(height: screenHeight * 0.01),
+                  if (isLabLoading)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomText(
+                              text: 'Laboratory',
+                              size: screenWidth * 0.016,
+                              color: AppColors.blue,
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                toggleLab(false);
+                                setState(() {
+                                  labTableData = [];
+                                  _selectedItems = [];
+                                });
+                              },
+                              icon: Icon(Icons.close),
+                              color: Colors.red,
+                            )
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return AlertDialog(
+                                      title: CustomText(
+                                        text: 'Add Tests',
+                                        size: screenWidth * 0.013,
+                                      ),
+                                      content: SizedBox(
+                                        width: screenWidth * 0.5,
+                                        height: screenHeight * 0.8,
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              CustomTextField(
-                                                onTap: () => _selectDate(
-                                                    context, _appointmentDate),
-                                                hintText: 'Select Date ',
-                                                width: screenWidth * 0.1,
-                                                controller: _appointmentDate,
-                                                icon: const Icon(
-                                                    Icons.date_range_outlined),
+                                              Wrap(
+                                                spacing: 8.0,
+                                                runSpacing: 4.0,
+                                                children: _selectedItems
+                                                    .map((item) => Chip(
+                                                          shadowColor:
+                                                              Colors.white,
+                                                          backgroundColor:
+                                                              AppColors
+                                                                  .secondaryColor,
+                                                          label: CustomText(
+                                                            text: item,
+                                                            color: Colors.white,
+                                                          ),
+                                                          deleteIcon:
+                                                              const Icon(
+                                                            Icons.close,
+                                                            color: Colors.white,
+                                                          ),
+                                                          onDeleted: () {
+                                                            setState(() {
+                                                              labTableData
+                                                                  .removeWhere(
+                                                                      (row) =>
+                                                                          row['Test'] ==
+                                                                          item);
+                                                              _selectedItems
+                                                                  .remove(item);
+                                                            });
+                                                          },
+                                                        ))
+                                                    .toList(),
                                               ),
+                                              const SizedBox(height: 20),
                                               CustomTextField(
-                                                onTap: () => _selectTime(
-                                                    context, _appointmentTime),
-                                                hintText: 'Select Time ',
-                                                width: screenWidth * 0.1,
-                                                controller: _appointmentTime,
-                                                icon: const Icon(Icons
-                                                    .access_time_filled_outlined),
+                                                onChanged: _filterItems,
+                                                hintText: 'Search Tests',
+                                                width: screenWidth * 0.8,
+                                                verticalSize:
+                                                    screenHeight * 0.03,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              SizedBox(
+                                                height: screenHeight * 0.7,
+                                                child: ListView.builder(
+                                                  itemCount:
+                                                      _filteredItems.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final item =
+                                                        _filteredItems[index];
+                                                    return ListTile(
+                                                      title: Text(item),
+                                                      onTap: () {
+                                                        if (!_selectedItems
+                                                            .contains(item)) {
+                                                          setState(() {
+                                                            _selectedItems
+                                                                .add(item);
+                                                            labTableData.add({
+                                                              'Test': item,
+                                                              'Results': '',
+                                                              'Reference': '',
+                                                            });
+                                                          });
+                                                        }
+                                                        print(
+                                                            'Selected: $item');
+                                                      },
+                                                    );
+                                                  },
+                                                ),
                                               ),
                                             ],
-                                          )
-                                        ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: CustomText(
-                                        text: 'OK',
-                                        color: AppColors.blue,
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        _appointmentDate.clear();
-                                        _appointmentTime.clear();
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: CustomText(
-                                        text: 'Cancel',
-                                        color: AppColors.blue,
-                                      ),
-                                    )
-                                  ],
+                                    );
+                                  },
                                 );
                               },
-                            );
+                            ).then((_) =>
+                                setState(() {})); // Refresh after dialog closes
                           },
-                        );
-                      },
-                      width: screenWidth * 0.2,
-                      height: screenHeight * 0.05,
-                    ),
-                  if (isMed)
-                    CustomButton(
-                      label: 'Add Medicines',
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return StatefulBuilder(
-                              builder: (context, setState) {
-                                return AlertDialog(
-                                  title: CustomText(
-                                    text: 'Add Medicines',
-                                    size: screenWidth * 0.013,
+                          child: Container(
+                            width: screenWidth * 0.85,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                width: screenWidth * 0.0015,
+                                color: AppColors.blue,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _selectedItems.isEmpty
+                                ? const Text("Tap to add tests",
+                                    style: TextStyle(color: Colors.grey))
+                                : Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    children: _selectedItems
+                                        .map((item) => Chip(
+                                              label: Text(item),
+                                              backgroundColor:
+                                                  AppColors.secondaryColor,
+                                              labelStyle: const TextStyle(
+                                                  color: Colors.white),
+                                            ))
+                                        .toList(),
                                   ),
-                                  content: SizedBox(
-                                    width: screenWidth * 0.5,
-                                    height: screenHeight * 0.8,
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Wrap(
-                                            spacing: 8.0,
-                                            runSpacing: 4.0,
-                                            children: _selectedMedicine
-                                                .map((item) => Chip(
-                                                      shadowColor: Colors.white,
-                                                      backgroundColor: AppColors
-                                                          .secondaryColor,
-                                                      label: CustomText(
-                                                          text: item,
-                                                          color: Colors.white),
-                                                      deleteIcon: const Icon(
-                                                          Icons.close,
-                                                          color: Colors.white),
-                                                      onDeleted: () {
-                                                        setState(() {
-                                                          _selectedMedicine
-                                                              .remove(item);
-                                                          medicineTableData
-                                                              .removeWhere((row) =>
-                                                                  row['Medicine Name'] ==
-                                                                  item);
-                                                          _updateSerialNumbers();
-                                                        });
-                                                      },
-                                                    ))
-                                                .toList(),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          // Search field
-                                          CustomTextField(
-                                            onChanged: (query) {
-                                              setState(() {
-                                                if (query.isEmpty) {
-                                                  _filteredMedicine =
-                                                      List.from(medicineNames);
-                                                } else {
-                                                  _filteredMedicine =
-                                                      medicineNames
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  if (isMedWidget)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomText(
+                              text: 'Medicine',
+                              size: screenWidth * 0.016,
+                              color: AppColors.blue,
+                            ),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    toggleMed(false);
+                                    medicineTableData = [];
+                                    _selectedMedicine = [];
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Colors.red,
+                                ))
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        GestureDetector(
+                          onTap: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                  builder: (context, setStateDialog) {
+                                    return AlertDialog(
+                                      title: CustomText(
+                                        text: 'Add Medicines',
+                                        size: screenWidth * 0.013,
+                                      ),
+                                      content: SizedBox(
+                                        width: screenWidth * 0.5,
+                                        height: screenHeight * 0.8,
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Wrap(
+                                                spacing: 8.0,
+                                                runSpacing: 4.0,
+                                                children: _selectedMedicine
+                                                    .map((item) => Chip(
+                                                          shadowColor:
+                                                              Colors.white,
+                                                          backgroundColor:
+                                                              AppColors
+                                                                  .secondaryColor,
+                                                          label: CustomText(
+                                                              text: item,
+                                                              color:
+                                                                  Colors.white),
+                                                          deleteIcon:
+                                                              const Icon(
+                                                                  Icons.close,
+                                                                  color: Colors
+                                                                      .white),
+                                                          onDeleted: () {
+                                                            setStateDialog(() {
+                                                              _selectedMedicine
+                                                                  .remove(item);
+                                                              medicineTableData
+                                                                  .removeWhere(
+                                                                      (row) =>
+                                                                          row['Medicine Name'] ==
+                                                                          item);
+                                                              _updateSerialNumbers();
+                                                            });
+                                                          },
+                                                        ))
+                                                    .toList(),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              CustomTextField(
+                                                onChanged: (query) {
+                                                  setStateDialog(() {
+                                                    if (query.isEmpty) {
+                                                      _filteredMedicine =
+                                                          List.from(
+                                                              medicineNames);
+                                                    } else {
+                                                      _filteredMedicine = medicineNames
                                                           .where((item) => item
                                                               .toLowerCase()
                                                               .contains(query
                                                                   .toLowerCase()))
                                                           .toList();
-                                                }
-                                              });
-                                            },
-                                            hintText: 'Search Medicine',
-                                            width: screenWidth * 0.8,
-                                            verticalSize: screenHeight * 0.03,
-                                          ),
-                                          const SizedBox(height: 10),
-                                          // ListView inside a SizedBox with fixed height
-                                          SizedBox(
-                                            height: screenHeight *
-                                                0.2, // Adjust height as needed
-                                            child: ListView.builder(
-                                              itemCount:
-                                                  _filteredMedicine.length,
-                                              itemBuilder: (context, index) {
-                                                final item =
-                                                    _filteredMedicine[index];
-                                                return ListTile(
-                                                  title: Text(item),
-                                                  onTap: () async {
-                                                    if (!_selectedMedicine
-                                                        .contains(item)) {
-                                                      setState(() {
-                                                        _selectedMedicine
-                                                            .add(item);
-                                                        isLoading = true;
-                                                      });
-                                                      await Future.delayed(
-                                                          const Duration(
-                                                              milliseconds:
-                                                                  250));
-
-                                                      setState(() {
-                                                        medicineTableData.add({
-                                                          'SL No':
-                                                              medicineTableData
-                                                                      .length +
-                                                                  1,
-                                                          'Medicine Name': item,
-                                                          'Morning': '',
-                                                          'Afternoon': '',
-                                                          'Evening': '',
-                                                          'Night': '',
-                                                          'Duration': '',
-                                                        });
-                                                        isLoading = false;
-                                                      });
                                                     }
+                                                  });
+                                                },
+                                                hintText: 'Search Medicine',
+                                                width: screenWidth * 0.8,
+                                                verticalSize:
+                                                    screenHeight * 0.03,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              SizedBox(
+                                                height: screenHeight * 0.2,
+                                                child: ListView.builder(
+                                                  itemCount:
+                                                      _filteredMedicine.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final item =
+                                                        _filteredMedicine[
+                                                            index];
+                                                    return ListTile(
+                                                      title: Text(item),
+                                                      onTap: () async {
+                                                        if (!_selectedMedicine
+                                                            .contains(item)) {
+                                                          setStateDialog(() {
+                                                            _selectedMedicine
+                                                                .add(item);
+                                                            isLoading = true;
+                                                            isMedLoading = true;
+                                                          });
+
+                                                          await Future.delayed(
+                                                              const Duration(
+                                                                  milliseconds:
+                                                                      250));
+
+                                                          setStateDialog(() {
+                                                            medicineTableData
+                                                                .add({
+                                                              'SL No':
+                                                                  medicineTableData
+                                                                          .length +
+                                                                      1,
+                                                              'Medicine Name':
+                                                                  item,
+                                                              'Morning': '',
+                                                              'Afternoon': '',
+                                                              'Evening': '',
+                                                              'Night': '',
+                                                              'Duration': '',
+                                                            });
+                                                            isLoading = false;
+                                                            isMedLoading =
+                                                                false;
+                                                          });
+                                                        }
+                                                      },
+                                                    );
                                                   },
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          if (medicineTableData.isNotEmpty) ...[
-                                            isLoading
-                                                ? CircularProgressIndicator()
-                                                : Column(
-                                                    children: [
-                                                      EditableDropDownTable(
+                                                ),
+                                              ),
+                                              if (medicineTableData.isNotEmpty)
+                                                isLoading
+                                                    ? const CircularProgressIndicator()
+                                                    : EditableDropDownTable(
                                                         headerColor:
                                                             Colors.white,
                                                         headerBackgroundColor:
@@ -1713,42 +1861,44 @@ class _IpPrescription extends State<IpPrescription> {
                                                           'Evening',
                                                           'Night',
                                                           'Duration'
-                                                        ], // Editable columns
+                                                        ],
                                                         dropdownValues: const {
                                                           'Morning': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                           'Afternoon': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                           'Evening': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                           'Night': [
                                                             '0.5 ml',
                                                             '1 ml',
                                                             '1.5 ml',
-                                                            '2 ml'
+                                                            '2 ml',
+                                                            'ing',
                                                           ],
                                                         },
                                                         onValueChanged:
                                                             (rowIndex, header,
                                                                 value) async {
-                                                          if (header ==
-                                                                  'Duration' &&
-                                                              rowIndex <
-                                                                  medicineTableData
-                                                                      .length) {
-                                                            setState(() {
+                                                          if (rowIndex <
+                                                              medicineTableData
+                                                                  .length) {
+                                                            setStateDialog(() {
                                                               medicineTableData[
                                                                       rowIndex][
                                                                   header] = value;
@@ -1759,134 +1909,198 @@ class _IpPrescription extends State<IpPrescription> {
                                                             medicineHeaders,
                                                         tableData:
                                                             medicineTableData,
-                                                      ),
-                                                    ],
-                                                  ),
-                                          ] else
-                                            const Text(
-                                                "Invalid or incomplete medicine data")
-                                        ],
+                                                      )
+                                              else
+                                                const Text(
+                                                    "Invalid or incomplete medicine data"),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                      width: screenWidth * 0.2,
-                      height: screenHeight * 0.05,
-                    ),
-                ],
-              ),
-              const SizedBox(
-                height: 35,
-              ),
-              isLabTest
-                  ? Container(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Wrap(
-                            spacing: 8.0,
-                            runSpacing: 4.0,
-                            children: _selectedItems
-                                .map((item) => Chip(
-                                      shadowColor: Colors.white,
-                                      backgroundColor: AppColors.secondaryColor,
-                                      label: CustomText(
-                                        text: item,
-                                        color: Colors.white,
-                                      ),
-                                      deleteIcon: const Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                      ),
-                                      onDeleted: () {
-                                        // Remove item from selected items
-                                        setState(() {
-                                          labTableData.removeWhere(
-                                              (row) => row['Test'] == item);
-                                          _selectedItems.remove(item);
-                                        });
-                                      },
-                                    ))
-                                .toList(),
-                          ),
-                          const SizedBox(height: 20),
-                          // Search field
-                          CustomTextField(
-                            onChanged: _filterItems,
-                            hintText: 'Search Tests',
-                            width: screenWidth * 0.8,
-                            verticalSize: screenHeight * 0.03,
-                          ),
-                          const SizedBox(height: 10),
-                          // ListView inside a SizedBox with fixed height
-                          SizedBox(
-                            height: screenHeight *
-                                0.3, // Adjust height based on your layout
-                            child: ListView.builder(
-                              itemCount: _filteredItems.length,
-                              itemBuilder: (context, index) {
-                                final item = _filteredItems[index];
-                                return ListTile(
-                                  title: Text(item),
-                                  onTap: () {
-                                    // Add item to selected items
-                                    if (!_selectedItems.contains(item)) {
-                                      setState(() {
-                                        labTableData.add({
-                                          'Test': item,
-                                          'Results': '',
-                                          'Reference': '',
-                                        });
-                                        _selectedItems.add(item);
-                                      });
-                                    }
-                                    print('Selected: $item');
+                                    );
                                   },
                                 );
                               },
+                            );
+
+                            setState(
+                                () {}); // Refresh outer table after dialog closes
+                          },
+                          child: isMedLoading
+                              ? const CircularProgressIndicator()
+                              : CustomDataTable(
+                                  headers: medicineHeaders,
+                                  tableData: medicineTableData,
+                                ),
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  if (isInvestLoading)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomText(
+                              text: 'Investigations',
+                              size: screenWidth * 0.02,
+                              color: AppColors.blue,
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : SizedBox(),
-              if (isInvestigation)
-                Container(
-                  child: Column(
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  toggleInvest(false);
+                                  _notesController.clear();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.close,
+                                color: Colors.red,
+                              ),
+                            )
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        CustomTextField(
+                          controller: _notesController,
+                          hintText: '',
+                          width: screenWidth * 0.85,
+                          verticalSize: screenWidth * 0.03,
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  if (isAppointment)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomButton(
+                              label: 'Choose Next Appointment Date and Time',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return StatefulBuilder(
+                                      builder: (context, setState) {
+                                        return AlertDialog(
+                                          title: CustomText(
+                                            text: 'Choose Next Appointment',
+                                            size: screenWidth * 0.013,
+                                          ),
+                                          content: SizedBox(
+                                            width: screenWidth * 0.3,
+                                            height: screenHeight * 0.2,
+                                            child: SingleChildScrollView(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  SizedBox(
+                                                      height:
+                                                          screenHeight * 0.1),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      CustomTextField(
+                                                        onTap: () => _selectDate(
+                                                            context,
+                                                            _appointmentDate),
+                                                        hintText:
+                                                            'Select Date ',
+                                                        width:
+                                                            screenWidth * 0.1,
+                                                        controller:
+                                                            _appointmentDate,
+                                                        icon: const Icon(Icons
+                                                            .date_range_outlined),
+                                                      ),
+                                                      CustomTextField(
+                                                        onTap: () => _selectTime(
+                                                            context,
+                                                            _appointmentTime),
+                                                        hintText:
+                                                            'Select Time ',
+                                                        width:
+                                                            screenWidth * 0.1,
+                                                        controller:
+                                                            _appointmentTime,
+                                                        icon: const Icon(Icons
+                                                            .access_time_filled_outlined),
+                                                      ),
+                                                    ],
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: CustomText(
+                                                text: 'OK',
+                                                color: AppColors.blue,
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                _appointmentDate.clear();
+                                                _appointmentTime.clear();
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: CustomText(
+                                                text: 'Cancel',
+                                                color: AppColors.blue,
+                                              ),
+                                            )
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                              width: screenWidth * 0.2,
+                              height: screenHeight * 0.05,
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  toggleAppointment(false);
+                                  _appointmentDate.clear();
+                                  _appointmentTime.clear();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.close,
+                                color: Colors.red,
+                              ),
+                            )
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.035),
+                      ],
+                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          CustomText(
-                            text: 'Investigation Tests :',
-                            size: screenWidth * 0.011,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      Row(
-                        children: [
-                          CustomTextField(
-                            controller: _notesController,
-                            hintText: 'Enter notes',
-                            width: screenWidth * 0.8,
-                            verticalSize: screenWidth * 0.03,
-                          ),
-                        ],
+                      ExpandableFAB(
+                        toggleMed,
+                        toggleLab,
+                        toggleInvest,
+                        toggleAppointment,
                       ),
                     ],
                   ),
-                ),
-
-              const SizedBox(
-                height: 35,
+                  SizedBox(height: screenHeight * 0.035),
+                ],
               ),
+              SizedBox(height: screenHeight * 0.05),
               Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1904,9 +2118,19 @@ class _IpPrescription extends State<IpPrescription> {
                     SizedBox(
                       width: 300,
                       child: CustomButton(
+                        label: 'Print',
+                        onPressed: () {
+                          printPrescription();
+                        },
+                        width: screenWidth * 0.5,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 300,
+                      child: CustomButton(
                         label: 'Prescribed',
                         onPressed: () {
-                          endIP(widget.patientID, widget.ipNumber);
+                          _savePrescriptionData();
                         },
                         width: screenWidth * 0.5,
                       ),
@@ -1918,6 +2142,108 @@ class _IpPrescription extends State<IpPrescription> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ExpandableFAB extends StatefulWidget {
+  final Function(bool) toggleMedLoading;
+  final Function(bool) toggleLabLoading;
+  final Function(bool) toggleInvestLoading;
+  final Function(bool) toggleAppointment;
+  ExpandableFAB(this.toggleMedLoading, this.toggleLabLoading,
+      this.toggleInvestLoading, this.toggleAppointment);
+  @override
+  _ExpandableFABState createState() => _ExpandableFABState();
+}
+
+class _ExpandableFABState extends State<ExpandableFAB> {
+  bool isExpanded = false;
+
+  void toggleFAB() {
+    setState(() {
+      isExpanded = !isExpanded;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final spacing = 10.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isExpanded)
+          Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab1',
+                mini: true,
+                onPressed: () {
+                  widget.toggleLabLoading(true);
+                },
+                child: Icon(
+                  Icons.check,
+                  color: Colors.white,
+                ),
+              ),
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab2',
+                mini: true,
+                onPressed: () {
+                  widget.toggleMedLoading(true);
+                },
+                child: Icon(
+                  Icons.medical_information,
+                  color: Colors.white,
+                ),
+              ),
+              FloatingActionButton(
+                backgroundColor: AppColors.blue,
+                heroTag: 'fab3',
+                mini: true,
+                onPressed: () {
+                  widget.toggleInvestLoading(true);
+                },
+                child: Icon(
+                  Icons.child_care,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        SizedBox(height: spacing),
+        GestureDetector(
+          onTap: toggleFAB,
+          child: DottedBorder(
+            borderType: BorderType.RRect,
+            radius: Radius.circular(25),
+            padding: EdgeInsets.all(5),
+            color: Colors.blue,
+            strokeWidth: 2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(25)),
+              child: Container(
+                height: screenHeight * 0.05,
+                width: screenWidth * 0.027,
+                color: Colors.blue,
+                child: Center(
+                    child: Icon(
+                  Icons.add_outlined,
+                  color: Colors.white,
+                  size: screenWidth * 0.02,
+                )),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

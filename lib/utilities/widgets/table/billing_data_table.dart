@@ -121,11 +121,6 @@ class _BillingDataTable extends State<BillingDataTable> {
                                     product['expiry'];
                                 widget.tableData[focusedRowIndex!]['Expiry'] =
                                     product['expiry'];
-
-                                controllers[focusedRowIndex!]['Free']?.text =
-                                    product['free'];
-                                widget.tableData[focusedRowIndex!]['Free'] =
-                                    product['free'];
                                 controllers[focusedRowIndex!]['MRP']?.text =
                                     product['mrp'];
                                 widget.tableData[focusedRowIndex!]['MRP'] =
@@ -212,7 +207,6 @@ class _BillingDataTable extends State<BillingDataTable> {
           'batchNumber': entryData['batchNumber'],
           'expiry': entryData['expiry'],
           'hsn': entryData['hsn'],
-          'free': entryData['free'],
           'mrp': entryData['mrp'],
           'rate': entryData['rate'],
           'sgst': entryData['sgst'],

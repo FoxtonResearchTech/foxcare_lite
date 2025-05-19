@@ -6,6 +6,7 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/billing_data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -25,7 +26,7 @@ class OpBillingEntry extends StatefulWidget {
   final String? phone;
   final String? doctorName;
   final String? specialization;
-  final List<dynamic>? medications;
+  final List<Map<String, dynamic>>? medications;
 
   const OpBillingEntry(
       {this.patientName,
@@ -88,6 +89,18 @@ class _OpBillingEntry extends State<OpBillingEntry> {
     'Tax Total',
     'Product Total',
   ];
+
+  final List<String> medicineHeaders = [
+    'SL No',
+    'Medicine Name',
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'Night',
+    'Duration',
+  ];
+
+  List<Map<String, dynamic>> medicineTableData = [];
 
   final List<String> editableColumns = ['Product Name', 'Quantity'];
 
@@ -285,6 +298,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
 
       setState(() {
         isSubmitting = false;
+        isPrinting = true;
       });
 
       CustomSnackBar(
@@ -339,15 +353,6 @@ class _OpBillingEntry extends State<OpBillingEntry> {
         FirebaseFirestore.instance.collection('billNo').doc('pharmacyBillings');
 
     await docRef.set({'billNo': newBillNo});
-  }
-
-  double _getTextWidth(String text, double maxWidth) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text),
-      maxLines: 1,
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: maxWidth);
-    return textPainter.size.width + 75;
   }
 
   void printInvoice() {
@@ -843,6 +848,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
     addNewRow();
     totalAmountController.addListener(_updateBalance);
     collectedAmountController.addListener(_updateBalance);
+    medicineTableData = widget.medications!;
   }
 
   double _taxTotal() {
@@ -1011,32 +1017,10 @@ class _OpBillingEntry extends State<OpBillingEntry> {
               ),
               SizedBox(height: screenHeight * 0.02),
               Container(
-                padding: EdgeInsets.only(left: screenWidth * 0.05),
-                width: double.infinity,
-                child: Wrap(
-                  alignment: WrapAlignment.start,
-                  spacing: screenWidth * 0.01,
-                  runSpacing: 8.0,
-                  children: widget.medications?.map((med) {
-                        final String medText = med.toString();
-                        final double textWidth =
-                            _getTextWidth(medText, screenWidth * 0.8);
-                        final double fieldWidth =
-                            textWidth.clamp(60, screenWidth * 0.3);
-
-                        return SizedBox(
-                          width: fieldWidth,
-                          child: PharmacyTextField(
-                            hintText: '',
-                            readOnly: true,
-                            controller: TextEditingController(text: medText),
-                            width: null,
-                          ),
-                        );
-                      }).toList() ??
-                      [],
-                ),
-              ),
+                  padding: EdgeInsets.only(left: screenWidth * 0.05),
+                  width: double.infinity,
+                  child: CustomDataTable(
+                      headers: medicineHeaders, tableData: medicineTableData)),
               SizedBox(height: screenHeight * 0.02),
               Row(
                 children: [

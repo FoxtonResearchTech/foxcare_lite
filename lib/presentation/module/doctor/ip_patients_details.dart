@@ -183,7 +183,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                                       null
                               ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
                               : 'N/A',
-                          date: ipTicketData['ipAdmitDate'],
+                          date: ipTicketData['ipAdmitDate'] ?? 'N/A',
                           ipAdmitDate: ipTicketData['ipAdmitDate'] ?? 'N/A',
                           age: patientData['age'] ?? 'N/A',
                           place: patientData['state'] ?? 'N/A',
