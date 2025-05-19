@@ -6,8 +6,13 @@ import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/buttons/pharmacy_button.dart';
+import '../../../../utilities/widgets/date_time.dart';
+import '../../../../utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../../utilities/widgets/textField/pharmacy_text_field.dart';
 import '../tools/manage_pharmacy_info.dart';
 import 'counter_sales.dart';
 import 'ip_billing.dart';
@@ -20,282 +25,364 @@ class MedicineReturn extends StatefulWidget {
 }
 
 class _MedicineReturn extends State<MedicineReturn> {
-  TextEditingController date = TextEditingController();
-  TextEditingController patientName = TextEditingController();
-  TextEditingController phoneNumber = TextEditingController();
-  TextEditingController billNo = TextEditingController();
+  TextEditingController _date = TextEditingController();
+  TextEditingController _billNo = TextEditingController();
+  TextEditingController _billId = TextEditingController();
+
+  TextEditingController discount = TextEditingController();
+  DateTime dateTime = DateTime.now();
+
+  final TextEditingController totalAmountController = TextEditingController();
+
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
+  String? billingTypeFound;
 
   double totalAmount = 0.0;
-  double taxPercentage = 12;
-  double gstPercentage = 10;
-  double taxAmount = 0.00;
-  double gstAmount = 0.00;
-  double totalGst = 0.00;
-  double grandTotal = 0.00;
+  double discountAmount = 0.0;
 
-  final List<String> headers1 = [
-    'Bill NO',
-    'Patient Name',
-    'OP NO / IP NO / Counter',
-    'Bill Date',
-    'Action',
-  ];
-  List<Map<String, dynamic>> tableData1 = [];
-  final List<String> headers2 = [
+  String? patientNameError;
+  String? doctorNameError;
+  bool isPrinting = false;
+  bool isAdding = false;
+  bool isSubmitting = false;
+  final List<String> headers = [
     'Product Name',
-    'Type',
-    'Batch',
-    'EXP',
     'HSN',
-    'Purchased Quantity',
+    'Batch',
+    'Expiry',
+    'Quantity',
+    'Return Qty',
     'MRP',
-    'Price',
-    'GST',
-    'Amount',
-    'Purchased Amount',
-    'Returning Qut',
-    'Returning Cost'
+    'Rate',
+    'Tax',
+    'SGST',
+    'CGST',
+    'Tax Total',
+    'Product Total',
+    'Delete',
   ];
-  List<Map<String, dynamic>> tableData2 = [];
-  Future<void> medicineReturn() async {
+  final List<String> pdfHeaders = [
+    'Product Name',
+    'HSN',
+    'Batch',
+    'Expiry',
+    'Quantity',
+    'MRP',
+    'Rate',
+    'Tax',
+    'SGST',
+    'CGST',
+    'Tax Total',
+    'Product Total',
+  ];
+
+  final List<String> editableColumns = ['Return Qty'];
+
+  List<Map<String, dynamic>> allProducts = [];
+  List<Map<String, TextEditingController>> controllers = [];
+  List<List<Map<String, dynamic>>> productSuggestions = [];
+
+  void clearAll() {
+    setState(() {
+      discount.clear();
+      totalAmountController.clear();
+
+      paymentDetails.clear();
+      selectedPaymentMode = null;
+      totalAmount = 0.0;
+      discountAmount = 0.0;
+      patientNameError = null;
+      doctorNameError = null;
+      isAdding = false;
+      isSubmitting = false;
+      isPrinting = false;
+      allProducts = [];
+    });
+  }
+
+  void onDiscountChanged(String value) {
+    setState(() {
+      double discountValue = double.tryParse(value) ?? 0.0;
+      double totalWithoutDiscount = _allProductTotal().toDouble();
+
+      double discountAmt = totalWithoutDiscount * (discountValue / 100);
+
+      double netTotal = totalWithoutDiscount - discountAmt;
+
+      discountAmount = discountAmt;
+      totalAmount = netTotal;
+      totalAmountController.text = totalAmount.toStringAsFixed(2);
+    });
+  }
+
+  Future<void> searchBill(String billNo) async {
+    final fireStore = FirebaseFirestore.instance;
+    final billingsDocRef = fireStore.collection('pharmacy').doc('billings');
+
+    final List<String> billingTypes = [
+      'opbilling',
+      'ipbilling',
+      'countersales'
+    ];
+
     try {
-      DocumentReference billingRef = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('billing')
-          .collection('medicinereturn')
-          .doc();
-      List<Map<String, dynamic>> updatedTableData = tableData1.map((item) {
-        return {
-          'Bill NO': item['Bill NO'] ?? 'N/A',
-          'Patient Name': item['Patient Name'] ?? 'N/A',
-          'OP NO / IP NO / Counter': item['OP NO / IP NO / Counter'] ?? 'N/A',
-          'Bill Date': item['Bill Date'] ?? 'N/A',
-        };
-      }).toList();
-      updatedTableData = tableData2.map((item) {
-        return {
-          'Product Name': item['Product Name'] ?? 'N/A',
-          'Type': item['Type'] ?? 'N/A',
-          'Batch': item['Batch'] ?? 'N/A',
-          'EXP': item['EXP'] ?? 'N/A',
-          'HSN': item['HSN'] ?? 'N/A',
-          'Quantity': item['Quantity'] ?? '0',
-          'MPS': item['MPS'] ?? 'N/A',
-          'Price': item['Price'] ?? 'N/A',
-          'Gst': item['Gst'] ?? '0%',
-          'Amount': item['Amount'] ?? '0.00',
-          'Purchased Amount': item['Purchased Amount'] ?? '0.00',
-          'Returning Qut': item['Returning Qut'] ?? '0',
-          'Returning Cost': item['Returning Cost'] ?? '0.00',
-        };
-      }).toList();
-      Map<String, dynamic> billingData = {
-        'billNo': billNo.text,
-        'billDate': date.text,
-        'patientName': patientName.text,
-        'phoneNumber': phoneNumber.text,
-        'totalAmount': totalAmount,
-        'taxAmount': taxAmount,
-        'gstAmount': gstAmount,
-        'totalGst': totalGst,
-        'grandTotal': grandTotal,
-        'items': updatedTableData,
-      };
+      for (final type in billingTypes) {
+        final querySnapshot = await billingsDocRef
+            .collection(type)
+            .where('billNo', isEqualTo: billNo)
+            .get();
+        billingTypeFound = type;
 
-      await billingRef.set(billingData);
-      for (var product in tableData2) {
-        String productName = product['Product Name'];
-        String batch = product['Batch'];
-        String hsn = product['HSN'];
+        if (querySnapshot.docs.isNotEmpty) {
+          final doc = querySnapshot.docs.first;
+          final data = doc.data();
 
-        double Quantity =
-            double.tryParse(product['Returning Qut'].toString()) ?? 0;
+          setState(() {
+            _billId.text = doc.id;
+            _date = TextEditingController(text: data['billDate']);
+            discount.text = data['discountPercentage'].toString();
+            totalAmountController.text = data['totalAmount'].toString();
 
-        print('Return Quantity: $Quantity');
+            paymentDetails.text = data['paymentDetails'].toString();
+            selectedPaymentMode = data['paymentMode'].toString();
+            discountAmount = double.parse(data['discountAmount'].toString());
+            totalAmount = double.parse(data['netTotalAmount'].toString());
 
-        if (Quantity > 0) {
-          QuerySnapshot<Map<String, dynamic>> productSnapshot =
-              await FirebaseFirestore.instance
-                  .collection('stock')
-                  .doc('Products')
-                  .collection('AddedProducts')
-                  .where('productName', isEqualTo: productName)
-                  .where('batchNumber', isEqualTo: batch)
-                  .where('hsnCode', isEqualTo: hsn)
-                  .get();
+            allProducts = List<Map<String, dynamic>>.from(data['entryProducts'])
+                .asMap()
+                .entries
+                .map((entry) {
+              final index = entry.key;
+              final product = Map<String, dynamic>.from(entry.value);
 
-          if (productSnapshot.docs.isEmpty) {
-            print(
-                'No matching product found for $productName, Batch: $batch, HSN: $hsn');
-          } else {
-            print('Found ${productSnapshot.docs.length} matching products.');
+              product['Delete'] = IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    allProducts.removeAt(index);
+                  });
+                },
+              );
 
-            for (var doc in productSnapshot.docs) {
-              double currentQuantity =
-                  double.tryParse(doc['quantity'].toString()) ?? 0;
-
-              double updatedQuantity =
-                  (currentQuantity - Quantity).clamp(0, double.infinity);
-
-              print(
-                  'Current Quantity: $currentQuantity, Updated Quantity: $updatedQuantity');
-
-              await FirebaseFirestore.instance
-                  .collection('stock')
-                  .doc('Products')
-                  .collection('AddedProducts')
-                  .doc(doc.id)
-                  .update({
-                'quantity': updatedQuantity.toString(),
-              });
-            }
-          }
+              return product;
+            }).toList();
+          });
+          break; // Bill found, no need to search in other types
         }
       }
 
-      CustomSnackBar(context,
-          message: 'Medicine Return data submitted successfully',
-          backgroundColor: Colors.green);
+      if (billNo.isEmpty) {
+        setState(() {
+          allProducts = [];
+        });
+      }
     } catch (e) {
-      CustomSnackBar(context,
-          message: 'Failed to submit Medicine Return data',
-          backgroundColor: Colors.red);
-
-      print('Error submitting billing data: $e');
+      print('Error searching bill: $e');
     }
   }
 
-  Future<void> fetchData({String? billNo}) async {
+  Future<void> returnBill(
+    String billId,
+    List<Map<String, dynamic>> returnedItems,
+    String billingType,
+  ) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      List<String> collections = ['ipbilling', 'opbilling', 'countersales'];
+      WriteBatch batch = firestore.batch();
 
-      List<QuerySnapshot> snapshots = await Future.wait(
-        collections.map((collection) {
-          Query query = firestore
-              .collection('pharmacy')
-              .doc('billing')
-              .collection(collection);
+      double updatedTotalBeforeTax = 0.0;
+      double updatedTaxTotal = 0.0;
+      double updatedNetTotal = 0.0;
+      double updatedDiscountAmount = 0.0;
 
-          if (billNo != null) {
-            query = query.where('billNo', isEqualTo: billNo);
+      // Get bill reference
+      DocumentReference billRef = firestore
+          .collection('pharmacy')
+          .doc('billings')
+          .collection(billingType)
+          .doc(billId);
+
+      DocumentSnapshot billSnapshot = await billRef.get();
+      if (!billSnapshot.exists) {
+        throw Exception("Bill not found");
+      }
+
+      List<Map<String, dynamic>> originalEntryProducts =
+          List<Map<String, dynamic>>.from(billSnapshot['entryProducts']);
+      List<Map<String, dynamic>> updatedEntryProducts = [];
+
+      // Loop through each item in original bill
+      for (var originalItem in originalEntryProducts) {
+        String productDocId = originalItem['productDocId'];
+        String purchaseEntryDocId = originalItem['purchaseEntryDocId'];
+        int originalQty =
+            int.tryParse(originalItem['Quantity'].toString()) ?? 0;
+
+        // Check if this product is returned
+        Map<String, dynamic>? returnedItem = returnedItems.firstWhere(
+          (item) => item['productDocId'] == productDocId,
+          orElse: () => {},
+        );
+
+        int returnQty = returnedItem.isNotEmpty
+            ? int.tryParse(returnedItem['Return Qty'].toString()) ?? 0
+            : 0;
+
+        if (returnQty > originalQty) returnQty = originalQty;
+        int newQty = originalQty - returnQty;
+
+        // Stock and purchaseEntry update only if there's a return
+        if (returnQty > 0) {
+          DocumentReference productRef = firestore
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .doc(productDocId);
+
+          DocumentSnapshot productSnapshot = await productRef.get();
+          if (!productSnapshot.exists) continue;
+
+          int currentQty =
+              int.tryParse(productSnapshot['quantity'].toString()) ?? 0;
+          int newMainQty = currentQty + returnQty;
+
+          batch.update(productRef, {
+            'quantity': newMainQty.toString(),
+          });
+
+          DocumentReference purchaseEntryRef =
+              productRef.collection('purchaseEntry').doc(purchaseEntryDocId);
+
+          DocumentSnapshot purchaseSnapshot = await purchaseEntryRef.get();
+          if (purchaseSnapshot.exists) {
+            int purchaseQty =
+                int.tryParse(purchaseSnapshot['quantity'].toString()) ?? 0;
+            int newPurchaseQty = purchaseQty + returnQty;
+
+            batch.update(purchaseEntryRef, {
+              'quantity': newPurchaseQty.toString(),
+            });
           }
 
-          return query.get();
-        }),
+          DateTime now = DateTime.now();
+          await productRef.collection('currentQty').doc().set({
+            'quantity': newMainQty.toString(),
+            'date':
+                "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}",
+            'time':
+                "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}",
+          });
+        }
+
+        // Recalculate item totals if new quantity > 0
+        if (newQty > 0) {
+          double rate = double.tryParse(originalItem['Rate'].toString()) ?? 0;
+          double tax = double.tryParse(originalItem['Tax'].toString()) ?? 0;
+
+          double itemTotalBeforeTax = newQty * rate;
+          double taxAmt = itemTotalBeforeTax * (tax / 100);
+          double totalWithTax = itemTotalBeforeTax + taxAmt;
+
+          updatedTotalBeforeTax += totalWithTax;
+          updatedTaxTotal += taxAmt;
+          updatedNetTotal += totalWithTax;
+
+          originalItem['Quantity'] = newQty.toString();
+          originalItem['Tax Total'] = taxAmt.toStringAsFixed(2);
+          originalItem['Product Total'] = totalWithTax.toStringAsFixed(2);
+
+          updatedEntryProducts.add(originalItem);
+        }
+      }
+
+      // Discount
+      double discountPercentage = double.tryParse(discount.text) ?? 0;
+      updatedDiscountAmount = updatedNetTotal * (discountPercentage / 100);
+      double finalTotal = updatedNetTotal - updatedDiscountAmount;
+
+      batch.update(billRef, {
+        'entryProducts': updatedEntryProducts,
+        'totalBeforeDiscount': updatedTotalBeforeTax.toStringAsFixed(2),
+        'taxTotal': updatedTaxTotal.toStringAsFixed(2),
+        'totalAmount': finalTotal.toStringAsFixed(2),
+        'netTotalAmount': finalTotal.toStringAsFixed(2),
+        'discountAmount': updatedDiscountAmount.toStringAsFixed(2),
+      });
+
+      await batch.commit();
+
+      CustomSnackBar(
+        context,
+        message: 'Return processed successfully and bill updated.',
+        backgroundColor: Colors.green,
       );
 
-      List<Map<String, dynamic>> patientData = [];
-      List<Map<String, dynamic>> medicineData = [];
-
-      for (var snapshot in snapshots) {
-        for (var doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-
-          if (data.isNotEmpty) {
-            patientData.add({
-              'Bill NO': data['billNo'] ?? 'N/A',
-              'Patient Name': data['patientName'] ?? 'N/A',
-              'OP NO / IP NO / Counter':
-                  data['opNumber'] ?? data['ipNumber'] ?? 'Counter',
-              'Bill Date': data['billDate'] ?? 'N/A',
-              'Phone Number': data['phoneNumber'] ?? 'N/A',
-              'Purchased Total': data['totalAmount'] ?? 'N/A',
-              'Purchased Tax': data['taxAmount'] ?? 'N/A',
-              'Purchased Gst': data['gstAmount'] ?? 'N/A',
-              'Purchased Total Gst': data['totalGst'] ?? 'N/A',
-              'Purchased Grand Total': data['grandTotal'] ?? 'N/A',
-              'Action': TextButton(
-                onPressed: () => medicineReturn(),
-                child: CustomText(text: 'Return'),
-              ),
-            });
-            for (var item in data['items']) {
-              medicineData.add({
-                'Product Name': item['Product Name'] ?? 'N/A',
-                'Type': item['Type'] ?? 'N/A',
-                'Batch': item['Batch'] ?? 'N/A',
-                'EXP': item['EXP'] ?? 'N/A',
-                'HSN': item['HSN'] ?? 'N/A',
-                'Purchased Quantity': item['Quantity'] ?? 'N/A',
-                'MRP': item['MPS'] ?? 'N/A',
-                'Price': item['Price'] ?? 'N/A',
-                'GST': item['Gst'] ?? 'N/A',
-                'Amount': item['Amount'] ?? 'N/A',
-                'Purchased Amount': item['Amount'],
-                'Returning Qut': '',
-                'Returning Cost': item['Returning Cost'],
-              });
-            }
-          }
-        }
-      }
-
-      if (patientData.isEmpty) {
-        setState(() {
-          tableData1 = [];
-          resetTotals();
-        });
-        return;
-      }
-      if (medicineData.isEmpty) {
-        setState(() {
-          tableData2 = [];
-          resetTotals();
-        });
-        return;
-      }
-
-      final firstEntry = patientData.first;
-      setState(() {
-        patientName.text = (firstEntry['firstName'] ?? '') +
-            ' ' +
-            (firstEntry['Patient Name'] ?? 'N/A');
-        phoneNumber.text = firstEntry['Phone Number'] ?? 'N/A';
-        date.text = firstEntry['Bill Date'] ?? 'N/A';
-        tableData1 = patientData;
-        tableData2 = medicineData;
-        calculateTotals();
-
-        if (billNo == null) {
-          resetTotals();
-        }
-      });
+      clearAll();
     } catch (e) {
-      print('Error fetching data: $e');
+      CustomSnackBar(
+        context,
+        message: 'Failed to process return.',
+        backgroundColor: Colors.red,
+      );
+      print('Return Error: $e');
     }
   }
 
-  void calculateTotals() {
-    totalAmount = tableData2.fold(0.0, (sum, item) {
-      double returningCost =
-          double.tryParse(item['Returning Cost']?.toString() ?? '0') ?? 0;
-      double amount = double.tryParse(item['Amount']?.toString() ?? '0') ?? 0;
-
-      return sum + (returningCost > 0 ? returningCost : amount);
-    });
-
-    taxAmount = (totalAmount * taxPercentage) / 100;
-    gstAmount = (totalAmount * gstPercentage) / 100;
-    totalGst = taxAmount + gstAmount;
-    grandTotal = totalAmount + totalGst;
-
-    totalAmount = double.parse(totalAmount.toStringAsFixed(2));
-    taxAmount = double.parse(taxAmount.toStringAsFixed(2));
-    gstAmount = double.parse(gstAmount.toStringAsFixed(2));
-    totalGst = double.parse(totalGst.toStringAsFixed(2));
-    grandTotal = double.parse(grandTotal.toStringAsFixed(2));
+  @override
+  void initState() {
+    super.initState();
+    ;
   }
 
-  void resetTotals() {
-    totalAmount = 0.00;
-    taxAmount = 0.00;
-    gstAmount = 0.00;
-    totalGst = 0.00;
-    grandTotal = 0.00;
-    patientName.clear();
+  double _taxTotal() {
+    double sum = allProducts.fold<double>(
+      0.0,
+      (sum, entry) {
+        var value = entry['Tax Total'];
+        if (value == null) return sum;
 
-    phoneNumber.clear();
+        if (value is String) {
+          return sum + (double.tryParse(value) ?? 0.0);
+        } else if (value is num) {
+          return sum + value.toDouble();
+        }
+
+        return sum;
+      },
+    );
+
+    return double.parse(sum.toStringAsFixed(2));
+  }
+
+  double _allProductTotal() {
+    double sum = allProducts.fold<double>(
+      0.0,
+      (sum, entry) {
+        var value = entry['Product Total'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value) ?? 0.0);
+        } else if (value is num) {
+          return sum + value.toDouble();
+        }
+
+        return sum;
+      },
+    );
+
+    return double.parse(sum.toStringAsFixed(2));
+  }
+
+  @override
+  void dispose() {
+    for (var rowControllers in controllers) {
+      for (var controller in rowControllers.values) {
+        controller.dispose();
+      }
+    }
+    super.dispose();
   }
 
   @override
@@ -309,183 +396,250 @@ class _MedicineReturn extends State<MedicineReturn> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.02,
-            left: screenWidth * 0.08,
-            right: screenWidth * 0.08,
+            left: screenWidth * 0.06,
+            right: screenWidth * 0.04,
             bottom: screenWidth * 0.05,
           ),
           child: Column(
             children: [
+              const TimeDateWidget(text: 'Medicine Return'),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Bill No ',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.008),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                        controller: _billNo,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.04),
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
+                    padding: EdgeInsets.only(top: screenWidth * 0.02),
+                    child: PharmacyButton(
+                      label: 'Search',
+                      onPressed: () {
+                        setState(() {
+                          allProducts.clear();
+                        });
+                        searchBill(_billNo.text);
+                      },
+                      width: screenWidth * 0.1,
+                      height: screenHeight * 0.042,
+                    ),
+                  ),
+                  SizedBox(width: screenWidth * 0.08),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: ' Bill Date ',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.008),
+                      PharmacyTextField(
+                        readOnly: true,
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                        controller: _date,
+                      )
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              if (allProducts.isNotEmpty) ...[
+                Row(
+                  children: [
+                    CustomText(
+                      text: 'Purchased Medicines',
+                      size: screenWidth * 0.02,
+                      color: AppColors.blue,
+                    ),
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.04),
+                CustomDataTable(
+                  editableColumns: editableColumns,
+                  headers: headers,
+                  tableData: allProducts,
+                  onValueChanged: (rowIndex, header, value) {
+                    setState(() {
+                      allProducts[rowIndex][header] = value;
+
+                      if (header == 'Return Qty') {
+                        final tax = double.tryParse(
+                                allProducts[rowIndex]['Tax'] ?? '0') ??
+                            0;
+                        final quantity = double.tryParse(
+                                allProducts[rowIndex]['Return Qty'] ?? '0') ??
+                            0;
+                        final price = double.tryParse(
+                            allProducts[rowIndex]['Rate'] ?? '0');
+                        final totalQuantity = quantity;
+
+                        if (price != null) {
+                          final totalWithoutTax = totalQuantity * price;
+                          final taxAmount = totalWithoutTax * (tax / 100);
+                          final totalWithTax = totalWithoutTax + taxAmount;
+
+                          allProducts[rowIndex]['Tax Total'] =
+                              taxAmount.toStringAsFixed(2);
+                          allProducts[rowIndex]['Product Total'] =
+                              totalWithTax.toStringAsFixed(2);
+                        }
+                      }
+                      _taxTotal();
+                      _allProductTotal();
+                      onDiscountChanged(discount.text);
+                    });
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: screenWidth * 0.395),
+                  child: Container(
+                    padding: EdgeInsets.only(left: screenWidth * 0.02),
+                    width: screenWidth * 0.7,
+                    height: screenHeight * 0.030,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         CustomText(
-                          text: "Medicine Return",
-                          size: screenWidth * 0.0275,
+                          text: 'Tax Total  : ',
+                        ),
+                        CustomText(
+                          text: " ${_taxTotal()}",
+                        ),
+                        SizedBox(width: screenWidth * 0.05),
+                        CustomText(
+                          text: 'Total  : ',
+                        ),
+                        CustomText(
+                          text: " ${_allProductTotal()}",
+                        ),
+                        SizedBox(width: screenWidth * 0.08),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: screenWidth * 0.6),
+                  child: Container(
+                    padding: EdgeInsets.only(left: screenWidth * 0.02),
+                    width: screenWidth * 0.7,
+                    height: screenHeight * 0.04,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        CustomText(
+                          text: 'Discount  ${discount.text} % : ',
+                        ),
+                        CustomText(
+                          text: '${discountAmount.toStringAsFixed(2)}',
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: screenWidth * 0.6),
+                  child: Container(
+                    padding: EdgeInsets.only(left: screenWidth * 0.02),
+                    width: screenWidth * 0.7,
+                    height: screenHeight * 0.04,
                     decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 0.5,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  CustomTextField(
-                    controller: billNo,
-                    hintText: 'Bill No',
-                    width: screenWidth * 0.25,
-                    onChanged: (value) async {
-                      setState(() {
-                        tableData2 = [];
-                        tableData1 = [];
-                      });
-
-                      fetchData(billNo: value);
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                    controller: date,
-                    hintText: 'Date',
-                    width: screenWidth * 0.25,
-                  ),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              Row(
-                children: [
-                  CustomTextField(
-                      controller: patientName,
-                      hintText: 'Patient Name',
-                      width: screenWidth * 0.25),
-                  SizedBox(width: screenHeight * 0.5),
-                  CustomTextField(
-                      controller: phoneNumber,
-                      hintText: 'Phone Number',
-                      width: screenWidth * 0.25),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
-                tableData: tableData1,
-                headers: headers1,
-              ),
-              SizedBox(height: screenHeight * 0.08),
-              if (tableData2.isNotEmpty) ...[
-                CustomDataTable(
-                  tableData: tableData2,
-                  headers: headers2,
-                  editableColumns: ['Returning Qut'],
-                  onValueChanged: (rowIndex, header, value) async {
-                    if (header == 'Purchased Quantity') {
-                      if (rowIndex >= 0 && rowIndex < tableData2.length) {
-                        setState(() {
-                          tableData2[rowIndex]['Purchased Quantity'] = value;
-
-                          double quantity = double.tryParse(value) ?? 0;
-                          double amountPerUnit = double.tryParse(
-                                  tableData2[rowIndex]['Amount']?.toString() ??
-                                      '0') ??
-                              0;
-                          double totalAmountForItem = quantity * amountPerUnit;
-
-                          tableData2[rowIndex]['Amount'] =
-                              totalAmountForItem.toStringAsFixed(2);
-
-                          calculateTotals();
-                        });
-                      } else {
-                        print("Error: rowIndex $rowIndex is out of range.");
-                      }
-                    }
-                    if (header == 'Returning Qut') {
-                      if (rowIndex >= 0 && rowIndex < tableData2.length) {
-                        setState(() {
-                          double returnQuantity = double.tryParse(value) ?? 0;
-                          double pricePerUnit = double.tryParse(
-                                  tableData2[rowIndex]['Price']?.toString() ??
-                                      '0') ??
-                              0;
-                          double gstPercentage = double.tryParse(
-                                  tableData2[rowIndex]['GST']
-                                          ?.replaceAll('%', '') ??
-                                      '0') ??
-                              0;
-
-                          double returnAmount = returnQuantity * pricePerUnit;
-                          double returnGst =
-                              (returnAmount * gstPercentage) / 100;
-                          double returnTotal = returnAmount + returnGst;
-
-                          tableData2[rowIndex]['Returning Cost'] =
-                              returnTotal.toStringAsFixed(2);
-
-                          calculateTotals();
-                        });
-                      } else {
-                        print("Error: rowIndex $rowIndex is out of range.");
-                      }
-                    }
-                  },
-                ),
-                Container(
-                  padding: EdgeInsets.only(right: screenWidth * 0.08),
-                  width: screenWidth,
-                  height: screenHeight * 0.028,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 0.5,
+                    child: Row(
+                      children: [
+                        CustomText(
+                          text: 'Net Total : ${totalAmount.toStringAsFixed(2)}',
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      CustomText(
-                        text: 'Total :$totalAmount ',
-                        size: screenWidth * 0.0085,
-                      )
-                    ],
-                  ),
                 ),
-                Container(
-                  padding: EdgeInsets.only(right: screenWidth * 0.08),
-                  width: screenWidth,
-                  height: screenHeight * 0.025,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 0.5,
-                    ),
-                  ),
+                SizedBox(height: screenHeight * 0.02),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.only(
+                          left: screenWidth * 0.05, right: screenWidth * 0.05),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text:
+                                        'Net Total : ${totalAmountController.text}',
+                                    size: screenWidth * 0.0125,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: screenHeight * 0.05),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.05),
+                Padding(
+                  padding: EdgeInsets.only(
+                      left: screenWidth * 0.09, right: screenWidth * 0.09),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      CustomText(text: '12% TAX :$taxAmount '),
-                      CustomText(text: '10% GST : $gstAmount'),
-                      CustomText(text: 'Total GST :$totalGst '),
-                      CustomText(text: 'Grand Total :$grandTotal '),
+                      PharmacyButton(
+                          color: AppColors.blue,
+                          label: 'Cancel',
+                          onPressed: () {
+                            clearAll();
+                          },
+                          width: screenWidth * 0.1),
+                      isSubmitting
+                          ? Lottie.asset('assets/button_loading.json',
+                              height: 150, width: 150)
+                          : PharmacyButton(
+                              color: AppColors.blue,
+                              label: 'Submit',
+                              onPressed: () async {
+                                await returnBill(_billId.text, allProducts,
+                                    billingTypeFound.toString());
+                              },
+                              width: screenWidth * 0.1),
                     ],
                   ),
                 ),
               ],
-              SizedBox(height: screenHeight * 0.08),
             ],
           ),
         ),
