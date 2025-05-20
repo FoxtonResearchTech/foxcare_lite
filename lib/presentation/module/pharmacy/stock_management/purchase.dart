@@ -26,8 +26,17 @@ class _Purchase extends State<Purchase> {
   TextEditingController _distributor = TextEditingController();
   TextEditingController _billNo = TextEditingController();
 
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController currentlyPayingAmount = TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
+
   List<String> distributorsNames = [];
   String? selectedDistributor;
+  double _originalCollected = 0.0;
 
   final List<String> headers = [
     'Bill NO',
@@ -40,6 +49,18 @@ class _Purchase extends State<Purchase> {
     'Action'
   ];
   List<Map<String, dynamic>> tableData = [];
+
+  void _payingAmountListener() {
+    double paying = double.tryParse(currentlyPayingAmount.text) ?? 0.0;
+    double total = double.tryParse(totalAmountController.text) ?? 0.0;
+
+    double newCollected = _originalCollected + paying;
+    double newBalance = total - newCollected;
+
+    collectedAmountController.text = newCollected.toStringAsFixed(2);
+    balanceController.text = newBalance.toStringAsFixed(2);
+  }
+
   Future<void> fetchData({String? distributor, String? billNo}) async {
     try {
       CollectionReference productsCollection = FirebaseFirestore.instance
@@ -74,14 +95,199 @@ class _Purchase extends State<Purchase> {
             'Bill Date': data['billDate']?.toString() ?? 'N/A',
             'Ref No': data['rfNo']?.toString() ?? 'N/A',
             'Distributor': '${data['distributor'] ?? 'N/A'}'.trim(),
-            'Amount': data['totalAmount']?.toString() ?? 'N/A',
+            'Amount': data['netTotalAmount']?.toString() ?? 'N/A',
             'Paid': data['collectedAmount']?.toString() ?? 'N/A',
             'Balance': data['balance']?.toString() ?? 'N/A',
             'Action': Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    double originalCollected = double.tryParse(
+                            data['collectedAmount']?.toString() ?? '0') ??
+                        0.0;
+                    double total = double.tryParse(
+                            data['netTotalAmount']?.toString() ?? '0') ??
+                        0.0;
+
+                    setState(() {
+                      _originalCollected = originalCollected;
+                      totalAmountController.text = total.toStringAsFixed(2);
+                      collectedAmountController.text =
+                          originalCollected.toStringAsFixed(2);
+                      balanceController.text =
+                          (total - originalCollected).toStringAsFixed(2);
+                      currentlyPayingAmount.text = '';
+                    });
+
+                    currentlyPayingAmount.removeListener(_payingAmountListener);
+                    currentlyPayingAmount.addListener(_payingAmountListener);
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const CustomText(
+                            text: 'Payment Details Details',
+                            size: 26,
+                          ),
+                          content: Container(
+                            width: 750,
+                            height: 275,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 25),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Total Amount',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        PharmacyTextField(
+                                            readOnly: true,
+                                            controller: totalAmountController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Collected',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        PharmacyTextField(
+                                            readOnly: true,
+                                            controller:
+                                                collectedAmountController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Balance',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        PharmacyTextField(
+                                            readOnly: true,
+                                            controller: balanceController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 50),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Paying Amount ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        PharmacyTextField(
+                                          hintText: '',
+                                          controller: currentlyPayingAmount,
+                                          width: 175,
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Payment Mode ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        SizedBox(
+                                          width: 175,
+                                          child: PharmacyDropDown(
+                                            label: '',
+                                            items: const [
+                                              'UPI',
+                                              'Credit Card',
+                                              'Debit Card',
+                                              'Net Banking',
+                                              'Cash'
+                                            ],
+                                            onChanged: (value) {
+                                              setState(
+                                                () {
+                                                  selectedPaymentMode = value;
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Payment Details ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        PharmacyTextField(
+                                          hintText: '',
+                                          controller: paymentDetails,
+                                          width: 175,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {},
+                              child: CustomText(
+                                text: 'Pay',
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: CustomText(
+                                text: 'Close',
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                   child: CustomText(
                     text: 'Pay',
                     color: AppColors.blue,
@@ -137,11 +343,25 @@ class _Purchase extends State<Purchase> {
     }
   }
 
+  void _updatePaymentAndBalance() {
+    final double totalAmount =
+        double.tryParse(totalAmountController.text) ?? 0.0;
+    final double collectedAmount =
+        double.tryParse(collectedAmountController.text) ?? 0.0;
+    final double payingAmount =
+        double.tryParse(currentlyPayingAmount.text) ?? 0.0;
+
+    final double newCollected = collectedAmount + payingAmount;
+    final double newBalance = totalAmount - newCollected;
+
+    collectedAmountController.text = newCollected.toStringAsFixed(2);
+    balanceController.text = newBalance.toStringAsFixed(2);
+  }
+
   @override
   void initState() {
     fetchData();
     fetchDistributors();
-
     super.initState();
   }
 
@@ -149,6 +369,8 @@ class _Purchase extends State<Purchase> {
   void dispose() {
     _distributor.dispose();
     _billNo.dispose();
+    currentlyPayingAmount.removeListener(_payingAmountListener);
+
     super.dispose();
   }
 
@@ -169,7 +391,7 @@ class _Purchase extends State<Purchase> {
           ),
           child: Column(
             children: [
-              TimeDateWidget(text: 'Purchase'),
+              const TimeDateWidget(text: 'Purchase'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
