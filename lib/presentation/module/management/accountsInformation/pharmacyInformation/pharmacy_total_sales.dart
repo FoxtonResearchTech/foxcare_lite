@@ -6,6 +6,7 @@ import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/pharma
 import 'package:intl/intl.dart';
 
 import '../../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../../utilities/widgets/table/data_table.dart';
 import '../../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../../utilities/widgets/textField/primary_textField.dart';
@@ -19,6 +20,14 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
   TextEditingController date = TextEditingController();
   TextEditingController fromDate = TextEditingController();
   TextEditingController toDate = TextEditingController();
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController currentlyPayingAmount = TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
+  double _originalCollected = 0.0;
 
   double totalAmount = 0.0;
 
@@ -31,13 +40,13 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
     'Patient Name',
     'OP NO / IP NO / Counter',
     'Phone Number',
-    'Purchased Total',
-    'Purchased Tax',
-    'Purchased Gst',
-    'Purchased Total Gst',
-    'Purchased Grand Total',
+    'Total Amount',
+    'Collected',
+    'Balance',
+    'Pay'
   ];
   List<Map<String, dynamic>> tableData = [];
+
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
     DateTime? pickedDate = await showDatePicker(
@@ -55,6 +64,17 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
     }
   }
 
+  void _payingAmountListener() {
+    double paying = double.tryParse(currentlyPayingAmount.text) ?? 0.0;
+    double total = double.tryParse(totalAmountController.text) ?? 0.0;
+
+    double newCollected = _originalCollected + paying;
+    double newBalance = total - newCollected;
+
+    collectedAmountController.text = newCollected.toStringAsFixed(2);
+    balanceController.text = newBalance.toStringAsFixed(2);
+  }
+
   Future<void> fetchData({
     String? date,
     String? fromDate,
@@ -70,7 +90,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
         collections.map((collection) {
           Query query = firestore
               .collection('pharmacy')
-              .doc('billing')
+              .doc('billings')
               .collection(collection);
 
           if (date != null) {
@@ -95,14 +115,211 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
               'Bill NO': data['billNo'] ?? 'N/A',
               'Patient Name': data['patientName'] ?? 'N/A',
               'OP NO / IP NO / Counter':
-                  data['opNumber'] ?? data['ipNumber'] ?? 'Counter',
+                  data['opTicket'] ?? data['ipTicket'] ?? 'Counter',
               'Bill Date': data['billDate'] ?? 'N/A',
-              'Phone Number': data['phoneNumber'] ?? 'N/A',
-              'Purchased Total': data['totalAmount'] ?? 'N/A',
-              'Purchased Tax': data['taxAmount'] ?? 'N/A',
-              'Purchased Gst': data['gstAmount'] ?? 'N/A',
-              'Purchased Total Gst': data['totalGst'] ?? 'N/A',
-              'Purchased Grand Total': data['grandTotal'] ?? 'N/A',
+              'Phone Number': data['phone'] ?? 'N/A',
+              'Total Amount': data['netTotalAmount']?.toString() ?? 'N/A',
+              'Collected': data['collectedAmount']?.toString() ?? 'N/A',
+              'Balance': data['balance']?.toString() ?? 'N/A',
+              'Pay': Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      double originalCollected = double.tryParse(
+                              data['collectedAmount']?.toString() ?? '0') ??
+                          0.0;
+                      double total = double.tryParse(
+                              data['netTotalAmount']?.toString() ?? '0') ??
+                          0.0;
+
+                      setState(() {
+                        _originalCollected = originalCollected;
+                        totalAmountController.text = total.toStringAsFixed(2);
+                        collectedAmountController.text =
+                            originalCollected.toStringAsFixed(2);
+                        balanceController.text =
+                            (total - originalCollected).toStringAsFixed(2);
+                        currentlyPayingAmount.text = '';
+                      });
+
+                      currentlyPayingAmount
+                          .removeListener(_payingAmountListener);
+                      currentlyPayingAmount.addListener(_payingAmountListener);
+
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const CustomText(
+                              text: 'Payment Details Details',
+                              size: 26,
+                            ),
+                            content: Container(
+                              width: 750,
+                              height: 275,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 25),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const CustomText(
+                                            text: 'Total Amount',
+                                            size: 20,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          CustomTextField(
+                                              readOnly: true,
+                                              controller: totalAmountController,
+                                              hintText: '',
+                                              width: 175),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const CustomText(
+                                            text: 'Collected',
+                                            size: 20,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          CustomTextField(
+                                              readOnly: true,
+                                              controller:
+                                                  collectedAmountController,
+                                              hintText: '',
+                                              width: 175),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const CustomText(
+                                            text: 'Balance',
+                                            size: 20,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          CustomTextField(
+                                              readOnly: true,
+                                              controller: balanceController,
+                                              hintText: '',
+                                              width: 175),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 50),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CustomText(
+                                            text: 'Paying Amount ',
+                                            size: 20,
+                                          ),
+                                          SizedBox(height: 7),
+                                          CustomTextField(
+                                            hintText: '',
+                                            controller: currentlyPayingAmount,
+                                            width: 175,
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CustomText(
+                                            text: 'Payment Mode ',
+                                            size: 20,
+                                          ),
+                                          SizedBox(height: 7),
+                                          SizedBox(
+                                            width: 175,
+                                            child: CustomDropdown(
+                                              label: '',
+                                              items: const [
+                                                'UPI',
+                                                'Credit Card',
+                                                'Debit Card',
+                                                'Net Banking',
+                                                'Cash'
+                                              ],
+                                              onChanged: (value) {
+                                                setState(
+                                                  () {
+                                                    selectedPaymentMode = value;
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CustomText(
+                                            text: 'Payment Details ',
+                                            size: 20,
+                                          ),
+                                          SizedBox(height: 7),
+                                          CustomTextField(
+                                            hintText: '',
+                                            controller: paymentDetails,
+                                            width: 175,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {},
+                                child: CustomText(
+                                  text: 'Pay',
+                                  color: AppColors.secondaryColor,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: CustomText(
+                                  text: 'Close',
+                                  color: AppColors.secondaryColor,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: CustomText(
+                      text: 'Pay',
+                      color: AppColors.blue,
+                      size: 14,
+                    ),
+                  ),
+                ],
+              ),
             });
           }
         }
@@ -129,8 +346,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
   void calculateTotals() {
     totalAmount = tableData.fold(0.0, (sum, item) {
       double amount =
-          double.tryParse(item['Purchased Grand Total']?.toString() ?? '0') ??
-              0;
+          double.tryParse(item['Total Amount']?.toString() ?? '0') ?? 0;
       return sum + amount;
     });
 
