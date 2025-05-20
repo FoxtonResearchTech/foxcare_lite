@@ -69,7 +69,10 @@ class _IpBilling extends State<IpBilling> {
 
           bool matches = false;
 
-          if (patientData['isIP'] == true) {
+          bool isSearching = (ipNumber != null && ipNumber.isNotEmpty) ||
+              (phoneNumber != null && phoneNumber.isNotEmpty);
+
+          if (isSearching) {
             if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
               matches = true;
             } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
@@ -77,8 +80,10 @@ class _IpBilling extends State<IpBilling> {
                   patientData['phone2'] == phoneNumber) {
                 matches = true;
               }
-            } else if (ipNumber == null &&
-                (phoneNumber == null || phoneNumber.isEmpty)) {
+            }
+          } else {
+            if (patientData['isIP'] == true &&
+                ipTicketData['discharged'] != true) {
               matches = true;
             }
           }
@@ -131,11 +136,14 @@ class _IpBilling extends State<IpBilling> {
             } catch (e) {
               print('Error fetching tokenNo for patient $patientId: $e');
             }
-            if (ipTicketData['discharged'] == true) {
+            if ((ipNumber == null || ipNumber.isEmpty) &&
+                (phoneNumber == null || phoneNumber.isEmpty) &&
+                ipTicketData['discharged'] == true) {
               print(
                   'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
               continue;
             }
+
             DocumentSnapshot ipPrescriptionSnapshot = await FirebaseFirestore
                 .instance
                 .collection('patients')

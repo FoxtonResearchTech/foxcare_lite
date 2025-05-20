@@ -130,7 +130,9 @@ class _OpBilling extends State<OpBilling> {
               }
             }
 
-            if (!medicineGiven) {
+            if (opNumber != null ||
+                (phoneNumber != null && phoneNumber.isNotEmpty) ||
+                !medicineGiven) {
               fetchedData.add({
                 'Token No': tokenNo,
                 'OP Number': patientData['opNumber'] ?? 'N/A',

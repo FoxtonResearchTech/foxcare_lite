@@ -298,7 +298,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
           .doc(widget.opNumber)
           .collection('opTickets')
           .doc(widget.opTicket)
-          .set({'medicineGiven': true});
+          .update({'medicineGiven': true});
       await updateBillNo(newBillNo);
 
       setState(() {
