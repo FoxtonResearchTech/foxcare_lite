@@ -28,7 +28,6 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
     'Bill NO',
     'Bill Date',
     'Bill Value',
-    'Payment Status',
     'Open Bill',
   ];
   List<Map<String, dynamic>> tableData = [];
@@ -39,14 +38,15 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
     'Product Name',
     'Batch',
     'Expiry',
-    'Quantity',
-    'HSN',
+    'Return Quantity',
     'Free',
     'MRP',
-    'Price',
+    'Rate',
     'Tax',
-    'Amount',
-    'Product Total'
+    'CGST',
+    'SGST',
+    'Total Tax',
+    'Product Total',
   ];
   List<Map<String, dynamic>> tableData2 = [];
 
@@ -103,11 +103,11 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
         query = query.where('distributor', isEqualTo: distributor);
       }
       if (singleDate != null) {
-        query = query.where('reportDate', isEqualTo: singleDate);
+        query = query.where('billDate', isEqualTo: singleDate);
       } else if (fromDate != null && toDate != null) {
         query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
+            .where('billDate', isGreaterThanOrEqualTo: fromDate)
+            .where('billDate', isLessThanOrEqualTo: toDate);
       }
       final QuerySnapshot snapshot = await query.get();
 
@@ -126,29 +126,29 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
 
         fetchedData.add({
           'Bill NO': data['billNo']?.toString() ?? 'N/A',
-          'Bill Date': data['reportDate']?.toString() ?? 'N/A',
+          'Bill Date': data['billDate']?.toString() ?? 'N/A',
           'Distributor Name': data['distributor']?.toString() ?? 'N/A',
-          'Bill Value': data['amount']?.toString() ?? 'N/A',
-          'Payment Status': data['paymentStatus']?.toString() ?? 'N/A',
+          'Bill Value': data['netTotalAmount']?.toString() ?? 'N/A',
           'Open Bill': TextButton(
             onPressed: () {
               for (var product in data['entryProducts']) {
                 tableData2.add({
                   'Product Name': product['Product Name'],
-                  'Batch': product['Batch Number'],
+                  'Batch': product['Batch'],
                   'Expiry': product['Expiry'],
-                  'Quantity': product['Quantity'],
                   'Free': product['Free'],
-                  'HSN': product['HSN Code'],
                   'MRP': product['MRP'],
-                  'Price': product['Price'],
-                  'Tax': product['GST'] + '%',
-                  'Amount': product['Amount'],
+                  'Rate': product['Rate'],
+                  'Tax': product['Tax'],
+                  'CGST': product['CGST'],
+                  'SGST': product['SGST'],
+                  'Total Tax': product['Tax Total'],
+                  'Return Quantity': product['Quantity'],
+                  'Product Total': product['Product Total'],
                   'HSN Code': product['HSN Code'],
                   'Category': product['Category'],
                   'Company': product['Company'],
                   'Distributor': product['Distributor'],
-                  'Product Total': product['Product Total'],
                 });
               }
               showDialog(

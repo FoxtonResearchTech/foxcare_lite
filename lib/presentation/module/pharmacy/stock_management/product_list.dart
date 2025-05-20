@@ -33,7 +33,6 @@ class _ProductListState extends State<ProductList> {
     'Category',
     'Company',
     'Composition',
-    'Type',
     'Action',
   ];
 
@@ -88,7 +87,6 @@ class _ProductListState extends State<ProductList> {
           'Category': data['category'],
           'Company': data['companyName'],
           'Composition': data['composition'],
-          'Type': data['type'],
           'Action': TextButton(
               onPressed: () {
                 final selectedProduct = data;
@@ -336,10 +334,16 @@ class _ProductListState extends State<ProductList> {
                   CustomDropdown(
                     label: 'Select Category',
                     items: const [
-                      'All',
-                      'Medicine',
-                      'Equipment',
-                      'Supplements',
+                      'Tablets',
+                      'Capsules',
+                      'Powders',
+                      'Solutions',
+                      'Suspensions',
+                      'Topical Medicines',
+                      'Suppository',
+                      'Injections',
+                      'Inhales',
+                      'Patches',
                     ],
                     onChanged: (value) {
                       setState(() {

@@ -72,7 +72,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       for (String collection in subcollections) {
         final QuerySnapshot snapshot = await firestore
             .collection('pharmacy')
-            .doc('billing')
+            .doc('billings')
             .collection(collection)
             .get();
 
@@ -82,27 +82,9 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
           if (isInRange(billDate)) {
             double value =
-                double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
+                double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
             total += value;
           }
-        }
-      }
-
-      // Handle returns
-      final QuerySnapshot returnSnapshot = await firestore
-          .collection('pharmacy')
-          .doc('billing')
-          .collection('medicinereturn')
-          .get();
-
-      for (var doc in returnSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final String? billDate = data['billDate'];
-
-        if (isInRange(billDate)) {
-          double returnValue =
-              double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
-          total -= returnValue;
         }
       }
 

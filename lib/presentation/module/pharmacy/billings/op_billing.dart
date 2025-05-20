@@ -69,6 +69,7 @@ class _OpBilling extends State<OpBilling> {
 
           bool matches = false;
           bool isAbscond = false;
+          bool medicineGiven = false;
 
           if (patientData['isIP'] == false) {
             if (opNumber != null && opTicketData['opTicket'] == opNumber) {
@@ -109,6 +110,8 @@ class _OpBilling extends State<OpBilling> {
               print('Error fetching tokenNo for patient $patientId: $e');
             }
             isAbscond = opTicketData['status'] == 'abscond';
+            medicineGiven = opTicketData['medicineGiven'] ?? false;
+
             DateTime? latestMedicineDate;
 
             for (var opTicketDoc in opTicketsSnapshot.docs) {
@@ -127,72 +130,73 @@ class _OpBilling extends State<OpBilling> {
               }
             }
 
-            fetchedData.add({
-              'Token No': tokenNo,
-              'OP Number': patientData['opNumber'] ?? 'N/A',
-              'OP Ticket': opTicketData['opTicket'] ?? 'N/A',
-              'Name':
-                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'Place': patientData['city'] ?? 'N/A',
-              'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
-              'Specialization': opTicketData['specialization'] ?? 'N/A',
-              'Medication': opTicketData['Medications'] ?? [],
-              'Actions': Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                      onPressed: () {
-                        final List<Map<String, dynamic>> medications =
-                            List<Map<String, dynamic>>.from(
-                          opTicketData['prescribedMedicines'] ?? [],
-                        );
-
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (
-                          context,
-                        ) =>
-                                OpBillingEntry(
-                                  patientName:
-                                      '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                                          .trim(),
-                                  opTicket: opTicketData['opTicket'] ?? 'N/A',
-                                  opNumber: patientData['opNumber'] ?? 'N/A',
-                                  place: patientData['city'] ?? 'N/A',
-                                  phone: patientData['phone1'] ?? 'N/A',
-                                  doctorName:
-                                      opTicketData['doctorName'] ?? 'N/A',
-                                  specialization:
-                                      opTicketData['specialization'] ?? 'N/A',
-                                  medications: medications,
-                                )));
-                      },
-                      child: const CustomText(text: 'Open')),
-                  TextButton(
-                      onPressed: () async {
-                        try {
-                          await FirebaseFirestore.instance
-                              .collection('patients')
-                              .doc(patientId)
-                              .collection('opTickets')
-                              .doc(opTicketData['opTicket'])
-                              .update({'status': 'abscond'});
-
-                          CustomSnackBar(context,
-                              message: 'Status updated to abscond');
-                        } catch (e) {
-                          print('Error updating status: $e');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Failed to update status')),
+            if (!medicineGiven) {
+              fetchedData.add({
+                'Token No': tokenNo,
+                'OP Number': patientData['opNumber'] ?? 'N/A',
+                'OP Ticket': opTicketData['opTicket'] ?? 'N/A',
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'Place': patientData['city'] ?? 'N/A',
+                'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
+                'Specialization': opTicketData['specialization'] ?? 'N/A',
+                'Medication': opTicketData['Medications'] ?? [],
+                'Actions': Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          final List<Map<String, dynamic>> medications =
+                              List<Map<String, dynamic>>.from(
+                            opTicketData['prescribedMedicines'] ?? [],
                           );
-                        }
-                      },
-                      child: const CustomText(text: 'Abort')),
-                ],
-              )
-            });
 
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (
+                            context,
+                          ) =>
+                                  OpBillingEntry(
+                                    patientName:
+                                        '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                                            .trim(),
+                                    opTicket: opTicketData['opTicket'] ?? 'N/A',
+                                    opNumber: patientData['opNumber'] ?? 'N/A',
+                                    place: patientData['city'] ?? 'N/A',
+                                    phone: patientData['phone1'] ?? 'N/A',
+                                    doctorName:
+                                        opTicketData['doctorName'] ?? 'N/A',
+                                    specialization:
+                                        opTicketData['specialization'] ?? 'N/A',
+                                    medications: medications,
+                                  )));
+                        },
+                        child: const CustomText(text: 'Open')),
+                    TextButton(
+                        onPressed: () async {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('patients')
+                                .doc(patientId)
+                                .collection('opTickets')
+                                .doc(opTicketData['opTicket'])
+                                .update({'status': 'abscond'});
+
+                            CustomSnackBar(context,
+                                message: 'Status updated to abscond');
+                          } catch (e) {
+                            print('Error updating status: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Failed to update status')),
+                            );
+                          }
+                        },
+                        child: const CustomText(text: 'Abort')),
+                  ],
+                )
+              });
+            }
             found = true;
             break;
           }

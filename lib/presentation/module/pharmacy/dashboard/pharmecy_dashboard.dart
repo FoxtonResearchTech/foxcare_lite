@@ -251,20 +251,6 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
         }
       }
 
-      final QuerySnapshot returnSnapshot = await firestore
-          .collection('pharmacy')
-          .doc('billing')
-          .collection('medicinereturn')
-          .where('billDate', isEqualTo: today)
-          .get();
-
-      for (var doc in returnSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        double returnValue =
-            double.tryParse(data['grandTotal']?.toString() ?? '0') ?? 0;
-        total -= returnValue;
-      }
-
       setState(() {
         pharmacyTotalIncome = total.toInt();
         isPharmacyTotalIncomeLoading = false;

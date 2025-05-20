@@ -19,6 +19,7 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
+import '../../../../utilities/widgets/table/data_table.dart';
 
 class IpBillingEntry extends StatefulWidget {
   final String? patientName;
@@ -29,6 +30,7 @@ class IpBillingEntry extends StatefulWidget {
   final String? doctorName;
   final String? specialization;
   final String? roomWard;
+  final List<Map<String, dynamic>>? medications;
 
   const IpBillingEntry(
       {this.patientName,
@@ -39,7 +41,8 @@ class IpBillingEntry extends StatefulWidget {
       this.phone,
       this.doctorName,
       this.specialization,
-      super.key});
+      super.key,
+      this.medications});
 
   @override
   State<IpBillingEntry> createState() => _IpBillingEntry();
@@ -54,6 +57,10 @@ class _IpBillingEntry extends State<IpBillingEntry> {
       TextEditingController();
   final TextEditingController balanceController = TextEditingController();
   final TextEditingController paymentDetails = TextEditingController();
+
+  final TextEditingController _fromDate = TextEditingController();
+  final TextEditingController _toDate = TextEditingController();
+
   String? selectedPaymentMode;
 
   double totalAmount = 0.0;
@@ -94,12 +101,40 @@ class _IpBillingEntry extends State<IpBillingEntry> {
 
   final List<String> editableColumns = ['Product Name', 'Quantity'];
 
+  final List<String> medicineHeaders = [
+    'SL No',
+    'Medicine Name',
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'Night',
+    'Duration',
+  ];
+
+  List<Map<String, dynamic>> medicineTableData = [];
+
   List<Map<String, dynamic>> allProducts = [];
   List<Map<String, TextEditingController>> controllers = [];
   List<List<Map<String, dynamic>>> productSuggestions = [];
 
   String billNO = '';
   int newBillNo = 0;
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
 
   void clearAll() {
     setState(() {
@@ -284,7 +319,9 @@ class _IpBillingEntry extends State<IpBillingEntry> {
         'collectedAmount': collectedAmountController.text,
         'balance': balanceController.text,
       });
-
+      await markAllTodayMedicinesAsGiven(
+          patientId: widget.opNumber.toString(),
+          ipTicket: widget.ipTicket.toString());
       await updateBillNo(newBillNo);
 
       setState(() {
@@ -343,6 +380,41 @@ class _IpBillingEntry extends State<IpBillingEntry> {
         FirebaseFirestore.instance.collection('billNo').doc('pharmacyBillings');
 
     await docRef.set({'billNo': newBillNo});
+  }
+
+  Future<void> markMedicineAsGiven({
+    required String patientId,
+    required String ipTicket,
+    required String docId,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(patientId)
+          .collection('ipTickets')
+          .doc(ipTicket)
+          .collection('prescribedMedicines')
+          .doc(docId)
+          .update({'medicineGiven': true});
+
+      print('Medicine marked as given for docId: $docId');
+    } catch (e) {
+      print('Error updating medicineGiven: $e');
+    }
+  }
+
+  Future<void> markAllTodayMedicinesAsGiven({
+    required String patientId,
+    required String ipTicket,
+  }) async {
+    final docIds = medicineTableData.map((item) => item['docId']).toSet();
+    for (var docId in docIds) {
+      await markMedicineAsGiven(
+        patientId: patientId,
+        ipTicket: ipTicket,
+        docId: docId,
+      );
+    }
   }
 
   void printInvoice() {
@@ -839,6 +911,56 @@ class _IpBillingEntry extends State<IpBillingEntry> {
     );
   }
 
+  Future<void> checkMedications({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    try {
+      final prescribedSnapshot = await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.opNumber)
+          .collection('ipTickets')
+          .doc(widget.ipTicket)
+          .collection('prescribedMedicines')
+          .get();
+
+      List<Map<String, dynamic>> todayPrescribedMedicines = [];
+      medicineTableData.clear();
+
+      for (var doc in prescribedSnapshot.docs) {
+        final data = doc.data();
+        final docDateStr = data['date'];
+
+        if (docDateStr != null &&
+            docDateStr.compareTo(fromDate) >= 0 &&
+            docDateStr.compareTo(toDate) <= 0 &&
+            data.containsKey('items')) {
+          todayPrescribedMedicines.add({
+            'docId': doc.id,
+            'items': data['items'],
+            'medicineGiven': data['medicineGiven'] ?? false,
+          });
+
+          final items = data['items'];
+          final medicineGiven = data['medicineGiven'] ?? false;
+          if (items is List) {
+            for (var item in items) {
+              if (item is Map<String, dynamic>) {
+                item['docId'] = doc.id;
+                item['medicineGiven'] = medicineGiven;
+                medicineTableData.add(item);
+              }
+            }
+          }
+        }
+      }
+
+      setState(() {});
+    } catch (e) {
+      print('Error fetching prescribed medicines: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -847,6 +969,20 @@ class _IpBillingEntry extends State<IpBillingEntry> {
     addNewRow();
     totalAmountController.addListener(_updateBalance);
     collectedAmountController.addListener(_updateBalance);
+    for (var entry in widget.medications!) {
+      final docId = entry['docId'];
+      final items = entry['items'];
+      final medicineGiven = entry['medicineGiven'];
+      if (items is List) {
+        for (var item in items) {
+          if (item is Map<String, dynamic>) {
+            item['docId'] = docId;
+            item['medicineGiven'] = medicineGiven;
+            medicineTableData.add(item);
+          }
+        }
+      }
+    }
   }
 
   double _taxTotal() {
@@ -1017,6 +1153,121 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.02),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomText(
+                    text: '     Prescribed Medications',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
+                  ),
+                  PharmacyButton(
+                      label: 'Check For Previous Medicine',
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return StatefulBuilder(
+                              builder: (context, setState) {
+                                return AlertDialog(
+                                  title: CustomText(
+                                    text: 'Check For Previous Medicine',
+                                    size: screenWidth * 0.013,
+                                  ),
+                                  content: SizedBox(
+                                    width: screenWidth * 0.25,
+                                    height: screenHeight * 0.2,
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(height: screenHeight * 0.1),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              PharmacyTextField(
+                                                onTap: () => _selectDate(
+                                                    context, _fromDate),
+                                                hintText: 'From Date ',
+                                                width: screenWidth * 0.1,
+                                                controller: _fromDate,
+                                                icon: const Icon(
+                                                    Icons.date_range_outlined),
+                                              ),
+                                              PharmacyTextField(
+                                                onTap: () => _selectDate(
+                                                    context, _toDate),
+                                                hintText: 'To Date ',
+                                                width: screenWidth * 0.1,
+                                                controller: _toDate,
+                                                icon: const Icon(Icons
+                                                    .access_time_filled_outlined),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () async {
+                                        await checkMedications(
+                                            fromDate: _fromDate.text,
+                                            toDate: _toDate.text);
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: CustomText(
+                                        text: 'OK',
+                                        color: AppColors.blue,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        _fromDate.clear();
+                                        _toDate.clear();
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: CustomText(
+                                        text: 'Cancel',
+                                        color: AppColors.blue,
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                      width: screenWidth * 0.14,
+                      height: screenHeight * 0.035)
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              if (medicineTableData.isNotEmpty) ...[
+                Container(
+                  padding: EdgeInsets.only(left: screenWidth * 0.05),
+                  width: double.infinity,
+                  child: CustomDataTable(
+                      headers: medicineHeaders,
+                      tableData: medicineTableData,
+                      rowColorResolver: (row) {
+                        if (row['medicineGiven'] == true) {
+                          return Colors.green.shade50;
+                        }
+                        return Colors.transparent;
+                      }),
+                ),
+                SizedBox(height: screenHeight * 0.02),
+              ],
+              if (medicineTableData.isEmpty) ...[
+                CustomText(
+                  text: 'No Medicine Prescribed',
+                  size: screenWidth * 0.012,
+                ),
+              ],
               Row(
                 children: [
                   CustomText(

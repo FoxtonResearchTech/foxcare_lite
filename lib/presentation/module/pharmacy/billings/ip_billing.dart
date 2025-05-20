@@ -86,6 +86,30 @@ class _IpBilling extends State<IpBilling> {
           if (matches) {
             String tokenNo = '';
             String tokenDate = '';
+            List<Map<String, dynamic>> todayPrescribedMedicines = [];
+
+            try {
+              final prescribedSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('ipTickets')
+                  .doc(ipTicketData['ipTicket'])
+                  .collection('prescribedMedicines')
+                  .get();
+
+              for (var doc in prescribedSnapshot.docs) {
+                final data = doc.data();
+                if (data['date'] == todayString && data.containsKey('items')) {
+                  todayPrescribedMedicines.add({
+                    'docId': doc.id,
+                    'items': data['items'],
+                    'medicineGiven': data['medicineGiven'] ?? false,
+                  });
+                }
+              }
+            } catch (e) {
+              print('Error fetching prescribed medicines: $e');
+            }
 
             try {
               final tokenSnapshot = await FirebaseFirestore.instance
@@ -142,6 +166,7 @@ class _IpBilling extends State<IpBilling> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => IpBillingEntry(
+                              medications: todayPrescribedMedicines,
                               opNumber: patientData['opNumber'] ?? 'N/A',
                               patientName:
                                   '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'

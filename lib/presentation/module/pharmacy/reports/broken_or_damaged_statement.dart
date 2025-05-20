@@ -394,7 +394,7 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
     totalAmount = tableData.fold(
       0.0,
       (sum, item) =>
-          sum + (double.tryParse(item['Return value']?.toString() ?? '0') ?? 0),
+          sum + (double.tryParse(item['Total Amount']?.toString() ?? '0') ?? 0),
     );
   }
 

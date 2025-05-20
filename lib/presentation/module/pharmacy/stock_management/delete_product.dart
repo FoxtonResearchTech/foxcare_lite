@@ -31,7 +31,6 @@ class _DeleteProduct extends State<DeleteProduct> {
     'Category',
     'Company',
     'Composition',
-    'Type',
     'Action',
   ];
 
@@ -58,7 +57,6 @@ class _DeleteProduct extends State<DeleteProduct> {
           'Category': data['category'],
           'Company': data['companyName'],
           'Composition': data['composition'],
-          'Type': data['type'],
           'Action': TextButton(
             onPressed: () {
               showDialog(
@@ -197,10 +195,16 @@ class _DeleteProduct extends State<DeleteProduct> {
                   CustomDropdown(
                     label: 'Select Category',
                     items: const [
-                      'All',
-                      'Medicine',
-                      'Equipment',
-                      'Supplements',
+                      'Tablets',
+                      'Capsules',
+                      'Powders',
+                      'Solutions',
+                      'Suspensions',
+                      'Topical Medicines',
+                      'Suppository',
+                      'Injections',
+                      'Inhales',
+                      'Patches',
                     ],
                     onChanged: (value) {
                       setState(() {

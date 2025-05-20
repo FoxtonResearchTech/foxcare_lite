@@ -293,7 +293,12 @@ class _OpBillingEntry extends State<OpBillingEntry> {
         'collectedAmount': collectedAmountController.text,
         'balance': balanceController.text,
       });
-
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.opNumber)
+          .collection('opTickets')
+          .doc(widget.opTicket)
+          .set({'medicineGiven': true});
       await updateBillNo(newBillNo);
 
       setState(() {
@@ -1006,32 +1011,35 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomText(
-                    text: '     Prescribed Medications',
-                    size: screenWidth * 0.02,
-                    color: AppColors.blue,
-                  )
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
-              Container(
-                  padding: EdgeInsets.only(left: screenWidth * 0.05),
-                  width: double.infinity,
-                  child: CustomDataTable(
-                      headers: medicineHeaders, tableData: medicineTableData)),
-              SizedBox(height: screenHeight * 0.02),
-              Row(
-                children: [
-                  CustomText(
-                    text: '     Products',
-                    size: screenWidth * 0.02,
-                    color: AppColors.blue,
-                  )
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.02),
+              if (medicineTableData.isNotEmpty) ...[
+                Row(
+                  children: [
+                    CustomText(
+                      text: '     Prescribed Medications',
+                      size: screenWidth * 0.02,
+                      color: AppColors.blue,
+                    )
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                Container(
+                    padding: EdgeInsets.only(left: screenWidth * 0.05),
+                    width: double.infinity,
+                    child: CustomDataTable(
+                        headers: medicineHeaders,
+                        tableData: medicineTableData)),
+                SizedBox(height: screenHeight * 0.02),
+                Row(
+                  children: [
+                    CustomText(
+                      text: '     Products',
+                      size: screenWidth * 0.02,
+                      color: AppColors.blue,
+                    )
+                  ],
+                ),
+                SizedBox(height: screenHeight * 0.02),
+              ],
               isAdding
                   ? const CircularProgressIndicator()
                   : Row(

@@ -31,28 +31,21 @@ class _NonMovingStock extends State<NonMovingStock> {
     'Non-Moving Details',
   ];
   List<Map<String, dynamic>> tableData = [];
+
   Future<void> fetchData({
     String? singleDate,
     String? fromDate,
     String? toDate,
   }) async {
     try {
-      Query query = FirebaseFirestore.instance
+      final addedProductsSnapshot = await FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
-          .collection('AddedProducts');
+          .collection('AddedProducts')
+          .get();
 
-      if (singleDate != null) {
-        query = query.where('reportDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
+      if (addedProductsSnapshot.docs.isEmpty) {
+        print("No products found");
         setState(() {
           tableData = [];
         });
@@ -60,75 +53,103 @@ class _NonMovingStock extends State<NonMovingStock> {
       }
 
       List<Map<String, dynamic>> fetchedData = [];
+      int i = 1;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('amount')) continue;
+      for (var productDoc in addedProductsSnapshot.docs) {
+        final productData = productDoc.data();
+        final docId = productDoc.id;
 
-        if (data.containsKey('fixedQuantity') &&
-            data.containsKey('quantity') &&
-            data['fixedQuantity'] == data['quantity']) {
-          fetchedData.add({
-            'SL No': i++,
-            'Product Name': data['productName'],
-            'Opening Stock': data['fixedQuantity'],
-            'Remaining Stock': data['quantity'],
-            'Expiry Date': data['expiry'],
-            'Non-Moving Details': TextButton(
-              onPressed: () {
-                DateTime reportDate = DateTime.parse(data['reportDate']);
-                DateTime today = DateTime.now();
-                int daysDifference = today.difference(reportDate).inDays;
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Non-Moving Stocks Details'),
-                      content: Container(
-                        width: 350,
-                        height: 180,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomText(
-                              text: 'Product Entry Date: ${data['reportDate']}',
-                            ),
-                            CustomText(
-                              text: 'Product Name: ${data['productName']}',
-                            ),
-                            CustomText(
-                              text: 'Opening Stock: ${data['fixedQuantity']}',
-                            ),
-                            CustomText(
-                              text: 'Remaining Stock: ${data['quantity']}',
-                            ),
-                            CustomText(
-                              text: 'Expiry Date: ${data['expiry']}',
-                            ),
-                            CustomText(
-                                text: 'Days Since Entry: $daysDifference days'),
-                          ],
-                        ),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: CustomText(
-                            text: 'Close',
-                            color: AppColors.secondaryColor,
+        final purchaseEntriesSnapshot = await FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .doc(docId)
+            .collection('purchaseEntry')
+            .get();
+
+        for (var purchaseDoc in purchaseEntriesSnapshot.docs) {
+          final purchaseData = purchaseDoc.data();
+
+          if (!purchaseData.containsKey('reportDate') ||
+              !purchaseData.containsKey('fixedQuantity') ||
+              !purchaseData.containsKey('quantity')) continue;
+
+          String reportDateStr = purchaseData['reportDate'];
+          DateTime reportDate =
+              DateTime.tryParse(reportDateStr) ?? DateTime(1900);
+
+          // Filtering logic
+          if (singleDate != null) {
+            if (reportDateStr != singleDate) continue;
+          } else if (fromDate != null && toDate != null) {
+            DateTime from = DateTime.parse(fromDate);
+            DateTime to = DateTime.parse(toDate);
+            if (reportDate.isBefore(from) || reportDate.isAfter(to)) continue;
+          }
+
+          // Check for non-moving condition
+          if (purchaseData['fixedQuantity'] == purchaseData['quantity']) {
+            fetchedData.add({
+              'SL No': i++,
+              'Product Name': productData['productName'],
+              'Opening Stock': purchaseData['fixedQuantity'],
+              'Remaining Stock': purchaseData['quantity'],
+              'Expiry Date': purchaseData['expiry'],
+              'Non-Moving Details': TextButton(
+                onPressed: () {
+                  int daysDifference =
+                      DateTime.now().difference(reportDate).inDays;
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Non-Moving Stocks Details'),
+                        content: Container(
+                          width: 350,
+                          height: 180,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                  text: 'Product Entry Date: $reportDateStr'),
+                              CustomText(
+                                  text:
+                                      'Product Name: ${productData['productName']}'),
+                              CustomText(
+                                  text:
+                                      'Opening Stock: ${purchaseData['fixedQuantity']}'),
+                              CustomText(
+                                  text:
+                                      'Remaining Stock: ${purchaseData['quantity']}'),
+                              CustomText(
+                                  text:
+                                      'Expiry Date: ${purchaseData['expiry']}'),
+                              CustomText(
+                                  text:
+                                      'Days Since Entry: $daysDifference days'),
+                            ],
                           ),
                         ),
-                      ],
-                    );
-                  },
-                );
-              },
-              child: CustomText(text: 'View Details'),
-            ),
-          });
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: CustomText(
+                              text: 'Close',
+                              color: AppColors.secondaryColor,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: CustomText(text: 'View Details'),
+              ),
+            });
+          }
         }
       }
 
