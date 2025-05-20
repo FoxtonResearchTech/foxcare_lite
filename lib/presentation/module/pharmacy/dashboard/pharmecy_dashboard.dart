@@ -621,6 +621,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

@@ -35,6 +35,14 @@ bool FlutterWindow::OnCreate() {
   // registered. The following call ensures a frame is pending to ensure the
   // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
+// Remove minimize and maximize buttons
+    HWND hwnd = GetHandle();  // Get window handle
+    LONG style = GetWindowLong(hwnd, GWL_STYLE);
+    style &= ~(WS_MAXIMIZEBOX);  // Disable minimize/maximize
+    SetWindowLong(hwnd, GWL_STYLE, style);
+
+// Maximize the window
+    ShowWindow(hwnd, SW_MAXIMIZE);
 
   return true;
 }
