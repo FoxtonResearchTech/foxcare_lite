@@ -285,8 +285,8 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
         child: Container(
           padding: EdgeInsets.only(
             top: screenHeight * 0.02,
-            left: screenWidth * 0.05,
-            right: screenWidth * 0.05,
+            left: screenWidth * 0.08,
+            right: screenWidth * 0.08,
             bottom: screenWidth * 0.05,
           ),
           child: Column(

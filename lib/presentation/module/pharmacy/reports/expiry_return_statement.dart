@@ -9,6 +9,9 @@ import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart'
 import 'package:intl/intl.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/buttons/pharmacy_button.dart';
+import '../../../../utilities/widgets/date_time.dart';
+import '../../../../utilities/widgets/textField/pharmacy_text_field.dart';
 import '../tools/manage_pharmacy_info.dart';
 
 class ExpiryReturnStatement extends StatefulWidget {
@@ -24,19 +27,13 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
   TextEditingController _toDateController = TextEditingController();
   TextEditingController distributorNameController = TextEditingController();
   TextEditingController dlNo1Controller = TextEditingController();
-  TextEditingController expiryDate1Controller = TextEditingController();
   TextEditingController dlNo2Controller = TextEditingController();
-  TextEditingController expiryDate2Controller = TextEditingController();
   TextEditingController gstNoController = TextEditingController();
-  TextEditingController lane1 = TextEditingController();
-  TextEditingController lane2 = TextEditingController();
-  TextEditingController returnNo = TextEditingController();
-  TextEditingController city = TextEditingController();
-  TextEditingController state = TextEditingController();
-  TextEditingController pinCode = TextEditingController();
+  TextEditingController address = TextEditingController();
+  TextEditingController refNo = TextEditingController();
+
   TextEditingController emailId = TextEditingController();
   TextEditingController phoneNo1 = TextEditingController();
-  TextEditingController phoneNO2 = TextEditingController();
   TextEditingController returnDate = TextEditingController();
   TextEditingController totalReturnAmount = TextEditingController();
   double totalAmount = 0.0;
@@ -111,15 +108,11 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
 
               dlNo2Controller.text = data['dlNo1']?.toString() ?? 'N/A';
 
-              lane1.text = data['lane1']?.toString() ?? 'N/A';
-              lane2.text = data['lane2']?.toString() ?? 'N/A';
-              city.text = data['city']?.toString() ?? 'N/A';
-              state.text = data['state']?.toString() ?? 'N/A';
-              pinCode.text = data['pinCode']?.toString() ?? 'N/A';
+              address.text = data['address']?.toString() ?? 'N/A';
+
               emailId.text = data['mail']?.toString() ?? 'N/A';
-              phoneNo1.text = data['phoneNo1']?.toString() ?? 'N/A';
-              phoneNO2.text = data['phoneNO2']?.toString() ?? 'N/A';
-              returnNo.text = data['returnNo']?.toString() ?? 'N/A';
+              phoneNo1.text = data['phone']?.toString() ?? 'N/A';
+              refNo.text = data['rfNo']?.toString() ?? 'N/A';
               returnDate.text = data['returnDate']?.toString() ?? 'N/A';
               totalReturnAmount.text =
                   data['netTotalAmount']?.toString() ?? 'N/A';
@@ -149,10 +142,13 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('View Bill'),
+                    title: const CustomText(
+                      text: 'View Bill',
+                      size: 26,
+                    ),
                     content: Container(
-                      width: 850,
-                      height: 850,
+                      width: 950,
+                      height: 750,
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
@@ -161,143 +157,114 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                               children: [
                                 SingleChildScrollView(
                                   child: Container(
-                                    width: 850,
-                                    height: 850,
+                                    width: 950,
+                                    height: 750,
                                     child: Column(
                                       children: [
-                                        Row(
+                                        const Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             CustomText(
                                               text: 'Distributor details ',
-                                              size: 16, // Adjusted size
+                                              size: 20, // Adjusted size
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 15),
+                                        const SizedBox(height: 15),
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            CustomTextField(
-                                              controller:
-                                                  distributorNameController,
-                                              hintText: 'Distributor Name',
-                                              width: 250,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text:
+                                                      'Distributor Name :${distributorNameController.text}',
+                                                  size: 16,
+                                                ),
+                                                CustomText(
+                                                  text:
+                                                      'DL / No 1 :${dlNo1Controller.text}',
+                                                  size: 16,
+                                                ),
+                                              ],
                                             ),
-                                            CustomTextField(
-                                              controller: returnDate,
-                                              hintText: 'Return Date',
-                                              width: 250,
+                                            const SizedBox(width: 175),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text:
+                                                      'Return Date :${returnDate.text}',
+                                                  size: 16,
+                                                ),
+                                                CustomText(
+                                                  text:
+                                                      'DL / No 2 :${dlNo2Controller.text}',
+                                                  size: 16,
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomTextField(
-                                              controller: dlNo1Controller,
-                                              hintText: 'DL / No 1',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: dlNo2Controller,
-                                              hintText: 'DL / No 2',
-                                              width: 250,
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 15),
-                                        Row(
+                                        const SizedBox(height: 15),
+                                        const Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             CustomText(
                                               text: 'Stock Return Address',
-                                              size: 16,
+                                              size: 20,
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 15),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomTextField(
-                                              controller: lane1,
-                                              hintText: 'Lane 1',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: lane2,
-                                              hintText: 'Lane 2',
-                                              width: 250,
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomTextField(
-                                              controller: city,
-                                              hintText: 'City',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: state,
-                                              hintText: 'State',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: pinCode,
-                                              hintText: 'Pin code',
-                                              width: 250,
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomTextField(
-                                              controller: emailId,
-                                              hintText: 'E-Mail ID',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: phoneNo1,
-                                              hintText: 'Phone NO 1',
-                                              width: 250,
-                                            ),
-                                            CustomTextField(
-                                              controller: phoneNO2,
-                                              hintText: 'Phone Number 2',
-                                              width: 250,
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
+                                        const SizedBox(height: 15),
                                         Row(
                                           children: [
-                                            CustomTextField(
-                                              controller: returnNo,
-                                              hintText: 'Expiry Return Number',
-                                              width: 250,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text:
+                                                      'Return Number : ${refNo.text}',
+                                                  size: 16,
+                                                ),
+                                                CustomText(
+                                                  text:
+                                                      'E-Mail ID : ${emailId.text}',
+                                                  size: 16,
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(width: 175),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text:
+                                                      'Address : ${address.text}',
+                                                  size: 16,
+                                                ),
+                                                CustomText(
+                                                  text:
+                                                      'Phone : ${phoneNo1.text}',
+                                                  size: 16,
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 20),
+                                        const SizedBox(height: 20),
                                         CustomDataTable(
                                             headers: headers2,
                                             tableData: tableData2),
                                         Container(
-                                          padding: EdgeInsets.only(left: 650),
+                                          padding:
+                                              const EdgeInsets.only(left: 650),
                                           width: 1000,
                                           height: 25,
                                           decoration: BoxDecoration(
@@ -315,7 +282,7 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                                             ],
                                           ),
                                         ),
-                                        SizedBox(height: 50),
+                                        const SizedBox(height: 50),
                                       ],
                                     ),
                                   ),
@@ -416,72 +383,26 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Expiry Return Statement",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              TimeDateWidget(text: 'Expiry Return Statement'),
               Row(
                 children: [
-                  CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(singleDate: _dateController.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
+                  PharmacyTextField(
                     onTap: () => _selectDate(context, _fromDateController),
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
+                  PharmacyTextField(
                     onTap: () => _selectDate(context, _toDateController),
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
+                  PharmacyButton(
                     label: 'Search',
                     onPressed: () {
                       fetchData(
@@ -490,7 +411,7 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                       );
                     },
                     width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                    height: screenWidth * 0.025,
                   ),
                 ],
               ),

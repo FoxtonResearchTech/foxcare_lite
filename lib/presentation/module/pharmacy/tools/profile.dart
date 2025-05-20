@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
@@ -68,35 +69,7 @@ class _Profile extends State<Profile> {
                   Padding(
                     padding: EdgeInsets.only(
                         left: screenWidth * 0.08, right: screenWidth * 0.08),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: screenWidth * 0.03),
-                          child: Column(
-                            children: [
-                              CustomText(
-                                text: "Profile",
-                                size: screenWidth * 0.0275,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: screenWidth * 0.15,
-                          height: screenWidth * 0.1,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.rectangle,
-                            borderRadius:
-                                BorderRadius.circular(screenWidth * 0.05),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/foxcare_lite_logo.png'),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: TimeDateWidget(text: 'Profile'),
                   ),
                   Row(
                     children: [
@@ -109,7 +82,10 @@ class _Profile extends State<Profile> {
                       ),
                       Column(
                         children: [
-                          const CustomText(text: 'Pharmacist Details'),
+                          CustomText(
+                            text: 'Pharmacist Details',
+                            size: screenWidth * 0.013,
+                          ),
                           SizedBox(height: screenHeight * 0.05),
                           Row(
                             children: [
@@ -142,7 +118,7 @@ class _Profile extends State<Profile> {
                               CustomTextField(
                                 readOnly: true,
                                 controller: TextEditingController(
-                                    text: user['gender'] ?? ''),
+                                    text: user['sex'] ?? ''),
                                 hintText: 'Gender',
                                 width: screenWidth * 0.25,
                               ),
@@ -309,17 +285,6 @@ class _Profile extends State<Profile> {
                       ],
                     ),
                     SizedBox(height: screenHeight * 0.05),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CustomButton(
-                          label: 'Create',
-                          onPressed: () {},
-                          width: screenWidth * 0.08,
-                          height: screenHeight * 0.05,
-                        )
-                      ],
-                    ),
                   ],
                 ))
           ],
