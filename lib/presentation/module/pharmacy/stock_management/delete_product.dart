@@ -217,6 +217,7 @@ class _DeleteProduct extends State<DeleteProduct> {
               ),
               SizedBox(height: screenHeight * 0.06),
               CustomDataTable(headers: headers, tableData: filteredProducts),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

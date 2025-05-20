@@ -461,6 +461,7 @@ class _Purchase extends State<Purchase> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

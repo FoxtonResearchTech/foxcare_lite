@@ -266,6 +266,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

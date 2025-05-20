@@ -443,6 +443,7 @@ class _DamageReturn extends State<DamageReturn> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

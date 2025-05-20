@@ -369,6 +369,7 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

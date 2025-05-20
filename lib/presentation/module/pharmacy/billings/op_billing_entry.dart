@@ -1352,6 +1352,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

@@ -456,7 +456,8 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
                       onPressed: () {},
                       width: screenWidth * 0.1)
                 ],
-              )
+              ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

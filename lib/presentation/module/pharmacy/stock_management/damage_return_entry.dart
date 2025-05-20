@@ -876,6 +876,7 @@ class _DamageReturnEntry extends State<DamageReturnEntry> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

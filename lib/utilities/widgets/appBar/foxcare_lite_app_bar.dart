@@ -119,7 +119,7 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
                                   CustomText(
                                     text: 'Pharmacist',
                                     color: Colors.white,
-                                    size: screenWidth * 0.009,
+                                    size: screenWidth * 0.008,
                                   ),
                                 ],
                               )

@@ -358,6 +358,7 @@ class _ProductListState extends State<ProductList> {
               ),
               SizedBox(height: screenHeight * 0.06),
               CustomDataTable(headers: headers, tableData: filteredProducts),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

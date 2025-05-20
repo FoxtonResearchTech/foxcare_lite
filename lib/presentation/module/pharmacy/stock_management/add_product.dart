@@ -404,7 +404,7 @@ class _AddProduct extends State<AddProduct> {
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(headers: headers, tableData: filteredProducts),
-              SizedBox(height: screenHeight * 0.06),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

@@ -359,6 +359,7 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

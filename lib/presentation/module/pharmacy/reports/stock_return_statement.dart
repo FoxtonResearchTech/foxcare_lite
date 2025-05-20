@@ -457,7 +457,8 @@ class _StockReturnStatement extends State<StockReturnStatement> {
                       onPressed: () {},
                       width: screenWidth * 0.1)
                 ],
-              )
+              ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

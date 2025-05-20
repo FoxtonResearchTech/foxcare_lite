@@ -123,35 +123,43 @@ Win32Window::~Win32Window() {
 bool Win32Window::Create(const std::wstring& title,
                          const Point& origin,
                          const Size& size) {
-  Destroy();
+    Destroy();
 
-  const wchar_t* window_class =
-      WindowClassRegistrar::GetInstance()->GetWindowClass();
+    const wchar_t* window_class =
+            WindowClassRegistrar::GetInstance()->GetWindowClass();
 
-  const POINT target_point = {static_cast<LONG>(origin.x),
-                              static_cast<LONG>(origin.y)};
-  HMONITOR monitor = MonitorFromPoint(target_point, MONITOR_DEFAULTTONEAREST);
-  UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
-  double scale_factor = dpi / 96.0;
+    const POINT target_point = {static_cast<LONG>(origin.x),
+                                static_cast<LONG>(origin.y)};
+    HMONITOR monitor = MonitorFromPoint(target_point, MONITOR_DEFAULTTONEAREST);
+    UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
+    double scale_factor = dpi / 96.0;
 
-  HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
-      Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
-      nullptr, nullptr, GetModuleHandle(nullptr), this);
+    HWND window = CreateWindow(
+            window_class, title.c_str(), WS_OVERLAPPEDWINDOW,  // Keep full window style
+            Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
+            Scale(size.width, scale_factor), Scale(size.height, scale_factor),
+            nullptr, nullptr, GetModuleHandle(nullptr), this);
 
-  if (!window) {
-    return false;
-  }
+    if (!window) {
+        return false;
+    }
 
-  UpdateTheme(window);
+    window_handle_ = window;
 
-  return OnCreate();
+    // Remove maximize button
+    LONG style = GetWindowLong(window_handle_, GWL_STYLE);
+    style &= ~WS_MAXIMIZEBOX;
+    SetWindowLong(window_handle_, GWL_STYLE, style);
+
+    UpdateTheme(window_handle_);
+
+    return OnCreate();
 }
 
 bool Win32Window::Show() {
-  return ShowWindow(window_handle_, SW_SHOWNORMAL);
+    return ShowWindow(window_handle_, SW_SHOWMAXIMIZED);
 }
+
 
 // static
 LRESULT CALLBACK Win32Window::WndProc(HWND const window,
