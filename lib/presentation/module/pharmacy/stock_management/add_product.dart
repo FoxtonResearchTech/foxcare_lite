@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
@@ -63,7 +66,6 @@ class _AddProduct extends State<AddProduct> {
         if (addedDate.isAfter(thirtyDaysAgo)) {
           fetchedData.add({
             'Product Name': data['productName'],
-            'HSN Code': data['hsnCode'],
             'Category': data['category'],
             'Company': data['companyName'],
             'Composition': data['composition'],
@@ -201,7 +203,7 @@ class _AddProduct extends State<AddProduct> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomDropdown(
+                  PharmacyDropDown(
                     label: 'Select Category',
                     items: const [
                       'Tablets',
@@ -222,7 +224,7 @@ class _AddProduct extends State<AddProduct> {
                       filterProducts();
                     },
                   ),
-                  CustomButton(
+                  PharmacyButton(
                     label: 'Add',
                     onPressed: () {
                       showDialog(
@@ -365,7 +367,7 @@ class _AddProduct extends State<AddProduct> {
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
-                  CustomTextField(
+                  PharmacyTextField(
                     hintText: 'Product Name',
                     width: screenWidth * 0.20,
                     onChanged: (value) {
@@ -374,7 +376,7 @@ class _AddProduct extends State<AddProduct> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
+                  PharmacyTextField(
                     hintText: 'Company Name',
                     width: screenWidth * 0.20,
                     onChanged: (value) {
@@ -383,16 +385,8 @@ class _AddProduct extends State<AddProduct> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
-                    hintText: 'HSN Code',
-                    width: screenWidth * 0.10,
-                    onChanged: (value) {
-                      hsnCode = value;
-                      filterProducts();
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.045),
-                  CustomButton(
+                  PharmacyButton(
+                    height: screenHeight * 0.045,
                     label: 'Search',
                     onPressed: filterProducts,
                     width: screenWidth * 0.1,
@@ -410,7 +404,7 @@ class _AddProduct extends State<AddProduct> {
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(headers: headers, tableData: filteredProducts),
-              SizedBox(height: screenHeight * 0.06),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

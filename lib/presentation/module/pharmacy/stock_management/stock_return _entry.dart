@@ -876,6 +876,7 @@ class _StockReturnEntry extends State<StockReturnEntry> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

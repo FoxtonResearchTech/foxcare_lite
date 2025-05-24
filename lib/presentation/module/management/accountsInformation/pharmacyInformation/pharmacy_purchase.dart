@@ -24,14 +24,297 @@ class PharmacyPurchase extends StatefulWidget {
 }
 
 class _PharmacyPurchase extends State<PharmacyPurchase> {
-  TextEditingController date = TextEditingController();
   TextEditingController fromDate = TextEditingController();
   TextEditingController toDate = TextEditingController();
 
   int selectedIndex = 1;
-  String? choosePartyName;
+  TextEditingController _distributor = TextEditingController();
+  TextEditingController _billNo = TextEditingController();
 
-  double totalAmount = 0.0;
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController currentlyPayingAmount = TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
+
+  List<String> distributorsNames = [];
+  String? selectedDistributor;
+  double _originalCollected = 0.0;
+
+  final List<String> headers = [
+    'Bill NO',
+    'Bill Date',
+    'Ref No',
+    'Distributor',
+    'Amount',
+    'Paid',
+    'Balance',
+    'Action'
+  ];
+  List<Map<String, dynamic>> tableData = [];
+
+  void _payingAmountListener() {
+    double paying = double.tryParse(currentlyPayingAmount.text) ?? 0.0;
+    double total = double.tryParse(totalAmountController.text) ?? 0.0;
+
+    double newCollected = _originalCollected + paying;
+    double newBalance = total - newCollected;
+
+    collectedAmountController.text = newCollected.toStringAsFixed(2);
+    balanceController.text = newBalance.toStringAsFixed(2);
+  }
+
+  Future<void> fetchData({String? fromDate, String? toDate}) async {
+    try {
+      CollectionReference productsCollection = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('PurchaseEntry');
+
+      Query query = productsCollection;
+
+      if (fromDate != null && toDate != null) {
+        query = query
+            .where('billDate', isGreaterThanOrEqualTo: fromDate)
+            .where('billDate', isLessThanOrEqualTo: toDate);
+      }
+
+      final QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        fetchedData.add(
+          {
+            'Bill NO': data['billNo']?.toString() ?? 'N/A',
+            'Bill Date': data['billDate']?.toString() ?? 'N/A',
+            'Ref No': data['rfNo']?.toString() ?? 'N/A',
+            'Distributor': '${data['distributor'] ?? 'N/A'}'.trim(),
+            'Amount': data['netTotalAmount']?.toString() ?? 'N/A',
+            'Paid': data['collectedAmount']?.toString() ?? 'N/A',
+            'Balance': data['balance']?.toString() ?? 'N/A',
+            'Action': Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    double originalCollected = double.tryParse(
+                            data['collectedAmount']?.toString() ?? '0') ??
+                        0.0;
+                    double total = double.tryParse(
+                            data['netTotalAmount']?.toString() ?? '0') ??
+                        0.0;
+
+                    setState(() {
+                      _originalCollected = originalCollected;
+                      totalAmountController.text = total.toStringAsFixed(2);
+                      collectedAmountController.text =
+                          originalCollected.toStringAsFixed(2);
+                      balanceController.text =
+                          (total - originalCollected).toStringAsFixed(2);
+                      currentlyPayingAmount.text = '';
+                    });
+
+                    currentlyPayingAmount.removeListener(_payingAmountListener);
+                    currentlyPayingAmount.addListener(_payingAmountListener);
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const CustomText(
+                            text: 'Payment Details Details',
+                            size: 26,
+                          ),
+                          content: Container(
+                            width: 750,
+                            height: 275,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 25),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Total Amount',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        CustomTextField(
+                                            readOnly: true,
+                                            controller: totalAmountController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Collected',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        CustomTextField(
+                                            readOnly: true,
+                                            controller:
+                                                collectedAmountController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Balance',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        CustomTextField(
+                                            readOnly: true,
+                                            controller: balanceController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 50),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Paying Amount ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        CustomTextField(
+                                          hintText: '',
+                                          controller: currentlyPayingAmount,
+                                          width: 175,
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Payment Mode ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        SizedBox(
+                                          width: 175,
+                                          child: CustomDropdown(
+                                            label: '',
+                                            items: const [
+                                              'UPI',
+                                              'Credit Card',
+                                              'Debit Card',
+                                              'Net Banking',
+                                              'Cash'
+                                            ],
+                                            onChanged: (value) {
+                                              setState(
+                                                () {
+                                                  selectedPaymentMode = value;
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Payment Details ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        CustomTextField(
+                                          hintText: '',
+                                          controller: paymentDetails,
+                                          width: 175,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {},
+                              child: CustomText(
+                                text: 'Pay',
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: CustomText(
+                                text: 'Close',
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: CustomText(
+                    text: 'Pay',
+                    color: AppColors.blue,
+                    size: 14,
+                  ),
+                ),
+              ],
+            ),
+          },
+        );
+      }
+
+      setState(() {
+        tableData = fetchedData;
+      });
+      print(tableData);
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
@@ -50,202 +333,18 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
     }
   }
 
-  final List<String> headers = [
-    'Entry No',
-    'Bill No',
-    'Bill Date',
-    'Distributor Name',
-    'Bill Amount',
-    'Bill Details'
-  ];
-
-  final List<String> headers2 = [
-    'Product Name',
-    'Batch',
-    'Expiry',
-    'Quantity',
-    'Free',
-    'MRP',
-    'Price',
-    'Tax',
-    'Amount',
-  ];
-  List<Map<String, dynamic>> tableData2 = [];
-
-  List<Map<String, dynamic>> tableData = [];
-  Future<void> fetchData(
-      {String? date, String? fromDate, String? toDate}) async {
-    try {
-      resetTotals();
-      CollectionReference productsCollection = FirebaseFirestore.instance
-          .collection('stock')
-          .doc('Products')
-          .collection('PurchaseEntry');
-
-      Query query = productsCollection;
-      if (date != null) {
-        query = query.where('reportDate', isEqualTo: date);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('reportDate', isGreaterThanOrEqualTo: fromDate)
-            .where('reportDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        fetchedData.add({
-          'Entry No': data['entryNo']?.toString() ?? 'N/A',
-          'Bill No': data['billNo']?.toString() ?? 'N/A',
-          'Bill Date': data['reportDate']?.toString() ?? 'N/A',
-          'Distributor Name': '${data['distributor'] ?? 'N/A'}'.trim(),
-          'Bill Amount': data['amount']?.toString() ?? 'N/A',
-          'Bill Details': TextButton(
-            onPressed: () {
-              for (var product in data['entryProducts']) {
-                tableData2.add({
-                  'Product Name': product['Product Name'],
-                  'Batch': product['Batch Number'],
-                  'Expiry': product['Expiry'],
-                  'Quantity': product['Quantity'],
-                  'Free': product['Free'],
-                  'MRP': product['MRP'],
-                  'Price': product['Price'],
-                  'Tax': product['GST'],
-                  'Amount': product['Amount'],
-                  'HSN Code': product['HSN Code'],
-                  'Category': product['Category'],
-                  'Company': product['Company'],
-                });
-              }
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text('View Bill'),
-                    content: Container(
-                      width: 950,
-                      height: 500,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SingleChildScrollView(
-                                  child: Container(
-                                    width: 950,
-                                    height: 500,
-                                    child: Column(
-                                      children: [
-                                        CustomDataTable(
-                                            headerColor: Colors.white,
-                                            headerBackgroundColor:
-                                                AppColors.blue,
-                                            headers: headers2,
-                                            tableData: tableData2),
-                                        SizedBox(height: 50),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Ok ',
-                          color: AppColors.secondaryColor,
-                          size: 14,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Cancel',
-                          color: AppColors.secondaryColor,
-                          size: 14,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ).then((_) {
-                tableData2.clear();
-              });
-            },
-            child: const CustomText(text: 'Open'),
-          ),
-        });
-      }
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Entry No']) ?? 0;
-        int tokenB = int.tryParse(b['Entry No']) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-      if (fetchedData.isEmpty) {
-        setState(() {
-          tableData = [];
-          resetTotals();
-        });
-        return;
-      }
-      setState(() {
-        tableData = fetchedData;
-        calculateTotals();
-      });
-      print(tableData);
-    } catch (e) {
-      print('Error fetching data: $e');
-    }
-  }
-
-  void calculateTotals() {
-    totalAmount = tableData.fold(0.0, (sum, item) {
-      double amount =
-          double.tryParse(item['Bill Amount']?.toString() ?? '0') ?? 0;
-      return sum + amount;
-    });
-
-    totalAmount = double.parse(totalAmount.toStringAsFixed(2));
-  }
-
-  void resetTotals() {
-    totalAmount = 0.00;
-  }
-
   @override
   void initState() {
     fetchData();
-
     super.initState();
   }
 
   @override
   void dispose() {
-    date.dispose();
-    fromDate.dispose();
-    toDate.dispose();
+    _distributor.dispose();
+    _billNo.dispose();
+    currentlyPayingAmount.removeListener(_payingAmountListener);
+
     super.dispose();
   }
 
@@ -328,7 +427,7 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "Pharmacy Total Sales",
+                          text: "Pharmacy Purchase",
                           size: screenWidth * .015,
                         ),
                       ],
@@ -347,76 +446,46 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
               ),
               Row(
                 children: [
+                  SizedBox(width: screenWidth * 0.02),
                   CustomTextField(
-                    controller: date,
-                    onTap: () => _selectDate(context, date),
-                    icon: Icon(Icons.date_range),
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(date: date.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
-                    onTap: () => _selectDate(context, fromDate),
                     controller: fromDate,
-                    icon: Icon(Icons.date_range),
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
-                    onTap: () => _selectDate(context, toDate),
-                    controller: toDate,
+                    verticalSize: screenHeight * 0.015,
                     icon: Icon(Icons.date_range),
-                    hintText: 'To Date',
-                    width: screenWidth * 0.15,
+                    onTap: () => _selectDate(context, fromDate),
                   ),
-                  SizedBox(width: screenHeight * 0.02),
+                  SizedBox(width: screenWidth * 0.02),
+                  CustomTextField(
+                    controller: toDate,
+                    hintText: 'To Date ',
+                    width: screenWidth * 0.15,
+                    verticalSize: screenHeight * 0.015,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, toDate),
+                  ),
+                  SizedBox(width: screenWidth * 0.02),
                   CustomButton(
                     label: 'Search',
                     onPressed: () {
                       fetchData(fromDate: fromDate.text, toDate: toDate.text);
                     },
                     width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                    height: screenHeight * 0.05,
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.08),
+              const Row(
+                children: [CustomText(text: 'Bill List')],
+              ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
+                columnWidths: {
+                  7: FixedColumnWidth(screenWidth * 0.15),
+                },
                 tableData: tableData,
                 headers: headers,
-                headerColor: Colors.white,
-                headerBackgroundColor: AppColors.blue,
-              ),
-              Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.03),
-                width: screenWidth,
-                height: screenHeight * 0.030,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CustomText(
-                      text: 'Total :        $totalAmount',
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

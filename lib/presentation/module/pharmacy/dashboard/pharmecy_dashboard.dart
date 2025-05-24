@@ -48,25 +48,24 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
   List<Map<String, dynamic>> expiryStocksData = [];
 
   final Map<int, FixedColumnWidth> columnWidths = {
-    0: FixedColumnWidth(240.0),
-    1: FixedColumnWidth(240.0),
-    2: FixedColumnWidth(240.0),
+    0: const FixedColumnWidth(240.0),
+    1: const FixedColumnWidth(240.0),
+    2: const FixedColumnWidth(240.0),
   };
 
   Future<void> fetchNearExpiryData() async {
     try {
-      final DateTime todayDate = DateTime.now();
-      final DateTime tenDaysFromNow = todayDate.add(Duration(days: 10));
-      int i = 1;
+      final DateTime today = DateTime.now();
+      final DateTime tenDaysFromNow = today.add(const Duration(days: 10));
 
-      Query query = FirebaseFirestore.instance
+      final QuerySnapshot productSnapshot = await FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
-          .collection('AddedProducts');
-      final QuerySnapshot snapshot = await query.get();
+          .collection('AddedProducts')
+          .get();
 
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
+      if (productSnapshot.docs.isEmpty) {
+        print("No products found");
         setState(() {
           expiryStocksData = [];
         });
@@ -74,70 +73,78 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       }
 
       List<Map<String, dynamic>> fetchedData = [];
+      int slNo = 1;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('amount') || !data.containsKey('reportDate'))
-          continue;
+      for (var productDoc in productSnapshot.docs) {
+        final productData = productDoc.data() as Map<String, dynamic>;
+        final productName = productData['productName'];
 
-        if (data.containsKey('fixedQuantity') &&
-            data.containsKey('quantity') &&
-            data.containsKey('expiry')) {
-          try {
-            DateTime expiryDate = DateTime.parse(data['expiry']);
+        final purchaseSnapshot = await FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .doc(productDoc.id)
+            .collection('purchaseEntry')
+            .get();
 
-            DateTime expiryOnly =
-                DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
-            DateTime todayOnly =
-                DateTime(todayDate.year, todayDate.month, todayDate.day);
-            DateTime tenDaysOnly = DateTime(
-                tenDaysFromNow.year, tenDaysFromNow.month, tenDaysFromNow.day);
+        for (var entryDoc in purchaseSnapshot.docs) {
+          final entryData = entryDoc.data();
 
-            if ((expiryOnly.isAtSameMomentAs(todayOnly) ||
-                    expiryOnly.isAfter(todayOnly)) &&
-                (expiryOnly.isAtSameMomentAs(tenDaysOnly) ||
-                    expiryOnly.isBefore(tenDaysOnly))) {
-              fetchedData.add({
-                'SL No': i++,
-                'Product Name': data['productName'],
-                'Opening Stock': data['fixedQuantity'],
-                'Remaining Stock': data['quantity'],
-                'Expiry Date': data['expiry'],
-              });
+          if (entryData.containsKey('fixedQuantity') &&
+              entryData.containsKey('quantity') &&
+              entryData.containsKey('expiry')) {
+            try {
+              DateTime expiryDate = DateTime.parse(entryData['expiry']);
 
-              if (fetchedData.length >= 5) break;
+              DateTime expiryOnly =
+                  DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
+              DateTime todayOnly = DateTime(today.year, today.month, today.day);
+              DateTime tenDaysOnly = DateTime(tenDaysFromNow.year,
+                  tenDaysFromNow.month, tenDaysFromNow.day);
+
+              if ((expiryOnly.isAtSameMomentAs(todayOnly) ||
+                      expiryOnly.isAfter(todayOnly)) &&
+                  (expiryOnly.isAtSameMomentAs(tenDaysOnly) ||
+                      expiryOnly.isBefore(tenDaysOnly))) {
+                fetchedData.add({
+                  'SL No': slNo++,
+                  'Product Name': productName,
+                  'Opening Stock': entryData['fixedQuantity'],
+                  'Remaining Stock': entryData['quantity'],
+                  'Expiry Date': entryData['expiry'],
+                });
+
+                if (fetchedData.length >= 5) break;
+              }
+            } catch (e) {
+              print(
+                  "Invalid expiry date format in entry: ${entryData['expiry']}");
             }
-          } catch (e) {
-            print("Invalid expiry date format: ${data['expiry']}");
-            continue;
           }
         }
+
+        if (fetchedData.length >= 5) break;
       }
 
       setState(() {
         expiryStocksData = fetchedData;
       });
     } catch (e) {
-      print('Error fetching expiry data: $e');
+      print('Error fetching near-expiry data: $e');
     }
   }
 
   Future<void> fetchNonMovingStocksData() async {
     try {
-      final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      int i = 1;
-
-      Query query = FirebaseFirestore.instance
+      final addedProductsSnapshot = await FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
           .collection('AddedProducts')
-          .where('reportDate', isEqualTo: today)
-          .limit(5);
+          .limit(5)
+          .get();
 
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found for today");
+      if (addedProductsSnapshot.docs.isEmpty) {
+        print("No products found");
         setState(() {
           nonMovingStocksData = [];
         });
@@ -145,72 +152,93 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       }
 
       List<Map<String, dynamic>> fetchedData = [];
+      int i = 1;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('amount')) continue;
-        if (!data.containsKey('reportDate')) continue;
+      for (var productDoc in addedProductsSnapshot.docs) {
+        final productData = productDoc.data();
+        final docId = productDoc.id;
 
-        if (data.containsKey('fixedQuantity') &&
-            data.containsKey('quantity') &&
-            data['fixedQuantity'] == data['quantity']) {
-          fetchedData.add({
-            'SL No': i++,
-            'Product Name': data['productName'],
-            'Opening Stock': data['fixedQuantity'],
-            'Remaining Stock': data['quantity'],
-            'Expiry Date': data['expiry'],
-            'Non-Moving Details': TextButton(
-              onPressed: () {
-                DateTime reportDate = DateTime.parse(data['reportDate']);
-                DateTime todayDate = DateTime.now();
-                int daysDifference = todayDate.difference(reportDate).inDays;
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Non-Moving Stocks Details'),
-                      content: Container(
-                        width: 350,
-                        height: 180,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomText(
-                                text:
-                                    'Product Entry Date: ${data['reportDate']}'),
-                            CustomText(
-                                text: 'Product Name: ${data['productName']}'),
-                            CustomText(
-                                text:
-                                    'Opening Stock: ${data['fixedQuantity']}'),
-                            CustomText(
-                                text: 'Remaining Stock: ${data['quantity']}'),
-                            CustomText(text: 'Expiry Date: ${data['expiry']}'),
-                            CustomText(
-                                text: 'Days Since Entry: $daysDifference days'),
-                          ],
-                        ),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: CustomText(
-                            text: 'Close',
-                            color: AppColors.secondaryColor,
+        final purchaseEntriesSnapshot = await FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .doc(docId)
+            .collection('purchaseEntry')
+            .get();
+
+        for (var purchaseDoc in purchaseEntriesSnapshot.docs) {
+          final purchaseData = purchaseDoc.data();
+
+          if (!purchaseData.containsKey('reportDate') ||
+              !purchaseData.containsKey('fixedQuantity') ||
+              !purchaseData.containsKey('quantity')) continue;
+
+          String reportDateStr = purchaseData['reportDate'];
+          DateTime reportDate =
+              DateTime.tryParse(reportDateStr) ?? DateTime(1900);
+
+          if (purchaseData['fixedQuantity'] == purchaseData['quantity']) {
+            fetchedData.add({
+              'SL No': i++,
+              'Product Name': productData['productName'],
+              'Opening Stock': purchaseData['fixedQuantity'],
+              'Remaining Stock': purchaseData['quantity'],
+              'Expiry Date': purchaseData['expiry'],
+              'Non-Moving Details': TextButton(
+                onPressed: () {
+                  int daysDifference =
+                      DateTime.now().difference(reportDate).inDays;
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Non-Moving Stocks Details'),
+                        content: Container(
+                          width: 350,
+                          height: 180,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                  text: 'Product Entry Date: $reportDateStr'),
+                              CustomText(
+                                  text:
+                                      'Product Name: ${productData['productName']}'),
+                              CustomText(
+                                  text:
+                                      'Opening Stock: ${purchaseData['fixedQuantity']}'),
+                              CustomText(
+                                  text:
+                                      'Remaining Stock: ${purchaseData['quantity']}'),
+                              CustomText(
+                                  text:
+                                      'Expiry Date: ${purchaseData['expiry']}'),
+                              CustomText(
+                                  text:
+                                      'Days Since Entry: $daysDifference days'),
+                            ],
                           ),
                         ),
-                      ],
-                    );
-                  },
-                );
-              },
-              child: CustomText(text: 'View Details'),
-            ),
-          });
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: CustomText(
+                              text: 'Close',
+                              color: AppColors.secondaryColor,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: CustomText(text: 'View Details'),
+              ),
+            });
+          }
         }
       }
 
@@ -218,7 +246,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
         nonMovingStocksData = fetchedData;
       });
     } catch (e) {
-      print('Error fetching today\'s data: $e');
+      print('Error fetching data: $e');
     }
   }
 
@@ -593,6 +621,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

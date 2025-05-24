@@ -2,11 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
+import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 class ProductList extends StatefulWidget {
@@ -25,11 +29,9 @@ class _ProductListState extends State<ProductList> {
   String? selectedCategoryFilter;
   String productName = '';
   String companyName = '';
-  String hsnCode = '';
 
   final List<String> headers = [
     'Product Name',
-    'HSN Code',
     'Category',
     'Company',
     'Composition',
@@ -83,7 +85,6 @@ class _ProductListState extends State<ProductList> {
         final data = doc.data();
         fetchedData.add({
           'Product Name': data['productName'],
-          'HSN Code': data['hsnCode'],
           'Category': data['category'],
           'Company': data['companyName'],
           'Composition': data['composition'],
@@ -108,10 +109,13 @@ class _ProductListState extends State<ProductList> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: Text('Add Product'),
+                      title: CustomText(
+                        text: 'Add Product',
+                        size: 25,
+                      ),
                       content: Container(
                         width: 600,
-                        height: 350,
+                        height: 325,
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
@@ -119,7 +123,7 @@ class _ProductListState extends State<ProductList> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Container(
-                                    width: 550,
+                                    width: 500,
                                     height: 300,
                                     child: Column(
                                       mainAxisAlignment:
@@ -131,14 +135,14 @@ class _ProductListState extends State<ProductList> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            CustomTextField(
+                                            PharmacyTextField(
                                               controller: _productName,
                                               hintText: 'Product Name',
                                               width: 200,
                                             ),
                                             SizedBox(
                                               width: 200,
-                                              child: CustomDropdown(
+                                              child: PharmacyDropDown(
                                                   label: 'Category',
                                                   items: const [
                                                     'Tablets',
@@ -166,12 +170,12 @@ class _ProductListState extends State<ProductList> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            CustomTextField(
+                                            PharmacyTextField(
                                               controller: _composition,
                                               hintText: 'Composition',
                                               width: 200,
                                             ),
-                                            CustomTextField(
+                                            PharmacyTextField(
                                               controller: _companyName,
                                               hintText: 'Company Name',
                                               width: 200,
@@ -182,12 +186,12 @@ class _ProductListState extends State<ProductList> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            CustomTextField(
+                                            PharmacyTextField(
                                               controller: _referredByDoctor,
                                               hintText: 'Referred by Doctor',
                                               width: 200,
                                             ),
-                                            CustomTextField(
+                                            PharmacyTextField(
                                               controller:
                                                   _additionalInformation,
                                               hintText:
@@ -275,11 +279,7 @@ class _ProductListState extends State<ProductList> {
             (companyName.isEmpty ||
                 product['Company']!
                     .toLowerCase()
-                    .contains(companyName.toLowerCase())) &&
-            (hsnCode.isEmpty ||
-                product['HSN Code']!
-                    .toLowerCase()
-                    .contains(hsnCode.toLowerCase()));
+                    .contains(companyName.toLowerCase()));
       }).toList();
     });
   }
@@ -301,37 +301,10 @@ class _ProductListState extends State<ProductList> {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Product List",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              TimeDateWidget(text: 'Product List'),
               Row(
                 children: [
-                  CustomDropdown(
+                  PharmacyDropDown(
                     label: 'Select Category',
                     items: const [
                       'Tablets',
@@ -357,7 +330,7 @@ class _ProductListState extends State<ProductList> {
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
-                  CustomTextField(
+                  PharmacyTextField(
                     hintText: 'Product Name',
                     width: screenWidth * 0.20,
                     onChanged: (value) {
@@ -366,7 +339,7 @@ class _ProductListState extends State<ProductList> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
+                  PharmacyTextField(
                     hintText: 'Company Name',
                     width: screenWidth * 0.20,
                     onChanged: (value) {
@@ -375,24 +348,17 @@ class _ProductListState extends State<ProductList> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
-                    hintText: 'HSN Code',
-                    width: screenWidth * 0.10,
-                    onChanged: (value) {
-                      hsnCode = value;
-                      filterProducts();
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.045),
-                  CustomButton(
+                  PharmacyButton(
                     label: 'Search',
                     onPressed: filterProducts,
                     width: screenWidth * 0.1,
+                    height: screenHeight * 0.045,
                   ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
               CustomDataTable(headers: headers, tableData: filteredProducts),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

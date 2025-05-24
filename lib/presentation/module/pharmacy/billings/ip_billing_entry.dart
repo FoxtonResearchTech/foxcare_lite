@@ -1590,6 +1590,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

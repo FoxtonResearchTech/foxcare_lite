@@ -108,6 +108,7 @@ class _StockManagement extends State<StockManagement> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

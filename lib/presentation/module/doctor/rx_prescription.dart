@@ -2189,8 +2189,9 @@ class _RxPrescription extends State<RxPrescription> {
                       width: 300,
                       child: CustomButton(
                         label: 'Process',
-                        onPressed: () {
-                          _savePrescriptionData();
+                        onPressed: () async {
+                          await _savePrescriptionData();
+                          await clearPrescriptionDraft(widget.patientID);
                         },
                         width: screenWidth * 0.5,
                       ),

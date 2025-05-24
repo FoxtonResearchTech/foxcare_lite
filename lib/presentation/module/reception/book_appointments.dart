@@ -586,7 +586,7 @@ class _BookAppointments extends State<BookAppointments> {
                         },
                       );
                     },
-                    width: screenWidth * 0.2,
+                    width: screenWidth * 0.175,
                     height: screenWidth * 0.025,
                   ),
                 ],

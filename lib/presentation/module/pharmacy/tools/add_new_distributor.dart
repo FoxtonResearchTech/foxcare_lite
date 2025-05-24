@@ -592,7 +592,6 @@ class _AddNewDistributor extends State<AddNewDistributor> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   PharmacyButton(
-                    color: AppColors.blue,
                     label: 'Cancel',
                     onPressed: () => (),
                     width: screenWidth * 0.08,
@@ -600,7 +599,6 @@ class _AddNewDistributor extends State<AddNewDistributor> {
                   ),
                   SizedBox(width: screenWidth * 0.05),
                   PharmacyButton(
-                    color: AppColors.blue,
                     label: 'Create',
                     onPressed: () => _saveDistributorData(),
                     width: screenWidth * 0.08,

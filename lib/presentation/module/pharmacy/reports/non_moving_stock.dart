@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
 
@@ -201,37 +204,10 @@ class _NonMovingStock extends State<NonMovingStock> {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
-                    child: Column(
-                      children: [
-                        CustomText(
-                          text: "Non-Moving Statement",
-                          size: screenWidth * 0.0275,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: screenWidth * 0.15,
-                    height: screenWidth * 0.1,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/foxcare_lite_logo.png'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              TimeDateWidget(text: 'Non-Moving Statement'),
               Row(
                 children: [
-                  CustomTextField(
+                  PharmacyTextField(
                     onTap: () => _selectDate(context, _dateController),
                     icon: Icon(Icons.date_range),
                     controller: _dateController,
@@ -239,7 +215,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
+                  PharmacyButton(
                     label: 'Search',
                     onPressed: () {
                       fetchData(singleDate: _dateController.text);
@@ -251,7 +227,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
+                  PharmacyTextField(
                     onTap: () => _selectDate(context, _fromDateController),
                     icon: Icon(Icons.date_range),
                     controller: _fromDateController,
@@ -259,7 +235,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomTextField(
+                  PharmacyTextField(
                     onTap: () => _selectDate(context, _toDateController),
                     icon: Icon(Icons.date_range),
                     controller: _toDateController,
@@ -267,7 +243,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
+                  PharmacyButton(
                     label: 'Search',
                     onPressed: () {
                       fetchData(
@@ -290,6 +266,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

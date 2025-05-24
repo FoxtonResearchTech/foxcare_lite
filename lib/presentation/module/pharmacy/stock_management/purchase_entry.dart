@@ -940,6 +940,7 @@ class _PurchaseEntry extends State<PurchaseEntry> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

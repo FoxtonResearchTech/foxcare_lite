@@ -153,6 +153,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
                       width: screenWidth * 0.08)
                 ],
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),
