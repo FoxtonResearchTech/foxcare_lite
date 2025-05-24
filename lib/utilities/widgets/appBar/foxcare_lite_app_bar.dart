@@ -36,6 +36,7 @@ import '../../constants.dart';
 import '../state/app_bar_selection_state.dart';
 
 class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
+
   final Map<String, Map<String, WidgetBuilder>>? navigationMap;
 
   const FoxCareLiteAppBar({
@@ -119,7 +120,7 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
                                   CustomText(
                                     text: 'Pharmacist',
                                     color: Colors.white,
-                                    size: screenWidth * 0.009,
+                                    size: screenWidth * 0.008,
                                   ),
                                 ],
                               )

@@ -440,7 +440,7 @@ class _BookAppointments extends State<BookAppointments> {
                     width: screenWidth * 0.08,
                     height: screenWidth * 0.02,
                   ),
-                  SizedBox(width: screenHeight * 0.57),
+                  Expanded(child: SizedBox()),
                   CustomButton(
                     label: 'Book Appointments',
                     onPressed: () {
