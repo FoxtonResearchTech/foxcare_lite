@@ -439,6 +439,7 @@ class _LabCollection extends State<LabCollection> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

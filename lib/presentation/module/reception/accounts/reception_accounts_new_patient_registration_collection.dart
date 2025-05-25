@@ -365,6 +365,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
                 ],
               ),
             ),
+            SizedBox(height: screenHeight * 0.05),
           ],
         ),
       ),

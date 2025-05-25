@@ -483,6 +483,7 @@ class _IpAdmitList extends State<IpAdmitList> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

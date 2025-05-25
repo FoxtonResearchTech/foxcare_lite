@@ -927,7 +927,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(headers: headers, tableData: employeeData),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

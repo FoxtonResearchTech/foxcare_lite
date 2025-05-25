@@ -335,6 +335,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05)
             ],
           ),
         ),

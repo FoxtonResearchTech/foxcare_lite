@@ -391,6 +391,7 @@ class _NewWardRooms extends State<NewWardRooms> {
                 ),
               ),
             ),
+            SizedBox(height: screenHeight * 0.05),
           ],
         ),
       ),

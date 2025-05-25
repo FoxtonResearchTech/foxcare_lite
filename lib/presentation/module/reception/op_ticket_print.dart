@@ -780,7 +780,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                       : Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

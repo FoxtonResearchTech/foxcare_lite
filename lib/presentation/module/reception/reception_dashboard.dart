@@ -661,6 +661,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
                 ),
               ],
             ),
+            SizedBox(height: screenHeight * 0.05),
           ],
         ),
       ),

@@ -441,6 +441,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.06),
             ],
           ),
         ),

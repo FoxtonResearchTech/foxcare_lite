@@ -362,6 +362,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                                   : Colors.transparent;
                             },
                           ),
+                    SizedBox(height: screenHeight * 0.05),
                   ],
                 ),
               ),

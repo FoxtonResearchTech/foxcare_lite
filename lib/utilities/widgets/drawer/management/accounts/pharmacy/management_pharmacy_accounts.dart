@@ -32,18 +32,26 @@ class _ManagementPharmacyAccounts extends State<ManagementPharmacyAccounts> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 150), // Very fast
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.ease;
+          const curve = Curves.fastOutSlowIn;
 
-          final tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          final offsetAnimation = animation.drive(tween);
+          final scaleTween =
+              Tween(begin: 0.9, end: 1.0).chain(CurveTween(curve: curve));
+          final fadeTween =
+              Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
-          return SlideTransition(position: offsetAnimation, child: child);
+          final scaleAnimation = animation.drive(scaleTween);
+          final fadeAnimation = animation.drive(fadeTween);
+
+          return FadeTransition(
+            opacity: fadeAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: child,
+            ),
+          );
         },
       ),
     );

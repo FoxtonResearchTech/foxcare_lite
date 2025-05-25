@@ -118,6 +118,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
 
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Padding(
@@ -166,51 +167,55 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
                 },
               ),
             ),
+            SizedBox(height: screenHeight * 0.07)
           ],
         ),
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Container(
-            width: 200,
-            height: 60,
-            margin: EdgeInsets.only(bottom: 12),
-            child: FloatingActionButton.extended(
-              onPressed: () => confirmAndDeleteCollection(context),
-              backgroundColor: Colors.red,
-              label: Text(
-                "Reset",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: screenHeight * 0.03),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              width: 200,
+              height: 60,
+              margin: EdgeInsets.only(bottom: 12),
+              child: FloatingActionButton.extended(
+                onPressed: () => confirmAndDeleteCollection(context),
+                backgroundColor: Colors.red,
+                label: Text(
+                  "Reset",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
+                icon: Icon(Icons.delete, size: 28, color: Colors.white),
+                elevation: 10,
               ),
-              icon: Icon(Icons.delete, size: 28, color: Colors.white),
-              elevation: 10,
             ),
-          ),
-          Container(
-            width: 200,
-            height: 60,
-            child: FloatingActionButton.extended(
-              onPressed: saveScheduleToFirestore,
-              backgroundColor: Colors.blue,
-              label: Text(
-                "Save",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            Container(
+              width: 200,
+              height: 60,
+              child: FloatingActionButton.extended(
+                onPressed: saveScheduleToFirestore,
+                backgroundColor: Colors.blue,
+                label: Text(
+                  "Save",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
+                icon: Icon(Icons.save, size: 28, color: Colors.white),
+                elevation: 10,
               ),
-              icon: Icon(Icons.save, size: 28, color: Colors.white),
-              elevation: 10,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

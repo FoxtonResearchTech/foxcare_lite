@@ -65,6 +65,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     String formattedDate =
         '${getDayWithSuffix(now.day)} ${DateFormat('MMMM').format(now)}';
     String formattedYear = DateFormat('y').format(now);
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Column(
       children: [
@@ -176,7 +177,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: screenHeight * 0.012),
         Container(
           height: 25,
           color: AppColors.blue,
@@ -187,6 +188,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ),
           ),
         ),
+        SizedBox(height: screenHeight * 0.055),
       ],
     );
   }

@@ -209,6 +209,7 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

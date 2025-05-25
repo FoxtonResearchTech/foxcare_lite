@@ -787,7 +787,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.075),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -840,7 +839,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.075),
+              SizedBox(height: screenHeight * 0.04),
               status == 'All Good'
                   ? SizedBox()
                   : Container(
@@ -1006,6 +1005,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   ),
                 ],
               ),
+              SizedBox(height: screenHeight * 0.05)
             ],
           ),
         ),

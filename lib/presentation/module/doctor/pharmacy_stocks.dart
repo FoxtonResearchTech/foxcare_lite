@@ -304,6 +304,7 @@ class _PharmacyStocks extends State<PharmacyStocks> {
                 headers: headers,
                 tableData: filteredProducts,
               ),
+              SizedBox(height: screenHeight * 0.05)
             ],
           ),
         ),
