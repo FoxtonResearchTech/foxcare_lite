@@ -763,7 +763,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
-      height: screenHeight * 1,
+      height: screenHeight * 0.9,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
       child: Card(
         elevation: 5,
@@ -1177,7 +1177,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
-      height: screenHeight * 0.8,
+      height: screenHeight * 0.9,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
       child: Card(
         elevation: 5,
@@ -1452,7 +1452,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
-      height: screenHeight * 0.8,
+      height: screenHeight * 0.9,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.047),
       child: Card(
         elevation: 5,

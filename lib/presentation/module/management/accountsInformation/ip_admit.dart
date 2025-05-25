@@ -542,6 +542,7 @@ class _IpAdmit extends State<IpAdmit> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

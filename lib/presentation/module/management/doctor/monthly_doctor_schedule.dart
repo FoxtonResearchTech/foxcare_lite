@@ -458,11 +458,14 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                       },
                     ),
             ),
+            SizedBox(
+              height: screenHeight * 0.05,
+            )
           ],
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0),
+        padding: const EdgeInsets.only(bottom: 25.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [

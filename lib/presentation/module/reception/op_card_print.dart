@@ -416,7 +416,7 @@ class _OpCardPrint extends State<OpCardPrint> {
                 tableData: tableData,
                 headers: headers,
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

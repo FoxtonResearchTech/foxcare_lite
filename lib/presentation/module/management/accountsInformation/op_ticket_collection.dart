@@ -405,6 +405,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.06),
             ],
           ),
         ),

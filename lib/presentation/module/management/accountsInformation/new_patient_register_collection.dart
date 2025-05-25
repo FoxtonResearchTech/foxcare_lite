@@ -393,6 +393,7 @@ class _NewPatientRegisterCollection
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.06),
             ],
           ),
         ),

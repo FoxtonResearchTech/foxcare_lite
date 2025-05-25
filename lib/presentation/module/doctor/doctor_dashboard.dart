@@ -558,6 +558,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
                 ),
               ],
             ),
+            SizedBox(height: screenHeight * 0.05)
           ],
         ),
       ),

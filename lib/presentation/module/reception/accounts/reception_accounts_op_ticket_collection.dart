@@ -383,6 +383,7 @@ class _ReceptionAccountsOpTicketCollection
                 ],
               ),
             ),
+            SizedBox(height: screenHeight * 0.05),
           ],
         ),
       ),

@@ -588,6 +588,7 @@ class _LabDashboard extends State<LabDashboard> {
                 )
               ],
             ),
+            SizedBox(height: screenHeight * 0.07)
           ],
         ),
       ),

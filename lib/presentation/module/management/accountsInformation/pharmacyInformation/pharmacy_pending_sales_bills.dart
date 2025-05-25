@@ -270,6 +270,7 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

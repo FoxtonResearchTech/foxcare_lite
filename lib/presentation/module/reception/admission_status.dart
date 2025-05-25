@@ -547,6 +547,7 @@ class _AdmissionStatus extends State<AdmissionStatus> {
           const SizedBox(
             height: 40,
           ),
+          SizedBox(height: screenHeight * 0.05),
         ],
       ),
     );

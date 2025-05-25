@@ -171,7 +171,6 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
             top: screenHeight * 0.01,
             left: screenWidth * 0.04,
             right: screenWidth * 0.04,
-            bottom: screenWidth * 0.25,
           ),
           child: Column(
             children: [

@@ -649,6 +649,7 @@ class _OtherExpense extends State<OtherExpense> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

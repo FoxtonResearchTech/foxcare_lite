@@ -106,6 +106,7 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
 
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Padding(
@@ -371,45 +372,48 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
           ),
         ),
       ),
-      floatingActionButton: SpeedDial(
-        animatedIcon: AnimatedIcons.menu_close,
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        children: [
-          SpeedDialChild(
-            child: const Icon(Icons.calendar_today, color: Colors.white),
-            backgroundColor: Colors.green,
-            label: 'Daily Schedule',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const AddDoctorSchedule()),
-              );
-            },
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.calendar_view_week, color: Colors.white),
-            backgroundColor: Colors.orange,
-            label: 'Weekly Schedule',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Weekly Schedule Selected')),
-              );
-            },
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.calendar_month, color: Colors.white),
-            backgroundColor: Colors.purple,
-            label: 'Monthly Schedule',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Monthly Schedule Selected')),
-              );
-            },
-          ),
-        ],
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: screenHeight * 0.05),
+        child: SpeedDial(
+          animatedIcon: AnimatedIcons.menu_close,
+          iconTheme: const IconThemeData(color: Colors.white),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          children: [
+            SpeedDialChild(
+              child: const Icon(Icons.calendar_today, color: Colors.white),
+              backgroundColor: Colors.green,
+              label: 'Daily Schedule',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AddDoctorSchedule()),
+                );
+              },
+            ),
+            SpeedDialChild(
+              child: const Icon(Icons.calendar_view_week, color: Colors.white),
+              backgroundColor: Colors.orange,
+              label: 'Weekly Schedule',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Weekly Schedule Selected')),
+                );
+              },
+            ),
+            SpeedDialChild(
+              child: const Icon(Icons.calendar_month, color: Colors.white),
+              backgroundColor: Colors.purple,
+              label: 'Monthly Schedule',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Monthly Schedule Selected')),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
