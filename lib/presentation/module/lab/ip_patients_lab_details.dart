@@ -9,6 +9,7 @@ import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
@@ -44,6 +45,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
   ];
   List<Map<String, dynamic>> tableData1 = [];
   Timer? _timer;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -275,6 +277,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
+
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: SingleChildScrollView(
@@ -292,7 +295,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    padding: EdgeInsets.only(top: screenWidth * 0.01),
                     child: Column(
                       children: [
                         CustomText(
@@ -319,29 +322,79 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SizedBox(width: screenHeight * 0.1),
-                  CustomTextField(
-                    controller: ipNumberSearch,
-                    hintText: 'IP Number',
-                    width: screenWidth * 0.1,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "IP Number",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: Colors.black87),
+                      ),
+                      SizedBox(height: 5),
+                      CustomTextField(
+                        controller: ipNumberSearch,
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                    controller: phoneNumberSearch,
-                    hintText: 'Mobile Number',
-                    width: screenWidth * 0.1,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Mobile Number",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: Colors.black87),
+                      ),
+                      SizedBox(height: 5),
+                      CustomTextField(
+                        controller: phoneNumberSearch,
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                      ),
+                    ],
                   ),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      final ipNumber = ipNumberSearch.text.trim();
-                      final phone = phoneNumberSearch.text.trim();
+                  Column(
+                    children: [
+                      SizedBox(
+                        height: 21,
+                      ),
+                      _isSearching
+                          ? SizedBox(
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json', // Customize color if needed
+                                ),
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() {
+                                  _isSearching = true;
+                                });
+                                final ipNumber = ipNumberSearch.text.trim();
+                                final phone = phoneNumberSearch.text.trim();
 
-                      await fetchData(
-                        patientID: ipNumber.isNotEmpty ? ipNumber : null,
-                        phoneNumber: phone.isNotEmpty ? phone : null,
-                      );
-                    },
-                    width: screenWidth * 0.1,
-                    height: screenHeight * 0.045,
+                                await fetchData(
+                                  patientID:
+                                      ipNumber.isNotEmpty ? ipNumber : null,
+                                  phoneNumber: phone.isNotEmpty ? phone : null,
+                                );
+                                setState(() {
+                                  _isSearching = false;
+                                });
+                              },
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
+                            ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.1),
                 ],

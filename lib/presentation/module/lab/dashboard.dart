@@ -539,7 +539,7 @@ class _LabDashboard extends State<LabDashboard> {
                 SizedBox(height: screenHeight * 0.03),
                 Center(
                   child: CustomButton(
-                    label: 'View More...',
+                    label: 'View More',
                     onPressed: () {
                       Navigator.push(
                           context,
@@ -575,7 +575,7 @@ class _LabDashboard extends State<LabDashboard> {
                 SizedBox(height: screenHeight * 0.03),
                 Center(
                   child: CustomButton(
-                    label: 'View More...',
+                    label: 'View More',
                     onPressed: () {
                       Navigator.push(
                           context,

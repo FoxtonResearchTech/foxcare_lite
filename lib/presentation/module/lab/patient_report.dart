@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 class PatientReport extends StatefulWidget {
   final String patientID;
@@ -117,7 +118,7 @@ class _PatientReport extends State<PatientReport> {
 
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
-          backgroundColor: AppColors.secondaryColor);
+          backgroundColor: Colors.cyan);
       print('All values have been successfully submitted.');
     } catch (e) {
       CustomSnackBar(context,
@@ -125,6 +126,8 @@ class _PatientReport extends State<PatientReport> {
       print('Error submitting data: $e');
     }
   }
+
+  bool isLoading = false;
 
   void _updateBalance() {
     double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
@@ -147,14 +150,55 @@ class _PatientReport extends State<PatientReport> {
     paidController.clear();
     balanceController.clear();
   }
-
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        _sampleCollectedDateController.text =
+        "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+  final TextEditingController _sampleCollectedDateController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final List<Map<String, String>> dummyData = [
+      {'title': 'Patient Name', 'subtitle': widget.name},
+      {'title': 'OP Ticket', 'subtitle': widget.opTicket},
+      {'title': 'Age', 'subtitle': widget.age},
+      {'title': 'Sex', 'subtitle': widget.sex},
+      {'title': 'DOB', 'subtitle': widget.dob},
+      {
+        'title': 'Basic Information / Diagnostics',
+        'subtitle': widget.primaryInfo
+      },
+      {'title': 'Refer By', 'subtitle': 'Test'},
+      {'title': 'Report Date', 'subtitle': _dateController.text},
+      {'title': 'Sample Date', 'subtitle': _dateController.text},
+      {'title': 'Report Number', 'subtitle': '07'},
+      {'title': 'Sample Collected Date', 'subtitle': ''},
 
+      // from controller
+    ];
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // or any custom action
+          },
+        ),
         title: Center(
             child: CustomText(
           text: "Patient Tests Report",
@@ -174,104 +218,103 @@ class _PatientReport extends State<PatientReport> {
           child: Column(
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomText(
                     text: 'Basic Details of Patients',
                     size: screenHeight * 0.03,
                   ),
+
                 ],
               ),
+
+
               SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomTextField(
-                      controller: TextEditingController(text: widget.name),
-                      hintText: 'Patient Name ',
-                      readOnly: true,
-                      width: screenWidth * 0.2),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.opTicket),
-                    hintText: 'OP Ticket ',
-                    width: screenWidth * 0.2,
-                    readOnly: true,
-                  )
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int crossAxisCount = 1;
+
+                  if (constraints.maxWidth > 1200) {
+                    crossAxisCount = 4;
+                  } else if (constraints.maxWidth > 900) {
+                    crossAxisCount = 3;
+                  } else if (constraints.maxWidth > 600) {
+                    crossAxisCount = 2;
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      shrinkWrap: true,
+                      childAspectRatio: 2, // smaller ratio = taller cards
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: dummyData.map((item) {
+                        bool isSampleDate = item['title'] == 'Sample Collected Date';
+
+                        return Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  item['title']!,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                Flexible(
+                                  child: isSampleDate
+                                      ? GestureDetector(
+                                    onTap: _selectDate,
+                                    child: AbsorbPointer(
+                                      child: TextField(
+                                        controller: _sampleCollectedDateController,
+                                        style: const TextStyle(fontSize: 14),
+                                        decoration: InputDecoration(
+                                          hintText: 'Select Date',
+                                          isDense: true,
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                      : Text(
+                                    item['subtitle']!,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                    // remove maxLines and overflow
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+
+                  );
+                },
               ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.age),
-                    hintText: 'Age ',
-                    width: screenWidth * 0.2,
-                    readOnly: true,
-                  ),
-                  SizedBox(width: screenWidth * 0.02),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.sex),
-                    hintText: 'Sex ',
-                    width: screenWidth * 0.2,
-                    readOnly: true,
-                  ),
-                  SizedBox(width: screenWidth * 0.02),
-                  CustomTextField(
-                    controller: TextEditingController(text: widget.dob),
-                    hintText: 'DOB ',
-                    width: screenWidth * 0.2,
-                    readOnly: true,
-                  )
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              CustomTextField(
-                controller: TextEditingController(text: widget.primaryInfo),
-                hintText: 'Basic Information / Diagnostics',
-                width: screenWidth,
-                verticalSize: screenHeight * 0.03,
-                readOnly: true,
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomTextField(
-                      controller: TextEditingController(),
-                      hintText: 'Report Number ',
-                      width: screenWidth * 0.2),
-                  CustomTextField(
-                      controller: _dateController,
-                      readOnly: true,
-                      hintText: 'Report Date ',
-                      width: screenWidth * 0.2),
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomTextField(
-                      hintText: 'Sample Date ', width: screenWidth * 0.2),
-                  CustomTextField(
-                      hintText: 'Sample Collected Date ',
-                      width: screenWidth * 0.2)
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.04),
-              SizedBox(
-                width: screenWidth * 0.5,
-                child: CustomDropdown(
-                  label: "Refer by Doctor's Name",
-                  items: ['Dr.1', 'Dr.2', 'Dr.3', 'Dr.4', 'Dr.5'],
-                  selectedItem: selectedValue,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedValue = value!;
-                    });
-                  },
-                ),
-              ),
+
+
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
                 editableColumns: ['Values'],
@@ -323,12 +366,33 @@ class _PatientReport extends State<PatientReport> {
                   SizedBox(
                     width: screenWidth * 0.05,
                   ),
-                  CustomButton(
-                      label: 'Submit',
-                      onPressed: () async {
-                        await submitData();
-                      },
-                      width: screenWidth * 0.1)
+                  Column(
+                    children: [
+                      isLoading
+                          ? SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Submit',
+                              onPressed: () {
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                submitData().then((_) {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                });
+                              },
+                              width: screenWidth * 0.1,
+                            ),
+                    ],
+                  )
                 ],
               ),
             ],

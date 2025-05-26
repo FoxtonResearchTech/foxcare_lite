@@ -6,6 +6,7 @@ import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -40,6 +41,7 @@ class _LabAccountsState extends State<LabAccounts> {
     'Collected',
     'Balance',
   ];
+  bool isLoading = false;
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData({
@@ -262,7 +264,7 @@ class _LabAccountsState extends State<LabAccounts> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    padding: EdgeInsets.only(top: screenWidth * 0.01),
                     child: Column(
                       children: [
                         CustomText(
@@ -297,6 +299,7 @@ class _LabAccountsState extends State<LabAccounts> {
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
+                /*
                   CustomTextField(
                     onTap: () => _selectDate(context, _dateController),
                     icon: Icon(Icons.date_range),
@@ -316,6 +319,7 @@ class _LabAccountsState extends State<LabAccounts> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
+                 */
                   CustomTextField(
                     onTap: () => _selectDate(context, _fromDateController),
                     icon: Icon(Icons.date_range),
@@ -332,17 +336,42 @@ class _LabAccountsState extends State<LabAccounts> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  Row(
+                    children: [
+
+                      isLoading ?
+                        Padding(
+                          padding: const EdgeInsets.only(left: 12.0),
+                          child: SizedBox(
+                            height: 40,
+                            width: 40,
+                            child: Lottie.asset(
+                              'assets/button_loading.json', // replace with your actual path
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ): CustomButton(
+                        label:'Search',
+                        onPressed: () {
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          fetchData(
+                            fromDate: _fromDateController.text,
+                            toDate: _toDateController.text,
+                          ).then((_) {
+                            setState(() {
+                              isLoading = false;
+                            });
+                          });
+                        },
+                        width: screenWidth * 0.1,
+                        height: screenHeight * 0.045,
+                      ),
+                    ],
+                  )
+
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 
 void CustomSnackBar(
-  BuildContext context, {
-  required String message,
-  Color backgroundColor = Colors.grey,
-  IconData? icon,
-  double iconSize = 24.0,
-  double fontSize = 16.0,
-  FontWeight fontWeight = FontWeight.bold,
-  Duration duration = const Duration(seconds: 3),
-}) {
+    BuildContext context, {
+      required String message,
+      Color backgroundColor = Colors.grey,
+      IconData? icon,
+      double iconSize = 24.0,
+      double fontSize = 16.0,
+      FontWeight fontWeight = FontWeight.bold,
+      Duration duration = const Duration(seconds: 3),
+    }) {
   final overlay = Overlay.of(context);
   late OverlayEntry overlayEntry;
 
   final screenWidth = MediaQuery.of(context).size.width;
-  final screenHeight = MediaQuery.of(context).size.height;
 
   overlayEntry = OverlayEntry(
     builder: (context) {
@@ -70,16 +69,19 @@ class SlideDownSnackBar extends StatefulWidget {
 }
 
 class _SlideDownSnackBarState extends State<SlideDownSnackBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with TickerProviderStateMixin {
+  late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+
+  late AnimationController _progressController;
+  late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _slideController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
@@ -87,23 +89,37 @@ class _SlideDownSnackBarState extends State<SlideDownSnackBar>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack));
 
     _fadeAnimation = CurvedAnimation(
-      parent: _controller,
+      parent: _slideController,
       curve: Curves.easeIn,
     );
 
-    _controller.forward();
+    _progressController = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    );
+
+    _progressAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(_progressController)
+      ..addListener(() {
+        setState(() {});
+      });
+
+    _slideController.forward();
+    _progressController.forward();
 
     Future.delayed(widget.duration, () {
-      _controller.reverse().then((_) => widget.onDismiss());
+      _slideController.reverse().then((_) {
+        widget.onDismiss();
+      });
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _slideController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -114,7 +130,6 @@ class _SlideDownSnackBarState extends State<SlideDownSnackBar>
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: widget.backgroundColor,
             borderRadius: BorderRadius.circular(8),
@@ -122,18 +137,37 @@ class _SlideDownSnackBarState extends State<SlideDownSnackBar>
               BoxShadow(color: Colors.black26, blurRadius: 8),
             ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.icon != null)
-                Icon(widget.icon, color: Colors.white, size: widget.iconSize),
-              if (widget.icon != null) const SizedBox(width: 10),
-              Expanded(
-                child: Center(
-                  child: CustomText(
-                    text: widget.message,
-                    color: Colors.white,
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    if (widget.icon != null)
+                      Icon(widget.icon, color: Colors.white, size: widget.iconSize),
+                    if (widget.icon != null) const SizedBox(width: 10),
+                    Expanded(
+                      child: Center(
+                        child: CustomText(
+                          text: widget.message,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(8),
+                ),
+                child: LinearProgressIndicator(
+                  value: _progressAnimation.value,
+                  backgroundColor: Colors.white24,
+                  color: Colors.white,
+                  minHeight: 3,
                 ),
               ),
             ],

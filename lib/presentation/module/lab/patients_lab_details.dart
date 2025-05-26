@@ -8,6 +8,7 @@ import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
@@ -30,6 +31,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
   final TextEditingController opNumberSearch = TextEditingController();
   final TextEditingController phoneNumberSearch = TextEditingController();
   int selectedIndex = 1;
+  bool _isSearching = false;
+
   final List<String> headers1 = [
     'Token NO',
     'OP Ticket',
@@ -271,7 +274,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    padding: EdgeInsets.only(top: screenWidth * 0.01),
                     child: Column(
                       children: [
                         CustomText(
@@ -298,33 +301,92 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SizedBox(width: screenHeight * 0.1),
-                  CustomTextField(
-                    controller: opNumberSearch,
-                    hintText: 'OP Number',
-                    width: screenWidth * 0.1,
-                  ),
-                  CustomTextField(
-                    controller: phoneNumberSearch,
-                    hintText: 'Mobile Number',
-                    width: screenWidth * 0.1,
-                  ),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      final opNumber = opNumberSearch.text.trim();
-                      final phone = phoneNumberSearch.text.trim();
 
-                      await fetchData(
-                        patientID: opNumber.isNotEmpty ? opNumber : null,
-                        phoneNumber: phone.isNotEmpty ? phone : null,
-                      );
-                    },
-                    width: screenWidth * 0.1,
-                    height: screenHeight * 0.045,
+                  // OP Number
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "OP Number",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: Colors.black87),
+                      ),
+                      SizedBox(height: 5),
+                      CustomTextField(
+                        controller: opNumberSearch,
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                      ),
+                    ],
                   ),
+
+                  // Mobile Number
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Mobile Number",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: Colors.black87),
+                      ),
+                      SizedBox(height: 5),
+                      CustomTextField(
+                        controller: phoneNumberSearch,
+                        hintText: '',
+                        width: screenWidth * 0.2,
+                      ),
+                    ],
+                  ),
+
+                  // Search Button aligned vertically with text fields
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 21), // Adjust as needed to align with TextFields
+                      _isSearching
+                          ? SizedBox(
+                        width: screenWidth * 0.1,
+                        height: screenHeight * 0.045,
+                        child: Center(
+                          child: Lottie.asset(
+                        'assets/button_loading.json', // Customize color if needed
+                          ),
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() {
+                            _isSearching = true;
+                          });
+
+                          final opNumber = opNumberSearch.text.trim();
+                          final phone = phoneNumberSearch.text.trim();
+
+                          await fetchData(
+                            patientID: opNumber.isNotEmpty ? opNumber : null,
+                            phoneNumber: phone.isNotEmpty ? phone : null,
+                          );
+
+                          setState(() {
+                            _isSearching = false;
+                          });
+                        },
+                        width: screenWidth * 0.1,
+                        height: screenHeight * 0.045,
+                      ),
+
+                    ],
+                  ),
+
                   SizedBox(width: screenHeight * 0.1),
                 ],
               ),
+
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
                 headerBackgroundColor: AppColors.blue,
