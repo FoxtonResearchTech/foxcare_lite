@@ -135,6 +135,8 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                 await historyData(
                     opNumber: data['opNumber'].toString(),
                     opTicket: ticketData['opTicket'].toString());
+                paymentDetails.clear();
+
                 double originalCollected = double.tryParse(
                         ticketData['opTicketCollectedAmount']?.toString() ??
                             '0') ??

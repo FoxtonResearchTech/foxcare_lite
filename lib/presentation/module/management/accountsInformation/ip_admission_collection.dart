@@ -167,6 +167,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                         ticketData['ipAdmissionTotalAmount']?.toString() ??
                             '0') ??
                     0.0;
+                paymentDetails.clear();
 
                 setState(() {
                   _originalCollected = originalCollected;
