@@ -185,7 +185,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                   builder: (BuildContext context) {
                     return AlertDialog(
                       title: const CustomText(
-                        text: 'Payment Details Details',
+                        text: 'Payment Details',
                         size: 26,
                       ),
                       content: Container(
@@ -805,6 +805,10 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                 headerColor: Colors.white,
                 tableData: tableData,
                 headers: headers,
+                columnWidths: {
+                  2: FixedColumnWidth(screenWidth * 0.1),
+                  3: FixedColumnWidth(screenWidth * 0.1),
+                },
               ),
               Container(
                 width: screenWidth,

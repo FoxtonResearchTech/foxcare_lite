@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
+import 'package:foxcare_lite/utilities/constants.dart';
 import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 
@@ -43,16 +44,18 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
   TextEditingController phone = TextEditingController();
   TextEditingController city = TextEditingController();
   TextEditingController description = TextEditingController();
-  TextEditingController amount = TextEditingController();
-  TextEditingController collected = TextEditingController();
-  TextEditingController balanceAmount = TextEditingController();
 
   TextEditingController payedDate = TextEditingController();
-  TextEditingController chequeNo = TextEditingController();
-  TextEditingController transactionId = TextEditingController();
 
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController currentlyPayingAmount = TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
   String? selectedPaymentMode;
-
+  double _originalCollected = 0.0;
+  final dateTime = DateTime.now();
   DateTime now = DateTime.now();
   final List<String> headers = [
     'Purchase Date',
@@ -64,12 +67,19 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
     'Amount',
     'Collected',
     'Balance',
-    'Payed Date',
-    'Payment Mode',
-    'Cheque NO',
-    'Transaction ID',
+    'Transactions',
   ];
   List<Map<String, dynamic>> tableData = [];
+
+  final List<String> historyHeaders = [
+    'Payment Mode',
+    'Payment Details',
+    'Payed Date',
+    'Payed Time',
+    'Collected',
+    'Balance',
+  ];
+  List<Map<String, dynamic>> historyTableData = [];
 
   Future<void> addBill() async {
     if (purchaseDate.text.isEmpty || payedDate.text.isEmpty) {
@@ -79,33 +89,108 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
     }
 
     try {
-      Map<String, dynamic> data = {
+      Map<String, dynamic> billData = {
         'purchaseDate': purchaseDate.text,
         'billNo': billNo.text,
         'fromParty': fromParty.text,
         'phone': phone.text,
         'city': city.text,
         'description': description.text,
-        'amount': amount.text,
-        'collected': collected.text,
-        'balance': balanceAmount.text,
+        'amount': totalAmountController.text,
+        'collected': collectedAmountController.text,
+        'balance': balanceController.text,
         'payedDate': payedDate.text,
-        'paymentMode': selectedPaymentMode,
-        'chequeNo': chequeNo.text,
-        'transactionId': transactionId.text,
       };
-      await FirebaseFirestore.instance
+
+      DocumentReference billRef = FirebaseFirestore.instance
           .collection('hospital')
           .doc('purchase')
           .collection('directPurchase')
-          .doc()
-          .set(data);
+          .doc();
+
+      await billRef.set(billData);
+
+      await billRef.collection('payments').add({
+        'collected': collectedAmountController.text,
+        'balance': balanceController.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
+
       clear();
       CustomSnackBar(context,
           message: 'Bill Added Successfully', backgroundColor: Colors.green);
     } catch (e) {
       CustomSnackBar(context,
           message: 'Failed to Add Bill', backgroundColor: Colors.red);
+    }
+  }
+
+  Future<void> historyData({required String docId}) async {
+    try {
+      DocumentReference patientDoc = FirebaseFirestore.instance
+          .collection('hospital')
+          .doc('purchase')
+          .collection('directPurchase')
+          .doc(docId);
+
+      QuerySnapshot snapshot = await patientDoc.collection('payments').get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          historyTableData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+
+        fetchedData.add({
+          'Payment Mode': data['paymentMode']?.toString() ?? 'N/A',
+          'Payment Details': data['paymentDetails']?.toString() ?? 'N/A',
+          'Payed Date': data['payedDate']?.toString() ?? 'N/A',
+          'Payed Time': data['payedTime']?.toString() ?? 'N/A',
+          'Collected': data['collected']?.toString() ?? 'N/A',
+          'Balance': data['balance']?.toString() ?? 'N/A',
+        });
+      }
+
+      fetchedData.sort((a, b) {
+        String formatTime(String time) {
+          List<String> parts = time.split(':');
+          String hour = parts[0].padLeft(2, '0');
+          String minute = parts.length > 1 ? parts[1] : '00';
+          return '$hour:$minute';
+        }
+
+        String dateTimeStrA =
+            '${a['Payed Date']} ${formatTime(a['Payed Time'])}';
+        String dateTimeStrB =
+            '${b['Payed Date']} ${formatTime(b['Payed Time'])}';
+
+        DateTime dateTimeA = DateTime.tryParse(dateTimeStrA) ?? DateTime(0);
+        DateTime dateTimeB = DateTime.tryParse(dateTimeStrB) ?? DateTime(0);
+
+        return dateTimeA.compareTo(dateTimeB);
+      });
+
+      setState(() {
+        historyTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
     }
   }
 
@@ -160,10 +245,71 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
           'Amount': opAmount,
           'Collected': opAmountCollected,
           'Balance': balance,
-          'Payed Date': data['payedDate'],
-          'Payment Mode': data['paymentMode'],
-          'Cheque NO': data['chequeNo'],
-          'Transaction ID': data['transactionId'],
+          'Transactions': TextButton(
+            onPressed: () async {
+              await historyData(docId: doc.id.toString());
+
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const CustomText(
+                      text: 'Payment History',
+                      size: 26,
+                    ),
+                    content: Container(
+                      width: 750,
+                      height: 300,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'History Of Payments',
+                              size: 20,
+                            ),
+                            SizedBox(height: 10),
+                            if (historyTableData.isNotEmpty) ...[
+                              CustomDataTable(
+                                  headers: historyHeaders,
+                                  tableData: historyTableData),
+                            ],
+                            if (historyTableData.isEmpty) ...[
+                              Center(
+                                child: Column(
+                                  children: [
+                                    SizedBox(height: 100),
+                                    CustomText(text: 'No Payment History'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: CustomText(
+                          text: 'Close',
+                          color: AppColors.secondaryColor,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ).then((_) {
+                historyTableData.clear();
+              });
+            },
+            child: CustomText(
+              text: 'View',
+              color: AppColors.blue,
+            ),
+          ),
         });
       }
 
@@ -176,11 +322,11 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
   }
 
   void _updateBalance() {
-    double totalAmount = double.tryParse(amount.text) ?? 0.0;
-    double paidAmount = double.tryParse(collected.text) ?? 0.0;
+    double totalAmount = double.tryParse(totalAmountController.text) ?? 0.0;
+    double paidAmount = double.tryParse(collectedAmountController.text) ?? 0.0;
     double balance = totalAmount - paidAmount;
 
-    balanceAmount.text = balance.toStringAsFixed(2);
+    balanceController.text = balance.toStringAsFixed(2);
   }
 
   Future<void> _selectDate(
@@ -246,13 +392,13 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
     phone.clear();
     city.clear();
     description.clear();
-    amount.clear();
-    collected.clear();
-    balanceAmount.clear();
     payedDate.clear();
-    chequeNo.clear();
-    transactionId.clear();
     selectedPaymentMode = '';
+    totalAmountController.clear();
+    collectedAmountController.clear();
+    currentlyPayingAmount.clear();
+    balanceController.clear();
+    paymentDetails.clear();
   }
 
   @override
@@ -261,8 +407,8 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
     _totalAmountCollected();
     _totalCollected();
     _totalBalance();
-    amount.addListener(_updateBalance);
-    collected.addListener(_updateBalance);
+    totalAmountController.addListener(_updateBalance);
+    collectedAmountController.addListener(_updateBalance);
     super.initState();
   }
 
@@ -272,12 +418,12 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
     _dateController.dispose();
     _toDateController.dispose();
     _fromDateController.dispose();
-    amount.dispose();
-    collected.dispose();
-    balanceAmount.dispose();
+    totalAmountController.dispose();
+    collectedAmountController.dispose();
+    currentlyPayingAmount.dispose();
+    balanceController.dispose();
+    paymentDetails.dispose();
     payedDate.dispose();
-    chequeNo.dispose();
-    transactionId.dispose();
     purchaseDate.dispose();
     billNo.dispose();
     fromParty.dispose();
@@ -467,7 +613,8 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            title: Text('Add Product'),
+                            title: CustomText(
+                                text: 'Add Bill', size: screenWidth * 0.017),
                             content: Container(
                               width: screenWidth * 0.5,
                               height: screenHeight * 0.5,
@@ -492,23 +639,58 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                                                     MainAxisAlignment
                                                         .spaceBetween,
                                                 children: [
-                                                  CustomTextField(
-                                                    onTap: () => _selectDate(
-                                                        context, purchaseDate),
-                                                    icon:
-                                                        Icon(Icons.date_range),
-                                                    controller: purchaseDate,
-                                                    hintText: 'Purchase Date',
-                                                    width: screenWidth * 0.15,
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Purchase Date',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        onTap: () =>
+                                                            _selectDate(context,
+                                                                purchaseDate),
+                                                        icon: Icon(
+                                                            Icons.date_range),
+                                                        controller:
+                                                            purchaseDate,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.15,
+                                                      ),
+                                                    ],
                                                   ),
-                                                  CustomTextField(
-                                                    onTap: () => _selectDate(
-                                                        context, payedDate),
-                                                    icon:
-                                                        Icon(Icons.date_range),
-                                                    controller: payedDate,
-                                                    hintText: 'Payed Date',
-                                                    width: screenWidth * 0.15,
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Payed Date',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        onTap: () =>
+                                                            _selectDate(context,
+                                                                payedDate),
+                                                        icon: Icon(
+                                                            Icons.date_range),
+                                                        controller: payedDate,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.15,
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -517,15 +699,47 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                                                     MainAxisAlignment
                                                         .spaceBetween,
                                                 children: [
-                                                  CustomTextField(
-                                                    controller: billNo,
-                                                    hintText: 'Bill NO',
-                                                    width: screenWidth * 0.2,
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Bill No',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller: billNo,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                      ),
+                                                    ],
                                                   ),
-                                                  CustomTextField(
-                                                    controller: fromParty,
-                                                    hintText: 'From Party',
-                                                    width: screenWidth * 0.2,
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'From Party',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller: fromParty,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -534,88 +748,185 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                                                     MainAxisAlignment
                                                         .spaceBetween,
                                                 children: [
-                                                  SizedBox(
-                                                    width: screenWidth * 0.15,
-                                                    child: CustomDropdown(
-                                                      label: 'Payment Type',
-                                                      items: const [
-                                                        'UPI',
-                                                        'Net Banking',
-                                                        'Credit card',
-                                                        'Debit Card',
-                                                      ],
-                                                      selectedItem:
-                                                          selectedPaymentMode,
-                                                      onChanged: (value) {
-                                                        setState(
-                                                          () {
-                                                            selectedPaymentMode =
-                                                                value;
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'City',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller: city,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Phone Number',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller: phone,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Total Amount',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller:
+                                                            totalAmountController,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.15,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Collected',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller:
+                                                            collectedAmountController,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.15,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Balance',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller:
+                                                            balanceController,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.15,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Payment Type',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      SizedBox(
+                                                        height:
+                                                            screenHeight * 0.04,
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                        child: CustomDropdown(
+                                                          label: '',
+                                                          items: Constants
+                                                              .paymentMode,
+                                                          selectedItem:
+                                                              selectedPaymentMode,
+                                                          onChanged: (value) {
+                                                            setState(
+                                                              () {
+                                                                selectedPaymentMode =
+                                                                    value;
+                                                              },
+                                                            );
                                                           },
-                                                        );
-                                                      },
-                                                    ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  CustomTextField(
-                                                    controller: amount,
-                                                    hintText: 'Total Amount',
-                                                    width: screenWidth * 0.15,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: collected,
-                                                    hintText: 'Collected',
-                                                    width: screenWidth * 0.15,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: city,
-                                                    hintText: 'City',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: phone,
-                                                    hintText: 'Phone Number',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: chequeNo,
-                                                    hintText: 'Cheque NO',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: transactionId,
-                                                    hintText: 'Transaction Id',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: description,
-                                                    hintText: 'Description',
-                                                    width: screenWidth * 0.25,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: balanceAmount,
-                                                    hintText: 'Balance',
-                                                    width: screenWidth * 0.2,
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Payment Details',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller:
+                                                            paymentDetails,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.2,
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -663,6 +974,9 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                 headerColor: Colors.white,
                 tableData: tableData,
                 headers: headers,
+                columnWidths: {
+                  5: FixedColumnWidth(screenWidth * 0.1),
+                },
               ),
               Container(
                 width: screenWidth,

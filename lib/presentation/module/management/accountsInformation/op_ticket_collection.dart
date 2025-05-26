@@ -160,7 +160,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                   builder: (BuildContext context) {
                     return AlertDialog(
                       title: const CustomText(
-                        text: 'Payment Details Details',
+                        text: 'Payment Details ',
                         size: 26,
                       ),
                       content: Container(

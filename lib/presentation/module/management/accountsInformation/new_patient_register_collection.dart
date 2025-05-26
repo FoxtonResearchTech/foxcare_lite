@@ -10,6 +10,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
+import 'package:foxcare_lite/utilities/constants.dart';
 import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 
 import 'package:iconsax/iconsax.dart';
@@ -268,7 +269,7 @@ class _NewPatientRegisterCollection
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: const CustomText(
-                      text: 'Payment Details Details',
+                      text: 'Payment Details ',
                       size: 26,
                     ),
                     content: Container(
@@ -360,13 +361,7 @@ class _NewPatientRegisterCollection
                                       width: 175,
                                       child: CustomDropdown(
                                         label: '',
-                                        items: const [
-                                          'UPI',
-                                          'Credit Card',
-                                          'Debit Card',
-                                          'Net Banking',
-                                          'Cash'
-                                        ],
+                                        items: Constants.paymentMode,
                                         onChanged: (value) {
                                           setState(
                                             () {
