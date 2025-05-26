@@ -87,6 +87,16 @@ class _NewPatientRegisterCollection
     required String paymentMode,
     required String payingAmount,
   }) async {
+    if (selectedPaymentMode == null ||
+        paymentDetails.text.isEmpty ||
+        currentlyPayingAmount.text.isEmpty) {
+      CustomSnackBar(
+        context,
+        message: "Please fill all the required fields",
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
     try {
       await FirebaseFirestore.instance
           .collection('patients')
@@ -115,6 +125,8 @@ class _NewPatientRegisterCollection
             ':' +
             dateTime.minute.toString().padLeft(2, '0'),
       });
+      fetchData();
+      Navigator.of(context).pop();
       CustomSnackBar(context,
           message: "Payment Updated Successfully",
           backgroundColor: Colors.green);

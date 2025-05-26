@@ -29,7 +29,7 @@ class PatientRegistration extends StatefulWidget {
 }
 
 class _PatientRegistrationState extends State<PatientRegistration> {
-  final dateTime = DateTime.timestamp();
+  final dateTime = DateTime.now();
 
   int selectedIndex = 1;
   String? selectedSex;
