@@ -126,7 +126,7 @@ class _ManagementAccountsDrawer extends State<ManagementAccountsDrawer> {
             },
           ),
           DrawerMenuItem(
-            title: 'Lab Collection',
+            title: 'OP Lab Collection',
             icon: Iconsax.add_circle,
             onTap: () {
               navigateWithTransition(context, LabCollection());

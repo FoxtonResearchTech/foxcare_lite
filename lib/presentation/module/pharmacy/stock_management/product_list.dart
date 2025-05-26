@@ -24,12 +24,12 @@ class _ProductListState extends State<ProductList> {
   final TextEditingController _productName = TextEditingController();
   final TextEditingController _composition = TextEditingController();
   final TextEditingController _companyName = TextEditingController();
-  final TextEditingController _referredByDoctor = TextEditingController();
   final TextEditingController _additionalInformation = TextEditingController();
   String? selectedCategoryFilter;
   String productName = '';
   String companyName = '';
-
+  List<String> doctors = [];
+  String? selectedDoctor;
   final List<String> headers = [
     'Product Name',
     'Category',
@@ -42,6 +42,24 @@ class _ProductListState extends State<ProductList> {
 
   List<Map<String, dynamic>> filteredProducts = [];
   String? selectedCategory;
+  void fetchDoctors() async {
+    final employeesSnapshot =
+        await FirebaseFirestore.instance.collection('employees').get();
+
+    for (var doc in employeesSnapshot.docs) {
+      if (doc['roles'] == 'Doctor') {
+        final firstName = doc['firstName'] ?? '';
+        final lastName = doc['lastName'] ?? '';
+        final doctorName = '$firstName $lastName';
+
+        if (!doctors.contains(doctorName)) {
+          setState(() {
+            doctors.add(doctorName);
+          });
+        }
+      }
+    }
+  }
 
   Future<void> updateProduct(String docId) async {
     try {
@@ -50,7 +68,7 @@ class _ProductListState extends State<ProductList> {
         'composition': _composition.text,
         'category': selectedCategory,
         'companyName': _companyName.text,
-        'referredByDoctor': _referredByDoctor.text,
+        'referredByDoctor': selectedDoctor,
         'additionalInformation': _additionalInformation.text,
       };
       await FirebaseFirestore.instance
@@ -96,8 +114,7 @@ class _ProductListState extends State<ProductList> {
                 _productName.text = selectedProduct['productName'] ?? '';
                 _composition.text = selectedProduct['composition'] ?? '';
                 _companyName.text = selectedProduct['companyName'] ?? '';
-                _referredByDoctor.text =
-                    selectedProduct['referredByDoctor'] ?? '';
+                selectedDoctor = selectedProduct['referredByDoctor'] ?? '';
                 _additionalInformation.text =
                     selectedProduct['additionalInformation'] ?? '';
 
@@ -123,8 +140,8 @@ class _ProductListState extends State<ProductList> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Container(
-                                    width: 500,
-                                    height: 300,
+                                    width: 600,
+                                    height: 325,
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -135,34 +152,57 @@ class _ProductListState extends State<ProductList> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            PharmacyTextField(
-                                              controller: _productName,
-                                              hintText: 'Product Name',
-                                              width: 200,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text: 'Product Name',
+                                                  size: 20,
+                                                ),
+                                                SizedBox(height: 7),
+                                                PharmacyTextField(
+                                                  controller: _productName,
+                                                  hintText: '',
+                                                  width: 200,
+                                                ),
+                                              ],
                                             ),
-                                            SizedBox(
-                                              width: 200,
-                                              child: PharmacyDropDown(
-                                                  label: 'Category',
-                                                  items: const [
-                                                    'Tablets',
-                                                    'Capsules',
-                                                    'Powders',
-                                                    'Solutions',
-                                                    'Suspensions',
-                                                    'Topical Medicines',
-                                                    'Suppository',
-                                                    'Injections',
-                                                    'Inhales',
-                                                    'Patches',
-                                                  ],
-                                                  selectedItem:
-                                                      selectedCategory,
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      selectedCategory = value;
-                                                    });
-                                                  }),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text: 'Category',
+                                                  size: 20,
+                                                ),
+                                                SizedBox(height: 7),
+                                                SizedBox(
+                                                  width: 200,
+                                                  child: PharmacyDropDown(
+                                                      label: '',
+                                                      items: const [
+                                                        'Tablets',
+                                                        'Capsules',
+                                                        'Powders',
+                                                        'Solutions',
+                                                        'Suspensions',
+                                                        'Topical Medicines',
+                                                        'Suppository',
+                                                        'Injections',
+                                                        'Inhales',
+                                                        'Patches',
+                                                      ],
+                                                      selectedItem:
+                                                          selectedCategory,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          selectedCategory =
+                                                              value;
+                                                        });
+                                                      }),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -170,15 +210,36 @@ class _ProductListState extends State<ProductList> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            PharmacyTextField(
-                                              controller: _composition,
-                                              hintText: 'Composition',
-                                              width: 200,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text: 'Composition',
+                                                  size: 20,
+                                                ),
+                                                SizedBox(height: 7),
+                                                PharmacyTextField(
+                                                  controller: _composition,
+                                                  hintText: '',
+                                                  width: 200,
+                                                ),
+                                              ],
                                             ),
-                                            PharmacyTextField(
-                                              controller: _companyName,
-                                              hintText: 'Company Name',
-                                              width: 200,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text: 'Company Name',
+                                                  size: 20,
+                                                ),
+                                                SizedBox(height: 7),
+                                                PharmacyTextField(
+                                                    controller: _companyName,
+                                                    hintText: '',
+                                                    width: 200),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -186,20 +247,50 @@ class _ProductListState extends State<ProductList> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            PharmacyTextField(
-                                              controller: _referredByDoctor,
-                                              hintText: 'Referred by Doctor',
-                                              width: 200,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text: 'Referred by Doctor',
+                                                  size: 20,
+                                                ),
+                                                SizedBox(height: 7),
+                                                SizedBox(
+                                                  width: 200,
+                                                  child: PharmacyDropDown(
+                                                      label: '',
+                                                      items: doctors,
+                                                      selectedItem:
+                                                          selectedDoctor,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          selectedDoctor =
+                                                              value;
+                                                        });
+                                                      }),
+                                                ),
+                                              ],
                                             ),
-                                            PharmacyTextField(
-                                              controller:
-                                                  _additionalInformation,
-                                              hintText:
-                                                  'Additional Information',
-                                              width: 200,
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text:
+                                                      'Additional Information',
+                                                  size: 20,
+                                                ),
+                                                SizedBox(height: 7),
+                                                PharmacyTextField(
+                                                    controller:
+                                                        _additionalInformation,
+                                                    hintText: '',
+                                                    width: 200),
+                                              ],
                                             ),
                                           ],
-                                        ),
+                                        )
                                       ],
                                     ),
                                   ),
@@ -253,7 +344,7 @@ class _ProductListState extends State<ProductList> {
   void initState() {
     super.initState();
     fetchData();
-
+    fetchDoctors();
     filteredProducts = List.from(allProducts);
   }
 
@@ -262,7 +353,7 @@ class _ProductListState extends State<ProductList> {
     _composition.clear();
 
     _companyName.clear();
-    _referredByDoctor.clear();
+    selectedDoctor = null;
     _additionalInformation.clear();
   }
 

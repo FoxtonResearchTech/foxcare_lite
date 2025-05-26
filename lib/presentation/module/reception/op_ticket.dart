@@ -27,7 +27,7 @@ class OpTicketPage extends StatefulWidget {
 }
 
 class _OpTicketPageState extends State<OpTicketPage> {
-  final dateTime = DateTime.timestamp();
+  final dateTime = DateTime.now();
   int selectedIndex = 2;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
@@ -214,9 +214,28 @@ class _OpTicketPageState extends State<OpTicketPage> {
         'opTicketTotalAmount': opTicketTotalAmount.text,
         'opTicketCollectedAmount': opTicketCollectedAmount.text,
         'opTicketBalance': opTicketBalance.text,
-        'paymentDetails': paymentDetails.text,
-        'paymentMode': selectedPaymentMode,
         'otherComments': otherComments.text,
+      });
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(selectedPatientId)
+          .collection('opTickets')
+          .doc(opTicketId)
+          .collection('opTicketPayments')
+          .doc()
+          .set({
+        'collected': opTicketCollectedAmount.text,
+        'balance': opTicketBalance.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
       });
       showDialog(
         context: context,
@@ -1582,13 +1601,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                                 child: CustomDropdown(
                                   width: screenWidth * 0.05,
                                   label: '',
-                                  items: const [
-                                    'UPI',
-                                    'Credit Card',
-                                    'Debit Card',
-                                    'Net Banking',
-                                    'Cash'
-                                  ],
+                                  items: Constants.paymentMode,
                                   onChanged: (value) {
                                     setState(
                                       () {

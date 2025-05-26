@@ -32,6 +32,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
   final TextEditingController phoneNumberSearch = TextEditingController();
   int selectedIndex = 1;
   bool _isSearching = false;
+  DateTime dateTime = DateTime.now();
 
   final List<String> headers1 = [
     'Token NO',
@@ -64,6 +65,10 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 
   Future<void> fetchData({String? patientID, String? phoneNumber}) async {
     try {
+      final DateTime now = DateTime.now();
+      final String todayDate =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
       final QuerySnapshot patientSnapshot =
           await FirebaseFirestore.instance.collection('patients').get();
 
@@ -72,12 +77,19 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
       for (var patientDoc in patientSnapshot.docs) {
         final patientData = patientDoc.data() as Map<String, dynamic>;
 
-        // Filter by phoneNumber at patient level
+        // Filter by phone number
         if (phoneNumber != null && phoneNumber.isNotEmpty) {
           if ((patientData['phone1'] ?? '') != phoneNumber &&
               (patientData['phone2'] ?? '') != phoneNumber) {
             continue;
           }
+        }
+
+        // Filter by opNumber (patientID)
+        if (patientID != null &&
+            patientID.isNotEmpty &&
+            (patientData['opNumber'] ?? '') != patientID) {
+          continue;
         }
 
         final opTicketsSnapshot = await FirebaseFirestore.instance
@@ -91,17 +103,26 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 
           if (!data.containsKey('opTicket')) continue;
 
-          if (patientID != null && patientID.isNotEmpty) {
-            if ((data['opTicket'] ?? '') != patientID) {
-              continue;
-            }
+          // Check for labExaminationPrescribedDate
+          final prescribedDate = data['labExaminationPrescribedDate'] ?? '';
+          final bool isTodayPrescribed = prescribedDate == todayDate;
+
+          // If searching by phone or patientID, don't filter by date
+          final bool skipDateFilter =
+              (patientID != null && patientID.isNotEmpty) ||
+                  (phoneNumber != null && phoneNumber.isNotEmpty);
+
+          if (!skipDateFilter && !isTodayPrescribed) {
+            continue;
           }
 
+          // Skip if Examination is missing
           if (!data.containsKey('Examination') ||
               (data['Examination'] as List).isEmpty) {
             continue;
           }
 
+          // Fetch token number
           String tokenNo = '';
           try {
             final tokenSnapshot = await FirebaseFirestore.instance
@@ -121,6 +142,26 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
             print('Error fetching tokenNo for patient ${patientDoc.id}: $e');
           }
 
+          // Check if sample data exists
+          String? sampleDate;
+          try {
+            final sampleDataDoc = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientDoc.id)
+                .collection('opTickets')
+                .doc(ticketDoc.id)
+                .collection('sampleData')
+                .doc('data')
+                .get();
+
+            if (sampleDataDoc.exists) {
+              sampleDate = sampleDataDoc.data()?['sampleDate'];
+            }
+          } catch (e) {
+            print('Error fetching sampleData: $e');
+          }
+
+          // Prepare table data row
           fetchedData.add({
             'Token NO': tokenNo,
             'OP Ticket': data['opTicket'] ?? 'N/A',
@@ -140,6 +181,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => PatientReport(
+                        sampleDate: sampleDate ?? "N/A",
                         patientID: patientData['opNumber'] ?? 'N/A',
                         opTicket: data['opTicket'] ?? 'N/A',
                         name:
@@ -161,31 +203,34 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   );
                 },
                 child: const CustomText(text: 'Open')),
-            'Sample Data': TextButton(
-                onPressed: () async {
-                  final time = DateFormat('HH:mm:ss').format(DateTime.now());
-                  try {
-                    await FirebaseFirestore.instance
-                        .collection('patients')
-                        .doc(patientDoc.id)
-                        .collection('opTickets')
-                        .doc(ticketDoc.id)
-                        .collection('sampleData')
-                        .doc('data')
-                        .set({
-                      'Time': time,
-                    }, SetOptions(merge: true));
-
-                    CustomSnackBar(context,
-                        message: "Sample Date Entered $time",
-                        backgroundColor: Colors.green);
-                  } catch (e) {
-                    CustomSnackBar(context,
-                        message: 'Failed to save: $e',
-                        backgroundColor: Colors.red);
-                  }
-                },
-                child: const CustomText(text: 'Enter Sample Data'))
+            'Sample Data': sampleDate != null
+                ? const CustomText(text: 'Sample Date Entered')
+                : TextButton(
+                    onPressed: () async {
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('patients')
+                            .doc(patientDoc.id)
+                            .collection('opTickets')
+                            .doc(ticketDoc.id)
+                            .collection('sampleData')
+                            .doc('data')
+                            .set({
+                          'sampleDate': todayDate,
+                          'sampleTime':
+                              "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
+                        }, SetOptions(merge: true));
+                        await fetchData();
+                        CustomSnackBar(context,
+                            message: "Sample Date Entered ",
+                            backgroundColor: Colors.green);
+                      } catch (e) {
+                        CustomSnackBar(context,
+                            message: 'Failed to save: $e',
+                            backgroundColor: Colors.red);
+                      }
+                    },
+                    child: const CustomText(text: 'Enter Sample Data')),
           });
         }
       }
@@ -346,47 +391,48 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 21), // Adjust as needed to align with TextFields
+                      SizedBox(
+                          height:
+                              21), // Adjust as needed to align with TextFields
                       _isSearching
                           ? SizedBox(
-                        width: screenWidth * 0.1,
-                        height: screenHeight * 0.045,
-                        child: Center(
-                          child: Lottie.asset(
-                        'assets/button_loading.json', // Customize color if needed
-                          ),
-                        ),
-                      )
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json', // Customize color if needed
+                                ),
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() {
-                            _isSearching = true;
-                          });
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() {
+                                  _isSearching = true;
+                                });
 
-                          final opNumber = opNumberSearch.text.trim();
-                          final phone = phoneNumberSearch.text.trim();
+                                final opNumber = opNumberSearch.text.trim();
+                                final phone = phoneNumberSearch.text.trim();
 
-                          await fetchData(
-                            patientID: opNumber.isNotEmpty ? opNumber : null,
-                            phoneNumber: phone.isNotEmpty ? phone : null,
-                          );
+                                await fetchData(
+                                  patientID:
+                                      opNumber.isNotEmpty ? opNumber : null,
+                                  phoneNumber: phone.isNotEmpty ? phone : null,
+                                );
 
-                          setState(() {
-                            _isSearching = false;
-                          });
-                        },
-                        width: screenWidth * 0.1,
-                        height: screenHeight * 0.045,
-                      ),
-
+                                setState(() {
+                                  _isSearching = false;
+                                });
+                              },
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
+                            ),
                     ],
                   ),
 
                   SizedBox(width: screenHeight * 0.1),
                 ],
               ),
-
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
                 headerBackgroundColor: AppColors.blue,

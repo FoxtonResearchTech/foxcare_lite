@@ -51,7 +51,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     'Description',
     'Rate',
     'Quantity',
-    'Amount'
+    'Amount',
+    'Delete',
   ];
   List<Map<String, dynamic>> currentIpAdditionalAmountData = [];
   bool validateForm1() {
@@ -306,13 +307,38 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
                   onPressed: () {
                     if (validateForm1()) {
                       setState(() {
-                        currentIpAdditionalAmountData.add({
-                          'SL No': currentIpAdditionalAmountData.length + 1,
-                          'Description': reasonForAdditionalAmount.text,
-                          'Rate': rate.text,
-                          'Quantity': quantity.text,
-                          'Amount': additionalAmount.text,
+                        setState(() {
+                          currentIpAdditionalAmountData.add({
+                            'SL No': currentIpAdditionalAmountData.length + 1,
+                            'Description': reasonForAdditionalAmount.text,
+                            'Rate': rate.text,
+                            'Quantity': quantity.text,
+                            'Amount': additionalAmount.text,
+                            'Delete': null,
+                          });
+
+                          int index = currentIpAdditionalAmountData.length - 1;
+
+                          currentIpAdditionalAmountData[index]['Delete'] =
+                              IconButton(
+                            onPressed: () {
+                              setState(() {
+                                currentIpAdditionalAmountData.removeAt(index);
+                                for (int i = 0;
+                                    i < currentIpAdditionalAmountData.length;
+                                    i++) {
+                                  currentIpAdditionalAmountData[i]['SL No'] =
+                                      i + 1;
+                                }
+                              });
+                              _totalAmount();
+                              totalAmount.text = _totalAmount().toString();
+                            },
+                            icon: Icon(Icons.delete),
+                            color: Colors.red,
+                          );
                         });
+
                         reasonForAdditionalAmount.clear();
                         quantity.clear();
                         rate.clear();

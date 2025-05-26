@@ -16,6 +16,7 @@ import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import '../../../../utilities/colors.dart';
+import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
@@ -49,6 +50,16 @@ class _OtherExpense extends State<OtherExpense> {
   TextEditingController collected = TextEditingController();
   TextEditingController balanceAmount = TextEditingController();
 
+  final TextEditingController totalAmountController = TextEditingController();
+  final TextEditingController collectedAmountController =
+      TextEditingController();
+  final TextEditingController currentlyPayingAmount = TextEditingController();
+  final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+  String? selectedPaymentMode;
+  double _originalCollected = 0.0;
+  final dateTime = DateTime.now();
+
   DateTime now = DateTime.now();
   final List<String> headers = [
     'Bill Date',
@@ -64,8 +75,156 @@ class _OtherExpense extends State<OtherExpense> {
     'Pay'
   ];
   List<Map<String, dynamic>> tableData = [];
+  final List<String> historyHeaders = [
+    'Payment Mode',
+    'Payment Details',
+    'Payed Date',
+    'Payed Time',
+    'Collected',
+    'Balance',
+  ];
+  List<Map<String, dynamic>> historyTableData = [];
+
+  void _payingAmountListener() {
+    double paying = double.tryParse(currentlyPayingAmount.text) ?? 0.0;
+    double total = double.tryParse(totalAmountController.text) ?? 0.0;
+
+    double newCollected = _originalCollected + paying;
+    double newBalance = total - newCollected;
+
+    collectedAmountController.text = newCollected.toStringAsFixed(2);
+    balanceController.text = newBalance.toStringAsFixed(2);
+  }
+
+  Future<void> savePayment({
+    required String docId,
+    required String totalAmount,
+    required String collected,
+    required String balance,
+    required String paymentMode,
+    required String payingAmount,
+  }) async {
+    if (selectedPaymentMode == null ||
+        paymentDetails.text.isEmpty ||
+        currentlyPayingAmount.text.isEmpty) {
+      CustomSnackBar(
+        context,
+        message: "Please fill all the required fields",
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('hospital')
+          .doc('purchase')
+          .collection('otherExpense')
+          .doc(docId)
+          .update({
+        'amount': totalAmount,
+        'collected': collected,
+        'balance': balance,
+      });
+      await FirebaseFirestore.instance
+          .collection('hospital')
+          .doc('purchase')
+          .collection('otherExpense')
+          .doc(docId)
+          .collection('payments')
+          .doc()
+          .set({
+        'collected': payingAmount,
+        'balance': balance,
+        'paymentMode': paymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
+      fetchData();
+      Navigator.of(context).pop();
+      CustomSnackBar(context,
+          message: "Payment Updated Successfully",
+          backgroundColor: Colors.green);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to register patient: $e")),
+      );
+    }
+  }
+
+  Future<void> historyData({required String docId}) async {
+    try {
+      DocumentReference patientDoc = FirebaseFirestore.instance
+          .collection('hospital')
+          .doc('purchase')
+          .collection('otherExpense')
+          .doc(docId);
+
+      QuerySnapshot snapshot = await patientDoc.collection('payments').get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No records found");
+        setState(() {
+          historyTableData = [];
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedData = [];
+
+      for (var doc in snapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+
+        fetchedData.add({
+          'Payment Mode': data['paymentMode']?.toString() ?? 'N/A',
+          'Payment Details': data['paymentDetails']?.toString() ?? 'N/A',
+          'Payed Date': data['payedDate']?.toString() ?? 'N/A',
+          'Payed Time': data['payedTime']?.toString() ?? 'N/A',
+          'Collected': data['collected']?.toString() ?? 'N/A',
+          'Balance': data['balance']?.toString() ?? 'N/A',
+        });
+      }
+
+      fetchedData.sort((a, b) {
+        String formatTime(String time) {
+          List<String> parts = time.split(':');
+          String hour = parts[0].padLeft(2, '0');
+          String minute = parts.length > 1 ? parts[1] : '00';
+          return '$hour:$minute';
+        }
+
+        String dateTimeStrA =
+            '${a['Payed Date']} ${formatTime(a['Payed Time'])}';
+        String dateTimeStrB =
+            '${b['Payed Date']} ${formatTime(b['Payed Time'])}';
+
+        DateTime dateTimeA = DateTime.tryParse(dateTimeStrA) ?? DateTime(0);
+        DateTime dateTimeB = DateTime.tryParse(dateTimeStrB) ?? DateTime(0);
+
+        return dateTimeA.compareTo(dateTimeB);
+      });
+
+      setState(() {
+        historyTableData = fetchedData;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
 
   Future<void> addBill() async {
+    if (billDate.text.isEmpty) {
+      CustomSnackBar(context,
+          message: 'Please Enter Bill Date', backgroundColor: Colors.red);
+      return;
+    }
+
     try {
       Map<String, dynamic> data = {
         'billDate': billDate.text,
@@ -79,13 +238,32 @@ class _OtherExpense extends State<OtherExpense> {
         'collected': collected.text,
         'balance': balanceAmount.text,
       };
-      await FirebaseFirestore.instance
+      DocumentReference billRef = FirebaseFirestore.instance
           .collection('hospital')
           .doc('purchase')
           .collection('otherExpense')
-          .doc()
-          .set(data);
+          .doc();
+
+      await billRef.set(data);
+
+      await billRef.collection('payments').add({
+        'collected': amount.text,
+        'balance': balanceAmount.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
+
       clear();
+      await fetchData();
+
       CustomSnackBar(context,
           message: 'Bill Added Successfully', backgroundColor: Colors.green);
     } catch (e) {
@@ -147,19 +325,218 @@ class _OtherExpense extends State<OtherExpense> {
           'Collected': opAmountCollected.toInt(),
           'Balance': balance.toInt(),
           'Pay': TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await historyData(docId: doc.id.toString());
+              paymentDetails.clear();
+
+              double originalCollected =
+                  double.tryParse(data['collected']?.toString() ?? '0') ?? 0.0;
+              double total =
+                  double.tryParse(data['amount']?.toString() ?? '0') ?? 0.0;
+
+              setState(() {
+                _originalCollected = originalCollected;
+                totalAmountController.text = total.toStringAsFixed(2);
+                collectedAmountController.text =
+                    originalCollected.toStringAsFixed(2);
+                balanceController.text =
+                    (total - originalCollected).toStringAsFixed(2);
+                currentlyPayingAmount.text = '';
+              });
+
+              currentlyPayingAmount.removeListener(_payingAmountListener);
+              currentlyPayingAmount.addListener(_payingAmountListener);
+
               showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return PaymentDialog(
-                      billNo: data['billNo'],
-                      partyName: data['partyName'],
-                      city: data['city'],
-                      balance: balance.toString(),
-                    );
-                  });
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const CustomText(
+                      text: 'Payment Details ',
+                      size: 26,
+                    ),
+                    content: Container(
+                      width: 750,
+                      height: 400,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 25),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const CustomText(
+                                      text: 'Total Amount',
+                                      size: 20,
+                                    ),
+                                    const SizedBox(height: 5),
+                                    CustomTextField(
+                                        readOnly: true,
+                                        controller: totalAmountController,
+                                        hintText: '',
+                                        width: 175),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const CustomText(
+                                      text: 'Collected',
+                                      size: 20,
+                                    ),
+                                    const SizedBox(height: 5),
+                                    CustomTextField(
+                                        readOnly: true,
+                                        controller: collectedAmountController,
+                                        hintText: '',
+                                        width: 175),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const CustomText(
+                                      text: 'Balance',
+                                      size: 20,
+                                    ),
+                                    const SizedBox(height: 5),
+                                    CustomTextField(
+                                        readOnly: true,
+                                        controller: balanceController,
+                                        hintText: '',
+                                        width: 175),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 50),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CustomText(
+                                      text: 'Paying Amount ',
+                                      size: 20,
+                                    ),
+                                    SizedBox(height: 7),
+                                    CustomTextField(
+                                      hintText: '',
+                                      controller: currentlyPayingAmount,
+                                      width: 175,
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CustomText(
+                                      text: 'Payment Mode ',
+                                      size: 20,
+                                    ),
+                                    SizedBox(height: 7),
+                                    SizedBox(
+                                      width: 175,
+                                      child: CustomDropdown(
+                                        label: '',
+                                        items: Constants.paymentMode,
+                                        onChanged: (value) {
+                                          setState(
+                                            () {
+                                              selectedPaymentMode = value;
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CustomText(
+                                      text: 'Payment Details ',
+                                      size: 20,
+                                    ),
+                                    SizedBox(height: 7),
+                                    CustomTextField(
+                                      hintText: '',
+                                      controller: paymentDetails,
+                                      width: 175,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 15),
+                            CustomText(
+                              text: 'History Of Payments',
+                              size: 20,
+                            ),
+                            SizedBox(height: 10),
+                            if (historyTableData.isNotEmpty) ...[
+                              CustomDataTable(
+                                  headers: historyHeaders,
+                                  tableData: historyTableData),
+                            ],
+                            if (historyTableData.isEmpty) ...[
+                              Center(
+                                child: Column(
+                                  children: [
+                                    SizedBox(height: 20),
+                                    CustomText(text: 'No Payment History'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () async {
+                          await savePayment(
+                              docId: doc.id.toString(),
+                              totalAmount:
+                                  totalAmountController.text.toString(),
+                              collected:
+                                  collectedAmountController.text.toString(),
+                              balance: balanceController.text.toString(),
+                              paymentMode: selectedPaymentMode.toString(),
+                              payingAmount:
+                                  currentlyPayingAmount.text.toString());
+                        },
+                        child: CustomText(
+                          text: 'Pay',
+                          color: AppColors.secondaryColor,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: CustomText(
+                          text: 'Close',
+                          color: AppColors.secondaryColor,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ).then((_) {
+                historyTableData.clear();
+              });
             },
-            child: const CustomText(text: 'Pay'),
+            child: CustomText(
+              text: 'Pay',
+              color: AppColors.blue,
+            ),
           ),
         });
       }
@@ -235,7 +612,6 @@ class _OtherExpense extends State<OtherExpense> {
         if (value is String) {
           value = double.tryParse(value) ?? 0.0;
         }
-        // Ensure value is double before conversion to int
         if (value is double) {
           value = value.toInt();
         }
@@ -255,6 +631,9 @@ class _OtherExpense extends State<OtherExpense> {
     collected.clear();
     balanceAmount.clear();
     particular.clear();
+    paymentDetails.clear();
+    currentlyPayingAmount.clear();
+    selectedPaymentMode = null;
   }
 
   @override
@@ -383,8 +762,12 @@ class _OtherExpense extends State<OtherExpense> {
               Row(
                 children: [
                   CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: const Icon(Icons.date_range),
+                    onTap: () {
+                      _selectDate(context, _dateController);
+                      _fromDateController.clear();
+                      _toDateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
                     controller: _dateController,
                     hintText: 'Date',
                     width: screenWidth * 0.15,
@@ -399,19 +782,25 @@ class _OtherExpense extends State<OtherExpense> {
                     height: screenWidth * 0.02,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  const CustomText(text: 'OR'),
+                  CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _fromDateController),
-                    icon: const Icon(Icons.date_range),
+                    onTap: () {
+                      _selectDate(context, _fromDateController);
+                      _dateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _toDateController),
-                    icon: const Icon(Icons.date_range),
+                    onTap: () {
+                      _selectDate(context, _toDateController);
+                      _dateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -434,7 +823,22 @@ class _OtherExpense extends State<OtherExpense> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const CustomText(text: 'Collection Report Of Date'),
+                  if (_dateController.text.isEmpty &&
+                      _fromDateController.text.isEmpty &&
+                      _toDateController.text.isEmpty)
+                    CustomText(text: 'Collection Report Of Date ')
+                  else if (_dateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_dateController.text} ')
+                  else if (_fromDateController.text.isNotEmpty &&
+                      _toDateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
+                  else if (_fromDateController.text.isEmpty ||
+                      _toDateController.text.isEmpty)
+                    SizedBox(),
                   CustomButton(
                     label: 'New Bill Entry',
                     onPressed: () {
@@ -442,10 +846,11 @@ class _OtherExpense extends State<OtherExpense> {
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            title: const Text('Add Bill'),
+                            title: CustomText(
+                                text: 'Add Bill', size: screenWidth * 0.017),
                             content: Container(
+                              height: screenHeight * 0.7,
                               width: screenWidth * 0.5,
-                              height: screenHeight * 0.5,
                               child: SingleChildScrollView(
                                 child: Column(
                                   children: [
@@ -453,114 +858,321 @@ class _OtherExpense extends State<OtherExpense> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Container(
-                                          width: screenWidth * 0.5,
-                                          height: screenHeight * 0.5,
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    onTap: () => _selectDate(
-                                                        context, billDate),
-                                                    icon: const Icon(
-                                                        Icons.date_range),
-                                                    controller: billDate,
-                                                    hintText: 'Bill Date',
-                                                    width: screenWidth * 0.15,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: billNo,
-                                                    hintText: 'Bill NO',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: fromParty,
-                                                    hintText: 'Party Name',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: city,
-                                                    hintText: 'City',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: phone,
-                                                    hintText: 'Phone Number',
-                                                    width: screenWidth * 0.2,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: address,
-                                                    hintText: 'Address',
-                                                    width: screenWidth * 0.25,
-                                                    verticalSize:
-                                                        screenHeight * 0.035,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: particular,
-                                                    hintText: 'Particular',
-                                                    width: screenWidth * 0.5,
-                                                    verticalSize:
-                                                        screenHeight * 0.035,
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: amount,
-                                                    hintText: 'Total Amount',
-                                                    width: screenWidth * 0.12,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: collected,
-                                                    hintText: 'Collected',
-                                                    width: screenWidth * 0.12,
-                                                  ),
-                                                  CustomTextField(
-                                                    controller: balanceAmount,
-                                                    hintText: 'Balance',
-                                                    width: screenWidth * 0.12,
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Bill Date',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      onTap: () => _selectDate(
+                                                          context, billDate),
+                                                      icon: const Icon(
+                                                          Icons.date_range),
+                                                      controller: billDate,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.15,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                                height: screenHeight * 0.01),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Bill No',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: billNo,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.2,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(
+                                                    width: screenWidth * 0.08),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Party name',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: fromParty,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.2,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                                height: screenHeight * 0.01),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'City',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: city,
+                                                      hintText: 'City',
+                                                      width: screenWidth * 0.2,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(
+                                                    width: screenWidth * 0.08),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Phone Number',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: phone,
+                                                      hintText: 'Phone Number',
+                                                      width: screenWidth * 0.2,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                                height: screenHeight * 0.01),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Address',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: address,
+                                                      hintText: 'Address',
+                                                      width: screenWidth * 0.25,
+                                                      verticalSize:
+                                                          screenHeight * 0.035,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                                height: screenHeight * 0.01),
+                                            Row(
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Particular',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: particular,
+                                                      hintText: 'Particular',
+                                                      width: screenWidth * 0.5,
+                                                      verticalSize:
+                                                          screenHeight * 0.035,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                                height: screenHeight * 0.01),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Total Amount',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: amount,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.12,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(
+                                                    width: screenWidth * 0.06),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Collected',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: collected,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.12,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(
+                                                    width: screenWidth * 0.06),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Balance',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller: balanceAmount,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.12,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                                height: screenHeight * 0.01),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Payment Type',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    SizedBox(
+                                                      height:
+                                                          screenHeight * 0.04,
+                                                      width: screenWidth * 0.2,
+                                                      child: CustomDropdown(
+                                                        label: '',
+                                                        items: Constants
+                                                            .paymentMode,
+                                                        selectedItem:
+                                                            selectedPaymentMode,
+                                                        onChanged: (value) {
+                                                          setState(
+                                                            () {
+                                                              selectedPaymentMode =
+                                                                  value;
+                                                            },
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(
+                                                    width: screenWidth * 0.08),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Payment Details',
+                                                      size: screenWidth * 0.012,
+                                                    ),
+                                                    SizedBox(
+                                                        height: screenHeight *
+                                                            0.01),
+                                                    CustomTextField(
+                                                      controller:
+                                                          paymentDetails,
+                                                      hintText: '',
+                                                      width: screenWidth * 0.2,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -570,21 +1182,8 @@ class _OtherExpense extends State<OtherExpense> {
                             ),
                             actions: <Widget>[
                               TextButton(
-                                onPressed: () {
-                                  addBill();
-                                  fetchData();
-                                  showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return PaymentDialog(
-                                          initialBalance: balanceAmount.text,
-                                          initialPayment: true,
-                                          billNo: billNo.text,
-                                          partyName: fromParty.text,
-                                          city: city.text,
-                                          balance: collected.text,
-                                        );
-                                      });
+                                onPressed: () async {
+                                  await addBill();
                                 },
                                 child: CustomText(
                                   text: 'Submit',

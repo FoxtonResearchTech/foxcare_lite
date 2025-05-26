@@ -140,7 +140,6 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
           .collection('stock')
           .doc('Products')
           .collection('AddedProducts')
-          .limit(5)
           .get();
 
       if (addedProductsSnapshot.docs.isEmpty) {
@@ -157,6 +156,7 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       for (var productDoc in addedProductsSnapshot.docs) {
         final productData = productDoc.data();
         final docId = productDoc.id;
+        if (fetchedData.length >= 5) break;
 
         final purchaseEntriesSnapshot = await FirebaseFirestore.instance
             .collection('stock')

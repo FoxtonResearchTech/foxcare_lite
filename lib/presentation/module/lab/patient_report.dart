@@ -11,6 +11,8 @@ import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart'
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../utilities/constants.dart';
+
 class PatientReport extends StatefulWidget {
   final String patientID;
   final String name;
@@ -24,6 +26,8 @@ class PatientReport extends StatefulWidget {
   final String primaryInfo;
   final String temperature;
   final String bloodPressure;
+  final String sampleDate;
+
   final String sugarLevel;
   final List<dynamic> medication;
 
@@ -42,22 +46,30 @@ class PatientReport extends StatefulWidget {
       required this.sex,
       required this.medication,
       required this.dob,
-      required this.opTicket});
+      required this.opTicket,
+      required this.sampleDate});
 
   @override
   State<PatientReport> createState() => _PatientReport();
 }
 
 class _PatientReport extends State<PatientReport> {
-  final TextEditingController reportNo = TextEditingController();
+  final dateTime = DateTime.now();
 
   final TextEditingController totalAmountController = TextEditingController();
   final TextEditingController paidController = TextEditingController();
   final TextEditingController balanceController = TextEditingController();
+  final TextEditingController paymentDetails = TextEditingController();
+
   TextEditingController _dateController = TextEditingController(
     text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
   );
-
+  final TextEditingController _sampleCollectedDateController =
+      TextEditingController(
+    text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+  );
+  String reportNO = '';
+  int newReportNo = 0;
   final List<String> headers1 = [
     'Test Descriptions',
     'Values',
@@ -65,12 +77,14 @@ class _PatientReport extends State<PatientReport> {
     'Reference Range',
   ];
   List<Map<String, dynamic>> tableData1 = [];
+  String? selectedPaymentMode;
 
   String? selectedValue;
 
   @override
   void initState() {
     super.initState();
+    getAndIncrementBillNo();
     totalAmountController.addListener(_updateBalance);
     paidController.addListener(_updateBalance);
     if (widget.medication.isNotEmpty) {
@@ -85,6 +99,40 @@ class _PatientReport extends State<PatientReport> {
     }
   }
 
+  Future<String?> getAndIncrementBillNo() async {
+    try {
+      final docRef =
+          FirebaseFirestore.instance.collection('billNo').doc('labBillNo');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['billNo'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
+
+        setState(() {
+          reportNO = '${currentNewBillNo}';
+          newReportNo = currentNewBillNo;
+        });
+
+        return reportNO;
+      } else {
+        print('Document does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateBillNo(int newBillNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('billNo').doc('labBillNo');
+
+    await docRef.set({'billNo': newBillNo});
+  }
+
   Future<void> submitData() async {
     try {
       final patientRef = FirebaseFirestore.instance
@@ -93,29 +141,45 @@ class _PatientReport extends State<PatientReport> {
           .collection('opTickets')
           .doc(widget.opTicket);
 
-      for (var row in tableData1) {
-        final testDescription = row['Test Descriptions'];
-        final value = row['Values'];
+      Map<String, String> testResults = {};
 
-        if (testDescription != null && value != '') {
-          await patientRef.collection('tests').doc(testDescription).set({
-            'Values': value,
-          }, SetOptions(merge: true));
+      for (var row in tableData1) {
+        final testDescription = row['Test Descriptions']?.toString().trim();
+        final value = row['Values']?.toString().trim();
+
+        if (testDescription != null &&
+            testDescription.isNotEmpty &&
+            value != null &&
+            value.isNotEmpty) {
+          testResults[testDescription] = value;
         }
       }
 
       await patientRef.set({
-        'labTotalAmount': totalAmountController.text,
-        'labCollected': paidController.text,
-        'labBalance': balanceController.text,
-        'reportDate': _dateController.text,
-        'reportNo': reportNo.text,
+        'labTotalAmount': totalAmountController.text.trim(),
+        'labCollected': paidController.text.trim(),
+        'labBalance': balanceController.text.trim(),
+        'reportDate': _dateController.text.trim(),
+        'reportNo': reportNO,
+        'sampleDate': widget.sampleDate,
+        'sampleCollectedDate': _sampleCollectedDateController.text.trim(),
+        'tests': testResults,
       }, SetOptions(merge: true));
-
-      await patientRef.set({
-        'reportNo': FieldValue.increment(1),
-      }, SetOptions(merge: true));
-
+      await patientRef.collection('labPayments').doc().set({
+        'collected': totalAmountController.text,
+        'balance': balanceController.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
+      await updateBillNo(newReportNo);
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
           backgroundColor: Colors.cyan);
@@ -150,6 +214,7 @@ class _PatientReport extends State<PatientReport> {
     paidController.clear();
     balanceController.clear();
   }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -160,16 +225,16 @@ class _PatientReport extends State<PatientReport> {
     if (picked != null) {
       setState(() {
         _sampleCollectedDateController.text =
-        "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
     }
   }
-  final TextEditingController _sampleCollectedDateController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final List<Map<String, String>> dummyData = [
+    final List<Map<String, String>> data = [
       {'title': 'Patient Name', 'subtitle': widget.name},
       {'title': 'OP Ticket', 'subtitle': widget.opTicket},
       {'title': 'Age', 'subtitle': widget.age},
@@ -181,8 +246,8 @@ class _PatientReport extends State<PatientReport> {
       },
       {'title': 'Refer By', 'subtitle': 'Test'},
       {'title': 'Report Date', 'subtitle': _dateController.text},
-      {'title': 'Sample Date', 'subtitle': _dateController.text},
-      {'title': 'Report Number', 'subtitle': '07'},
+      {'title': 'Sample Date', 'subtitle': widget.sampleDate},
+      {'title': 'Report Number', 'subtitle': reportNO},
       {'title': 'Sample Collected Date', 'subtitle': ''},
 
       // from controller
@@ -224,11 +289,8 @@ class _PatientReport extends State<PatientReport> {
                     text: 'Basic Details of Patients',
                     size: screenHeight * 0.03,
                   ),
-
                 ],
               ),
-
-
               SizedBox(height: screenHeight * 0.04),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -251,8 +313,9 @@ class _PatientReport extends State<PatientReport> {
                       shrinkWrap: true,
                       childAspectRatio: 2, // smaller ratio = taller cards
                       physics: const NeverScrollableScrollPhysics(),
-                      children: dummyData.map((item) {
-                        bool isSampleDate = item['title'] == 'Sample Collected Date';
+                      children: data.map((item) {
+                        bool isSampleDate =
+                            item['title'] == 'Sample Collected Date';
 
                         return Card(
                           elevation: 4,
@@ -273,34 +336,39 @@ class _PatientReport extends State<PatientReport> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-
                                 Flexible(
                                   child: isSampleDate
                                       ? GestureDetector(
-                                    onTap: _selectDate,
-                                    child: AbsorbPointer(
-                                      child: TextField(
-                                        controller: _sampleCollectedDateController,
-                                        style: const TextStyle(fontSize: 14),
-                                        decoration: InputDecoration(
-                                          hintText: 'Select Date',
-                                          isDense: true,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                          onTap: _selectDate,
+                                          child: AbsorbPointer(
+                                            child: TextField(
+                                              controller:
+                                                  _sampleCollectedDateController,
+                                              style:
+                                                  const TextStyle(fontSize: 14),
+                                              decoration: InputDecoration(
+                                                hintText: 'Select Date',
+                                                isDense: true,
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 6),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                  )
+                                        )
                                       : Text(
-                                    item['subtitle']!,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                    // remove maxLines and overflow
-                                  ),
+                                          item['subtitle']!,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                          // remove maxLines and overflow
+                                        ),
                                 ),
                               ],
                             ),
@@ -308,13 +376,9 @@ class _PatientReport extends State<PatientReport> {
                         );
                       }).toList(),
                     ),
-
-
                   );
                 },
               ),
-
-
               SizedBox(height: screenHeight * 0.08),
               CustomDataTable(
                 editableColumns: ['Values'],
@@ -331,29 +395,108 @@ class _PatientReport extends State<PatientReport> {
                 },
               ),
               SizedBox(height: screenHeight * 0.06),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomTextField(
-                      controller: totalAmountController,
-                      hintText: 'Total Amount',
-                      width: screenWidth * 0.2),
-                  SizedBox(width: screenWidth * 0.03),
-                  CustomTextField(
-                      controller: paidController,
-                      hintText: 'Paid',
-                      width: screenWidth * 0.2),
-                  SizedBox(width: screenWidth * 0.03),
-                  CustomText(
-                    text: 'Balance : ',
-                    size: screenWidth * 0.012,
-                  ),
-                  SizedBox(width: screenWidth * 0.01),
-                  CustomTextField(
-                      controller: balanceController,
-                      hintText: '',
-                      width: screenWidth * 0.2),
-                ],
+              Container(
+                padding: const EdgeInsets.only(left: 50, right: 50),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Total Amount ',
+                              size: screenWidth * 0.013,
+                            ),
+                            SizedBox(height: 7),
+                            CustomTextField(
+                              hintText: '',
+                              controller: totalAmountController,
+                              width: screenWidth * 0.2,
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Collected ',
+                              size: screenWidth * 0.013,
+                            ),
+                            SizedBox(height: 7),
+                            CustomTextField(
+                              hintText: '',
+                              controller: paidController,
+                              width: screenWidth * 0.2,
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Balance ',
+                              size: screenWidth * 0.013,
+                            ),
+                            SizedBox(height: 7),
+                            CustomTextField(
+                              hintText: '',
+                              controller: balanceController,
+                              width: screenWidth * 0.2,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenWidth * 0.02),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Payment Mode ',
+                              size: screenWidth * 0.013,
+                            ),
+                            SizedBox(height: 7),
+                            SizedBox(
+                              width: screenWidth * 0.2,
+                              child: CustomDropdown(
+                                width: screenWidth * 0.05,
+                                label: '',
+                                items: Constants.paymentMode,
+                                onChanged: (value) {
+                                  setState(
+                                    () {
+                                      selectedPaymentMode = value;
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Payment Details ',
+                              size: screenWidth * 0.013,
+                            ),
+                            SizedBox(height: 7),
+                            CustomTextField(
+                              hintText: '',
+                              controller: paymentDetails,
+                              width: screenWidth * 0.2,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: screenHeight * 0.06),
               Row(

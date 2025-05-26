@@ -198,15 +198,17 @@ class _LabDashboard extends State<LabDashboard> {
 
   Future<void> getWaitingLabTestOpPatients() async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .limit(3)
-          .get();
+      final DateTime now = DateTime.now();
+      final String todayDate =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      final QuerySnapshot patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       List<Map<String, dynamic>> fetchedData = [];
 
       for (var patientDoc in patientSnapshot.docs) {
         final patientData = patientDoc.data() as Map<String, dynamic>;
+        if (fetchedData.length >= 3) break;
 
         final opTicketsSnapshot = await FirebaseFirestore.instance
             .collection('patients')
@@ -242,6 +244,11 @@ class _LabDashboard extends State<LabDashboard> {
           } catch (e) {
             print('Error fetching tokenNo for patient ${patientDoc.id}: $e');
           }
+          final prescribedDate = data['labExaminationPrescribedDate'] ?? '';
+
+          if (prescribedDate != todayDate) {
+            continue;
+          }
 
           fetchedData.add({
             'Token NO': tokenNo,
@@ -276,17 +283,15 @@ class _LabDashboard extends State<LabDashboard> {
 
   Future<void> getWaitingLabTestIpPatients() async {
     try {
-      final QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('patients')
-          .limit(3) // Limit the number of documents to 3
-          .get();
+      final QuerySnapshot patientSnapshot =
+          await FirebaseFirestore.instance.collection('patients').get();
 
       List<Map<String, dynamic>> fetchedData = [];
       final todayString = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
       for (var patientDoc in patientSnapshot.docs) {
         final patientData = patientDoc.data() as Map<String, dynamic>;
-
+        if (fetchedData.length >= 3) break;
         final ipTicketsSnapshot = await FirebaseFirestore.instance
             .collection('patients')
             .doc(patientDoc.id)
@@ -320,7 +325,6 @@ class _LabDashboard extends State<LabDashboard> {
               }
             }
           }
-
           if (todayExams.isEmpty) continue;
 
           String tokenNo = '';
