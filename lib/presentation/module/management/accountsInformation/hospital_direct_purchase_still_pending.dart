@@ -259,6 +259,8 @@ class _HospitalDirectPurchaseStillPending
           'Pay': TextButton(
             onPressed: () async {
               await historyData(docId: doc.id.toString());
+              paymentDetails.clear();
+
               double originalCollected =
                   double.tryParse(data['collected']?.toString() ?? '0') ?? 0.0;
               double total =

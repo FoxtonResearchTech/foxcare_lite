@@ -245,6 +245,8 @@ class _NewPatientRegisterCollection
           'Pay': TextButton(
             onPressed: () async {
               await historyData(opNumber: data['opNumber'].toString());
+              paymentDetails.clear();
+
               double originalCollected = double.tryParse(
                       data['opAmountCollected']?.toString() ?? '0') ??
                   0.0;

@@ -239,6 +239,7 @@ class _Purchase extends State<Purchase> {
                 TextButton(
                   onPressed: () async {
                     await historyData(docId: doc.id.toString());
+                    paymentDetails.clear();
 
                     double originalCollected = double.tryParse(
                             data['collectedAmount']?.toString() ?? '0') ??
