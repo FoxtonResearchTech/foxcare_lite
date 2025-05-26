@@ -282,33 +282,46 @@ class _PurchaseEntry extends State<PurchaseEntry> {
         }
       }
 
-      await FirebaseFirestore.instance
+      DocumentReference billRef = FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
           .collection('PurchaseEntry')
-          .doc()
-          .set({
-        'billDate': _dateController.text,
-        'billNo': _billNo.text,
-        'rfNo': rfNo,
-        'entryProducts': allProducts,
-        'distributor': selectedDistributor,
-        'discountPercentage': discount.text,
-        'discountAmount': discountAmount.toStringAsFixed(2),
-        'taxTotal': _taxTotal().toStringAsFixed(2),
-        'totalBeforeDiscount': _allProductTotal().toStringAsFixed(2),
-        'netTotalAmount': totalAmount.toStringAsFixed(2),
-        'address': address.text,
-        'phone': phone.text,
-        'mail': mail.text,
-        'dlNo1': dlNo1.text,
-        'dlNo2': dlNo2.text,
-        'gstIn': gstIn.text,
-        'paymentDetails': paymentDetails.text,
-        'paymentMode': selectedPaymentMode,
-        'totalAmount': totalAmountController.text,
-        'collectedAmount': collectedAmountController.text,
+          .doc();
+      await billRef
+        ..set({
+          'billDate': _dateController.text,
+          'billNo': _billNo.text,
+          'rfNo': rfNo,
+          'entryProducts': allProducts,
+          'distributor': selectedDistributor,
+          'discountPercentage': discount.text,
+          'discountAmount': discountAmount.toStringAsFixed(2),
+          'taxTotal': _taxTotal().toStringAsFixed(2),
+          'totalBeforeDiscount': _allProductTotal().toStringAsFixed(2),
+          'netTotalAmount': totalAmount.toStringAsFixed(2),
+          'address': address.text,
+          'phone': phone.text,
+          'mail': mail.text,
+          'dlNo1': dlNo1.text,
+          'dlNo2': dlNo2.text,
+          'gstIn': gstIn.text,
+          'totalAmount': totalAmountController.text,
+          'collectedAmount': collectedAmountController.text,
+          'balance': balanceController.text,
+        });
+      await billRef.collection('payments').add({
+        'collected': totalAmount.toStringAsFixed(2),
         'balance': balanceController.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
       });
       await updateIpAdmitBillNo(newRfNo);
       setState(() {
