@@ -66,6 +66,12 @@ class _OtherExpense extends State<OtherExpense> {
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> addBill() async {
+    if (billDate.text.isEmpty) {
+      CustomSnackBar(context,
+          message: 'Please Enter Bill Date', backgroundColor: Colors.red);
+      return;
+    }
+
     try {
       Map<String, dynamic> data = {
         'billDate': billDate.text,
@@ -86,6 +92,8 @@ class _OtherExpense extends State<OtherExpense> {
           .doc()
           .set(data);
       clear();
+      await fetchData();
+
       CustomSnackBar(context,
           message: 'Bill Added Successfully', backgroundColor: Colors.green);
     } catch (e) {
@@ -383,8 +391,12 @@ class _OtherExpense extends State<OtherExpense> {
               Row(
                 children: [
                   CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: const Icon(Icons.date_range),
+                    onTap: () {
+                      _selectDate(context, _dateController);
+                      _fromDateController.clear();
+                      _toDateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
                     controller: _dateController,
                     hintText: 'Date',
                     width: screenWidth * 0.15,
@@ -399,19 +411,25 @@ class _OtherExpense extends State<OtherExpense> {
                     height: screenWidth * 0.02,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  const CustomText(text: 'OR'),
+                  CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _fromDateController),
-                    icon: const Icon(Icons.date_range),
+                    onTap: () {
+                      _selectDate(context, _fromDateController);
+                      _dateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _toDateController),
-                    icon: const Icon(Icons.date_range),
+                    onTap: () {
+                      _selectDate(context, _toDateController);
+                      _dateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -434,7 +452,22 @@ class _OtherExpense extends State<OtherExpense> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const CustomText(text: 'Collection Report Of Date'),
+                  if (_dateController.text.isEmpty &&
+                      _fromDateController.text.isEmpty &&
+                      _toDateController.text.isEmpty)
+                    CustomText(text: 'Collection Report Of Date ')
+                  else if (_dateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_dateController.text} ')
+                  else if (_fromDateController.text.isNotEmpty &&
+                      _toDateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
+                  else if (_fromDateController.text.isEmpty ||
+                      _toDateController.text.isEmpty)
+                    SizedBox(),
                   CustomButton(
                     label: 'New Bill Entry',
                     onPressed: () {
@@ -570,21 +603,22 @@ class _OtherExpense extends State<OtherExpense> {
                             ),
                             actions: <Widget>[
                               TextButton(
-                                onPressed: () {
-                                  addBill();
-                                  fetchData();
-                                  showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return PaymentDialog(
-                                          initialBalance: balanceAmount.text,
-                                          initialPayment: true,
-                                          billNo: billNo.text,
-                                          partyName: fromParty.text,
-                                          city: city.text,
-                                          balance: collected.text,
-                                        );
-                                      });
+                                onPressed: () async {
+                                  await addBill();
+                                  if (billDate.text.isNotEmpty) {
+                                    await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return PaymentDialog(
+                                            initialBalance: balanceAmount.text,
+                                            initialPayment: true,
+                                            billNo: billNo.text,
+                                            partyName: fromParty.text,
+                                            city: city.text,
+                                            balance: collected.text,
+                                          );
+                                        });
+                                  }
                                 },
                                 child: CustomText(
                                   text: 'Submit',
