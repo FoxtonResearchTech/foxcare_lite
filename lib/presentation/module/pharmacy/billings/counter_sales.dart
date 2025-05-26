@@ -1332,13 +1332,7 @@ class _CounterSales extends State<CounterSales> {
                                   child: PharmacyDropDown(
                                     width: screenWidth * 0.04,
                                     label: '',
-                                    items: const [
-                                      'UPI',
-                                      'Credit Card',
-                                      'Debit Card',
-                                      'Net Banking',
-                                      'Cash'
-                                    ],
+                                    items: Constants.paymentMode,
                                     onChanged: (value) {
                                       setState(
                                         () {

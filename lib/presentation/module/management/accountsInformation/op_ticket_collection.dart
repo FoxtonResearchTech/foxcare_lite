@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../utilities/colors.dart';
+import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
@@ -259,13 +260,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                                         width: 175,
                                         child: CustomDropdown(
                                           label: '',
-                                          items: const [
-                                            'UPI',
-                                            'Credit Card',
-                                            'Debit Card',
-                                            'Net Banking',
-                                            'Cash'
-                                          ],
+                                          items: Constants.paymentMode,
                                           onChanged: (value) {
                                             setState(
                                               () {

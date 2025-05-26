@@ -1589,13 +1589,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                                 child: CustomDropdown(
                                   width: screenWidth * 0.05,
                                   label: '',
-                                  items: const [
-                                    'UPI',
-                                    'Credit Card',
-                                    'Debit Card',
-                                    'Net Banking',
-                                    'Cash'
-                                  ],
+                                  items: Constants.paymentMode,
                                   onChanged: (value) {
                                     setState(
                                       () {

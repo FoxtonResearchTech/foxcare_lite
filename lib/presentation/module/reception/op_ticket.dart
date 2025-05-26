@@ -1601,13 +1601,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                                 child: CustomDropdown(
                                   width: screenWidth * 0.05,
                                   label: '',
-                                  items: const [
-                                    'UPI',
-                                    'Credit Card',
-                                    'Debit Card',
-                                    'Net Banking',
-                                    'Cash'
-                                  ],
+                                  items: Constants.paymentMode,
                                   onChanged: (value) {
                                     setState(
                                       () {

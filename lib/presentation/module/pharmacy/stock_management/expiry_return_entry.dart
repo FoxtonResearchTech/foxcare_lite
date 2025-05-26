@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 
+import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
 class ExpiryReturnEntry extends StatefulWidget {
@@ -806,13 +807,7 @@ class _ExpiryReturnEntry extends State<ExpiryReturnEntry> {
                                   child: PharmacyDropDown(
                                     width: screenWidth * 0.05,
                                     label: '',
-                                    items: const [
-                                      'UPI',
-                                      'Credit Card',
-                                      'Debit Card',
-                                      'Net Banking',
-                                      'Cash'
-                                    ],
+                                    items: Constants.paymentMode,
                                     onChanged: (value) {
                                       setState(
                                         () {

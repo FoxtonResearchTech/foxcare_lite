@@ -10,6 +10,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
+import '../../../utilities/constants.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
@@ -499,13 +500,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                     child: CustomDropdown(
                                       width: screenWidth * 0.05,
                                       label: '',
-                                      items: const [
-                                        'UPI',
-                                        'Credit Card',
-                                        'Debit Card',
-                                        'Net Banking',
-                                        'Cash'
-                                      ],
+                                      items: Constants.paymentMode,
                                       onChanged: (value) {
                                         setState(
                                           () {

@@ -6,6 +6,7 @@ import 'package:foxcare_lite/presentation/module/management/generalInformation/g
 import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_register_patient.dart';
 import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
 import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
+import 'package:foxcare_lite/utilities/constants.dart';
 import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -284,13 +285,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                                         width: 175,
                                         child: CustomDropdown(
                                           label: '',
-                                          items: const [
-                                            'UPI',
-                                            'Credit Card',
-                                            'Debit Card',
-                                            'Net Banking',
-                                            'Cash'
-                                          ],
+                                          items: Constants.paymentMode,
                                           onChanged: (value) {
                                             setState(
                                               () {

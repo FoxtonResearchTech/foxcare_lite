@@ -1556,13 +1556,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                                 verticalSize: screenHeight * 0.02,
                                 width: screenWidth * 0.2,
                                 hintText: '',
-                                items: const [
-                                  'UPI',
-                                  'Credit Card',
-                                  'Debit Card',
-                                  'Net Banking',
-                                  'Cash'
-                                ],
+                                items: Constants.paymentMode,
                                 onChanged: (value) {
                                   setState(() {
                                     paymentMode = value!;
