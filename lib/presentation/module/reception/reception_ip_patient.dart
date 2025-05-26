@@ -10,6 +10,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
+import '../../../utilities/constants.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
@@ -47,7 +48,7 @@ class ReceptionIpPatient extends StatefulWidget {
 }
 
 class _ReceptionIpPatient extends State<ReceptionIpPatient> {
-  final dateTime = DateTime.timestamp();
+  final dateTime = DateTime.now();
   final TextEditingController _temperatureController = TextEditingController();
   final TextEditingController _bloodPressureController =
       TextEditingController();
@@ -58,6 +59,11 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
   final TextEditingController _symptomsController = TextEditingController();
   final TextEditingController _ipAdmissionTotalAmount = TextEditingController();
   final TextEditingController _ipAdmissionCollected = TextEditingController();
+  final TextEditingController _ipAdmissionBalance = TextEditingController();
+  final TextEditingController _paymentDetails = TextEditingController();
+
+  String? selectedPaymentMode;
+
   ScrollController _scrollController = ScrollController();
   ScrollController _scrollController1 = ScrollController();
   ScrollController _scrollController2 = ScrollController();
@@ -119,7 +125,17 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
   @override
   void initState() {
     fetchRoomData();
+    _ipAdmissionTotalAmount.addListener(_updateBalance);
+    _ipAdmissionCollected.addListener(_updateBalance);
     super.initState();
+  }
+
+  void _updateBalance() {
+    double totalAmount = double.tryParse(_ipAdmissionTotalAmount.text) ?? 0.0;
+    double paidAmount = double.tryParse(_ipAdmissionCollected.text) ?? 0.0;
+    double balance = totalAmount - paidAmount;
+
+    _ipAdmissionBalance.text = balance.toStringAsFixed(0);
   }
 
   @override
@@ -157,6 +173,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
             dateTime.second.toString().padLeft(2, '0'),
         'ipAdmissionTotalAmount': _ipAdmissionTotalAmount.text,
         'ipAdmissionCollected': _ipAdmissionCollected.text,
+        'ipAdmissionBalance': _ipAdmissionBalance.text,
         'ipAdmission': {
           'roomType': selectedIPAdmissionValue,
           'roomNumber': selectedRoom
@@ -175,11 +192,33 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
             dateTime.day.toString().padLeft(2, '0'),
         'ipAdmissionTotalAmount': _ipAdmissionTotalAmount.text,
         'ipAdmissionCollected': _ipAdmissionCollected.text,
+        'ipAdmissionBalance': _ipAdmissionBalance.text,
         'ipAdmission': {
           'roomType': selectedIPAdmissionValue,
           'roomNumber': selectedRoom
         },
       }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.patientID)
+          .collection('ipTickets')
+          .doc(widget.ipNumber)
+          .collection('ipAdmitPayments')
+          .doc()
+          .set({
+        'collected': _ipAdmissionCollected.text,
+        'balance': _ipAdmissionBalance.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': _paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
 
       CustomSnackBar(context,
           message: 'Details saved successfully!',
@@ -203,6 +242,15 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+            )),
         backgroundColor: AppColors.appBar,
       ),
       body: SingleChildScrollView(
@@ -352,9 +400,9 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                 CustomTextField(
                     controller: TextEditingController(
                       text: dateTime.hour.toString() +
-                          '-' +
+                          ':' +
                           dateTime.minute.toString().padLeft(2, '0') +
-                          '-' +
+                          ':' +
                           dateTime.second.toString().padLeft(2, '0'),
                     ),
                     hintText: 'Time',
@@ -367,24 +415,127 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
               const SizedBox(
                 height: 30,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(width: screenWidth * 0.2),
-                  CustomTextField(
-                    hintText: 'IP Admission Amount',
-                    width: screenWidth * 0.13,
-                    controller: _ipAdmissionTotalAmount,
-                  ),
-                  SizedBox(width: screenWidth * 0.05),
-                  CustomTextField(
-                    hintText: 'Collected',
-                    width: screenWidth * 0.1,
-                    controller: _ipAdmissionCollected,
-                  ),
-                  SizedBox(width: screenWidth * 0.2),
-                ],
+              Container(
+                padding: EdgeInsets.only(left: screenWidth * 0.05),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomText(
+                      text: 'Payments',
+                      color: AppColors.blue,
+                      size: screenWidth * 0.02,
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(left: 50, right: 50),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Total Amount ',
+                                    size: screenWidth * 0.012,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: _ipAdmissionTotalAmount,
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Collected ',
+                                    size: screenWidth * 0.012,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: _ipAdmissionCollected,
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Balance ',
+                                    size: screenWidth * 0.012,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: _ipAdmissionBalance,
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenWidth * 0.02),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Payment Mode ',
+                                    size: screenWidth * 0.012,
+                                  ),
+                                  SizedBox(height: 7),
+                                  SizedBox(
+                                    width: screenWidth * 0.2,
+                                    child: CustomDropdown(
+                                      width: screenWidth * 0.05,
+                                      label: '',
+                                      items: Constants.paymentMode,
+                                      onChanged: (value) {
+                                        setState(
+                                          () {
+                                            selectedPaymentMode = value;
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: 'Payment Details ',
+                                    size: screenWidth * 0.012,
+                                  ),
+                                  SizedBox(height: 7),
+                                  CustomTextField(
+                                    hintText: '',
+                                    controller: _paymentDetails,
+                                    width: screenWidth * 0.2,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+
               const SizedBox(
                 height: 35,
               ),

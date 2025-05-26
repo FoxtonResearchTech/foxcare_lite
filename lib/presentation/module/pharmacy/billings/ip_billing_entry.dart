@@ -290,13 +290,12 @@ class _IpBillingEntry extends State<IpBillingEntry> {
         }
       }
 
-      // Save stock return document
-      await FirebaseFirestore.instance
+      DocumentReference billRef = FirebaseFirestore.instance
           .collection('pharmacy')
           .doc('billings')
           .collection('ipbilling')
-          .doc()
-          .set({
+          .doc();
+      await billRef.set({
         'billDate': todayString,
         'billNo': billNO,
         'ipTicket': widget.ipTicket,
@@ -313,11 +312,23 @@ class _IpBillingEntry extends State<IpBillingEntry> {
         'taxTotal': _taxTotal().toStringAsFixed(2),
         'totalBeforeDiscount': _allProductTotal().toStringAsFixed(2),
         'netTotalAmount': totalAmount.toStringAsFixed(2),
-        'paymentDetails': paymentDetails.text,
-        'paymentMode': selectedPaymentMode,
         'totalAmount': totalAmountController.text,
         'collectedAmount': collectedAmountController.text,
         'balance': balanceController.text,
+      });
+      await billRef.collection('payments').add({
+        'collected': totalAmount.toStringAsFixed(2),
+        'balance': balanceController.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
       });
       await markAllTodayMedicinesAsGiven(
           patientId: widget.opNumber.toString(),
@@ -1514,13 +1525,7 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                                   child: PharmacyDropDown(
                                     width: screenWidth * 0.04,
                                     label: '',
-                                    items: const [
-                                      'UPI',
-                                      'Credit Card',
-                                      'Debit Card',
-                                      'Net Banking',
-                                      'Cash'
-                                    ],
+                                    items: Constants.paymentMode,
                                     onChanged: (value) {
                                       setState(
                                         () {

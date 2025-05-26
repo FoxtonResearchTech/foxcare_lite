@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 
+import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 
 class StockReturnEntry extends StatefulWidget {
@@ -265,13 +266,13 @@ class _StockReturnEntry extends State<StockReturnEntry> {
         }
       }
 
-      // Save stock return document
-      await FirebaseFirestore.instance
+      DocumentReference billRef = FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
           .collection('StockReturn')
-          .doc()
-          .set({
+          .doc();
+
+      await billRef.set({
         'returnDate': _dateController.text,
         'rfNo': rfNo,
         'entryProducts': allProducts,
@@ -287,11 +288,24 @@ class _StockReturnEntry extends State<StockReturnEntry> {
         'dlNo1': dlNo1.text,
         'dlNo2': dlNo2.text,
         'gstIn': gstIn.text,
-        'paymentDetails': paymentDetails.text,
-        'paymentMode': selectedPaymentMode,
         'totalAmount': totalAmountController.text,
         'collectedAmount': collectedAmountController.text,
         'balance': balanceController.text,
+      });
+
+      await billRef.collection('payments').add({
+        'collected': totalAmount.toStringAsFixed(2),
+        'balance': balanceController.text,
+        'paymentMode': selectedPaymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
       });
 
       await updateBillNo(newRfNo);
@@ -806,13 +820,7 @@ class _StockReturnEntry extends State<StockReturnEntry> {
                                   child: PharmacyDropDown(
                                     width: screenWidth * 0.05,
                                     label: '',
-                                    items: const [
-                                      'UPI',
-                                      'Credit Card',
-                                      'Debit Card',
-                                      'Net Banking',
-                                      'Cash'
-                                    ],
+                                    items: Constants.paymentMode,
                                     onChanged: (value) {
                                       setState(
                                         () {

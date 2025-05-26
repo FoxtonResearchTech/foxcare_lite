@@ -13,4 +13,12 @@ class Constants {
   static String pincode = '6900001';
   static String landLine = '0471 222222';
   static String billNo = '+91 9999999999';
+  static List<String> paymentMode = [
+    'UPI',
+    'Credit Card',
+    'Debit Card',
+    'Net Banking',
+    'Cash',
+    'Cheque',
+  ];
 }

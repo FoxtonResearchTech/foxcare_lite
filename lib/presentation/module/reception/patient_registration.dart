@@ -29,7 +29,7 @@ class PatientRegistration extends StatefulWidget {
 }
 
 class _PatientRegistrationState extends State<PatientRegistration> {
-  final dateTime = DateTime.timestamp();
+  final dateTime = DateTime.now();
 
   int selectedIndex = 1;
   String? selectedSex;
@@ -145,8 +145,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       'opAmount': opAmount.text,
       'opAmountCollected': opAmountCollected.text,
       'opAmountBalance': opAmountBalance.text,
-      'paymentMode': paymentMode,
-      'paymentDetails': paymentDetails.text,
       'opAdmissionDate': dateTime.year.toString() +
           '-' +
           dateTime.month.toString().padLeft(2, '0') +
@@ -159,6 +157,25 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           .collection('patients')
           .doc(uid)
           .set(patientData);
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(uid)
+          .collection('opAmountPayments')
+          .doc()
+          .set({
+        'collected': opAmountCollected.text,
+        'balance': opAmountBalance.text,
+        'paymentMode': paymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Patient registered successfully")),
@@ -1539,13 +1556,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                                 verticalSize: screenHeight * 0.02,
                                 width: screenWidth * 0.2,
                                 hintText: '',
-                                items: const [
-                                  'UPI',
-                                  'Credit Card',
-                                  'Debit Card',
-                                  'Net Banking',
-                                  'Cash'
-                                ],
+                                items: Constants.paymentMode,
                                 onChanged: (value) {
                                   setState(() {
                                     paymentMode = value!;

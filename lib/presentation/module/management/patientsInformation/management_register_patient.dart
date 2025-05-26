@@ -143,6 +143,9 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
   String uid = '';
 
   Future<void> savePatientDetails() async {
+    setState(() {
+      isRegisterLoading = true;
+    });
     Map<String, dynamic> patientData = {
       'opNumber': uid,
       'firstName': firstname.text,
@@ -450,7 +453,9 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
           );
         },
       );
-
+      setState(() {
+        isRegisterLoading = false;
+      });
       await initializeUid();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1607,13 +1612,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                                 verticalSize: screenHeight * 0.02,
                                 width: screenWidth * 0.2,
                                 hintText: '',
-                                items: const [
-                                  'UPI',
-                                  'Credit Card',
-                                  'Debit Card',
-                                  'Net Banking',
-                                  'Cash'
-                                ],
+                                items: Constants.paymentMode,
                                 onChanged: (value) {
                                   setState(() {
                                     paymentMode = value!;
