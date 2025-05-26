@@ -487,6 +487,7 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
                 tableData: tableData,
                 headers: headers,
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

@@ -75,7 +75,7 @@ class ManagementRegisterPatient extends StatefulWidget {
 }
 
 class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
-  final dateTime = DateTime.timestamp();
+  final dateTime = DateTime.now();
   int selectedIndex = 0;
   String? selectedSex;
   String? selectedBloodGroup;
@@ -164,8 +164,6 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
       'opAmount': opAmount.text,
       'opAmountCollected': opAmountCollected.text,
       'opAmountBalance': opAmountBalance.text,
-      'paymentMode': paymentMode,
-      'paymentDetails': paymentDetails.text,
       'opAdmissionDate': dateTime.year.toString() +
           '-' +
           dateTime.month.toString().padLeft(2, '0') +
@@ -178,11 +176,28 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
           .collection('patients')
           .doc(uid)
           .set(patientData);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Patient registered successfully")),
-      );
-
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(uid)
+          .collection('opAmountPayments')
+          .doc()
+          .set({
+        'collected': opAmountCollected.text,
+        'balance': opAmountBalance.text,
+        'paymentMode': paymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
+      CustomSnackBar(context,
+          message: "Patient registered successfully",
+          backgroundColor: Colors.green);
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -763,7 +778,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
-      height: screenHeight * 1,
+      height: screenHeight * 0.9,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
       child: Card(
         elevation: 5,
@@ -1177,7 +1192,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
-      height: screenHeight * 0.8,
+      height: screenHeight * 0.9,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
       child: Card(
         elevation: 5,
@@ -1452,7 +1467,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
     double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
-      height: screenHeight * 0.8,
+      height: screenHeight * 0.9,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.047),
       child: Card(
         elevation: 5,

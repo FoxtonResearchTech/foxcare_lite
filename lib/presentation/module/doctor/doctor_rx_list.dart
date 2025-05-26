@@ -439,7 +439,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   return Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.05)
             ],
           ),
         ),

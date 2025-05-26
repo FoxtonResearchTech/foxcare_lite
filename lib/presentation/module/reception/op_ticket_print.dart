@@ -75,8 +75,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
 
         for (var opTicketDoc in opTicketsSnapshot.docs) {
           final opTicketData = opTicketDoc.data();
-          print(
-              'opTicketData: ${opTicketData['opTicket']}'); // Debugging print statement
+          print('opTicketData: ${opTicketData['opTicket']}');
 
           bool matches = false;
 
@@ -717,7 +716,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "Admission Status ",
+                          text: "OP Ticket Print ",
                           size: screenWidth * .015,
                         ),
                       ],
@@ -780,7 +779,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                       : Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

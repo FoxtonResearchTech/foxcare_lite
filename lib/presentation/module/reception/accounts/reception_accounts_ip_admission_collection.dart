@@ -397,6 +397,7 @@ class _ReceptionAccountsIpAdmissionCollection
                 ],
               ),
             ),
+            SizedBox(height: screenHeight * 0.05),
           ],
         ),
       ),

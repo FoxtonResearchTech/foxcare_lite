@@ -538,6 +538,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05)
             ],
           ),
         ),

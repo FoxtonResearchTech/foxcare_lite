@@ -261,7 +261,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                       : Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

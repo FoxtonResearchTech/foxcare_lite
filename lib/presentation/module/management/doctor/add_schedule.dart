@@ -551,6 +551,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
                   ),
                 ),
               ),
+              SizedBox(height: screenHeight * 0.07)
             ],
           ),
         ),

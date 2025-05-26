@@ -259,7 +259,7 @@ class _PatientsSearch extends State<PatientsSearch> {
                       : Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.05)
             ],
           ),
         ),

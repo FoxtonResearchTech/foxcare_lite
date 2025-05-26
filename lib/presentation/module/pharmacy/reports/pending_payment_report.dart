@@ -30,7 +30,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
 
   void _addRow() {
     List<Map<String, dynamic>> fetchedData = [];
-    int n = 5;
+    int n = 1000000;
     for (int i = 1; i <= n; i++) {
       fetchedData.add({
         'SL No': i,
@@ -121,7 +121,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
                 children: [CustomText(text: 'Total Pending Payment List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),

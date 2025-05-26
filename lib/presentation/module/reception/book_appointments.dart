@@ -610,7 +610,7 @@ class _BookAppointments extends State<BookAppointments> {
                 tableData: tableData1,
                 headers: headers1,
               ),
-              SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),

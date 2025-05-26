@@ -663,6 +663,7 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                   ],
                 ),
               ),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),
