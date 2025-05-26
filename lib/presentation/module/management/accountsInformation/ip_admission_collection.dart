@@ -353,7 +353,11 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
               Row(
                 children: [
                   CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
+                    onTap: () {
+                      _selectDate(context, _dateController);
+                      _fromDateController.clear();
+                      _toDateController.clear();
+                    },
                     icon: Icon(Icons.date_range),
                     controller: _dateController,
                     hintText: 'Date',
@@ -372,7 +376,10 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _fromDateController),
+                    onTap: () {
+                      _selectDate(context, _fromDateController);
+                      _dateController.clear();
+                    },
                     icon: Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
@@ -380,7 +387,10 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _toDateController),
+                    onTap: () {
+                      _selectDate(context, _toDateController);
+                      _dateController.clear();
+                    },
                     icon: Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
@@ -401,8 +411,22 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),
-              const Row(
-                children: [CustomText(text: 'Collection Report Of Date')],
+              Row(
+                children: [
+                  if (_dateController.text.isEmpty &&
+                      _fromDateController.text.isEmpty &&
+                      _toDateController.text.isEmpty)
+                    CustomText(text: 'Collection Report Of Date ')
+                  else if (_dateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_dateController.text} ')
+                  else if (_fromDateController.text.isNotEmpty &&
+                      _toDateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(

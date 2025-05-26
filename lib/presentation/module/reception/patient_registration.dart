@@ -145,8 +145,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
       'opAmount': opAmount.text,
       'opAmountCollected': opAmountCollected.text,
       'opAmountBalance': opAmountBalance.text,
-      'paymentMode': paymentMode,
-      'paymentDetails': paymentDetails.text,
       'opAdmissionDate': dateTime.year.toString() +
           '-' +
           dateTime.month.toString().padLeft(2, '0') +
@@ -159,6 +157,25 @@ class _PatientRegistrationState extends State<PatientRegistration> {
           .collection('patients')
           .doc(uid)
           .set(patientData);
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(uid)
+          .collection('opAmountPayments')
+          .doc()
+          .set({
+        'collected': opAmountCollected.text,
+        'balance': opAmountBalance.text,
+        'paymentMode': paymentMode,
+        'paymentDetails': paymentDetails.text,
+        'payedDate': dateTime.year.toString() +
+            '-' +
+            dateTime.month.toString().padLeft(2, '0') +
+            '-' +
+            dateTime.day.toString().padLeft(2, '0'),
+        'payedTime': dateTime.hour.toString() +
+            ':' +
+            dateTime.minute.toString().padLeft(2, '0'),
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Patient registered successfully")),

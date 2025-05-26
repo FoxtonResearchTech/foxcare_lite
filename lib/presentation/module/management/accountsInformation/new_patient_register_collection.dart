@@ -127,11 +127,9 @@ class _NewPatientRegisterCollection
 
   Future<void> historyData({required String opNumber}) async {
     try {
-      // Access the document with the given opNumber inside 'patients'
       DocumentReference patientDoc =
           FirebaseFirestore.instance.collection('patients').doc(opNumber);
 
-      // Fetch documents inside 'opAmountPayments' subcollection
       QuerySnapshot snapshot =
           await patientDoc.collection('opAmountPayments').get();
 
@@ -159,12 +157,20 @@ class _NewPatientRegisterCollection
       }
 
       fetchedData.sort((a, b) {
-        DateTime dateTimeA =
-            DateTime.tryParse('${a['Payed Date']} ${a['Payed Time']}') ??
-                DateTime(0);
-        DateTime dateTimeB =
-            DateTime.tryParse('${b['Payed Date']} ${b['Payed Time']}') ??
-                DateTime(0);
+        String formatTime(String time) {
+          List<String> parts = time.split(':');
+          String hour = parts[0].padLeft(2, '0');
+          String minute = parts.length > 1 ? parts[1] : '00';
+          return '$hour:$minute';
+        }
+
+        String dateTimeStrA =
+            '${a['Payed Date']} ${formatTime(a['Payed Time'])}';
+        String dateTimeStrB =
+            '${b['Payed Date']} ${formatTime(b['Payed Time'])}';
+
+        DateTime dateTimeA = DateTime.tryParse(dateTimeStrA) ?? DateTime(0);
+        DateTime dateTimeB = DateTime.tryParse(dateTimeStrB) ?? DateTime(0);
 
         return dateTimeA.compareTo(dateTimeB);
       });
@@ -638,7 +644,11 @@ class _NewPatientRegisterCollection
               Row(
                 children: [
                   CustomTextField(
-                    onTap: () => _selectDate(context, _dateController),
+                    onTap: () {
+                      _selectDate(context, _dateController);
+                      _fromDateController.clear();
+                      _toDateController.clear();
+                    },
                     icon: Icon(Icons.date_range),
                     controller: _dateController,
                     hintText: 'Date',
@@ -657,7 +667,10 @@ class _NewPatientRegisterCollection
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _fromDateController),
+                    onTap: () {
+                      _selectDate(context, _fromDateController);
+                      _dateController.clear();
+                    },
                     icon: Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
@@ -665,7 +678,10 @@ class _NewPatientRegisterCollection
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
-                    onTap: () => _selectDate(context, _toDateController),
+                    onTap: () {
+                      _selectDate(context, _toDateController);
+                      _dateController.clear();
+                    },
                     icon: Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
@@ -686,8 +702,22 @@ class _NewPatientRegisterCollection
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),
-              const Row(
-                children: [CustomText(text: 'Collection Report Of Date')],
+              Row(
+                children: [
+                  if (_dateController.text.isEmpty &&
+                      _fromDateController.text.isEmpty &&
+                      _toDateController.text.isEmpty)
+                    CustomText(text: 'Collection Report Of Date ')
+                  else if (_dateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_dateController.text} ')
+                  else if (_fromDateController.text.isNotEmpty &&
+                      _toDateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
