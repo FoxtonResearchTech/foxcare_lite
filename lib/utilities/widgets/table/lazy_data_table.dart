@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import '../../colors.dart';
 import '../text/primary_text.dart';
 
 class LazyDataTable extends StatefulWidget {
   final List<String> headers;
   final List<Map<String, dynamic>> tableData;
-  final List<String>? editableColumns;
   final Map<int, TableColumnWidth> columnWidths;
   final Color headerBackgroundColor;
   final Color headerColor;
-
   final Color borderColor;
   final Color Function(Map<String, dynamic>)? rowColorResolver;
-  final Function(int rowIndex, String header, String value)? onValueChanged;
-  final List<Map<String, TextEditingController>>? controllers;
 
   LazyDataTable({
     super.key,
     required this.headers,
     required this.tableData,
-    this.editableColumns,
     this.columnWidths = const {},
     Color? headerBackgroundColor,
     this.borderColor = Colors.black,
     this.rowColorResolver,
-    this.onValueChanged,
-    this.controllers,
     this.headerColor = Colors.white,
   }) : headerBackgroundColor = headerBackgroundColor ?? AppColors.blue;
 
@@ -33,45 +27,114 @@ class LazyDataTable extends StatefulWidget {
   State<LazyDataTable> createState() => _LazyDataTable();
 }
 
-class _LazyDataTable extends State<LazyDataTable> {
-  late List<Map<String, TextEditingController>> controllers;
+class _LazyDataTable extends State<LazyDataTable>
+    with AutomaticKeepAliveClientMixin {
+  late ScrollController _scrollController;
+  int itemsToShow = 100;
+  bool isLoadingMore = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-
-    controllers = widget.tableData.map((row) {
-      return {
-        for (String header in widget.headers)
-          if (row[header] is! Widget)
-            header: TextEditingController(text: row[header]?.toString() ?? '')
-      };
-    }).toList();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
-    // Dispose all controllers
-    for (var rowControllers in controllers) {
-      for (var controller in rowControllers.values) {
-        controller.dispose();
-      }
-    }
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollListener() {
+    // If we are close to the bottom and not already loading more, load more
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 100 &&
+        !isLoadingMore &&
+        itemsToShow < widget.tableData.length) {
+      _loadMoreItems();
+    }
+  }
+
+  Future<void> _loadMoreItems() async {
+    setState(() {
+      isLoadingMore = true;
+    });
+
+    // Simulate a delay for loading (replace with actual async fetch if needed)
+    await Future.delayed(const Duration(seconds: 1));
+
+    setState(() {
+      itemsToShow = (itemsToShow + 100).clamp(0, widget.tableData.length);
+      isLoadingMore = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final rowHeight = screenHeight * 0.025;
-    final tableHeight = (rowHeight * widget.tableData.length)
-        .clamp(0, screenHeight * 0.7)
-        .toDouble();
+
+    if (widget.tableData.length <= 25) {
+      // If data length <= 25, show full table without scrolling or lazy loading
+      return Column(
+        children: [
+          Table(
+            border: TableBorder.all(color: widget.borderColor),
+            columnWidths: widget.columnWidths.isNotEmpty
+                ? widget.columnWidths
+                : {
+                    for (int i = 0; i < widget.headers.length; i++)
+                      i: const FlexColumnWidth()
+                  },
+            children: [
+              TableRow(
+                decoration: BoxDecoration(color: widget.headerBackgroundColor),
+                children: widget.headers
+                    .map((header) => Center(
+                          child: CustomText(
+                            maxLines: 5,
+                            text: header,
+                            color: widget.headerColor,
+                          ),
+                        ))
+                    .toList(),
+              ),
+              // All rows rendered directly here
+              ...widget.tableData.map((row) => TableRow(
+                    decoration: BoxDecoration(
+                        color: widget.rowColorResolver?.call(row) ??
+                            Colors.transparent),
+                    children: widget.headers.map((header) {
+                      final cellData = row[header];
+                      if (cellData is Widget) {
+                        return Center(child: cellData);
+                      } else {
+                        return Center(
+                          child: CustomText(
+                            maxLines: 25,
+                            text: cellData?.toString() ?? '',
+                          ),
+                        );
+                      }
+                    }).toList(),
+                  )),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Else, use lazy loading with scrolling (existing logic)
+    final dataToShow = widget.tableData.take(itemsToShow).toList();
 
     return Column(
       children: [
-        // Table header
         Table(
           border: TableBorder.all(color: widget.borderColor),
           columnWidths: widget.columnWidths.isNotEmpty
@@ -84,88 +147,133 @@ class _LazyDataTable extends State<LazyDataTable> {
             TableRow(
               decoration: BoxDecoration(color: widget.headerBackgroundColor),
               children: widget.headers
-                  .map(
-                    (header) => Center(
-                      child: CustomText(
-                        maxLines: 5,
-                        text: header,
-                        color: widget.headerColor,
-                      ),
-                    ),
-                  )
+                  .map((header) => Center(
+                        child: CustomText(
+                          maxLines: 5,
+                          text: header,
+                          color: widget.headerColor,
+                        ),
+                      ))
                   .toList(),
             ),
           ],
         ),
-
-        // Lazy-loaded rows
-        Container(
-          height: tableHeight,
-          child: ListView.builder(
-            itemCount: widget.tableData.length,
-            itemBuilder: (context, index) {
-              final row = widget.tableData[index];
-              final rowColor =
-                  widget.rowColorResolver?.call(row) ?? Colors.transparent;
-
-              return Table(
-                border: TableBorder.all(color: widget.borderColor),
-                columnWidths: widget.columnWidths.isNotEmpty
-                    ? widget.columnWidths
-                    : {
-                        for (int i = 0; i < widget.headers.length; i++)
-                          i: const FlexColumnWidth()
-                      },
-                children: [
-                  TableRow(
-                    decoration: BoxDecoration(color: rowColor),
-                    children: widget.headers.map((header) {
-                      final cellData = row[header];
-                      final isEditable =
-                          widget.editableColumns?.contains(header) ?? false;
-
-                      if (cellData is Widget) {
-                        return Center(child: cellData);
-                      } else if (isEditable) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            width: screenWidth * 0.02,
-                            height: screenHeight * 0.05,
-                            child: TextField(
-                              controller: controllers[index][header],
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                  horizontal: 8.0,
-                                ),
-                              ),
-                              onChanged: (value) {
-                                row[header] = value;
-                                if (widget.onValueChanged != null) {
-                                  widget.onValueChanged!(index, header, value);
-                                }
-                              },
-                            ),
+        SizedBox(
+          height: screenHeight * 0.594,
+          child: ScrollConfiguration(
+            behavior:
+                ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            child: ListView.builder(
+              key: PageStorageKey('lazyDataTableList'),
+              controller: _scrollController,
+              itemCount: dataToShow.length + (isLoadingMore ? 1 : 0),
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: true,
+              itemBuilder: (context, index) {
+                if (index == dataToShow.length) {
+                  // Show a single loading indicator at bottom
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(AppColors.blue),
                           ),
-                        );
-                      } else {
-                        return Center(
+                        ),
+                        const SizedBox(width: 12),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
                           child: CustomText(
-                            maxLines: 25,
-                            text: cellData?.toString() ?? '',
+                            key: ValueKey(DateTime.now().second % 3),
+                            text:
+                                'Loading${'.' * ((DateTime.now().second % 3) + 1)}',
+                            color: AppColors.blue,
                           ),
-                        );
-                      }
-                    }).toList(),
-                  ),
-                ],
-              );
-            },
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                final row = dataToShow[index];
+                return LazyDataRow(
+                  index: index,
+                  row: row,
+                  headers: widget.headers,
+                  columnWidths: widget.columnWidths,
+                  borderColor: widget.borderColor,
+                  rowColor:
+                      widget.rowColorResolver?.call(row) ?? Colors.transparent,
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
+                );
+              },
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class LazyDataRow extends StatelessWidget {
+  final int index;
+  final Map<String, dynamic> row;
+  final List<String> headers;
+  final Map<int, TableColumnWidth> columnWidths;
+  final Color borderColor;
+  final Color rowColor;
+  final double screenWidth;
+  final double screenHeight;
+
+  const LazyDataRow({
+    Key? key,
+    required this.index,
+    required this.row,
+    required this.headers,
+    required this.columnWidths,
+    required this.borderColor,
+    required this.rowColor,
+    required this.screenWidth,
+    required this.screenHeight,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Table(
+        border: TableBorder.all(color: borderColor),
+        columnWidths: columnWidths.isNotEmpty
+            ? columnWidths
+            : {
+                for (int i = 0; i < headers.length; i++)
+                  i: const FlexColumnWidth()
+              },
+        children: [
+          TableRow(
+            decoration: BoxDecoration(color: rowColor),
+            children: headers.map((header) {
+              final cellData = row[header];
+
+              if (cellData is Widget) {
+                return Center(child: cellData);
+              } else {
+                return Center(
+                  child: CustomText(
+                    maxLines: 25,
+                    text: cellData?.toString() ?? '',
+                  ),
+                );
+              }
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }

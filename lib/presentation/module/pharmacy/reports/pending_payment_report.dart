@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
-import '../tools/manage_pharmacy_info.dart';
 
 class PendingPaymentReport extends StatefulWidget {
   const PendingPaymentReport({super.key});
@@ -30,15 +27,21 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
 
   void _addRow() {
     List<Map<String, dynamic>> fetchedData = [];
-    int n = 10000;
+    int n = 1000000;
     for (int i = 1; i <= n; i++) {
       fetchedData.add({
         'SL No': i,
         'Distributor Pending Payment Report': '',
         'Bill Number': '',
         'Bill Date': '',
-        'Total Amount': '',
-        'Bill Details': '',
+        'Total Amount': '2000000000',
+        'Bill Details': TextButton(
+          onPressed: () {},
+          child: CustomText(
+            text: 'Open',
+            color: AppColors.blue,
+          ),
+        ),
       });
     }
 
@@ -47,9 +50,28 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
     });
   }
 
+  int _totalTotalAmount() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Total Amount'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
+        }
+
+        return sum;
+      },
+    );
+  }
+
   @override
   void initState() {
     _addRow();
+    _totalTotalAmount();
     super.initState();
   }
 
@@ -126,7 +148,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(right: screenWidth * 0.005),
+                padding: EdgeInsets.only(left: screenWidth * 0.4),
                 width: screenWidth,
                 height: screenHeight * 0.030,
                 decoration: BoxDecoration(
@@ -138,7 +160,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
                 child: Column(
                   children: [
                     CustomText(
-                      text: 'Total : ',
+                      text: 'Total : ${_totalTotalAmount().toString()}',
                     )
                   ],
                 ),
