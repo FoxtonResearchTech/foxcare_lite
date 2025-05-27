@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
@@ -604,9 +605,9 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       // Step 3: Add new schedule
       await collection.add(scheduleData);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Schedule added successfully!')),
-      );
+      CustomSnackBar(context,
+          message: 'Schedule added successfully',
+          backgroundColor: Colors.green);
 
       setState(() {
         selectedDoctor = null;

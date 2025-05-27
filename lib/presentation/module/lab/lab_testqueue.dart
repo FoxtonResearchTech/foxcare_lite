@@ -90,9 +90,9 @@ class _LabTestQueueState extends State<LabTestQueue> {
           ),
         ),
         buildDrawerItem(0, 'Dashboard', () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LabDashboard()),
-          );
+          // Navigator.of(context).pushReplacement(
+          //   MaterialPageRoute(builder: (context) => LabDashboard()),
+          // );
         }, Iconsax.mask),
         Divider(height: 5, color: Colors.grey),
         buildDrawerItem(1, 'Test Queue', () {}, Iconsax.receipt),

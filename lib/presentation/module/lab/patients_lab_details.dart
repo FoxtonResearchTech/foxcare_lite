@@ -186,6 +186,10 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                     MaterialPageRoute(
                       builder: (context) => PatientReport(
                         doctorName: data['doctorName'] ?? 'N/A',
+                        specialization: data['specialization'] ?? 'N/A',
+                        bloodGroup: patientData['bloodGroup'] ?? 'N/A',
+                        phoneNo: patientData['phone1'] ?? 'N/A',
+                        city: patientData['city'] ?? 'N/A',
                         sampleDate: sampleDate ?? "N/A",
                         patientID: patientData['opNumber'] ?? 'N/A',
                         opTicket: data['opTicket'] ?? 'N/A',

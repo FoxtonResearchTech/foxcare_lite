@@ -4,6 +4,8 @@ class Constants {
   static String hospitalCity = 'Thampanoor';
   static String hospitalDistrict = 'Thiruvananthapuram';
   static String hospitalName = 'Surya Hospitals';
+  static String labName = 'Surya Laboratory';
+
   static String pharmacyName = 'Surya Pharmacy';
 
   static String mail = 'suryahospital@gmail.com';

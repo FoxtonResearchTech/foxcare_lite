@@ -174,7 +174,24 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
             } catch (e) {
               print('Error fetching sampleData: $e');
             }
+            DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientDoc.id)
+                .collection('ipAdmissionPayments')
+                .doc('payments${data['ipTicket'].toString()}')
+                .get();
 
+            Map<String, dynamic>? detailsData = detailsDoc.exists
+                ? detailsDoc.data() as Map<String, dynamic>?
+                : null;
+            final ipDetailsDoc = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientDoc.id)
+                .collection('ipPrescription')
+                .doc('details')
+                .get();
+
+            final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
             fetchedData.add({
               'Token NO': tokenNo,
               'IP Ticket': data['ipTicket'] ?? 'N/A',
@@ -196,15 +213,22 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => IpPatientReport(
+                          city: patientData['city'] ?? 'N/A',
+                          phoneNo: patientData['phone1'] ?? 'N/A',
                           doctorName: data['doctorName'] ?? 'N/A',
                           examDocId: examDoc.id.toString(),
                           sampleDate: sampleDate ?? 'N/A',
                           patientID: patientData['opNumber'] ?? 'N/A',
+                          bloodGroup: patientData['bloodGroup'] ?? 'N/A',
+                          specialization: data['specialization'] ?? 'N/A',
                           ipTicket: data['ipTicket'] ?? 'N/A',
                           name:
                               '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
                                   .trim(),
                           age: patientData['age'] ?? 'N/A',
+                          roomNo: ipAdmission['roomNo'],
+                          roomType: ipAdmission['roomType'],
+                          ipAdmitDate: data['ipAdmitDate'],
                           sex: patientData['sex'] ?? 'N/A',
                           place: patientData['state'] ?? 'N/A',
                           dob: patientData['dob'] ?? 'N/A',
