@@ -77,13 +77,29 @@ class _ManagementDashboard extends State<ManagementDashboard> {
             .get();
 
         for (var doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final String? billDate = data['billDate'];
+          final docId = doc.id;
 
-          if (isInRange(billDate)) {
-            double value =
-                double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
-            total += value;
+          try {
+            final paymentsSnapshot = await firestore
+                .collection('pharmacy')
+                .doc('billings')
+                .collection(collection)
+                .doc(docId)
+                .collection('payments')
+                .get();
+
+            for (var payDoc in paymentsSnapshot.docs) {
+              final payData = payDoc.data();
+              final collectedStr = payData['collected']?.toString();
+              final payedDateStr = payData['payedDate']?.toString();
+
+              if (isInRange(payedDateStr)) {
+                final value = double.tryParse(collectedStr ?? '0') ?? 0;
+                total += value;
+              }
+            }
+          } catch (e) {
+            print('Error fetching payments in $collection/$docId: $e');
           }
         }
       }
@@ -123,24 +139,35 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         isPharmacyTotalExpenseLoading = true;
       });
 
-      // Purchase Entry
-      final QuerySnapshot purchaseSnapshot = await firestore
+      final purchaseSnapshot = await firestore
           .collection('stock')
           .doc('Products')
           .collection('PurchaseEntry')
           .get();
 
       for (var doc in purchaseSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final String? reportDate = data['billDate'];
-        if (isInRange(reportDate)) {
-          double value =
-              double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
-          total += value;
+        final docId = doc.id;
+
+        final paymentsSnapshot = await firestore
+            .collection('stock')
+            .doc('Products')
+            .collection('PurchaseEntry')
+            .doc(docId)
+            .collection('payments')
+            .get();
+
+        for (var payDoc in paymentsSnapshot.docs) {
+          final payData = payDoc.data();
+          final collectedStr = payData['collected']?.toString();
+          final payedDateStr = payData['payedDate']?.toString();
+
+          if (isInRange(payedDateStr)) {
+            final value = double.tryParse(collectedStr ?? '0') ?? 0;
+            total += value;
+          }
         }
       }
 
-      // Return Collections
       List<String> returnCollections = [
         'StockReturn',
         'ExpiryReturn',
@@ -148,20 +175,32 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       ];
 
       for (String collection in returnCollections) {
-        final QuerySnapshot returnSnapshot = await firestore
+        final returnSnapshot = await firestore
             .collection('stock')
             .doc('Products')
             .collection(collection)
             .get();
 
         for (var doc in returnSnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final String? dateStr = data['returnDate'];
+          final docId = doc.id;
 
-          if (isInRange(dateStr)) {
-            double returnValue =
-                double.tryParse(data['netTotalAmount']?.toString() ?? '0') ?? 0;
-            total -= returnValue;
+          final paymentsSnapshot = await firestore
+              .collection('stock')
+              .doc('Products')
+              .collection(collection)
+              .doc(docId)
+              .collection('payments')
+              .get();
+
+          for (var payDoc in paymentsSnapshot.docs) {
+            final payData = payDoc.data();
+            final collectedStr = payData['collected']?.toString();
+            final payedDateStr = payData['payedDate']?.toString();
+
+            if (isInRange(payedDateStr)) {
+              final value = double.tryParse(collectedStr ?? '0') ?? 0;
+              total -= value;
+            }
           }
         }
       }
@@ -204,129 +243,194 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         return true;
       }
 
-      int parseAmount(dynamic value) {
-        if (value == null) return 0;
-        return int.tryParse(value.toString()) ?? 0;
+      int parseAmount(String? value) {
+        if (value == null || value.trim().isEmpty) return 0;
+        return int.tryParse(value) ?? 0;
       }
 
       for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final patientId = doc.id;
 
-        // 1. opAmountCollected
-        if (isInRange(data['opAdmissionDate'])) {
-          income += parseAmount(data['opAmountCollected']);
-        }
-
-        // 2. opTickets
+        // 1. Get all opAmountPayments
         try {
-          final opTicketsSnapshot = await fireStore
+          final opPaymentsSnapshot = await fireStore
               .collection('patients')
-              .doc(doc.id)
-              .collection('opTickets')
+              .doc(patientId)
+              .collection('opAmountPayments')
               .get();
 
-          for (var opDoc in opTicketsSnapshot.docs) {
-            final opData = opDoc.data();
-            if (isInRange(opData['tokenDate'])) {
-              income += parseAmount(opData['opTicketCollectedAmount']);
-            }
-            if (isInRange(opData['reportDate'])) {
-              income += parseAmount(opData['labCollected']);
+          for (var payDoc in opPaymentsSnapshot.docs) {
+            final payData = payDoc.data();
+            final collectedStr = payData['collected']?.toString();
+            final payedDateStr = payData['payedDate']?.toString();
+
+            if (isInRange(payedDateStr)) {
+              income += parseAmount(collectedStr);
             }
           }
         } catch (e) {
-          print('Error fetching opTickets for ${doc.id}: $e');
-        }
-
-        // 3. ipTickets
+          print('Error fetching opAmountPayments for $patientId: $e');
+        } // 2. Get all opTickets and sum their opTicketPayments
         try {
-          final ipTicketsSnapshot = await fireStore
+          final opTicketsSnapshot = await fireStore
               .collection('patients')
-              .doc(doc.id)
-              .collection('ipTickets')
+              .doc(patientId)
+              .collection('opTickets')
               .get();
 
-          for (var ipDoc in ipTicketsSnapshot.docs) {
-            final ipData = ipDoc.data();
+          for (var opTicketDoc in opTicketsSnapshot.docs) {
+            final opTicketId = opTicketDoc.id;
 
-            if (isInRange(ipData['roomAllotmentDate'])) {
-              income += parseAmount(ipData['ipAdmissionCollected']);
-            }
-
-            // labCollection inside ipTickets
             try {
-              final labCollectionSnapshot = await fireStore
+              final opTicketPaymentsSnapshot = await fireStore
                   .collection('patients')
-                  .doc(doc.id)
-                  .collection('ipTickets')
-                  .doc(ipDoc.id)
-                  .collection('labCollection')
+                  .doc(patientId)
+                  .collection('opTickets')
+                  .doc(opTicketId)
+                  .collection('opTicketPayments')
                   .get();
 
-              for (var labDoc in labCollectionSnapshot.docs) {
-                final labData = labDoc.data();
-                if (isInRange(labData['reportDate'])) {
-                  income += parseAmount(labData['labCollected']);
+              for (var paymentDoc in opTicketPaymentsSnapshot.docs) {
+                final paymentData = paymentDoc.data();
+                final collectedStr = paymentData['collected']?.toString();
+                final payedDateStr = paymentData['payedDate']?.toString();
+
+                if (isInRange(payedDateStr)) {
+                  income += parseAmount(collectedStr);
                 }
               }
             } catch (e) {
               print(
-                  'Error fetching labCollection for ipTicket ${ipDoc.id} of patient ${doc.id}: $e');
-            }
-
-            // ipAdmissionPayments/payments
-            try {
-              final ipTicketId = ipData['ipTicket']?.toString();
-              if (ipTicketId != null) {
-                final paymentsSnapshot = await fireStore
-                    .collection('patients')
-                    .doc(doc.id)
-                    .collection('ipAdmissionPayments')
-                    .doc('payments$ipTicketId')
-                    .collection('additionalAmount')
-                    .get();
-
-                DateTime? latestDateTime;
-                double latestCollected = 0;
-
-                for (var payDoc in paymentsSnapshot.docs) {
-                  final payData = payDoc.data();
-                  final dateStr = payData['date'] as String?;
-                  final timeStr = payData['time'] as String?;
-                  final amountStr = payData['collectedTillNow'];
-
-                  if (dateStr == null || timeStr == null || amountStr == null)
-                    continue;
-
-                  if (!isInRange(dateStr)) continue;
-
-                  try {
-                    final fullDateTimeStr = '$dateStr $timeStr';
-                    final formatter = DateFormat('yyyy-MM-dd H:mm');
-                    final dt = formatter.parseStrict(fullDateTimeStr);
-
-                    if (latestDateTime == null || dt.isAfter(latestDateTime)) {
-                      latestDateTime = dt;
-                      latestCollected =
-                          double.tryParse(amountStr.toString()) ?? 0;
-                      print(
-                          'Latest additional amount for $doc.id: $latestCollected');
-                    }
-                  } catch (e) {
-                    print('Error parsing date+time for ${payDoc.id}: $e');
-                  }
-                }
-
-                if (latestDateTime != null) {
-                  income += latestCollected.toInt();
-                }
-              }
-            } catch (e) {
-              print('Error fetching ipAdmissionPayments for ${doc.id}: $e');
+                  'Error fetching opTicketPayments for $opTicketId of $patientId: $e');
             }
           }
         } catch (e) {
-          print('Error fetching ipTickets for ${doc.id}: $e');
+          print('Error fetching opTickets for $patientId: $e');
+        } // 3. Get all ipTickets and sum their ipAdmitPayments
+        try {
+          final ipTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(patientId)
+              .collection('ipTickets')
+              .get();
+
+          for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+            final ipTicketId = ipTicketDoc.id;
+
+            try {
+              final ipAdmitPaymentsSnapshot = await fireStore
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('ipTickets')
+                  .doc(ipTicketId)
+                  .collection('ipAdmitPayments')
+                  .get();
+
+              for (var paymentDoc in ipAdmitPaymentsSnapshot.docs) {
+                final paymentData = paymentDoc.data();
+                final collectedStr = paymentData['collected']?.toString();
+                final payedDateStr = paymentData['payedDate']?.toString();
+
+                if (isInRange(payedDateStr)) {
+                  income += parseAmount(collectedStr);
+                }
+              }
+            } catch (e) {
+              print(
+                  'Error fetching ipAdmitPayments for $ipTicketId of $patientId: $e');
+            }
+          }
+        } catch (e) {
+          print('Error fetching ipTickets for $patientId: $e');
+        } // 4. Sum labPayments inside opTickets
+        try {
+          final opTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(patientId)
+              .collection('opTickets')
+              .get();
+
+          for (var opTicketDoc in opTicketsSnapshot.docs) {
+            final opTicketId = opTicketDoc.id;
+
+            try {
+              final labPaymentsSnapshot = await fireStore
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('opTickets')
+                  .doc(opTicketId)
+                  .collection('labPayments')
+                  .get();
+
+              for (var labDoc in labPaymentsSnapshot.docs) {
+                final labData = labDoc.data();
+                final collectedStr = labData['collected']?.toString();
+                final payedDateStr = labData['payedDate']?.toString();
+
+                if (isInRange(payedDateStr)) {
+                  income += parseAmount(collectedStr);
+                }
+              }
+            } catch (e) {
+              print('Error fetching op labPayments for $opTicketId: $e');
+            }
+          }
+        } catch (e) {
+          print('Error fetching opTickets for labPayments: $e');
+        } // 5. Sum labPayments inside ipTickets ➜ Examination ➜ labPayments
+        try {
+          final ipTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(patientId)
+              .collection('ipTickets')
+              .get();
+
+          for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+            final ipTicketId = ipTicketDoc.id;
+
+            try {
+              final examinationSnapshot = await fireStore
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('ipTickets')
+                  .doc(ipTicketId)
+                  .collection('Examination')
+                  .get();
+
+              for (var examDoc in examinationSnapshot.docs) {
+                final examId = examDoc.id;
+
+                try {
+                  final labPaymentsSnapshot = await fireStore
+                      .collection('patients')
+                      .doc(patientId)
+                      .collection('ipTickets')
+                      .doc(ipTicketId)
+                      .collection('Examination')
+                      .doc(examId)
+                      .collection('labPayments')
+                      .get();
+
+                  for (var labDoc in labPaymentsSnapshot.docs) {
+                    final labData = labDoc.data();
+                    final collectedStr = labData['collected']?.toString();
+                    final payedDateStr = labData['payedDate']?.toString();
+
+                    if (isInRange(payedDateStr)) {
+                      income += parseAmount(collectedStr);
+                    }
+                  }
+                } catch (e) {
+                  print(
+                      'Error fetching labPayments in Examination $examId: $e');
+                }
+              }
+            } catch (e) {
+              print('Error fetching Examination for ipTicket $ipTicketId: $e');
+            }
+          }
+        } catch (e) {
+          print('Error fetching ipTickets for labPayments: $e');
         }
       }
 
