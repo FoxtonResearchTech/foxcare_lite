@@ -30,7 +30,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
 
   void _addRow() {
     List<Map<String, dynamic>> fetchedData = [];
-    int n = 1000000;
+    int n = 10000;
     for (int i = 1; i <= n; i++) {
       fetchedData.add({
         'SL No': i,
