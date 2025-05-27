@@ -102,6 +102,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           final data = ticketDoc.data();
 
           if (!data.containsKey('opTicket')) continue;
+          if (data.containsKey('reportNo') && data.containsKey('reportDate'))
+            continue;
 
           // Check for labExaminationPrescribedDate
           final prescribedDate = data['labExaminationPrescribedDate'] ?? '';

@@ -702,7 +702,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "Lab Collection ",
+                          text: "IP Lab Collection ",
                           size: screenWidth * .015,
                         ),
                       ],

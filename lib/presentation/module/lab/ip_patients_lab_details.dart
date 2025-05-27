@@ -133,8 +133,14 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
           for (var examDoc in examSnapshot.docs) {
             final examData = examDoc.data();
+            if (examData.containsKey('reportNo') &&
+                examData.containsKey('reportDate')) {
+              continue;
+            }
             final examDate = examData['date'];
             final examItems = examData['items'];
+
+            // if (examData.containsKey('reportDate')) break;
 
             // Filter by date if opNumber and phoneNumber not provided
             if ((opNumber == null || opNumber.isEmpty) &&

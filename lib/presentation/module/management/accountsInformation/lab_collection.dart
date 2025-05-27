@@ -698,7 +698,7 @@ class _LabCollection extends State<LabCollection> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: "Lab Collection ",
+                          text: "OP Lab Collection ",
                           size: screenWidth * .015,
                         ),
                       ],

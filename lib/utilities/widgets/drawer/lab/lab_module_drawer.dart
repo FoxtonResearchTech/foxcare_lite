@@ -4,7 +4,9 @@ import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_room_availability_check.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patients_search.dart';
 import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
+import 'package:foxcare_lite/presentation/module/lab/ip_lab_accounts.dart';
 import 'package:foxcare_lite/presentation/module/lab/ip_patients_lab_details.dart';
+import 'package:foxcare_lite/presentation/module/lab/ip_report_search.dart';
 import 'package:foxcare_lite/presentation/module/lab/lab_accounts.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
@@ -101,17 +103,31 @@ class _LabModuleDrawer extends State<LabModuleDrawer> {
             },
           ),
           DrawerMenuItem(
-            title: 'Accounts',
+            title: 'OP Ticket Accounts',
             icon: Iconsax.money,
             onTap: () {
               navigateWithTransition(context, LabAccounts());
             },
           ),
           DrawerMenuItem(
-            title: 'Reports',
+            title: 'OP Ticket Reports',
             icon: Iconsax.document,
             onTap: () {
               navigateWithTransition(context, ReportsSearch());
+            },
+          ),
+          DrawerMenuItem(
+            title: 'IP Ticket Accounts',
+            icon: Iconsax.money,
+            onTap: () {
+              navigateWithTransition(context, IpLabAccounts());
+            },
+          ),
+          DrawerMenuItem(
+            title: 'IP Ticket Reports',
+            icon: Iconsax.document,
+            onTap: () {
+              navigateWithTransition(context, IpReportSearch());
             },
           ),
           DrawerMenuItem(

@@ -17,15 +17,15 @@ import '../../../utilities/widgets/textField/primary_textField.dart';
 import 'dashboard.dart';
 import 'lab_testqueue.dart';
 
-class LabAccounts extends StatefulWidget {
-  const LabAccounts({super.key});
+class IpLabAccounts extends StatefulWidget {
+  const IpLabAccounts({super.key});
 
   @override
-  State<LabAccounts> createState() => _LabAccountsState();
+  State<IpLabAccounts> createState() => _IpLabAccounts();
 }
 
-class _LabAccountsState extends State<LabAccounts> {
-  int selectedIndex = 3;
+class _IpLabAccounts extends State<IpLabAccounts> {
+  int selectedIndex = 5;
 
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
@@ -33,9 +33,9 @@ class _LabAccountsState extends State<LabAccounts> {
   final List<String> headers = [
     'Report Date',
     'Report No',
-    'Name',
     'OP Number',
-    'OP Ticket',
+    'IP Ticket',
+    'Name',
     'Total Amount',
     'Collected',
     'Balance',
@@ -65,40 +65,55 @@ class _LabAccountsState extends State<LabAccounts> {
       for (var patientDoc in patientsSnapshot.docs) {
         final patientData = patientDoc.data() as Map<String, dynamic>;
 
-        final opTicketsSnapshot =
-            await patientDoc.reference.collection('opTickets').get();
+        final ipTicketsSnapshot =
+            await patientDoc.reference.collection('ipTickets').get();
 
-        for (var ticketDoc in opTicketsSnapshot.docs) {
+        for (var ticketDoc in ipTicketsSnapshot.docs) {
           final ticketData = ticketDoc.data();
-          if (!ticketData.containsKey('reportNo') ||
-              !ticketData.containsKey('reportDate')) continue;
+          final ticketId = ticketDoc.id;
 
-          final reportDate = ticketData['reportDate']?.toString();
-          if (singleDate != null && reportDate != singleDate) continue;
-          if (fromDate != null &&
-              toDate != null &&
-              (reportDate == null ||
-                  reportDate.compareTo(fromDate) < 0 ||
-                  reportDate.compareTo(toDate) > 0)) {
-            continue;
+          // Fetch examinations inside this ipTicket
+          final examSnapshot = await patientDoc.reference
+              .collection('ipTickets')
+              .doc(ticketId)
+              .collection('Examination')
+              .get();
+
+          for (var examDoc in examSnapshot.docs) {
+            final examData = examDoc.data();
+
+            // Must have reportNo and reportDate to consider
+            if (!examData.containsKey('reportNo') ||
+                !examData.containsKey('reportDate')) continue;
+
+            final String reportDate = examData['reportDate'].toString();
+
+            // Filter by dates
+            if (singleDate != null && reportDate != singleDate) continue;
+            if (fromDate != null &&
+                toDate != null &&
+                (reportDate.compareTo(fromDate) < 0 ||
+                    reportDate.compareTo(toDate) > 0)) {
+              continue;
+            }
+
+            fetchedData.add({
+              'Report Date': reportDate,
+              'Report No': examData['reportNo']?.toString() ?? 'N/A',
+              'Name':
+                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'IP Ticket': ticketData['ipTicket']?.toString() ?? 'N/A',
+              'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+              'Total Amount': examData['labTotalAmount']?.toString() ?? '0',
+              'Collected': examData['labCollected']?.toString() ?? '0',
+              'Balance': examData['labBalance']?.toString() ?? '0',
+            });
           }
-
-          fetchedData.add({
-            'Report Date': reportDate ?? 'N/A',
-            'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
-            'Name':
-                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                    .trim(),
-            'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
-            'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
-            'Total Amount': ticketData['labTotalAmount']?.toString() ?? '0',
-            'Collected': ticketData['labCollected']?.toString() ?? '0',
-            'Balance': ticketData['labBalance']?.toString() ?? '0',
-          });
         }
       }
 
-      // Sort by report number
+      // Sort by report number ascending
       fetchedData.sort((a, b) {
         int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
         int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
@@ -109,7 +124,7 @@ class _LabAccountsState extends State<LabAccounts> {
         tableData = fetchedData;
       });
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching IP ticket data: $e');
     }
   }
 
@@ -273,7 +288,7 @@ class _LabAccountsState extends State<LabAccounts> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: " OP Ticket Accounts",
+                          text: " IP Ticket Accounts",
                           size: screenWidth * 0.03,
                         ),
                       ],
@@ -292,7 +307,6 @@ class _LabAccountsState extends State<LabAccounts> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
                   CustomTextField(

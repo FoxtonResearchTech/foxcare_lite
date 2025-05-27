@@ -14,37 +14,15 @@ import 'dashboard.dart';
 import 'lab_accounts.dart';
 import 'lab_testqueue.dart';
 
-class ReportsSearch extends StatefulWidget {
-  const ReportsSearch({super.key});
+class IpReportSearch extends StatefulWidget {
+  const IpReportSearch({super.key});
 
   @override
-  State<ReportsSearch> createState() => _ReportsSearch();
+  State<IpReportSearch> createState() => _IpReportSearch();
 }
 
-class ReportRow {
-  final String slNo;
-  final String opNumber;
-  final String name;
-  final String age;
-  final String testType;
-  final String dateOfReport;
-  final String amountCollected;
-  final String paymentStatus;
-
-  ReportRow(
-    this.slNo,
-    this.opNumber,
-    this.name,
-    this.age,
-    this.testType,
-    this.dateOfReport,
-    this.amountCollected,
-    this.paymentStatus,
-  );
-}
-
-class _ReportsSearch extends State<ReportsSearch> {
-  int selectedIndex = 4;
+class _IpReportSearch extends State<IpReportSearch> {
+  int selectedIndex = 6;
 
   TextEditingController _reportNumber = TextEditingController();
   TextEditingController _dateController = TextEditingController();
@@ -54,9 +32,9 @@ class _ReportsSearch extends State<ReportsSearch> {
   final List<String> headers = [
     'Report Date',
     'Report No',
-    'Name',
-    'OP Ticket',
+    'IP Ticket',
     'OP Number',
+    'Name',
     'Report'
   ];
   List<Map<String, dynamic>> tableData = [];
@@ -77,49 +55,67 @@ class _ReportsSearch extends State<ReportsSearch> {
         final patientData = patientDoc.data() as Map<String, dynamic>;
         final patientId = patientDoc.id;
 
-        final opTicketsSnapshot = await FirebaseFirestore.instance
+        final ipTicketsSnapshot = await FirebaseFirestore.instance
             .collection('patients')
             .doc(patientId)
-            .collection('opTickets')
+            .collection('ipTickets')
             .get();
 
-        for (var ticketDoc in opTicketsSnapshot.docs) {
+        for (var ticketDoc in ipTicketsSnapshot.docs) {
           final ticketData = ticketDoc.data();
+          final ticketId = ticketDoc.id;
 
-          if (!ticketData.containsKey('reportNo') ||
-              !ticketData.containsKey('reportDate')) continue;
+          final examSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(patientId)
+              .collection('ipTickets')
+              .doc(ticketId)
+              .collection('Examination')
+              .get();
 
-          bool matches = false;
+          for (var examDoc in examSnapshot.docs) {
+            final examData = examDoc.data();
 
-          if (singleDate != null) {
-            matches = ticketData['reportDate'] == singleDate;
-          } else if (fromDate != null && toDate != null) {
-            final date = ticketData['reportDate'];
-            matches =
-                date.compareTo(fromDate) >= 0 && date.compareTo(toDate) <= 0;
-          } else if (reportNo != null) {
-            matches = ticketData['reportNo'].toString() == reportNo;
-          } else {
-            matches = true;
-          }
+            if (!examData.containsKey('reportNo') ||
+                !examData.containsKey('reportDate')) continue;
 
-          if (matches) {
-            fetchedData.add({
-              'Report Date': ticketData['reportDate']?.toString() ?? 'N/A',
-              'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
-              'Name':
-                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
-              'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
-              'Total Amount': ticketData['labTotalAmount']?.toString() ?? '0',
-              'Collected': ticketData['labCollected']?.toString() ?? '0',
-              'Balance': ticketData['labBalance']?.toString() ?? '0',
-            });
+            final String reportDate = examData['reportDate'].toString();
+            final String reportNumber = examData['reportNo'].toString();
+
+            bool matches = false;
+
+            if (singleDate != null) {
+              matches = reportDate == singleDate;
+            } else if (fromDate != null && toDate != null) {
+              matches = reportDate.compareTo(fromDate) >= 0 &&
+                  reportDate.compareTo(toDate) <= 0;
+            } else if (reportNo != null) {
+              matches = reportNumber == reportNo;
+            } else {
+              matches = true;
+            }
+
+            if (matches) {
+              final List<String> tests = (examData['items'] is List)
+                  ? (examData['items'] as List).whereType<String>().toList()
+                  : [];
+
+              fetchedData.add({
+                'Report Date': reportDate,
+                'Report No': reportNumber,
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'IP Ticket': ticketData['ipTicket']?.toString() ?? 'N/A',
+                'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+                'Tests': tests.join(', '),
+              });
+            }
           }
         }
       }
 
+      // Sort by Report No
       fetchedData.sort((a, b) {
         int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
         int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
@@ -130,7 +126,7 @@ class _ReportsSearch extends State<ReportsSearch> {
         tableData = fetchedData;
       });
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching IP examination data: $e');
     }
   }
 
@@ -239,7 +235,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                     child: Column(
                       children: [
                         CustomText(
-                          text: " OP Ticket Reports",
+                          text: " IP Ticket Reports",
                           size: screenWidth * 0.03,
                         ),
                       ],
