@@ -5,6 +5,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admission_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit_list.dart';
+import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_lab_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/new_patient_register_collection.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
@@ -130,6 +131,13 @@ class _ManagementAccountsDrawer extends State<ManagementAccountsDrawer> {
             icon: Iconsax.add_circle,
             onTap: () {
               navigateWithTransition(context, LabCollection());
+            },
+          ),
+          DrawerMenuItem(
+            title: 'IP Lab Collection',
+            icon: Iconsax.add_circle,
+            onTap: () {
+              navigateWithTransition(context, IpLabCollection());
             },
           ),
           DrawerMenuItem(

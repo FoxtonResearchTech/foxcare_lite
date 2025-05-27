@@ -177,10 +177,13 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
             'List of Tests': data['Examination'] ?? 'N/A',
             'Action': TextButton(
                 onPressed: () {
+                  final investigation =
+                      data['investigationTests'] as Map<String, dynamic>?;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => PatientReport(
+                        doctorName: data['doctorName'] ?? 'N/A',
                         sampleDate: sampleDate ?? "N/A",
                         patientID: patientData['opNumber'] ?? 'N/A',
                         opTicket: data['opTicket'] ?? 'N/A',
@@ -194,7 +197,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                         medication: data['Examination'] ?? 'N/A',
                         address: patientData['address1'] ?? 'N/A',
                         pincode: patientData['pincode'] ?? 'N/A',
-                        primaryInfo: patientData['otherComments'] ?? 'N/A',
+                        primaryInfo: investigation?['diagnosisSigns'] ?? 'N/A',
                         temperature: data['temperature'] ?? 'N/A',
                         bloodPressure: data['bloodPressure'] ?? 'N/A',
                         sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
@@ -439,6 +442,10 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 headerColor: Colors.white,
                 tableData: tableData1,
                 headers: headers1,
+                columnWidths: {
+                  6: FixedColumnWidth(screenWidth * 0.15),
+                  8: FixedColumnWidth(screenWidth * 0.1),
+                },
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'
                       ? Colors.red.shade200

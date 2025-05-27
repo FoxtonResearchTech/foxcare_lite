@@ -37,7 +37,7 @@ class _IpAdmit extends State<IpAdmit> {
   TextEditingController quantity = TextEditingController();
   TextEditingController reasonForAmount = TextEditingController();
 
-  int selectedIndex = 8;
+  int selectedIndex = 9;
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();

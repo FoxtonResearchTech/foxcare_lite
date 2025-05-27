@@ -35,7 +35,7 @@ class IpAdmitList extends StatefulWidget {
 class _IpAdmitList extends State<IpAdmitList> {
   final dateTime = DateTime.now();
 
-  int selectedIndex = 9;
+  int selectedIndex = 10;
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();

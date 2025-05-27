@@ -20,6 +20,8 @@ class PatientReport extends StatefulWidget {
   final String sex;
   final String dob;
   final String opTicket;
+  final String doctorName;
+
   final String place;
   final String address;
   final String pincode;
@@ -47,7 +49,8 @@ class PatientReport extends StatefulWidget {
       required this.medication,
       required this.dob,
       required this.opTicket,
-      required this.sampleDate});
+      required this.sampleDate,
+      required this.doctorName});
 
   @override
   State<PatientReport> createState() => _PatientReport();
@@ -236,6 +239,7 @@ class _PatientReport extends State<PatientReport> {
     final screenHeight = MediaQuery.of(context).size.height;
     final List<Map<String, String>> data = [
       {'title': 'Patient Name', 'subtitle': widget.name},
+      {'title': 'OP Number', 'subtitle': widget.patientID},
       {'title': 'OP Ticket', 'subtitle': widget.opTicket},
       {'title': 'Age', 'subtitle': widget.age},
       {'title': 'Sex', 'subtitle': widget.sex},
@@ -244,13 +248,11 @@ class _PatientReport extends State<PatientReport> {
         'title': 'Basic Information / Diagnostics',
         'subtitle': widget.primaryInfo
       },
-      {'title': 'Refer By', 'subtitle': 'Test'},
+      {'title': 'Refer By', 'subtitle': widget.doctorName},
       {'title': 'Report Date', 'subtitle': _dateController.text},
       {'title': 'Sample Date', 'subtitle': widget.sampleDate},
       {'title': 'Report Number', 'subtitle': reportNO},
       {'title': 'Sample Collected Date', 'subtitle': ''},
-
-      // from controller
     ];
     return Scaffold(
       appBar: AppBar(
