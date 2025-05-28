@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
@@ -29,14 +30,12 @@ class _PharmacyStocks extends State<PharmacyStocks> {
   final TextEditingController _productName = TextEditingController();
   final TextEditingController _composition = TextEditingController();
   final TextEditingController _quantity = TextEditingController();
-  final TextEditingController _hsnCode = TextEditingController();
   final TextEditingController _companyName = TextEditingController();
   final TextEditingController _referredByDoctor = TextEditingController();
   final TextEditingController _additionalInformation = TextEditingController();
   String? selectedCategoryFilter;
   String productName = '';
   String companyName = '';
-  String hsnCode = '';
 
   final List<String> headers = [
     'Product Name',
@@ -75,32 +74,48 @@ class _PharmacyStocks extends State<PharmacyStocks> {
 
   Future<void> fetchData() async {
     try {
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .get();
-
       List<Map<String, dynamic>> fetchedData = [];
+      DocumentSnapshot? lastDoc;
+      const int pageSize = 20;
 
-      for (var doc in stockSnapshot.docs) {
-        final data = doc.data();
-        fetchedData.add({
-          'Product Name': data['productName'],
-          'HSN Code': data['hsnCode'],
-          'Quantity': data['quantity'],
-          'Category': data['category'],
-          'Company': data['companyName'],
-          'Composition': data['composition'],
-          'Type': data['type'],
+      while (true) {
+        Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .limit(pageSize);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        QuerySnapshot<Map<String, dynamic>> snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          break; // No more documents to fetch
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          fetchedData.add({
+            'Product Name': data['productName'],
+            'HSN Code': data['hsnCode'],
+            'Quantity': data['quantity'],
+            'Category': data['category'],
+            'Company': data['companyName'],
+            'Composition': data['composition'],
+            'Type': data['type'],
+          });
+        }
+
+        lastDoc = snapshot.docs.last;
+        setState(() {
+          allProducts = fetchedData;
+          filteredProducts = List.from(allProducts);
         });
+        // Optional delay between pages
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-
-      setState(() {
-        allProducts = fetchedData;
-        filteredProducts = List.from(allProducts); // Update filtered list too
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -119,7 +134,6 @@ class _PharmacyStocks extends State<PharmacyStocks> {
     _productName.clear();
     _composition.clear();
     _quantity.clear();
-    _hsnCode.clear();
     _companyName.clear();
     _referredByDoctor.clear();
     _additionalInformation.clear();
@@ -138,11 +152,7 @@ class _PharmacyStocks extends State<PharmacyStocks> {
             (companyName.isEmpty ||
                 product['Company']!
                     .toLowerCase()
-                    .contains(companyName.toLowerCase())) &&
-            (hsnCode.isEmpty ||
-                product['HSN Code']!
-                    .toLowerCase()
-                    .contains(hsnCode.toLowerCase()));
+                    .contains(companyName.toLowerCase()));
       }).toList();
     });
   }
@@ -281,15 +291,6 @@ class _PharmacyStocks extends State<PharmacyStocks> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
-                    hintText: 'HSN Code',
-                    width: screenWidth * 0.10,
-                    onChanged: (value) {
-                      hsnCode = value;
-                      filterProducts();
-                    },
-                  ),
-                  SizedBox(width: screenHeight * 0.045),
                   CustomButton(
                     label: 'Search',
                     onPressed: filterProducts,
@@ -298,7 +299,7 @@ class _PharmacyStocks extends State<PharmacyStocks> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(
+              LazyDataTable(
                 headerColor: Colors.white,
                 headerBackgroundColor: AppColors.blue,
                 headers: headers,

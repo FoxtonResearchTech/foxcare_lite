@@ -53,47 +53,53 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     int opCount = 0;
+    DocumentSnapshot? lastPatientDoc;
+    bool hasMore = true;
 
     try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
+      while (hasMore) {
+        Query patientQuery = fireStore.collection('patients').limit(20);
+        if (lastPatientDoc != null) {
+          patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
+        }
 
-      for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final patientSnapshot = await patientQuery.get();
 
-        if (!data.containsKey('opNumber') ||
-            !data.containsKey('opAdmissionDate')) continue;
+        for (var doc in patientSnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
 
-        try {
-          final DocumentSnapshot tokenSnapshot = await fireStore
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
+          if (!data.containsKey('opNumber') ||
+              !data.containsKey('opAdmissionDate')) continue;
 
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data() as Map<String, dynamic>?;
+          try {
+            final tokenSnapshot = await doc.reference
+                .collection('tokens')
+                .doc('currentToken')
+                .get();
 
-            final String? tokenDate = tokenData?['date'];
+            if (tokenSnapshot.exists) {
+              final tokenData = tokenSnapshot.data();
 
-            if (tokenDate == today) {
-              final QuerySnapshot opTicketsSnapshot = await fireStore
-                  .collection('patients')
-                  .doc(doc.id)
-                  .collection('opTickets')
-                  .where('doctorName', isEqualTo: currentUser!.name)
-                  .where('tokenDate', isEqualTo: today)
-                  .get();
+              final String? tokenDate = tokenData?['date'];
 
-              if (opTicketsSnapshot.docs.isNotEmpty) {
+              if (tokenDate == today) {
+                final opTicketsSnapshot = await doc.reference
+                    .collection('opTickets')
+                    .where('doctorName', isEqualTo: currentUser!.name)
+                    .where('tokenDate', isEqualTo: today)
+                    .get();
+
                 opCount += opTicketsSnapshot.docs.length;
               }
             }
+          } catch (e) {
+            print('Error fetching token for patient ${doc.id}: $e');
           }
-        } catch (e) {
-          print('Error fetching token for patient ${doc.id}: $e');
         }
+
+        lastPatientDoc = patientSnapshot.docs.last;
+        await Future.delayed(const Duration(milliseconds: 100));
+        hasMore = patientSnapshot.docs.length == 20;
       }
 
       setState(() {
@@ -109,20 +115,40 @@ class _DoctorDashboard extends State<DoctorDashboard> {
 
   Future<int> getNoOfNewPatients() async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
-
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+    int count = 0;
+    DocumentSnapshot? lastDoc;
+    bool hasMore = true;
+
     try {
-      final QuerySnapshot snapshot = await fireStore
-          .collection('patients')
-          .where('opAdmissionDate', isEqualTo: today)
-          .get();
+      while (hasMore) {
+        Query query = fireStore
+            .collection('patients')
+            .where('opAdmissionDate', isEqualTo: today)
+            .limit(20);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final snapshot = await query.get();
+
+        count += snapshot.docs.length;
+
+        if (snapshot.docs.length < 20) {
+          hasMore = false;
+        } else {
+          lastDoc = snapshot.docs.last;
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      }
 
       setState(() {
-        noOfNewPatients = snapshot.docs.length;
+        noOfNewPatients = count;
       });
 
-      return noOfNewPatients;
+      return count;
     } catch (e) {
       print('Error fetching documents: $e');
       return 0;
@@ -133,111 +159,121 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    int missingCount = 0;
+    int waitingCount = 0;
+    DocumentSnapshot? lastPatientDoc;
+    bool hasMore = true;
 
     try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
+      while (hasMore) {
+        Query patientQuery = fireStore.collection('patients').limit(20);
+        if (lastPatientDoc != null) {
+          patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
+        }
 
-      for (var patientDoc in patientSnapshot.docs) {
-        final QuerySnapshot opTicketsSnapshot = await fireStore
-            .collection('patients')
-            .doc(patientDoc.id)
-            .collection('opTickets')
-            .where('doctorName', isEqualTo: currentUser!.name)
-            .where('tokenDate', isEqualTo: today)
-            .get();
+        final patientSnapshot = await patientQuery.get();
 
-        for (var opTicketDoc in opTicketsSnapshot.docs) {
-          final data = opTicketDoc.data() as Map<String, dynamic>;
+        for (var patientDoc in patientSnapshot.docs) {
+          final opTicketsSnapshot = await patientDoc.reference
+              .collection('opTickets')
+              .where('doctorName', isEqualTo: currentUser!.name)
+              .where('tokenDate', isEqualTo: today)
+              .get();
 
-          if (!data.containsKey('Medication') &&
-              !data.containsKey('Examination')) {
-            missingCount++;
+          for (var ticketDoc in opTicketsSnapshot.docs) {
+            final data = ticketDoc.data();
+
+            final hasMedication = data.containsKey('Medication') &&
+                data['Medication'] != null &&
+                data['Medication'].toString().trim().isNotEmpty;
+
+            final hasExamination = data.containsKey('Examination') &&
+                data['Examination'] != null &&
+                data['Examination'].toString().trim().isNotEmpty;
+
+            if (!hasMedication && !hasExamination) {
+              waitingCount++;
+            }
           }
         }
+
+        lastPatientDoc = patientSnapshot.docs.last;
+        await Future.delayed(const Duration(milliseconds: 100));
+        hasMore = patientSnapshot.docs.length == 20;
       }
 
       setState(() {
-        noOfWaitingQueue = missingCount;
+        noOfWaitingQueue = waitingCount;
       });
 
-      return missingCount;
+      return waitingCount;
     } catch (e) {
       print('Error fetching documents: $e');
       return 0;
     }
   }
 
-  Future<void> fetchCounterOneData() async {
-    final user = UserSession.currentUser;
+  Future<void> fetchCounterOneData({int pageSize = 10}) async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    List<Map<String, dynamic>> fetchedData = [];
+    DocumentSnapshot? lastDoc;
+    bool doctorFound = false;
 
-    try {
-      List<Map<String, dynamic>> fetchedData = [];
+    final employeeSnapshot = await FirebaseFirestore.instance
+        .collection('employees')
+        .where('roles', isEqualTo: 'Doctor')
+        .get();
 
-      QuerySnapshot<Map<String, dynamic>> counterSnapshot =
-          await FirebaseFirestore.instance
-              .collection('employees')
-              .where('roles', isEqualTo: 'Doctor')
-              .get();
-
-      bool doctorFound = false;
-
-      for (var doc in counterSnapshot.docs) {
-        final data = doc.data();
-        final String fullName = '${data['firstName']} ${data['lastName']}';
-
-        if (fullName == currentUser!.name) {
-          doctorFound = true;
-
-          String combined =
-              'Doctor: $fullName | Specialization: ${data['specialization'] ?? 'N/A'}';
-          fetchedData.add({
-            'Counter': combined,
-            'Token': 'N/A',
-          });
-          break;
-        }
-      }
-
-      if (!doctorFound) {
+    for (var doc in employeeSnapshot.docs) {
+      final data = doc.data();
+      final fullName = '${data['firstName']} ${data['lastName']}';
+      if (fullName == currentUser!.name) {
+        doctorFound = true;
         fetchedData.add({
-          'Counter': 'Currently No Patients in Queue.',
+          'Counter':
+              'Doctor: $fullName | Specialization: ${data['specialization'] ?? 'N/A'}',
           'Token': 'N/A',
         });
+        break;
+      }
+    }
+
+    if (!doctorFound) {
+      fetchedData.add({
+        'Counter': 'Currently No Patients in Queue.',
+        'Token': 'N/A',
+      });
+    }
+
+    List<Map<String, dynamic>> tokenData = [];
+    bool hasMore = true;
+
+    while (hasMore) {
+      Query patientQuery =
+          FirebaseFirestore.instance.collection('patients').limit(pageSize);
+
+      if (lastDoc != null) {
+        patientQuery = patientQuery.startAfterDocument(lastDoc);
       }
 
-      QuerySnapshot<Map<String, dynamic>> patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
-
-      List<Map<String, dynamic>> tokenData = [];
+      final patientSnapshot = await patientQuery.get();
+      if (patientSnapshot.docs.isEmpty) break;
 
       for (var patientDoc in patientSnapshot.docs) {
-        final patientId = patientDoc.id;
-
-        QuerySnapshot<Map<String, dynamic>> opTicketsSnapshot =
-            await FirebaseFirestore.instance
-                .collection('patients')
-                .doc(patientId)
-                .collection('opTickets')
-                .where('doctorName', isEqualTo: currentUser!.name)
-                .where('tokenDate', isEqualTo: today)
-                .get();
+        final opTicketsSnapshot = await patientDoc.reference
+            .collection('opTickets')
+            .where('doctorName', isEqualTo: currentUser!.name)
+            .where('tokenDate', isEqualTo: today)
+            .get();
 
         if (opTicketsSnapshot.docs.isNotEmpty) {
-          DocumentSnapshot<Map<String, dynamic>> currentTokenSnapshot =
-              await FirebaseFirestore.instance
-                  .collection('patients')
-                  .doc(patientId)
-                  .collection('tokens')
-                  .doc('currentToken')
-                  .get();
+          final currentTokenSnapshot = await patientDoc.reference
+              .collection('tokens')
+              .doc('currentToken')
+              .get();
 
           if (currentTokenSnapshot.exists) {
             final currentTokenData = currentTokenSnapshot.data();
-            String token =
-                currentTokenData?['tokenNumber']?.toString() ?? 'N/A';
+            final token = currentTokenData?['tokenNumber']?.toString() ?? 'N/A';
 
             if (token != 'N/A') {
               tokenData.add({
@@ -252,51 +288,55 @@ class _DoctorDashboard extends State<DoctorDashboard> {
         }
       }
 
-      // Sort tokens
-      tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
+      lastDoc = patientSnapshot.docs.last;
+      hasMore = patientSnapshot.docs.length == pageSize;
 
-      for (var item in tokenData) {
-        fetchedData.add(item['display']);
-      }
-
-      if (tokenData.isEmpty) {
-        fetchedData.add({
-          'Counter': 'No patients found for today.',
-          'Token': 'N/A',
-        });
-      }
-
-      // Step 3: Update UI
-      setState(() {
-        counterTableData = fetchedData;
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
+      await Future.delayed(const Duration(milliseconds: 100)); // Add delay
     }
+
+    tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
+    for (var item in tokenData) {
+      fetchedData.add(item['display']);
+    }
+
+    if (tokenData.isEmpty) {
+      fetchedData.add({
+        'Counter': 'No patients found for today.',
+        'Token': 'N/A',
+      });
+    }
+
+    setState(() {
+      counterTableData = fetchedData;
+    });
   }
 
-  Future<int> getLabOp() async {
-    final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+  Future<int> getLabOp({int pageSize = 10}) async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    List<Map<String, dynamic>> fetchedData = [];
+    int matchingCount = 0;
+    DocumentSnapshot? lastDoc;
+    bool hasMore = true;
 
-    try {
-      final QuerySnapshot patientSnapshot = await fireStore
-          .collection('patients')
-          .where('opAdmissionDate', isEqualTo: today)
-          .get();
+    while (hasMore) {
+      Query patientQuery =
+          FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
-      int matchingCount = 0;
-      List<Map<String, dynamic>> fetchedData = [];
+      if (lastDoc != null) {
+        patientQuery = patientQuery.startAfterDocument(lastDoc);
+      }
+
+      final patientSnapshot = await patientQuery.get();
+      if (patientSnapshot.docs.isEmpty) break;
 
       for (var doc in patientSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
 
-        DocumentSnapshot detailsDoc =
-            await doc.reference.collection('tokens').doc('currentToken').get();
+        if (data['opAdmissionDate'] != today) continue;
 
-        Map<String, dynamic>? detailsData = detailsDoc.exists
-            ? detailsDoc.data() as Map<String, dynamic>?
-            : null;
+        final detailsDoc =
+            await doc.reference.collection('tokens').doc('currentToken').get();
+        final detailsData = detailsDoc.data();
 
         final opTicketsSnapshot = await doc.reference
             .collection('opTickets')
@@ -332,22 +372,23 @@ class _DoctorDashboard extends State<DoctorDashboard> {
         }
       }
 
-      // Sort by token number
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['Token'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
+      lastDoc = patientSnapshot.docs.last;
+      hasMore = patientSnapshot.docs.length == pageSize;
 
-      setState(() {
-        tableData1 = fetchedData;
-      });
-
-      return matchingCount;
-    } catch (e) {
-      print('Error fetching documents: $e');
-      return 0;
+      await Future.delayed(const Duration(milliseconds: 300)); // Add delay
     }
+
+    fetchedData.sort((a, b) {
+      int tokenA = int.tryParse(a['Token'].toString()) ?? 0;
+      int tokenB = int.tryParse(b['Token'].toString()) ?? 0;
+      return tokenA.compareTo(tokenB);
+    });
+
+    setState(() {
+      tableData1 = fetchedData;
+    });
+
+    return matchingCount;
   }
 
   void _showTablesWithDelay() async {
