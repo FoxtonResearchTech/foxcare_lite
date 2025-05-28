@@ -18,6 +18,7 @@ import 'package:printing/printing.dart';
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/date_time.dart';
+import '../../../../utilities/widgets/table/lazy_data_table.dart';
 import '../tools/manage_pharmacy_info.dart';
 
 class CancelBill extends StatefulWidget {
@@ -102,112 +103,136 @@ class _CancelBill extends State<CancelBill> {
 
   Future<void> fetchOpBills({String? billNO}) async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('billings')
-          .collection('opbilling');
+      List<Map<String, dynamic>> allFetchedData = [];
+      DocumentSnapshot? lastDoc;
+      const int batchSize = 10; // adjust the limit as needed
+      bool hasMore = true;
 
-      if (billNO != null) {
-        query = query.where('billNo', isEqualTo: billNO);
-      }
+      while (hasMore) {
+        Query query = FirebaseFirestore.instance
+            .collection('pharmacy')
+            .doc('billings')
+            .collection('opbilling')
+            .limit(batchSize);
 
-      final QuerySnapshot snapshot = await query.get();
-      List<Map<String, dynamic>> fetchedData = [];
+        if (billNO != null) {
+          query = query.where('billNo', isEqualTo: billNO);
+        }
 
-      for (var bills in snapshot.docs) {
-        final data = bills.data() as Map<String, dynamic>;
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
 
-        if (data.isNotEmpty) {
-          fetchedData.add({
-            'Bill No': data['billNo'] ?? 'N/A',
-            'Patient Name': data['patientName'] ?? 'N/A',
-            'OP No': data['opNumber'] ?? 'N/A',
-            'Bill Date': data['billDate'] ?? 'N/A',
-            'OP Ticket': data['opTicket'] ?? 'N/A',
-            'Doctor Name': data['doctorName'] ?? 'N/A',
-            'Action': Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    final List<Map<String, dynamic>> productLists =
-                        (data['entryProducts'] as List)
-                            .map((e) => Map<String, dynamic>.from(e as Map))
-                            .toList();
-                    printOpInvoice(
-                      data['billNo'],
-                      data['billDate'],
-                      data['patientName'],
-                      data['doctorName'],
-                      data['opNumber'],
-                      data['phone'],
-                      data['place'],
-                      data['opTicket'],
-                      data['specialization'],
-                      productLists,
-                      data['discountPercentage'],
-                      data['discountAmount'],
-                      data['taxTotal'],
-                      data['totalBeforeDiscount'],
-                      data['netTotalAmount'],
-                    );
-                  },
-                  child: const CustomText(text: 'View'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Delete Confirmation'),
-                          content: Container(
-                            width: 200,
-                            height: 35,
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                CustomText(text: 'Are you sure ?'),
-                                SizedBox(height: 8),
-                              ],
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () async {
-                                await cancelOpBill(
-                                    bills.id, data['entryProducts']);
-                              },
-                              child: const CustomText(
-                                text: 'Sure',
-                                color: Colors.red,
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var bills in snapshot.docs) {
+          final data = bills.data() as Map<String, dynamic>;
+
+          if (data.isNotEmpty) {
+            allFetchedData.add({
+              'Bill No': data['billNo'] ?? 'N/A',
+              'Patient Name': data['patientName'] ?? 'N/A',
+              'OP No': data['opNumber'] ?? 'N/A',
+              'Bill Date': data['billDate'] ?? 'N/A',
+              'OP Ticket': data['opTicket'] ?? 'N/A',
+              'Doctor Name': data['doctorName'] ?? 'N/A',
+              'Action': Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      final List<Map<String, dynamic>> productLists =
+                          (data['entryProducts'] as List)
+                              .map((e) => Map<String, dynamic>.from(e as Map))
+                              .toList();
+                      printOpInvoice(
+                        data['billNo'],
+                        data['billDate'],
+                        data['patientName'],
+                        data['doctorName'],
+                        data['opNumber'],
+                        data['phone'],
+                        data['place'],
+                        data['opTicket'],
+                        data['specialization'],
+                        productLists,
+                        data['discountPercentage'],
+                        data['discountAmount'],
+                        data['taxTotal'],
+                        data['totalBeforeDiscount'],
+                        data['netTotalAmount'],
+                      );
+                    },
+                    child: const CustomText(text: 'View'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Delete Confirmation'),
+                            content: Container(
+                              width: 200,
+                              height: 35,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  CustomText(text: 'Are you sure ?'),
+                                  SizedBox(height: 8),
+                                ],
                               ),
                             ),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {});
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Close'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: const CustomText(text: 'Cancel'),
-                ),
-              ],
-            )
-          });
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () async {
+                                  await cancelOpBill(
+                                      bills.id, data['entryProducts']);
+                                },
+                                child: const CustomText(
+                                  text: 'Sure',
+                                  color: Colors.red,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {});
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: const CustomText(text: 'Cancel'),
+                  ),
+                ],
+              )
+            });
+          }
         }
-      }
 
-      setState(() {
-        opTableData = fetchedData;
-      });
+        setState(() {
+          opTableData = List.from(allFetchedData);
+        });
+
+        lastDoc = snapshot.docs.last;
+
+        if (snapshot.docs.length < batchSize) {
+          hasMore = false;
+        }
+
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching paginated op bills: $e');
     }
   }
 
@@ -803,113 +828,138 @@ class _CancelBill extends State<CancelBill> {
 
   Future<void> fetchIpBills({String? billNO}) async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('billings')
-          .collection('ipbilling');
+      List<Map<String, dynamic>> allFetchedData = [];
+      DocumentSnapshot? lastDoc;
+      const int batchSize = 10; // Adjust as needed
+      bool hasMore = true;
 
-      if (billNO != null) {
-        query = query.where('billNo', isEqualTo: billNO);
-      }
+      while (hasMore) {
+        Query query = FirebaseFirestore.instance
+            .collection('pharmacy')
+            .doc('billings')
+            .collection('ipbilling')
+            .limit(batchSize);
 
-      final QuerySnapshot snapshot = await query.get();
-      List<Map<String, dynamic>> fetchedData = [];
+        if (billNO != null) {
+          query = query.where('billNo', isEqualTo: billNO);
+        }
 
-      for (var bills in snapshot.docs) {
-        final data = bills.data() as Map<String, dynamic>;
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
 
-        if (data.isNotEmpty) {
-          fetchedData.add({
-            'Bill No': data['billNo'] ?? 'N/A',
-            'Patient Name': data['patientName'] ?? 'N/A',
-            'OP No': data['opNumber'] ?? 'N/A',
-            'IP Ticket': data['ipTicket'] ?? 'N/A',
-            'Bill Date': data['billDate'] ?? 'N/A',
-            'Doctor Name': data['doctorName'] ?? 'N/A',
-            'Action': Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    final List<Map<String, dynamic>> productLists =
-                        (data['entryProducts'] as List)
-                            .map((e) => Map<String, dynamic>.from(e as Map))
-                            .toList();
-                    printIpInvoice(
-                      data['billNo'],
-                      data['billDate'],
-                      data['patientName'],
-                      data['doctorName'],
-                      data['opNumber'],
-                      data['phone'],
-                      data['place'],
-                      data['ipTicket'],
-                      data['roomWard'],
-                      data['specialization'],
-                      productLists,
-                      data['discountPercentage'],
-                      data['discountAmount'],
-                      data['taxTotal'],
-                      data['totalBeforeDiscount'],
-                      data['netTotalAmount'],
-                    );
-                  },
-                  child: const CustomText(text: 'View'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Delete Confirmation'),
-                          content: Container(
-                            width: 200,
-                            height: 35,
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                CustomText(text: 'Are you sure ?'),
-                                SizedBox(height: 8),
-                              ],
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () async {
-                                await cancelIpBill(
-                                    bills.id, data['entryProducts']);
-                              },
-                              child: const CustomText(
-                                text: 'Sure',
-                                color: Colors.red,
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var bills in snapshot.docs) {
+          final data = bills.data() as Map<String, dynamic>;
+
+          if (data.isNotEmpty) {
+            allFetchedData.add({
+              'Bill No': data['billNo'] ?? 'N/A',
+              'Patient Name': data['patientName'] ?? 'N/A',
+              'OP No': data['opNumber'] ?? 'N/A',
+              'IP Ticket': data['ipTicket'] ?? 'N/A',
+              'Bill Date': data['billDate'] ?? 'N/A',
+              'Doctor Name': data['doctorName'] ?? 'N/A',
+              'Action': Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      final List<Map<String, dynamic>> productLists =
+                          (data['entryProducts'] as List)
+                              .map((e) => Map<String, dynamic>.from(e as Map))
+                              .toList();
+                      printIpInvoice(
+                        data['billNo'],
+                        data['billDate'],
+                        data['patientName'],
+                        data['doctorName'],
+                        data['opNumber'],
+                        data['phone'],
+                        data['place'],
+                        data['ipTicket'],
+                        data['roomWard'],
+                        data['specialization'],
+                        productLists,
+                        data['discountPercentage'],
+                        data['discountAmount'],
+                        data['taxTotal'],
+                        data['totalBeforeDiscount'],
+                        data['netTotalAmount'],
+                      );
+                    },
+                    child: const CustomText(text: 'View'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Delete Confirmation'),
+                            content: Container(
+                              width: 200,
+                              height: 35,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  CustomText(text: 'Are you sure ?'),
+                                  SizedBox(height: 8),
+                                ],
                               ),
                             ),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {});
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Close'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: const CustomText(text: 'Cancel'),
-                ),
-              ],
-            )
-          });
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () async {
+                                  await cancelIpBill(
+                                      bills.id, data['entryProducts']);
+                                },
+                                child: const CustomText(
+                                  text: 'Sure',
+                                  color: Colors.red,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {});
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: const CustomText(text: 'Cancel'),
+                  ),
+                ],
+              )
+            });
+          }
         }
-      }
 
-      setState(() {
-        ipTableData = fetchedData;
-      });
+        // Add fetched data to the table
+        setState(() {
+          ipTableData = List.from(allFetchedData);
+        });
+
+        lastDoc = snapshot.docs.last;
+
+        if (snapshot.docs.length < batchSize) {
+          hasMore = false;
+        }
+
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching paginated IP bills: $e');
     }
   }
 
@@ -1516,109 +1566,137 @@ class _CancelBill extends State<CancelBill> {
 
   Future<void> fetchCounterSalesBills({String? billNO}) async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('billings')
-          .collection('countersales');
+      List<Map<String, dynamic>> allFetchedData = [];
+      DocumentSnapshot? lastDoc;
+      const int batchSize = 10; // Set the number of documents per batch
+      bool hasMore = true;
 
-      if (billNO != null) {
-        query = query.where('billNo', isEqualTo: billNO);
-      }
+      while (hasMore) {
+        Query query = FirebaseFirestore.instance
+            .collection('pharmacy')
+            .doc('billings')
+            .collection('countersales')
+            .limit(batchSize);
 
-      final QuerySnapshot snapshot = await query.get();
-      List<Map<String, dynamic>> fetchedData = [];
+        if (billNO != null) {
+          query = query.where('billNo', isEqualTo: billNO);
+        }
 
-      for (var bills in snapshot.docs) {
-        final data = bills.data() as Map<String, dynamic>;
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
 
-        if (data.isNotEmpty) {
-          fetchedData.add({
-            'Bill No': data['billNo'] ?? 'N/A',
-            'Patient Name': data['patientName'] ?? 'N/A',
-            'OP No': data['opNumber'] ?? 'N/A',
-            'Bill Date': data['billDate'] ?? 'N/A',
-            'Doctor Name': data['doctorName'] ?? 'N/A',
-            'Action': Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    final List<Map<String, dynamic>> productLists =
-                        (data['entryProducts'] as List)
-                            .map((e) => Map<String, dynamic>.from(e as Map))
-                            .toList();
-                    printCounterInvoice(
-                      data['billNo'],
-                      data['billDate'],
-                      data['patientName'],
-                      data['doctorName'],
-                      data['opNumber'],
-                      data['phone'],
-                      data['place'],
-                      productLists,
-                      data['discountPercentage'],
-                      data['discountAmount'],
-                      data['taxTotal'],
-                      data['totalBeforeDiscount'],
-                      data['netTotalAmount'],
-                    );
-                  },
-                  child: const CustomText(text: 'View'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Delete Confirmation'),
-                          content: Container(
-                            width: 200,
-                            height: 35,
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                CustomText(text: 'Are you sure ?'),
-                                SizedBox(height: 8),
-                              ],
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () async {
-                                await cancelCounterSalesBill(
-                                    bills.id, data['entryProducts']);
-                              },
-                              child: const CustomText(
-                                text: 'Sure',
-                                color: Colors.red,
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var bills in snapshot.docs) {
+          final data = bills.data() as Map<String, dynamic>;
+
+          if (data.isNotEmpty) {
+            allFetchedData.add({
+              'Bill No': data['billNo'] ?? 'N/A',
+              'Patient Name': data['patientName'] ?? 'N/A',
+              'OP No': data['opNumber'] ?? 'N/A',
+              'Bill Date': data['billDate'] ?? 'N/A',
+              'Doctor Name': data['doctorName'] ?? 'N/A',
+              'Action': Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      final List<Map<String, dynamic>> productLists =
+                          (data['entryProducts'] as List)
+                              .map((e) => Map<String, dynamic>.from(e as Map))
+                              .toList();
+                      printCounterInvoice(
+                        data['billNo'],
+                        data['billDate'],
+                        data['patientName'],
+                        data['doctorName'],
+                        data['opNumber'],
+                        data['phone'],
+                        data['place'],
+                        productLists,
+                        data['discountPercentage'],
+                        data['discountAmount'],
+                        data['taxTotal'],
+                        data['totalBeforeDiscount'],
+                        data['netTotalAmount'],
+                      );
+                    },
+                    child: const CustomText(text: 'View'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Delete Confirmation'),
+                            content: Container(
+                              width: 200,
+                              height: 35,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  CustomText(text: 'Are you sure ?'),
+                                  SizedBox(height: 8),
+                                ],
                               ),
                             ),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {});
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Close'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: const CustomText(text: 'Cancel'),
-                ),
-              ],
-            )
-          });
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () async {
+                                  await cancelCounterSalesBill(
+                                      bills.id, data['entryProducts']);
+                                },
+                                child: const CustomText(
+                                  text: 'Sure',
+                                  color: Colors.red,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {});
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: const CustomText(text: 'Cancel'),
+                  ),
+                ],
+              )
+            });
+          }
         }
-      }
 
-      setState(() {
-        counterSalesTableData = fetchedData;
-      });
+        // Append current batch's data to the UI list
+        setState(() {
+          counterSalesTableData = List.from(allFetchedData);
+        });
+
+        // Update lastDoc to last document in this batch
+        lastDoc = snapshot.docs.last;
+
+        // If less than batchSize docs fetched, no more docs
+        if (snapshot.docs.length < batchSize) {
+          hasMore = false;
+        }
+
+        // Delay to avoid rate limits and smooth UI updates
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching paginated counter sales bills: $e');
     }
   }
 
@@ -2284,7 +2362,7 @@ class _CancelBill extends State<CancelBill> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
-                CustomDataTable(
+                LazyDataTable(
                   headers: opHeaders,
                   tableData: opTableData,
                 ),
@@ -2323,7 +2401,7 @@ class _CancelBill extends State<CancelBill> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
-                CustomDataTable(
+                LazyDataTable(
                   headers: ipHeaders,
                   tableData: ipTableData,
                 ),
@@ -2362,7 +2440,7 @@ class _CancelBill extends State<CancelBill> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
-                CustomDataTable(
+                LazyDataTable(
                   headers: counterSalesHeaders,
                   tableData: counterSalesTableData,
                 ),

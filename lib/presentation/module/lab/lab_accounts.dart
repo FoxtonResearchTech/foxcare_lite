@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -44,70 +45,89 @@ class _LabAccountsState extends State<LabAccounts> {
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData({
-    String? singleDate,
     String? fromDate,
     String? toDate,
+    int pageSize = 20,
   }) async {
     try {
-      final QuerySnapshot patientsSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+      Query query =
+          FirebaseFirestore.instance.collection('patients').limit(pageSize);
+      DocumentSnapshot? lastPatientDoc;
+      bool hasMore = true;
 
-      if (patientsSnapshot.docs.isEmpty) {
-        print("No patient records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
+      List<Map<String, dynamic>> allFetchedData = [];
 
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var patientDoc in patientsSnapshot.docs) {
-        final patientData = patientDoc.data() as Map<String, dynamic>;
-
-        final opTicketsSnapshot =
-            await patientDoc.reference.collection('opTickets').get();
-
-        for (var ticketDoc in opTicketsSnapshot.docs) {
-          final ticketData = ticketDoc.data();
-          if (!ticketData.containsKey('reportNo') ||
-              !ticketData.containsKey('reportDate')) continue;
-
-          final reportDate = ticketData['reportDate']?.toString();
-          if (singleDate != null && reportDate != singleDate) continue;
-          if (fromDate != null &&
-              toDate != null &&
-              (reportDate == null ||
-                  reportDate.compareTo(fromDate) < 0 ||
-                  reportDate.compareTo(toDate) > 0)) {
-            continue;
-          }
-
-          fetchedData.add({
-            'Report Date': reportDate ?? 'N/A',
-            'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
-            'Name':
-                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                    .trim(),
-            'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
-            'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
-            'Total Amount': ticketData['labTotalAmount']?.toString() ?? '0',
-            'Collected': ticketData['labCollected']?.toString() ?? '0',
-            'Balance': ticketData['labBalance']?.toString() ?? '0',
-          });
+      while (hasMore) {
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
         }
+
+        final patientsSnapshot = await query.get();
+
+        if (patientsSnapshot.docs.isEmpty) {
+          print("No more patient records found");
+          break;
+        }
+
+        for (var patientDoc in patientsSnapshot.docs) {
+          final patientData = patientDoc.data() as Map<String, dynamic>;
+
+          final opTicketsSnapshot =
+              await patientDoc.reference.collection('opTickets').get();
+
+          for (var ticketDoc in opTicketsSnapshot.docs) {
+            final ticketData = ticketDoc.data();
+            if (!ticketData.containsKey('reportNo') ||
+                !ticketData.containsKey('reportDate')) continue;
+
+            final reportDate = ticketData['reportDate']?.toString();
+
+            if (fromDate != null &&
+                toDate != null &&
+                (reportDate == null ||
+                    reportDate.compareTo(fromDate) < 0 ||
+                    reportDate.compareTo(toDate) > 0)) {
+              continue;
+            }
+
+            allFetchedData.add({
+              'Report Date': reportDate ?? 'N/A',
+              'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
+              'Name':
+                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
+              'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+              'Total Amount': ticketData['labTotalAmount']?.toString() ?? '0',
+              'Collected': ticketData['labCollected']?.toString() ?? '0',
+              'Balance': ticketData['labBalance']?.toString() ?? '0',
+            });
+          }
+        }
+
+        // Update lastPatientDoc for next page
+        lastPatientDoc = patientsSnapshot.docs.last;
+
+        // If fewer docs returned than pageSize, this is the last page
+        if (patientsSnapshot.docs.length < pageSize) {
+          hasMore = false;
+        }
+
+        // Sort the data by Report No
+        allFetchedData.sort((a, b) {
+          int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
+          int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
+          return aNo.compareTo(bNo);
+        });
+
+        // Update UI after each batch
+        setState(() {
+          tableData = List.from(allFetchedData);
+        });
+
+        // Optional: small delay to throttle UI updates
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-
-      // Sort by report number
-      fetchedData.sort((a, b) {
-        int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
-        int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
-        return aNo.compareTo(bNo);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -363,7 +383,7 @@ class _LabAccountsState extends State<LabAccounts> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

@@ -1589,6 +1589,31 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                             color: AppColors.blue,
                             label: 'Submit',
                             onPressed: () {
+                              final collectedAmountText =
+                                  collectedAmountController.text.trim();
+
+                              // Validate collected amount is not empty
+                              if (collectedAmountText.isEmpty) {
+                                CustomSnackBar(context,
+                                    message:
+                                        'Please enter the collected amount',
+                                    backgroundColor: Colors.orange);
+
+                                return;
+                              }
+
+                              // Parse and validate amount
+                              final collectedAmount =
+                                  double.tryParse(collectedAmountText);
+                              if (collectedAmount == null ||
+                                  collectedAmount < 0) {
+                                CustomSnackBar(context,
+                                    message:
+                                        'Please enter a valid collected amount',
+                                    backgroundColor: Colors.orange);
+
+                                return;
+                              }
                               submitBill();
                             },
                             width: screenWidth * 0.1),

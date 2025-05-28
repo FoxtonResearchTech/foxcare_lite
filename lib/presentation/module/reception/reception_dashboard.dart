@@ -422,7 +422,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
               .get();
 
           final detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
+              ? detailsDoc.data()
               : null;
 
           final opTicketsSnapshot = await doc.reference

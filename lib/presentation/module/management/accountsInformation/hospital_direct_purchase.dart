@@ -13,6 +13,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/utilities/constants.dart';
 import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -200,122 +201,139 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
     String? toDate,
   }) async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('hospital')
-          .doc('purchase')
-          .collection('directPurchase');
-
-      if (singleDate != null) {
-        query = query.where('purchaseDate', isEqualTo: singleDate);
-      } else if (fromDate != null && toDate != null) {
-        query = query
-            .where('purchaseDate', isGreaterThanOrEqualTo: fromDate)
-            .where('purchaseDate', isLessThanOrEqualTo: toDate);
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
-
       List<Map<String, dynamic>> fetchedData = [];
+      DocumentSnapshot? lastDoc;
+      const int batchSize = 20;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('billNo')) continue;
-        if (!data.containsKey('purchaseDate')) continue;
+      while (true) {
+        Query query = FirebaseFirestore.instance
+            .collection('hospital')
+            .doc('purchase')
+            .collection('directPurchase')
+            .limit(batchSize);
 
-        double opAmount =
-            double.tryParse(data['amount']?.toString() ?? '0') ?? 0;
-        double opAmountCollected =
-            double.tryParse(data['collected']?.toString() ?? '0') ?? 0;
-        double balance = opAmount - opAmountCollected;
+        // Apply filters
+        if (singleDate != null) {
+          query = query.where('purchaseDate', isEqualTo: singleDate);
+          query = query.orderBy('purchaseDate');
+        } else if (fromDate != null && toDate != null) {
+          query = query
+              .where('purchaseDate', isGreaterThanOrEqualTo: fromDate)
+              .where('purchaseDate', isLessThanOrEqualTo: toDate)
+              .orderBy('purchaseDate');
+        }
 
-        fetchedData.add({
-          'Purchase Date': data['purchaseDate'],
-          'Bill NO': data['billNo'],
-          'From Party': data['fromParty'],
-          'Phone': data['phone'],
-          'City': data['city'],
-          'Description': data['description'],
-          'Amount': opAmount,
-          'Collected': opAmountCollected,
-          'Balance': balance,
-          'Transactions': TextButton(
-            onPressed: () async {
-              await historyData(docId: doc.id.toString());
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
 
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const CustomText(
-                      text: 'Payment History',
-                      size: 26,
-                    ),
-                    content: Container(
-                      width: 750,
-                      height: 300,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomText(
-                              text: 'History Of Payments',
-                              size: 20,
-                            ),
-                            SizedBox(height: 10),
-                            if (historyTableData.isNotEmpty) ...[
-                              CustomDataTable(
-                                  headers: historyHeaders,
-                                  tableData: historyTableData),
-                            ],
-                            if (historyTableData.isEmpty) ...[
-                              Center(
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: 100),
-                                    CustomText(text: 'No Payment History'),
-                                  ],
-                                ),
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          // No more data to fetch
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (!data.containsKey('billNo')) continue;
+          if (!data.containsKey('purchaseDate')) continue;
+
+          double opAmount =
+              double.tryParse(data['amount']?.toString() ?? '0') ?? 0;
+          double opAmountCollected =
+              double.tryParse(data['collected']?.toString() ?? '0') ?? 0;
+          double balance = opAmount - opAmountCollected;
+
+          fetchedData.add({
+            'Purchase Date': data['purchaseDate'],
+            'Bill NO': data['billNo'],
+            'From Party': data['fromParty'],
+            'Phone': data['phone'],
+            'City': data['city'],
+            'Description': data['description'],
+            'Amount': opAmount,
+            'Collected': opAmountCollected,
+            'Balance': balance,
+            'Transactions': TextButton(
+              onPressed: () async {
+                await historyData(docId: doc.id.toString());
+
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const CustomText(
+                        text: 'Payment History',
+                        size: 26,
+                      ),
+                      content: Container(
+                        width: 750,
+                        height: 300,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CustomText(
+                                text: 'History Of Payments',
+                                size: 20,
                               ),
+                              SizedBox(height: 10),
+                              if (historyTableData.isNotEmpty) ...[
+                                CustomDataTable(
+                                    headers: historyHeaders,
+                                    tableData: historyTableData),
+                              ],
+                              if (historyTableData.isEmpty) ...[
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      SizedBox(height: 100),
+                                      CustomText(text: 'No Payment History'),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Close',
-                          color: AppColors.secondaryColor,
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: CustomText(
+                            text: 'Close',
+                            color: AppColors.secondaryColor,
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              ).then((_) {
-                historyTableData.clear();
-              });
-            },
-            child: CustomText(
-              text: 'View',
-              color: AppColors.blue,
+                      ],
+                    );
+                  },
+                ).then((_) {
+                  historyTableData.clear();
+                });
+              },
+              child: CustomText(
+                text: 'View',
+                color: AppColors.blue,
+              ),
             ),
-          ),
+          });
+        }
+
+        lastDoc = snapshot.docs.last;
+        setState(() {
+          tableData = List.from(fetchedData);
         });
+
+        await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      setState(() {
-        tableData = fetchedData;
-      });
+      if (fetchedData.isEmpty) {
+        print("No records found");
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -969,7 +987,7 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

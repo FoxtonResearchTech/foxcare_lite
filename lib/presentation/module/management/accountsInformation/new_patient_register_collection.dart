@@ -201,7 +201,7 @@ class _NewPatientRegisterCollection
     String? singleDate,
     String? fromDate,
     String? toDate,
-    int pageSize = 1,
+    int pageSize = 20,
     Duration delayBetweenPages = const Duration(milliseconds: 100),
   }) async {
     try {
@@ -220,7 +220,7 @@ class _NewPatientRegisterCollection
               .where('opAdmissionDate', isLessThanOrEqualTo: toDate)
               .orderBy('opAdmissionDate');
         } else {
-          query = query.orderBy('opAdmissionDate');
+          query = query;
         }
 
         if (lastDoc != null) {

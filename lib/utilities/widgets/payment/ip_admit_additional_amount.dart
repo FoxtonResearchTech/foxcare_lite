@@ -126,6 +126,13 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
 
   Future<void> initialAmount(String docID, String? ipTicket) async {
     try {
+      List<Map<String, dynamic>> cleanedData =
+          currentIpAdditionalAmountData.map((entry) {
+        final newEntry = Map<String, dynamic>.from(entry);
+        newEntry.remove('Delete'); // Remove the IconButton
+        return newEntry;
+      }).toList();
+
       Map<String, dynamic> data = {
         'ipAdmissionTotalAmount': totalAmount.text,
         'ipAdmissionCollected': '0',
@@ -137,21 +144,15 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
             '-' +
             dateTime.day.toString().padLeft(2, '0'),
       };
-      await FirebaseFirestore.instance
+      DocumentReference ref = FirebaseFirestore.instance
           .collection('patients')
           .doc(docID)
           .collection('ipAdmissionPayments')
-          .doc('payments$ipTicket')
-          .set(data);
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(docID)
-          .collection('ipAdmissionPayments')
-          .doc('payments$ipTicket')
-          .collection('additionalAmount')
-          .doc()
-          .set({
-        'details': currentIpAdditionalAmountData,
+          .doc('payments$ipTicket');
+
+      await ref.set(data);
+      await ref.collection('additionalAmount').doc().set({
+        'details': cleanedData,
         'totalAmount': totalAmount.text,
         'ipTicket': ipTicket,
         'collectedTillNow': '0',
@@ -170,6 +171,13 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
 
   Future<void> additionalPaymentAmount(String docID, String? ipTicket) async {
     try {
+      List<Map<String, dynamic>> cleanedData =
+          currentIpAdditionalAmountData.map((entry) {
+        final newEntry = Map<String, dynamic>.from(entry);
+        newEntry.remove('Delete'); // Remove the IconButton
+        return newEntry;
+      }).toList();
+
       DocumentReference paymentDocRef = FirebaseFirestore.instance
           .collection('patients')
           .doc(docID)
@@ -204,7 +212,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
       });
 
       await paymentDocRef.collection('additionalAmount').doc().set({
-        'details': currentIpAdditionalAmountData,
+        'details': cleanedData,
         'totalAmount': totalAmount.text,
         'ipTicket': ipTicket,
         'collectedTillNow': existingCollectedAmount,
@@ -394,7 +402,8 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
       actions: <Widget>[
         TextButton(
           onPressed: () async {
-            handleIpPayment(widget.docId.toString(), widget.ipTicket);
+            handleIpPayment(
+                widget.docId.toString(), widget.ipTicket.toString());
 
             widget.fetchData!();
           },
