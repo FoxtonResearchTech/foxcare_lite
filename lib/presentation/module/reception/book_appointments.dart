@@ -84,11 +84,11 @@ class _BookAppointments extends State<BookAppointments> {
   }
 
   Future<void> searchPatients(
-      String opNumber,
-      String phoneNumber, {
-        int pageSize = 20,
-        Duration delayBetweenPages = const Duration(milliseconds: 100),
-      }) async {
+    String opNumber,
+    String phoneNumber, {
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     final lowerOp = opNumber.trim().toLowerCase();
     final lowerPhone = phoneNumber.trim().toLowerCase();
@@ -114,7 +114,9 @@ class _BookAppointments extends State<BookAppointments> {
         final docPhone1 = data['phone1']?.toString().toLowerCase();
         final docPhone2 = data['phone2']?.toString().toLowerCase();
 
-        if (docOp == lowerOp || docPhone1 == lowerPhone || docPhone2 == lowerPhone) {
+        if (docOp == lowerOp ||
+            docPhone1 == lowerPhone ||
+            docPhone2 == lowerPhone) {
           matchedDoc = doc;
           break;
         }
@@ -139,7 +141,6 @@ class _BookAppointments extends State<BookAppointments> {
       });
     }
   }
-
 
   Future<void> fetchDoctorAndSpecialization() async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -203,78 +204,105 @@ class _BookAppointments extends State<BookAppointments> {
     }
   }
 
-  Future<void> fetchData({String? date}) async {
+  Future<void> fetchData({String? date, int pageSize = 10}) async {
     try {
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+      Query query =
+          FirebaseFirestore.instance.collection('patients').limit(pageSize);
+      DocumentSnapshot? lastPatientDoc;
+      bool hasMore = true;
 
-      List<Map<String, dynamic>> fetchedData = [];
+      List<Map<String, dynamic>> allFetchedData = [];
+      int i = 1;
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        try {
-          final appointmentDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('appointments')
-              .doc('appointment')
-              .get();
-
-          final appointmentData = appointmentDoc.data();
-
-          if (date != null && appointmentData?['appointmentDate'] != date) {
-            continue;
-          }
-
-          fetchedData.add({
-            'SL No': i++,
-            'OP No': data['opNumber'] ?? 'N/A',
-            'Date': appointmentData?['appointmentDate'] ?? 'N/A',
-            'Time': appointmentData?['appointmentTime'] ?? 'N/A',
-            'Patient Name': data['firstName'] ?? 'N/A',
-            'Phone': data['phone1'] ?? 'N/A',
-            'City': data['city'] ?? 'N/A',
-            'Doctor Name': data['doctorName'] ?? 'N/A',
-            'Specialization': data['specialization'] ?? 'N/A',
-            'Action': Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AppointmentsOpTicket(
-                                  patientId: data['opNumber'],
-                                )));
-                  },
-                  child: CustomText(
-                    text: 'Create',
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: CustomText(
-                    text: 'Delete',
-                  ),
-                ),
-              ],
-            )
-          });
-        } catch (e) {
-          print('Error fetching appointment for patient ${doc.id}: $e');
+      while (hasMore) {
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
         }
+
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          print("No more patient records found");
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          try {
+            final appointmentDoc = await doc.reference
+                .collection('appointments')
+                .doc('appointment')
+                .get();
+
+            final appointmentData = appointmentDoc.data();
+
+            if (date != null && appointmentData?['appointmentDate'] != date) {
+              continue;
+            }
+
+            allFetchedData.add({
+              'SL No': i++,
+              'OP No': data['opNumber'] ?? 'N/A',
+              'Date': appointmentData?['appointmentDate'] ?? 'N/A',
+              'Time': appointmentData?['appointmentTime'] ?? 'N/A',
+              'Patient Name': data['firstName'] ?? 'N/A',
+              'Phone': data['phone1'] ?? 'N/A',
+              'City': data['city'] ?? 'N/A',
+              'Doctor Name': appointmentData?['doctorName'] ?? 'N/A',
+              'Specialization': appointmentData?['specialization'] ?? 'N/A',
+              'Action': Row(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AppointmentsOpTicket(
+                                    patientId: data['opNumber'],
+                                  )));
+                    },
+                    child: CustomText(text: 'Create'),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: CustomText(text: 'Delete'),
+                  ),
+                ],
+              )
+            });
+          } catch (e) {
+            print('Error fetching appointment for patient ${doc.id}: $e');
+          }
+        }
+
+        // Update lastPatientDoc for next page
+        lastPatientDoc = snapshot.docs.last;
+
+        // Stop if this is the last page
+        if (snapshot.docs.length < pageSize) {
+          hasMore = false;
+        }
+
+        // Sort fetched batch
+        allFetchedData.sort((a, b) {
+          try {
+            final dateTimeA = dateFormat.parse('${a['Date']} ${a['Time']}');
+            final dateTimeB = dateFormat.parse('${b['Date']} ${b['Time']}');
+            return dateTimeA.compareTo(dateTimeB);
+          } catch (e) {
+            return 0;
+          }
+        });
+
+        // Update table data after each batch
+        setState(() {
+          tableData1 = List.from(allFetchedData);
+        });
+
+        // Optional delay to throttle UI updates
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-
-      fetchedData.sort((a, b) {
-        final dateTimeA = dateFormat.parse('${a['Date']} ${a['Time']}');
-        final dateTimeB = dateFormat.parse('${b['Date']} ${b['Time']}');
-        return dateTimeA.compareTo(dateTimeB);
-      });
-
-      setState(() {
-        tableData1 = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data from Firestore: $e');
     }
@@ -445,29 +473,27 @@ class _BookAppointments extends State<BookAppointments> {
                   SizedBox(width: screenHeight * 0.02),
                   isLoading
                       ? SizedBox(
-                    width: screenWidth * 0.04,
-                    height: screenWidth * 0.04,
-                    child: Lottie.asset(
-                      'assets/button_loading.json',
-                      repeat: true,
-                    ),
-                  )
+                          width: screenWidth * 0.04,
+                          height: screenWidth * 0.04,
+                          child: Lottie.asset(
+                            'assets/button_loading.json',
+                            repeat: true,
+                          ),
+                        )
                       : CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      if (isLoading) return; // prevent double clicks
-                      setState(() => isLoading = true);
+                          label: 'Search',
+                          onPressed: () async {
+                            if (isLoading) return; // prevent double clicks
+                            setState(() => isLoading = true);
 
-                      await fetchData(date: dateSearch.text);
-                      i = 1;
+                            await fetchData(date: dateSearch.text);
+                            i = 1;
 
-                      setState(() => isLoading = false);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.03,
-                  ),
-
-
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.03,
+                        ),
                   Expanded(child: SizedBox()),
                   CustomButton(
                     label: 'Book Appointments',
