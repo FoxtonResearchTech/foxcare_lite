@@ -85,14 +85,14 @@ class _ManagementPharmacyAccounts extends State<ManagementPharmacyAccounts> {
           },
         ),
         DrawerMenuItem(
-          title: 'Pharmacy Pending Sales Bills',
+          title: 'Pending Sales Bills',
           icon: Iconsax.ticket,
           onTap: () {
             navigateWithTransition(context, PharmacyPendingSalesBills());
           },
         ),
         DrawerMenuItem(
-          title: 'Pharmacy OutStanding Bills',
+          title: 'Purchase OutStanding Bills',
           icon: Iconsax.ticket,
           onTap: () {
             navigateWithTransition(context, PharmacyOutStandingBills());

@@ -11,6 +11,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
 import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -36,7 +37,6 @@ class _IpLabCollection extends State<IpLabCollection> {
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
-  int hoveredIndex = -1;
   String getDayWithSuffix(int day) {
     if (day >= 11 && day <= 13) {
       return '${day}th';
@@ -236,301 +236,322 @@ class _IpLabCollection extends State<IpLabCollection> {
     String? singleDate,
     String? fromDate,
     String? toDate,
+    int limit = 10,
   }) async {
     try {
-      final QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No patient records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
-
+      DocumentSnapshot? lastPatientDoc;
+      bool hasMore = true;
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final docRef = doc.reference;
+      while (hasMore) {
+        Query query =
+            FirebaseFirestore.instance.collection('patients').limit(limit);
 
-        final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
+        }
 
-        for (var ipTicketDoc in ipTicketsSnapshot.docs) {
-          final ipTicketData = ipTicketDoc.data();
+        final snapshot = await query.get();
 
-          final examinationSnapshot =
-              await ipTicketDoc.reference.collection('Examination').get();
+        if (snapshot.docs.isEmpty) {
+          // No more patients
+          hasMore = false;
+          break;
+        }
 
-          for (var examDoc in examinationSnapshot.docs) {
-            final examData = examDoc.data();
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final docRef = doc.reference;
 
-            if (!examData.containsKey('reportDate')) continue;
+          final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
 
-            final examDate = examData['reportDate']?.toString();
+          for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+            final ipTicketData = ipTicketDoc.data();
 
-            // Filtering based on singleDate
-            if (singleDate != null && examDate != singleDate) continue;
+            final examinationSnapshot =
+                await ipTicketDoc.reference.collection('Examination').get();
 
-            // Filtering based on date range
-            if (fromDate != null &&
-                toDate != null &&
-                (examDate == null ||
-                    examDate.compareTo(fromDate) < 0 ||
-                    examDate.compareTo(toDate) > 0)) {
-              continue;
-            }
+            for (var examDoc in examinationSnapshot.docs) {
+              final examData = examDoc.data();
 
-            double totalAmount = double.tryParse(
-                    examData['labTotalAmount']?.toString() ?? '0') ??
-                0;
-            double collectedAmount =
-                double.tryParse(examData['labCollected']?.toString() ?? '0') ??
-                    0;
-            double balance = totalAmount - collectedAmount;
+              if (!examData.containsKey('reportDate')) continue;
 
-            fetchedData.add({
-              'Report No': examData['reportNo']?.toString() ?? 'N/A',
-              'Report Date': examData['reportDate'] ?? 'N/A',
-              'IP Ticket': ipTicketDoc.id,
-              'OP No': data['opNumber']?.toString() ?? 'N/A',
-              'Name':
-                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'City': data['city']?.toString() ?? 'N/A',
-              'Doctor Name': ipTicketData['doctorName']?.toString() ?? 'N/A',
-              'Total Amount': totalAmount.toString(),
-              'Collected': collectedAmount.toString(),
-              'Balance': balance,
-              'Pay': TextButton(
-                onPressed: () async {
-                  await historyData(
-                    examDocId: examDoc.id.toString(),
-                    opNumber: data['opNumber'].toString(),
-                    ipTicket: ipTicketDoc.id,
-                  );
-                  paymentDetails.clear();
+              final examDate = examData['reportDate']?.toString();
 
-                  double originalCollected = collectedAmount;
-                  double total = totalAmount;
+              // Filtering based on singleDate
+              if (singleDate != null && examDate != singleDate) continue;
 
-                  setState(() {
-                    _originalCollected = originalCollected;
-                    totalAmountController.text = total.toStringAsFixed(2);
-                    collectedAmountController.text =
-                        originalCollected.toStringAsFixed(2);
-                    balanceController.text =
-                        (total - originalCollected).toStringAsFixed(2);
-                    currentlyPayingAmount.text = '';
-                  });
+              // Filtering based on date range
+              if (fromDate != null &&
+                  toDate != null &&
+                  (examDate == null ||
+                      examDate.compareTo(fromDate) < 0 ||
+                      examDate.compareTo(toDate) > 0)) {
+                continue;
+              }
 
-                  currentlyPayingAmount.removeListener(_payingAmountListener);
-                  currentlyPayingAmount.addListener(_payingAmountListener);
+              double totalAmount = double.tryParse(
+                      examData['labTotalAmount']?.toString() ?? '0') ??
+                  0;
+              double collectedAmount = double.tryParse(
+                      examData['labCollected']?.toString() ?? '0') ??
+                  0;
+              double balance = totalAmount - collectedAmount;
 
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const CustomText(
-                          text: 'Payment Details ',
-                          size: 26,
-                        ),
-                        content: Container(
-                          width: 750,
-                          height: 400,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 25),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const CustomText(
-                                            text: 'Total Amount', size: 20),
-                                        const SizedBox(height: 5),
-                                        CustomTextField(
-                                            readOnly: true,
-                                            controller: totalAmountController,
-                                            hintText: '',
-                                            width: 175),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const CustomText(
-                                            text: 'Collected', size: 20),
-                                        const SizedBox(height: 5),
-                                        CustomTextField(
-                                            readOnly: true,
-                                            controller:
-                                                collectedAmountController,
-                                            hintText: '',
-                                            width: 175),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const CustomText(
-                                            text: 'Balance', size: 20),
-                                        const SizedBox(height: 5),
-                                        CustomTextField(
-                                            readOnly: true,
-                                            controller: balanceController,
-                                            hintText: '',
-                                            width: 175),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 50),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        CustomText(
-                                            text: 'Paying Amount ', size: 20),
-                                        SizedBox(height: 7),
-                                        CustomTextField(
-                                          hintText: '',
-                                          controller: currentlyPayingAmount,
-                                          width: 175,
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        CustomText(
-                                            text: 'Payment Mode ', size: 20),
-                                        SizedBox(height: 7),
-                                        SizedBox(
-                                          width: 175,
-                                          child: CustomDropdown(
-                                            label: '',
-                                            items: Constants.paymentMode,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                selectedPaymentMode = value;
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        CustomText(
-                                            text: 'Payment Details ', size: 20),
-                                        SizedBox(height: 7),
-                                        CustomTextField(
-                                          hintText: '',
-                                          controller: paymentDetails,
-                                          width: 175,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 15),
-                                CustomText(
-                                    text: 'History Of Payments', size: 20),
-                                SizedBox(height: 10),
-                                if (historyTableData.isNotEmpty) ...[
-                                  CustomDataTable(
-                                      headers: historyHeaders,
-                                      tableData: historyTableData),
-                                ],
-                                if (historyTableData.isEmpty) ...[
-                                  Center(
-                                    child: Column(
-                                      children: [
-                                        SizedBox(height: 20),
-                                        CustomText(text: 'No Payment History'),
-                                      ],
-                                    ),
+              fetchedData.add({
+                'Report No': examData['reportNo']?.toString() ?? 'N/A',
+                'Report Date': examData['reportDate'] ?? 'N/A',
+                'IP Ticket': ipTicketDoc.id,
+                'OP No': data['opNumber']?.toString() ?? 'N/A',
+                'Name':
+                    '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'City': data['city']?.toString() ?? 'N/A',
+                'Doctor Name': ipTicketData['doctorName']?.toString() ?? 'N/A',
+                'Total Amount': totalAmount.toString(),
+                'Collected': collectedAmount.toString(),
+                'Balance': balance,
+                'Pay': TextButton(
+                  onPressed: () async {
+                    await historyData(
+                      examDocId: examDoc.id.toString(),
+                      opNumber: data['opNumber'].toString(),
+                      ipTicket: ipTicketDoc.id,
+                    );
+                    paymentDetails.clear();
+
+                    double originalCollected = collectedAmount;
+                    double total = totalAmount;
+
+                    setState(() {
+                      _originalCollected = originalCollected;
+                      totalAmountController.text = total.toStringAsFixed(2);
+                      collectedAmountController.text =
+                          originalCollected.toStringAsFixed(2);
+                      balanceController.text =
+                          (total - originalCollected).toStringAsFixed(2);
+                      currentlyPayingAmount.text = '';
+                    });
+
+                    currentlyPayingAmount.removeListener(_payingAmountListener);
+                    currentlyPayingAmount.addListener(_payingAmountListener);
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const CustomText(
+                            text: 'Payment Details ',
+                            size: 26,
+                          ),
+                          content: Container(
+                            width: 750,
+                            height: 400,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 25),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const CustomText(
+                                              text: 'Total Amount', size: 20),
+                                          const SizedBox(height: 5),
+                                          CustomTextField(
+                                              readOnly: true,
+                                              controller: totalAmountController,
+                                              hintText: '',
+                                              width: 175),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const CustomText(
+                                              text: 'Collected', size: 20),
+                                          const SizedBox(height: 5),
+                                          CustomTextField(
+                                              readOnly: true,
+                                              controller:
+                                                  collectedAmountController,
+                                              hintText: '',
+                                              width: 175),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const CustomText(
+                                              text: 'Balance', size: 20),
+                                          const SizedBox(height: 5),
+                                          CustomTextField(
+                                              readOnly: true,
+                                              controller: balanceController,
+                                              hintText: '',
+                                              width: 175),
+                                        ],
+                                      ),
+                                    ],
                                   ),
+                                  SizedBox(height: 50),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CustomText(
+                                              text: 'Paying Amount ', size: 20),
+                                          SizedBox(height: 7),
+                                          CustomTextField(
+                                            hintText: '',
+                                            controller: currentlyPayingAmount,
+                                            width: 175,
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CustomText(
+                                              text: 'Payment Mode ', size: 20),
+                                          SizedBox(height: 7),
+                                          SizedBox(
+                                            width: 175,
+                                            child: CustomDropdown(
+                                              label: '',
+                                              items: Constants.paymentMode,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  selectedPaymentMode = value;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CustomText(
+                                              text: 'Payment Details ',
+                                              size: 20),
+                                          SizedBox(height: 7),
+                                          CustomTextField(
+                                            hintText: '',
+                                            controller: paymentDetails,
+                                            width: 175,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 15),
+                                  CustomText(
+                                      text: 'History Of Payments', size: 20),
+                                  SizedBox(height: 10),
+                                  if (historyTableData.isNotEmpty) ...[
+                                    CustomDataTable(
+                                        headers: historyHeaders,
+                                        tableData: historyTableData),
+                                  ],
+                                  if (historyTableData.isEmpty) ...[
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 20),
+                                          CustomText(
+                                              text: 'No Payment History'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () async {
-                              await savePayment(
-                                examDocId: examDoc.id.toString(),
-                                ipTicket: ipTicketDoc.id,
-                                opNumber: data['opNumber'].toString(),
-                                amount: totalAmountController.text.toString(),
-                                collected:
-                                    collectedAmountController.text.toString(),
-                                balance: balanceController.text.toString(),
-                                paymentMode: selectedPaymentMode.toString(),
-                                payingAmount:
-                                    currentlyPayingAmount.text.toString(),
-                              );
-                            },
-                            child: CustomText(
-                              text: 'Pay',
-                              color: AppColors.secondaryColor,
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () async {
+                                await savePayment(
+                                  examDocId: examDoc.id.toString(),
+                                  ipTicket: ipTicketDoc.id,
+                                  opNumber: data['opNumber'].toString(),
+                                  amount: totalAmountController.text.toString(),
+                                  collected:
+                                      collectedAmountController.text.toString(),
+                                  balance: balanceController.text.toString(),
+                                  paymentMode: selectedPaymentMode.toString(),
+                                  payingAmount:
+                                      currentlyPayingAmount.text.toString(),
+                                );
+                              },
+                              child: CustomText(
+                                text: 'Pay',
+                                color: AppColors.secondaryColor,
+                              ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: CustomText(
-                              text: 'Close',
-                              color: AppColors.secondaryColor,
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: CustomText(
+                                text: 'Close',
+                                color: AppColors.secondaryColor,
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  ).then((_) {
-                    historyTableData.clear();
-                  });
-                },
-                child: CustomText(
-                  text: 'Pay',
-                  color: AppColors.blue,
+                          ],
+                        );
+                      },
+                    ).then((_) {
+                      historyTableData.clear();
+                    });
+                  },
+                  child: CustomText(
+                    text: 'Pay',
+                    color: AppColors.blue,
+                  ),
                 ),
-              ),
-            });
+              });
+            }
           }
         }
+
+        // Prepare for next iteration
+        lastPatientDoc = snapshot.docs.last;
+        // Sort the accumulated data by Report No
+        fetchedData.sort((a, b) {
+          int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
+          int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
+          return tokenA.compareTo(tokenB);
+        });
+
+        setState(() {
+          tableData = List.from(fetchedData);
+          _totalAmountCollected();
+          _totalCollected();
+          _totalBalance();
+        });
+        // If less than limit docs returned, this is last page
+        if (snapshot.docs.length < limit) {
+          hasMore = false;
+        } else {
+          // Optional delay to avoid Firestore throttling
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
       }
-
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-        _totalAmountCollected();
-        _totalCollected();
-        _totalBalance();
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -798,7 +819,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

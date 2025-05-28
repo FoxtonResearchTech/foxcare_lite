@@ -93,7 +93,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
     String? singleDate,
     String? fromDate,
     String? toDate,
-    int pageSize = 1,
+    int pageSize = 20,
     Duration delayBetweenPages = const Duration(milliseconds: 100),
   }) async {
     try {

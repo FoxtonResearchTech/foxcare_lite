@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/pharmacy/management_pharmacy_accounts.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:intl/intl.dart';
 
@@ -222,13 +223,24 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
       resetTotals();
 
       List<String> collections = ['ipbilling', 'opbilling', 'countersales'];
+      List<Map<String, dynamic>> allData = [];
 
-      List<QuerySnapshot> snapshots = await Future.wait(
-        collections.map((collection) {
+      const int pageSize = 10;
+
+      for (String collection in collections) {
+        DocumentSnapshot? lastDoc;
+        bool hasMore = true;
+
+        while (hasMore) {
           Query query = firestore
               .collection('pharmacy')
               .doc('billings')
-              .collection(collection);
+              .collection(collection)
+              .limit(pageSize);
+
+          if (lastDoc != null) {
+            query = query.startAfterDocument(lastDoc);
+          }
 
           if (date != null) {
             query = query.where('billDate', isEqualTo: date);
@@ -237,18 +249,18 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                 .where('billDate', isGreaterThanOrEqualTo: fromDate)
                 .where('billDate', isLessThanOrEqualTo: toDate);
           }
-          return query.get();
-        }),
-      );
 
-      List<Map<String, dynamic>> patientData = [];
+          QuerySnapshot snapshot = await query.get();
 
-      for (var snapshot in snapshots) {
-        for (var doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
+          if (snapshot.docs.isEmpty) {
+            hasMore = false;
+            break;
+          }
 
-          if (data.isNotEmpty) {
-            patientData.add({
+          for (var doc in snapshot.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+
+            allData.add({
               'Bill NO': data['billNo'] ?? 'N/A',
               'Patient Name': data['patientName'] ?? 'N/A',
               'OP NO / IP NO / Counter':
@@ -502,22 +514,26 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
               ),
             });
           }
+
+          // Update UI with each batch
+          setState(() {
+            tableData = List.from(allData);
+            calculateTotals();
+          });
+
+          lastDoc = snapshot.docs.last;
+
+          // Delay after updating UI
+          await Future.delayed(Duration(milliseconds: 100));
         }
       }
 
-      if (patientData.isEmpty) {
+      if (allData.isEmpty) {
         setState(() {
           tableData = [];
           resetTotals();
         });
-        return;
       }
-
-      final firstEntry = patientData.first;
-      setState(() {
-        tableData = patientData;
-        calculateTotals();
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -592,10 +608,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
               ),
             ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: dashboard(),
-            ),
+            child: dashboard(),
           ),
         ],
       ),
@@ -613,8 +626,8 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            left: screenWidth * 0.01,
-            right: screenWidth * 0.01,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
             bottom: screenWidth * 0.01,
           ),
           child: Column(
@@ -624,19 +637,19 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "Pharmacy Total Sales",
-                          size: screenWidth * .015,
+                          size: screenWidth * .03,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -692,8 +705,8 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              SizedBox(height: screenHeight * 0.06),
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
                 headerColor: Colors.white,

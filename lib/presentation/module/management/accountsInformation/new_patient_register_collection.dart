@@ -201,7 +201,7 @@ class _NewPatientRegisterCollection
     String? singleDate,
     String? fromDate,
     String? toDate,
-    int pageSize = 1,
+    int pageSize = 20,
     Duration delayBetweenPages = const Duration(milliseconds: 100),
   }) async {
     try {
@@ -213,14 +213,13 @@ class _NewPatientRegisterCollection
 
         if (singleDate != null) {
           query = query.where('opAdmissionDate', isEqualTo: singleDate);
-          query = query.orderBy('opAdmissionDate');
+          query = query;
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('opAdmissionDate', isGreaterThanOrEqualTo: fromDate)
-              .where('opAdmissionDate', isLessThanOrEqualTo: toDate)
-              .orderBy('opAdmissionDate');
+              .where('opAdmissionDate', isLessThanOrEqualTo: toDate);
         } else {
-          query = query.orderBy('opAdmissionDate');
+          query = query;
         }
 
         if (lastDoc != null) {

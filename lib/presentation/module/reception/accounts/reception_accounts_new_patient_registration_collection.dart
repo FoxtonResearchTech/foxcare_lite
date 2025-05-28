@@ -53,14 +53,12 @@ class _ReceptionAccountsNewPatientRegistrationCollection
 
         if (singleDate != null) {
           query = query.where('opAdmissionDate', isEqualTo: singleDate);
-          query = query.orderBy('opAdmissionDate');
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('opAdmissionDate', isGreaterThanOrEqualTo: fromDate)
-              .where('opAdmissionDate', isLessThanOrEqualTo: toDate)
-              .orderBy('opAdmissionDate');
+              .where('opAdmissionDate', isLessThanOrEqualTo: toDate);
         } else {
-          query = query.orderBy('opAdmissionDate');
+          query = query;
         }
 
         if (lastDoc != null) {

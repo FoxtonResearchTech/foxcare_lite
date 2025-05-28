@@ -4,6 +4,7 @@ import 'package:foxcare_lite/presentation/module/management/accountsInformation/
 import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/payment/ip_admit_payment_dialog.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -76,174 +77,187 @@ class _IpAdmit extends State<IpAdmit> {
     String? singleDate,
     String? fromDate,
     String? toDate,
+    int limit = 10,
   }) async {
     try {
-      final patientQuerySnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
-
-      if (patientQuerySnapshot.docs.isEmpty) {
-        print("No patient records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
-
+      DocumentSnapshot? lastPatientDoc;
+      bool hasMore = true;
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in patientQuerySnapshot.docs) {
-        final data = doc.data();
+      final ipNumberLower = ipNumber?.toLowerCase();
 
-        final ipTicketsSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(doc.id)
-            .collection('ipTickets')
-            .where('discharged', isEqualTo: false)
-            .get();
+      while (hasMore) {
+        Query query =
+            FirebaseFirestore.instance.collection('patients').limit(limit);
 
-        for (var ipTicketDoc in ipTicketsSnapshot.docs) {
-          final ipData = ipTicketDoc.data();
-          final String? roomAllotmentDateStr =
-              ipData['roomAllotmentDate']?.toString();
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
+        }
 
-          bool match = true;
+        final patientQuerySnapshot = await query.get();
 
-          if ((ipNumber != null && ipNumber.isNotEmpty) ||
-              (singleDate != null && singleDate.isNotEmpty) ||
-              (fromDate != null &&
+        if (patientQuerySnapshot.docs.isEmpty) {
+          // No more patients
+          hasMore = false;
+          break;
+        }
+
+        for (var doc in patientQuerySnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          final ipTicketsSnapshot = await doc.reference
+              .collection('ipTickets')
+              .where('discharged', isEqualTo: false)
+              .get();
+
+          for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+            final ipData = ipTicketDoc.data();
+            final roomAllotmentDateStr =
+                ipData['roomAllotmentDate']?.toString();
+
+            bool match = true;
+
+            // Manual case-insensitive check for ipNumber
+            if ((ipNumber != null && ipNumber.isNotEmpty) ||
+                (singleDate != null && singleDate.isNotEmpty) ||
+                (fromDate != null &&
+                    fromDate.isNotEmpty &&
+                    toDate != null &&
+                    toDate.isNotEmpty)) {
+              match = false;
+
+              if (ipNumber != null &&
+                  ipNumber.isNotEmpty &&
+                  ipData['ipTicket'] != null &&
+                  ipData['ipTicket'].toString().toLowerCase() ==
+                      ipNumberLower) {
+                match = true;
+              } else if (singleDate != null &&
+                  singleDate.isNotEmpty &&
+                  roomAllotmentDateStr == singleDate) {
+                match = true;
+              } else if (fromDate != null &&
                   fromDate.isNotEmpty &&
                   toDate != null &&
-                  toDate.isNotEmpty)) {
-            match = false;
-
-            if (ipNumber != null &&
-                ipNumber.isNotEmpty &&
-                ipData['ipTicket'].toString() == ipNumber) {
-              match = true;
-            } else if (singleDate != null &&
-                singleDate.isNotEmpty &&
-                roomAllotmentDateStr == singleDate) {
-              match = true;
-            } else if (fromDate != null &&
-                fromDate.isNotEmpty &&
-                toDate != null &&
-                toDate.isNotEmpty &&
-                roomAllotmentDateStr != null &&
-                roomAllotmentDateStr.compareTo(fromDate) >= 0 &&
-                roomAllotmentDateStr.compareTo(toDate) <= 0) {
-              match = true;
+                  toDate.isNotEmpty &&
+                  roomAllotmentDateStr != null &&
+                  roomAllotmentDateStr.compareTo(fromDate) >= 0 &&
+                  roomAllotmentDateStr.compareTo(toDate) <= 0) {
+                match = true;
+              }
             }
+
+            if (!match) continue;
+
+            final ipPaymentDoc = await doc.reference
+                .collection('ipAdmissionPayments')
+                .doc("payments${ipData['ipTicket'].toString()}")
+                .get();
+
+            Map<String, dynamic>? detailsData =
+                ipPaymentDoc.exists ? ipPaymentDoc.data() : null;
+
+            final ipDetailsDoc = await doc.reference
+                .collection('ipPrescription')
+                .doc('details')
+                .get();
+
+            final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
+            double ipAdmissionTotalAmount = double.tryParse(
+                    detailsData?['ipAdmissionTotalAmount'] ?? '0') ??
+                0;
+            double ipAdmissionCollected =
+                double.tryParse(detailsData?['ipAdmissionCollected'] ?? '0') ??
+                    0;
+            double ipAdmissionBalanceAmount =
+                double.tryParse(detailsData?['ipAdmissionBalance'] ?? '0') ?? 0;
+            double balance = ipAdmissionTotalAmount - ipAdmissionCollected;
+
+            fetchedData.add({
+              'IP Ticket': ipData['ipTicket']?.toString() ?? '',
+              'OP No': data['opNumber']?.toString() ?? 'N/A',
+              'IP Admission Date': ipData['ipAdmitDate']?.toString() ?? '',
+              'Room Allotment Date': roomAllotmentDateStr ?? '',
+              'Name':
+                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'City': data['city']?.toString() ?? 'N/A',
+              'Doctor Name': ipData['doctorName']?.toString() ?? '',
+              'Total Amount': ipAdmissionTotalAmount.toStringAsFixed(2),
+              'Collected': ipAdmissionCollected.toStringAsFixed(2),
+              'Balance': balance.toStringAsFixed(2),
+              'Pay': TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => PaymentDialog(
+                      timeLine: true,
+                      ipTicket: ipData['ipTicket'],
+                      patientID: data['opNumber'],
+                      firstName: data['firstName'],
+                      lastName: data['lastName'],
+                      doctorName: ipData['doctorName'],
+                      specialization: ipData['specialization'],
+                      bloodGroup: data['bloodGroup'],
+                      address: data['address1'],
+                      age: data['age'],
+                      phoneNo: data['phone1'],
+                      city: data['city'],
+                      roomNo: ipAdmission['roomNo'],
+                      roomType: ipAdmission['roomType'],
+                      ipAdmitDate: ipData['ipAdmitDate'],
+                      docId: doc.id,
+                      totalBilledAmount: ipAdmissionTotalAmount.toString(),
+                      totalCollectedAmount: ipAdmissionCollected.toString(),
+                      totalBalanceAmount: ipAdmissionBalanceAmount.toString(),
+                      totalAmount: ipAdmissionCollected.toString(),
+                      balance: balance.toString(),
+                      fetchData: fetchData,
+                    ),
+                  );
+                },
+                child: CustomText(text: 'Pay'),
+              ),
+              'Add Amount': TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => IpAdmitAdditionalAmount(
+                      ipTicket: ipData['ipTicket'].toString(),
+                      docId: doc.id,
+                      fetchData: fetchData,
+                      timeLine: true,
+                    ),
+                  );
+                },
+                child: CustomText(text: 'Add'),
+              ),
+            });
           }
+        }
 
-          if (!match) continue;
+        // Prepare for next page
+        lastPatientDoc = patientQuerySnapshot.docs.last;
 
-          final ipPaymentDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipAdmissionPayments')
-              .doc("payments${ipData['ipTicket'].toString()}")
-              .get();
+        // Sort by IP Ticket number
+        fetchedData.sort((a, b) {
+          int tokenA = int.tryParse(a['IP Ticket'].toString()) ?? 0;
+          int tokenB = int.tryParse(b['IP Ticket'].toString()) ?? 0;
+          return tokenA.compareTo(tokenB);
+        });
 
-          bool hasIpPayment = ipPaymentDoc.exists;
+        setState(() {
+          tableData = List.from(fetchedData);
+        });
 
-          DocumentSnapshot detailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipAdmissionPayments')
-              .doc('payments${ipData['ipTicket'].toString()}')
-              .get();
-
-          Map<String, dynamic>? detailsData = detailsDoc.exists
-              ? detailsDoc.data() as Map<String, dynamic>?
-              : null;
-          final ipDetailsDoc = await FirebaseFirestore.instance
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipPrescription')
-              .doc('details')
-              .get();
-
-          final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
-          double ipAdmissionTotalAmount =
-              double.tryParse(detailsData?['ipAdmissionTotalAmount'] ?? '0') ??
-                  0;
-          double ipAdmissionCollected =
-              double.tryParse(detailsData?['ipAdmissionCollected'] ?? '0') ?? 0;
-          double ipAdmissionBalanceAmount =
-              double.tryParse(detailsData?['ipAdmissionBalance'] ?? '0') ?? 0;
-          double balance = ipAdmissionTotalAmount - ipAdmissionCollected;
-
-          fetchedData.add({
-            'IP Ticket': ipData['ipTicket']?.toString() ?? '',
-            'OP No': data['opNumber']?.toString() ?? 'N/A',
-            'IP Admission Date': ipData['ipAdmitDate']?.toString() ?? '',
-            'Room Allotment Date': roomAllotmentDateStr ?? '',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
-            'City': data['city']?.toString() ?? 'N/A',
-            'Doctor Name': ipData['doctorName']?.toString() ?? '',
-            'Total Amount': ipAdmissionTotalAmount.toStringAsFixed(2),
-            'Collected': ipAdmissionCollected.toStringAsFixed(2),
-            'Balance': balance.toStringAsFixed(2),
-            'Pay': TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => PaymentDialog(
-                    timeLine: true,
-                    ipTicket: ipData['ipTicket'],
-                    patientID: data['opNumber'],
-                    firstName: data['firstName'],
-                    lastName: data['lastName'],
-                    doctorName: ipData['doctorName'],
-                    specialization: ipData['specialization'],
-                    bloodGroup: data['bloodGroup'],
-                    address: data['address1'],
-                    age: data['age'],
-                    phoneNo: data['phone1'],
-                    city: data['city'],
-                    roomNo: ipAdmission['roomNo'],
-                    roomType: ipAdmission['roomType'],
-                    ipAdmitDate: ipData['ipAdmitDate'],
-                    docId: doc.id,
-                    totalBilledAmount: ipAdmissionTotalAmount.toString(),
-                    totalCollectedAmount: ipAdmissionCollected.toString(),
-                    totalBalanceAmount: ipAdmissionBalanceAmount.toString(),
-                    totalAmount: ipAdmissionCollected.toString(),
-                    balance: balance.toString(),
-                    fetchData: fetchData,
-                  ),
-                );
-              },
-              child: CustomText(text: 'Pay'),
-            ),
-            'Add Amount': TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => IpAdmitAdditionalAmount(
-                    ipTicket: ipData['ipTicket'].toString(),
-                    docId: doc.id,
-                    fetchData: fetchData,
-                    timeLine: true,
-                  ),
-                );
-              },
-              child: CustomText(text: 'Add'),
-            ),
-          });
+        // If less than limit docs returned, this is last page
+        if (patientQuerySnapshot.docs.length < limit) {
+          hasMore = false;
+        } else {
+          // delay to avoid Firestore throttling
+          await Future.delayed(const Duration(milliseconds: 100));
         }
       }
-
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['IP Ticket'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['IP Ticket'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -530,7 +544,7 @@ class _IpAdmit extends State<IpAdmit> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

@@ -77,10 +77,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
       List<Map<String, dynamic>> fetchedData = [];
 
       while (hasMore) {
-        Query patientQuery = FirebaseFirestore.instance
-            .collection('patients')
-            .orderBy('opNumber') // adjust if needed
-            .limit(pageSize);
+        Query patientQuery =
+            FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
         if (lastPatientDoc != null) {
           patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
