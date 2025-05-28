@@ -807,50 +807,96 @@ class _OpTicketPageState extends State<OpTicketPage> {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     List<Map<String, String>> patientsList = [];
-    List<QueryDocumentSnapshot> docs = [];
+    Map<String, QueryDocumentSnapshot> docMap = {};
+    const int pageSize = 20;
 
+    // 1. Handle OP Number (case-insensitive, client-side filter)
     if (opNumber.isNotEmpty) {
-      final QuerySnapshot snapshot =
-          await firestore.collection('patients').get();
-      docs.addAll(snapshot.docs.where((doc) {
-        final docOp = (doc['opNumber'] ?? '').toString();
-        return docOp.toLowerCase() == opNumber.toLowerCase();
-      }));
+      DocumentSnapshot? lastDoc;
+      bool hasMore = true;
+
+      while (hasMore) {
+        Query query = firestore.collection('patients').limit(pageSize);
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final snapshot = await query.get();
+        if (snapshot.docs.isEmpty) break;
+
+        for (var doc in snapshot.docs) {
+          final docOp = (doc['opNumber'] ?? '').toString();
+          if (docOp.toLowerCase() == opNumber.toLowerCase()) {
+            docMap[doc.id] = doc;
+          }
+        }
+
+        lastDoc = snapshot.docs.last;
+        hasMore = snapshot.docs.length == pageSize;
+      }
     }
 
-    // Phone1 exact match
+    // 2. Handle Phone Number - phone1 match
     if (phoneNumber.isNotEmpty) {
-      final QuerySnapshot snapshotPhone1 = await firestore
-          .collection('patients')
-          .where('phone1', isEqualTo: phoneNumber)
-          .get();
-      docs.addAll(snapshotPhone1.docs);
+      DocumentSnapshot? lastDoc;
+      bool hasMore = true;
 
-      // Phone2 exact match
-      final QuerySnapshot snapshotPhone2 = await firestore
-          .collection('patients')
-          .where('phone2', isEqualTo: phoneNumber)
-          .get();
-      docs.addAll(snapshotPhone2.docs);
+      while (hasMore) {
+        Query query = firestore
+            .collection('patients')
+            .where('phone1', isEqualTo: phoneNumber)
+            .limit(pageSize);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final snapshot = await query.get();
+        if (snapshot.docs.isEmpty) break;
+
+        for (var doc in snapshot.docs) {
+          docMap[doc.id] = doc;
+        }
+
+        lastDoc = snapshot.docs.last;
+        hasMore = snapshot.docs.length == pageSize;
+      }
+
+      // 3. Handle Phone Number - phone2 match
+      lastDoc = null;
+      hasMore = true;
+
+      while (hasMore) {
+        Query query = firestore
+            .collection('patients')
+            .where('phone2', isEqualTo: phoneNumber)
+            .limit(pageSize);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final snapshot = await query.get();
+        if (snapshot.docs.isEmpty) break;
+
+        for (var doc in snapshot.docs) {
+          docMap[doc.id] = doc;
+        }
+
+        lastDoc = snapshot.docs.last;
+        hasMore = snapshot.docs.length == pageSize;
+      }
     }
 
-    // Remove duplicates by document ID
-    final uniqueDocs = {
-      for (var doc in docs) doc.id: doc,
-    }.values;
-
-    for (var doc in uniqueDocs) {
+    // Convert documents to map list
+    for (var doc in docMap.values) {
       patientsList.add({
-        'opNumber': doc['opNumber'] ?? 'N/A',
+        'opNumber': doc['opNumber'] ?? '',
         'name':
-            ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '') ?? 'N/A')
-                .trim(),
-        'age': doc['age'] ?? 'N/A',
-        'dob': doc['dob'] ?? 'N/A',
-        'sex': doc['sex'] ?? 'N/A',
-        'phone': doc['phone1'] ?? 'N/A',
-        'phone2': doc['phone2'] ?? 'N/A',
-        'address': doc['address1'] ?? 'N/A',
+            ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '')).trim(),
+        'age': doc['age'] ?? '',
+        'phone': doc['phone1'] ?? '',
+        'address': doc['address1'] ?? '',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
       });

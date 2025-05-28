@@ -69,38 +69,56 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         isPharmacyTotalIncomeLoading = true;
       });
 
+      const int pageSize = 10;
+
       for (String collection in subcollections) {
-        final QuerySnapshot snapshot = await firestore
-            .collection('pharmacy')
-            .doc('billings')
-            .collection(collection)
-            .get();
+        DocumentSnapshot? lastDoc;
+        bool hasMore = true;
 
-        for (var doc in snapshot.docs) {
-          final docId = doc.id;
+        while (hasMore) {
+          Query query = firestore
+              .collection('pharmacy')
+              .doc('billings')
+              .collection(collection)
+              .orderBy(FieldPath.documentId)
+              .limit(pageSize);
 
-          try {
-            final paymentsSnapshot = await firestore
-                .collection('pharmacy')
-                .doc('billings')
-                .collection(collection)
-                .doc(docId)
-                .collection('payments')
-                .get();
-
-            for (var payDoc in paymentsSnapshot.docs) {
-              final payData = payDoc.data();
-              final collectedStr = payData['collected']?.toString();
-              final payedDateStr = payData['payedDate']?.toString();
-
-              if (isInRange(payedDateStr)) {
-                final value = double.tryParse(collectedStr ?? '0') ?? 0;
-                total += value;
-              }
-            }
-          } catch (e) {
-            print('Error fetching payments in $collection/$docId: $e');
+          if (lastDoc != null) {
+            query = query.startAfterDocument(lastDoc);
           }
+
+          final snapshot = await query.get();
+          if (snapshot.docs.isEmpty) break;
+
+          for (var doc in snapshot.docs) {
+            final docId = doc.id;
+
+            try {
+              final paymentsSnapshot = await firestore
+                  .collection('pharmacy')
+                  .doc('billings')
+                  .collection(collection)
+                  .doc(docId)
+                  .collection('payments')
+                  .get();
+
+              for (var payDoc in paymentsSnapshot.docs) {
+                final payData = payDoc.data();
+                final collectedStr = payData['collected']?.toString();
+                final payedDateStr = payData['payedDate']?.toString();
+
+                if (isInRange(payedDateStr)) {
+                  final value = double.tryParse(collectedStr ?? '0') ?? 0;
+                  total += value;
+                }
+              }
+            } catch (e) {
+              print('Error fetching payments in $collection/$docId: $e');
+            }
+          }
+
+          lastDoc = snapshot.docs.last;
+          hasMore = snapshot.docs.length == pageSize;
         }
       }
 
@@ -109,9 +127,9 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         isPharmacyTotalIncomeLoading = false;
       });
 
-      print("Pharmacy Total Income (after returns): $pharmacyTotalIncome");
+      print("Pharmacy Total Income: $pharmacyTotalIncome");
     } catch (e) {
-      print("Error fetching pharmacy totals: $e");
+      print("Error fetching pharmacy income: $e");
       setState(() {
         isPharmacyTotalIncomeLoading = false;
       });
@@ -139,55 +157,33 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         isPharmacyTotalExpenseLoading = true;
       });
 
-      final purchaseSnapshot = await firestore
-          .collection('stock')
-          .doc('Products')
-          .collection('PurchaseEntry')
-          .get();
+      // Paginate PurchaseEntry
+      DocumentSnapshot? lastPurchaseDoc;
+      const int pageSize = 10;
+      bool hasMorePurchases = true;
 
-      for (var doc in purchaseSnapshot.docs) {
-        final docId = doc.id;
-
-        final paymentsSnapshot = await firestore
+      while (hasMorePurchases) {
+        Query purchaseQuery = firestore
             .collection('stock')
             .doc('Products')
             .collection('PurchaseEntry')
-            .doc(docId)
-            .collection('payments')
-            .get();
+            .orderBy(FieldPath.documentId)
+            .limit(pageSize);
 
-        for (var payDoc in paymentsSnapshot.docs) {
-          final payData = payDoc.data();
-          final collectedStr = payData['collected']?.toString();
-          final payedDateStr = payData['payedDate']?.toString();
-
-          if (isInRange(payedDateStr)) {
-            final value = double.tryParse(collectedStr ?? '0') ?? 0;
-            total += value;
-          }
+        if (lastPurchaseDoc != null) {
+          purchaseQuery = purchaseQuery.startAfterDocument(lastPurchaseDoc);
         }
-      }
 
-      List<String> returnCollections = [
-        'StockReturn',
-        'ExpiryReturn',
-        'DamageReturn'
-      ];
+        final purchaseSnapshot = await purchaseQuery.get();
+        if (purchaseSnapshot.docs.isEmpty) break;
 
-      for (String collection in returnCollections) {
-        final returnSnapshot = await firestore
-            .collection('stock')
-            .doc('Products')
-            .collection(collection)
-            .get();
-
-        for (var doc in returnSnapshot.docs) {
+        for (var doc in purchaseSnapshot.docs) {
           final docId = doc.id;
 
           final paymentsSnapshot = await firestore
               .collection('stock')
               .doc('Products')
-              .collection(collection)
+              .collection('PurchaseEntry')
               .doc(docId)
               .collection('payments')
               .get();
@@ -199,9 +195,66 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
             if (isInRange(payedDateStr)) {
               final value = double.tryParse(collectedStr ?? '0') ?? 0;
-              total -= value;
+              total += value;
             }
           }
+        }
+
+        lastPurchaseDoc = purchaseSnapshot.docs.last;
+        hasMorePurchases = purchaseSnapshot.docs.length == pageSize;
+      }
+
+      // Paginate Returns
+      List<String> returnCollections = [
+        'StockReturn',
+        'ExpiryReturn',
+        'DamageReturn'
+      ];
+
+      for (String collection in returnCollections) {
+        DocumentSnapshot? lastReturnDoc;
+        bool hasMoreReturns = true;
+
+        while (hasMoreReturns) {
+          Query returnQuery = firestore
+              .collection('stock')
+              .doc('Products')
+              .collection(collection)
+              .orderBy(FieldPath.documentId)
+              .limit(pageSize);
+
+          if (lastReturnDoc != null) {
+            returnQuery = returnQuery.startAfterDocument(lastReturnDoc);
+          }
+
+          final returnSnapshot = await returnQuery.get();
+          if (returnSnapshot.docs.isEmpty) break;
+
+          for (var doc in returnSnapshot.docs) {
+            final docId = doc.id;
+
+            final paymentsSnapshot = await firestore
+                .collection('stock')
+                .doc('Products')
+                .collection(collection)
+                .doc(docId)
+                .collection('payments')
+                .get();
+
+            for (var payDoc in paymentsSnapshot.docs) {
+              final payData = payDoc.data();
+              final collectedStr = payData['collected']?.toString();
+              final payedDateStr = payData['payedDate']?.toString();
+
+              if (isInRange(payedDateStr)) {
+                final value = double.tryParse(collectedStr ?? '0') ?? 0;
+                total -= value;
+              }
+            }
+          }
+
+          lastReturnDoc = returnSnapshot.docs.last;
+          hasMoreReturns = returnSnapshot.docs.length == pageSize;
         }
       }
 
@@ -219,39 +272,50 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<int> getTotalIncome({String? fromDate, String? toDate}) async {
+  Future<int> getTotalIncome({
+    String? fromDate,
+    String? toDate,
+    int pageSize = 10,
+  }) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int income = 0;
 
-    try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
+    setState(() {
+      isTotalIncomeLoading = true;
+    });
 
-      setState(() {
-        isTotalIncomeLoading = true;
-      });
+    DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
 
-      DateTime? from = fromDate != null ? DateTime.tryParse(fromDate) : null;
-      DateTime? to = toDate != null ? DateTime.tryParse(toDate) : null;
+    bool isInRange(String? dateStr) {
+      if (dateStr == null) return false;
+      DateTime? d = DateTime.tryParse(dateStr);
+      if (d == null) return false;
+      if (from != null && d.isBefore(from)) return false;
+      if (to != null && d.isAfter(to)) return false;
+      return true;
+    }
 
-      bool isInRange(String? dateStr) {
-        if (dateStr == null) return false;
-        DateTime? d = DateTime.tryParse(dateStr);
-        if (d == null) return false;
-        if (from != null && d.isBefore(from)) return false;
-        if (to != null && d.isAfter(to)) return false;
-        return true;
+    int parseAmount(String? value) {
+      if (value == null || value.trim().isEmpty) return 0;
+      return int.tryParse(value) ?? 0;
+    }
+
+    DocumentSnapshot? lastPatientDoc;
+
+    while (true) {
+      Query query = fireStore.collection('patients').limit(pageSize);
+      if (lastPatientDoc != null) {
+        query = query.startAfterDocument(lastPatientDoc);
       }
 
-      int parseAmount(String? value) {
-        if (value == null || value.trim().isEmpty) return 0;
-        return int.tryParse(value) ?? 0;
-      }
+      final QuerySnapshot patientSnapshot = await query.get();
+      if (patientSnapshot.docs.isEmpty) break;
 
       for (var doc in patientSnapshot.docs) {
         final patientId = doc.id;
 
-        // 1. Get all opAmountPayments
+        // 1. OP Payments
         try {
           final opPaymentsSnapshot = await fireStore
               .collection('patients')
@@ -263,14 +327,15 @@ class _ManagementDashboard extends State<ManagementDashboard> {
             final payData = payDoc.data();
             final collectedStr = payData['collected']?.toString();
             final payedDateStr = payData['payedDate']?.toString();
-
             if (isInRange(payedDateStr)) {
               income += parseAmount(collectedStr);
             }
           }
         } catch (e) {
           print('Error fetching opAmountPayments for $patientId: $e');
-        } // 2. Get all opTickets and sum their opTicketPayments
+        }
+
+        // 2. OP Ticket Payments
         try {
           final opTicketsSnapshot = await fireStore
               .collection('patients')
@@ -294,7 +359,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                 final paymentData = paymentDoc.data();
                 final collectedStr = paymentData['collected']?.toString();
                 final payedDateStr = paymentData['payedDate']?.toString();
-
                 if (isInRange(payedDateStr)) {
                   income += parseAmount(collectedStr);
                 }
@@ -306,7 +370,9 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           }
         } catch (e) {
           print('Error fetching opTickets for $patientId: $e');
-        } // 3. Get all ipTickets and sum their ipAdmitPayments
+        }
+
+        // 3. IP Admit Payments
         try {
           final ipTicketsSnapshot = await fireStore
               .collection('patients')
@@ -330,19 +396,19 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                 final paymentData = paymentDoc.data();
                 final collectedStr = paymentData['collected']?.toString();
                 final payedDateStr = paymentData['payedDate']?.toString();
-
                 if (isInRange(payedDateStr)) {
                   income += parseAmount(collectedStr);
                 }
               }
             } catch (e) {
-              print(
-                  'Error fetching ipAdmitPayments for $ipTicketId of $patientId: $e');
+              print('Error fetching ipAdmitPayments for $ipTicketId: $e');
             }
           }
         } catch (e) {
           print('Error fetching ipTickets for $patientId: $e');
-        } // 4. Sum labPayments inside opTickets
+        }
+
+        // 4. Lab Payments in OP Tickets
         try {
           final opTicketsSnapshot = await fireStore
               .collection('patients')
@@ -366,7 +432,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                 final labData = labDoc.data();
                 final collectedStr = labData['collected']?.toString();
                 final payedDateStr = labData['payedDate']?.toString();
-
                 if (isInRange(payedDateStr)) {
                   income += parseAmount(collectedStr);
                 }
@@ -377,7 +442,9 @@ class _ManagementDashboard extends State<ManagementDashboard> {
           }
         } catch (e) {
           print('Error fetching opTickets for labPayments: $e');
-        } // 5. Sum labPayments inside ipTickets ➜ Examination ➜ labPayments
+        }
+
+        // 5. Lab Payments in IP ➜ Examination ➜ labPayments
         try {
           final ipTicketsSnapshot = await fireStore
               .collection('patients')
@@ -415,7 +482,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     final labData = labDoc.data();
                     final collectedStr = labData['collected']?.toString();
                     final payedDateStr = labData['payedDate']?.toString();
-
                     if (isInRange(payedDateStr)) {
                       income += parseAmount(collectedStr);
                     }
@@ -426,7 +492,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                 }
               }
             } catch (e) {
-              print('Error fetching Examination for ipTicket $ipTicketId: $e');
+              print('Error fetching Examination for $ipTicketId: $e');
             }
           }
         } catch (e) {
@@ -434,16 +500,15 @@ class _ManagementDashboard extends State<ManagementDashboard> {
         }
       }
 
-      setState(() {
-        totalIncome = income;
-        isTotalIncomeLoading = false;
-      });
-
-      return income;
-    } catch (e) {
-      print('Error fetching patients: $e');
-      return 0;
+      lastPatientDoc = patientSnapshot.docs.last;
     }
+
+    setState(() {
+      totalIncome = income;
+      isTotalIncomeLoading = false;
+    });
+
+    return income;
   }
 
   double parseAmount(dynamic value) {
@@ -458,9 +523,14 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<int> getTotalExpense({String? fromDate, String? toDate}) async {
+  Future<int> getTotalExpense({
+    String? fromDate,
+    String? toDate,
+    int pageSize = 20,
+  }) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int expense = 0;
+
     setState(() {
       isTotalExpenseLoading = true;
     });
@@ -472,10 +542,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       if (dateStr == null) return false;
       final date = DateTime.tryParse(dateStr);
       if (date == null) return false;
-
       if (from != null && date.isBefore(from)) return false;
       if (to != null && date.isAfter(to)) return false;
-
       return true;
     }
 
@@ -485,30 +553,56 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
 
     try {
-      final directPurchaseSnapshot = await fireStore
+      // Direct Purchase Pagination
+      CollectionReference directCollection = fireStore
           .collection('hospital')
           .doc('purchase')
-          .collection('directPurchase')
-          .get();
+          .collection('directPurchase');
 
-      for (var doc in directPurchaseSnapshot.docs) {
-        final data = doc.data();
-        if (isInRange(data['purchaseDate'])) {
-          expense += parseAmount(data['collected']);
+      DocumentSnapshot? lastDirectDoc;
+      while (true) {
+        Query query = directCollection.limit(pageSize);
+        if (lastDirectDoc != null) {
+          query = query.startAfterDocument(lastDirectDoc);
         }
+
+        QuerySnapshot snapshot = await query.get();
+        if (snapshot.docs.isEmpty) break;
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (isInRange(data['purchaseDate'])) {
+            expense += parseAmount(data['collected']);
+          }
+        }
+
+        lastDirectDoc = snapshot.docs.last;
       }
 
-      final otherExpenseSnapshot = await fireStore
+      // Other Expense Pagination
+      CollectionReference otherCollection = fireStore
           .collection('hospital')
           .doc('purchase')
-          .collection('otherExpense')
-          .get();
+          .collection('otherExpense');
 
-      for (var doc in otherExpenseSnapshot.docs) {
-        final data = doc.data();
-        if (isInRange(data['billDate'])) {
-          expense += parseAmount(data['collected']);
+      DocumentSnapshot? lastOtherDoc;
+      while (true) {
+        Query query = otherCollection.limit(pageSize);
+        if (lastOtherDoc != null) {
+          query = query.startAfterDocument(lastOtherDoc);
         }
+
+        QuerySnapshot snapshot = await query.get();
+        if (snapshot.docs.isEmpty) break;
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (isInRange(data['billDate'])) {
+            expense += parseAmount(data['collected']);
+          }
+        }
+
+        lastOtherDoc = snapshot.docs.last;
       }
 
       setState(() {
@@ -523,7 +617,12 @@ class _ManagementDashboard extends State<ManagementDashboard> {
     }
   }
 
-  Future<int> getNoOfOp({String? fromDate, String? toDate}) async {
+  Future<int> getNoOfOp({
+    String? fromDate,
+    String? toDate,
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int opCount = 0;
 
@@ -538,38 +637,69 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       if (dateStr == null) return false;
       final date = DateTime.tryParse(dateStr);
       if (date == null) return false;
-
       if (from != null && date.isBefore(from)) return false;
       if (to != null && date.isAfter(to)) return false;
-
       return true;
     }
 
+    DocumentSnapshot? lastPatientDoc;
+
     try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
-
-      for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        try {
-          final opTicketsSnapshot = await fireStore
-              .collection('patients')
-              .doc(doc.id)
-              .collection('opTickets')
-              .get();
-
-          for (var opDoc in opTicketsSnapshot.docs) {
-            final opData = opDoc.data();
-            final opDateStr = opData['tokenDate'];
-
-            if (isInRange(opDateStr)) {
-              opCount++;
-            }
-          }
-        } catch (e) {
-          print('Error fetching ipTickets for ${doc.id}: $e');
+      while (true) {
+        Query patientQuery = fireStore.collection('patients').limit(pageSize);
+        if (lastPatientDoc != null) {
+          patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
         }
+
+        final QuerySnapshot patientSnapshot = await patientQuery.get();
+
+        if (patientSnapshot.docs.isEmpty) {
+          break;
+        }
+
+        for (var patientDoc in patientSnapshot.docs) {
+          try {
+            Query opTicketsQuery = fireStore
+                .collection('patients')
+                .doc(patientDoc.id)
+                .collection('opTickets')
+                .limit(pageSize);
+
+            DocumentSnapshot? lastOpDoc;
+
+            while (true) {
+              if (lastOpDoc != null) {
+                opTicketsQuery = opTicketsQuery.startAfterDocument(lastOpDoc);
+              }
+
+              final QuerySnapshot opTicketsSnapshot =
+                  await opTicketsQuery.get();
+
+              if (opTicketsSnapshot.docs.isEmpty) {
+                break;
+              }
+
+              for (var opDoc in opTicketsSnapshot.docs) {
+                final opData = opDoc.data() as Map<String, dynamic>;
+                final opDateStr = opData['tokenDate'];
+
+                if (isInRange(opDateStr)) {
+                  opCount++;
+                }
+              }
+
+              lastOpDoc = opTicketsSnapshot.docs.last;
+
+              await Future.delayed(delayBetweenPages);
+            }
+          } catch (e) {
+            print('Error fetching opTickets for patient ${patientDoc.id}: $e');
+          }
+        }
+
+        lastPatientDoc = patientSnapshot.docs.last;
+
+        await Future.delayed(delayBetweenPages);
       }
 
       setState(() {
@@ -580,11 +710,15 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       return opCount;
     } catch (e) {
       print('Error fetching patients: $e');
+      setState(() {
+        isTotalOpLoading = false;
+      });
       return 0;
     }
   }
 
-  Future<int> getNoOfIp({String? fromDate, String? toDate}) async {
+  Future<int> getNoOfIp(
+      {String? fromDate, String? toDate, int pageSize = 20}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     int ipCount = 0;
 
@@ -599,38 +733,44 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       if (dateStr == null) return false;
       final date = DateTime.tryParse(dateStr);
       if (date == null) return false;
-
       if (from != null && date.isBefore(from)) return false;
       if (to != null && date.isAfter(to)) return false;
-
       return true;
     }
 
+    DocumentSnapshot? lastDoc;
+
     try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
-
-      for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        try {
-          final ipTicketsSnapshot = await fireStore
-              .collection('patients')
-              .doc(doc.id)
-              .collection('ipTickets')
-              .get();
-
-          for (var ipDoc in ipTicketsSnapshot.docs) {
-            final ipData = ipDoc.data();
-            final ipDateStr = ipData['ipAdmitDate'];
-
-            if (isInRange(ipDateStr)) {
-              ipCount++;
-            }
-          }
-        } catch (e) {
-          print('Error fetching ipTickets for ${doc.id}: $e');
+      while (true) {
+        Query query = fireStore.collection('patients').limit(pageSize);
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
         }
+
+        final QuerySnapshot patientSnapshot = await query.get();
+        if (patientSnapshot.docs.isEmpty) break;
+
+        for (var doc in patientSnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          try {
+            final ipTicketsSnapshot =
+                await doc.reference.collection('ipTickets').get();
+
+            for (var ipDoc in ipTicketsSnapshot.docs) {
+              final ipData = ipDoc.data();
+              final ipDateStr = ipData['ipAdmitDate'];
+
+              if (isInRange(ipDateStr)) {
+                ipCount++;
+              }
+            }
+          } catch (e) {
+            print('Error fetching ipTickets for ${doc.id}: $e');
+          }
+        }
+
+        lastDoc = patientSnapshot.docs.last;
       }
 
       setState(() {
@@ -640,47 +780,56 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
       return ipCount;
     } catch (e) {
-      print('Error fetching patients: $e');
+      print('Error during pagination: $e');
       return 0;
     }
   }
 
-  Future<int> getTodayNoOfOp() async {
+  Future<int> getTodayNoOfOp({int pageSize = 20}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     int opCount = 0;
+    DocumentSnapshot? lastDoc;
 
     try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
-
-      for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        if (!data.containsKey('opNumber') ||
-            !data.containsKey('opAdmissionDate')) continue;
-
-        try {
-          final DocumentSnapshot tokenSnapshot = await fireStore
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data() as Map<String, dynamic>?;
-
-            final String? tokenDate = tokenData?['date'];
-
-            if (tokenDate == today) {
-              opCount++;
-            }
-          }
-        } catch (e) {
-          print('Error fetching token for patient ${doc.id}: $e');
+      while (true) {
+        Query query = fireStore.collection('patients').limit(pageSize);
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
         }
+
+        final QuerySnapshot patientSnapshot = await query.get();
+        if (patientSnapshot.docs.isEmpty) break;
+
+        for (var doc in patientSnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          if (!data.containsKey('opNumber') ||
+              !data.containsKey('opAdmissionDate')) {
+            continue;
+          }
+
+          try {
+            final DocumentSnapshot tokenSnapshot = await doc.reference
+                .collection('tokens')
+                .doc('currentToken')
+                .get();
+
+            if (tokenSnapshot.exists) {
+              final tokenData = tokenSnapshot.data() as Map<String, dynamic>?;
+              final String? tokenDate = tokenData?['date'];
+
+              if (tokenDate == today) {
+                opCount++;
+              }
+            }
+          } catch (e) {
+            print('Error fetching token for patient ${doc.id}: $e');
+          }
+        }
+
+        lastDoc = patientSnapshot.docs.last;
       }
 
       setState(() {
@@ -689,27 +838,50 @@ class _ManagementDashboard extends State<ManagementDashboard> {
 
       return opCount;
     } catch (e) {
-      print('Error fetching patients: $e');
+      print('Error during pagination: $e');
       return 0;
     }
   }
 
-  Future<int> getNoOfNewPatients() async {
+  Future<int> getNoOfNewPatients({
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
-
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+    int totalCount = 0;
+    DocumentSnapshot? lastDocument;
+
     try {
-      final QuerySnapshot snapshot = await fireStore
-          .collection('patients')
-          .where('opAdmissionDate', isEqualTo: today)
-          .get();
+      while (true) {
+        Query query = fireStore
+            .collection('patients')
+            .where('opAdmissionDate', isEqualTo: today)
+            .limit(pageSize);
+
+        if (lastDocument != null) {
+          query = query.startAfterDocument(lastDocument);
+        }
+
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          break;
+        }
+
+        totalCount += snapshot.docs.length;
+
+        lastDocument = snapshot.docs.last;
+
+        await Future.delayed(delayBetweenPages);
+      }
 
       setState(() {
-        noOfNewPatients = snapshot.docs.length;
+        noOfNewPatients = totalCount;
       });
 
-      return noOfNewPatients;
+      return totalCount;
     } catch (e) {
       print('Error fetching documents: $e');
       return 0;

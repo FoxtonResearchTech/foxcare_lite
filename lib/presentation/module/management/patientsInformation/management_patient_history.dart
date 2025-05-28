@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 
@@ -55,68 +56,89 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
     super.dispose();
   }
 
-  Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
+  Future<void> fetchData({
+    String? opNumber,
+    String? phoneNumber,
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
+    print('Fetching data with pagination...');
+    DocumentSnapshot? lastDocument;
+    List<Map<String, dynamic>> allFetchedData = [];
+
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      while (true) {
+        Query query = FirebaseFirestore.instance.collection('patients');
 
-      if (opNumber != null) {
-        query = query.where('opNumber', isEqualTo: opNumber);
-      } else if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
+        if (opNumber != null) {
+          query = query.where('opNumber', isEqualTo: opNumber);
+        } else if (phoneNumber != null) {
+          query = query.where(Filter.or(
+            Filter('phone1', isEqualTo: phoneNumber),
+            Filter('phone2', isEqualTo: phoneNumber),
+          ));
+        }
+
+        if (lastDocument != null) {
+          query = query.startAfterDocument(lastDocument);
+        }
+
+        query = query.limit(pageSize);
+
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          print('No more documents to fetch.');
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (!data.containsKey('opNumber')) continue;
+          allFetchedData.add(
+            {
+              'OP NO': data['opNumber'] ?? 'N/A',
+              'Name':
+                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'Place': data['state'] ?? 'N/A',
+              'Phone No': data['phone1'] ?? 'N/A',
+              'DOB': data['dob'] ?? 'N/A',
+              'View': TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return PatientHistoryDialog(
+                        firstName: data['firstName'],
+                        lastName: data['lastName'],
+                        dob: data['dob'],
+                        sex: data['sex'],
+                        phone1: data['phone1'],
+                        phone2: data['phone2'],
+                        opNumber: data['opNumber'],
+                        ipNumber: data['ipNumber'],
+                        bloodGroup: data['bloodGroup'],
+                      );
+                    },
+                  );
+                },
+                child: const CustomText(text: 'View'),
+              ),
+            },
+          );
+        }
+
+        lastDocument = snapshot.docs.last;
+
+        // Optional: throttle delay to reduce load
+        await Future.delayed(delayBetweenPages);
       }
-      final QuerySnapshot snapshot = await query.get();
 
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData1 = [];
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        fetchedData.add(
-          {
-            'OP NO': data['opNumber'] ?? 'N/A',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
-            'Place': data['state'] ?? 'N/A',
-            'Phone No': data['phone1'] ?? 'N/A',
-            'DOB': data['dob'] ?? 'N/A',
-            'View': TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return PatientHistoryDialog(
-                      firstName: data['firstName'],
-                      lastName: data['lastName'],
-                      dob: data['dob'],
-                      sex: data['sex'],
-                      phone1: data['phone1'],
-                      phone2: data['phone2'],
-                      opNumber: data['opNumber'],
-                      ipNumber: data['ipNumber'],
-                      bloodGroup: data['bloodGroup'],
-                    );
-                  },
-                );
-              },
-              child: const CustomText(text: 'View'),
-            ),
-          },
-        );
-      }
       setState(() {
-        tableData1 = fetchedData;
+        tableData1 = allFetchedData;
       });
+      print('Finished fetching ${allFetchedData.length} records.');
     } catch (e) {
       print('Error fetching data from Firestore: $e');
     }
@@ -252,7 +274,7 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData1,

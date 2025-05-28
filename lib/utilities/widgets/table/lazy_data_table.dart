@@ -11,6 +11,7 @@ class LazyDataTable extends StatefulWidget {
   final Color headerColor;
   final Color borderColor;
   final Color Function(Map<String, dynamic>)? rowColorResolver;
+  final void Function(double scrollOffset)? onScroll;
 
   LazyDataTable({
     super.key,
@@ -21,6 +22,7 @@ class LazyDataTable extends StatefulWidget {
     this.borderColor = Colors.black,
     this.rowColorResolver,
     this.headerColor = Colors.white,
+    this.onScroll,
   }) : headerBackgroundColor = headerBackgroundColor ?? AppColors.blue;
 
   @override
@@ -30,7 +32,7 @@ class LazyDataTable extends StatefulWidget {
 class _LazyDataTable extends State<LazyDataTable>
     with AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
-  int itemsToShow = 100;
+  int itemsToShow = 25;
   bool isLoadingMore = false;
 
   @override
@@ -51,7 +53,14 @@ class _LazyDataTable extends State<LazyDataTable>
   }
 
   void _scrollListener() {
-    // If we are close to the bottom and not already loading more, load more
+    final offset = _scrollController.position.pixels;
+
+    // Call the scroll function
+    if (widget.onScroll != null) {
+      widget.onScroll!(offset);
+    }
+
+    // Lazy loading trigger
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
         !isLoadingMore &&
@@ -65,11 +74,10 @@ class _LazyDataTable extends State<LazyDataTable>
       isLoadingMore = true;
     });
 
-    // Simulate a delay for loading (replace with actual async fetch if needed)
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 100));
 
     setState(() {
-      itemsToShow = (itemsToShow + 100).clamp(0, widget.tableData.length);
+      itemsToShow = (itemsToShow + 25).clamp(0, widget.tableData.length);
       isLoadingMore = false;
     });
   }

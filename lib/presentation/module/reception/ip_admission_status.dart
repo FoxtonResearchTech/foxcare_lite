@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
@@ -41,101 +42,111 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
     super.dispose();
   }
 
-  Future<void> fetchData({String? ipNumber, String? phoneNumber}) async {
-    print('Fetching data with OP Number: $ipNumber');
+  Future<void> fetchData({
+    String? ipNumber,
+    String? phoneNumber,
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
+    print('Fetching data with IP Number: $ipNumber');
+
+    DocumentSnapshot? lastPatientDoc; // for pagination
+    List<Map<String, dynamic>> allFetchedData = [];
+
+    final patientsCollection =
+        FirebaseFirestore.instance.collection('patients');
 
     try {
-      List<Map<String, dynamic>> fetchedData = [];
-      bool hasIpPrescription = false;
-      final today = DateTime.now();
-      final todayString =
-          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      while (true) {
+        Query<Map<String, dynamic>> query = patientsCollection.limit(pageSize);
 
-      final QuerySnapshot<Map<String, dynamic>> patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
+        }
 
-      for (var patientDoc in patientSnapshot.docs) {
-        final patientId = patientDoc.id;
-        final patientData = patientDoc.data();
+        final patientSnapshot = await query.get();
 
-        final opTicketsSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(patientId)
-            .collection('ipTickets')
-            .get();
+        if (patientSnapshot.docs.isEmpty) {
+          // No more patients to fetch
+          break;
+        }
 
-        bool found = false;
+        for (var patientDoc in patientSnapshot.docs) {
+          final patientId = patientDoc.id;
+          final patientData = patientDoc.data();
 
-        for (var ipTicketDoc in opTicketsSnapshot.docs) {
-          final ipTicketData = ipTicketDoc.data();
-          print(
-              'opTicketData: ${ipTicketData['opTicket']}'); // Debugging print statement
+          final ipTicketsSnapshot = await patientsCollection
+              .doc(patientId)
+              .collection('ipTickets')
+              .get();
 
-          bool matches = false;
+          for (var ipTicketDoc in ipTicketsSnapshot.docs) {
+            final ipTicketData = ipTicketDoc.data();
 
-          if (patientData['isIP'] == true) {
-            if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
-              matches = true;
-            } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
-              if (patientData['phone1'] == phoneNumber ||
-                  patientData['phone2'] == phoneNumber) {
+            bool matches = false;
+
+            if (patientData['isIP'] == true) {
+              if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+                matches = true;
+              } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+                if (patientData['phone1'] == phoneNumber ||
+                    patientData['phone2'] == phoneNumber) {
+                  matches = true;
+                }
+              } else if (ipNumber == null &&
+                  (phoneNumber == null || phoneNumber.isEmpty)) {
                 matches = true;
               }
-            } else if (ipNumber == null &&
-                (phoneNumber == null || phoneNumber.isEmpty)) {
-              matches = true;
             }
-          }
 
-          if (matches) {
-            String tokenNo = '';
-            String tokenDate = '';
+            if (matches) {
+              if (ipTicketData['discharged'] == true) {
+                print(
+                    'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
+                continue;
+              }
 
-            if (ipTicketData['discharged'] == true) {
-              print(
-                  'Skipping discharged IP ticket: ${ipTicketData['ipTicket']}');
-              continue;
+              DocumentSnapshot ipPrescriptionSnapshot = await patientsCollection
+                  .doc(patientId)
+                  .collection('ipPrescription')
+                  .doc('details')
+                  .get();
+
+              Map<String, dynamic>? detailsData = ipPrescriptionSnapshot.exists
+                  ? ipPrescriptionSnapshot.data() as Map<String, dynamic>?
+                  : null;
+
+              allFetchedData.add({
+                'IP Admit Date': ipTicketData['ipAdmitDate'] ?? 'N/A',
+                'OP No': patientData['opNumber'] ?? 'N/A',
+                'IP Ticket': ipTicketData['ipTicket'] ?? 'N/A',
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'Room/Ward': detailsData?['ipAdmission']?['roomType'] != null &&
+                        detailsData?['ipAdmission']?['roomNumber'] != null
+                    ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
+                    : 'N/A',
+                'Consulting Doctor': ipTicketData['doctorName'] ?? 'N/A',
+              });
+
+              break; // Only add one matching IP ticket per patient
             }
-            DocumentSnapshot ipPrescriptionSnapshot = await FirebaseFirestore
-                .instance
-                .collection('patients')
-                .doc(patientId)
-                .collection('ipPrescription')
-                .doc('details')
-                .get();
-            Map<String, dynamic>? detailsData = ipPrescriptionSnapshot.exists
-                ? ipPrescriptionSnapshot.data() as Map<String, dynamic>?
-                : null;
-
-            fetchedData.add({
-              'IP Admit Date': ipTicketData['ipAdmitDate'] ?? 'N/A',
-              'OP No': patientData['opNumber'] ?? 'N/A',
-              'IP Ticket': ipTicketData['ipTicket'] ?? 'N/A',
-              'Name':
-                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'Room/Ward': detailsData?['ipAdmission']?['roomType'] != null &&
-                      detailsData?['ipAdmission']?['roomNumber'] != null
-                  ? "${detailsData!['ipAdmission']['roomType']} ${detailsData['ipAdmission']['roomNumber']}"
-                  : 'N/A',
-              'Consulting Doctor': ipTicketData['doctorName'] ?? 'N/A',
-            });
-
-            found = true;
-            break;
           }
         }
+
+        lastPatientDoc = patientSnapshot.docs.last;
+
+        setState(() {
+          tableData1 = List.from(allFetchedData);
+          print('Fetched so far: ${tableData1.length}');
+        });
+
+        // Optional delay between pages
+        await Future.delayed(delayBetweenPages);
       }
 
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Token NO']) ?? 0;
-        int tokenB = int.tryParse(b['Token NO']) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
-      setState(() {
-        tableData1 = fetchedData;
-      });
+      print('Finished fetching ${allFetchedData.length} total IP tickets.');
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -270,7 +281,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData1,

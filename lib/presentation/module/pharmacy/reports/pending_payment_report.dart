@@ -27,14 +27,15 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
 
   void _addRow() {
     List<Map<String, dynamic>> fetchedData = [];
-    int n = 1000000;
-    for (int i = 1; i <= n; i++) {
+    int start = tableData.length + 1;
+    int end = start + 50; // Add 100 more rows
+    for (int i = start; i < end; i++) {
       fetchedData.add({
         'SL No': i,
         'Distributor Pending Payment Report': '',
         'Bill Number': '',
         'Bill Date': '',
-        'Total Amount': '2000000000',
+        'Total Amount': '20000',
         'Bill Details': TextButton(
           onPressed: () {},
           child: CustomText(
@@ -46,7 +47,7 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
     }
 
     setState(() {
-      tableData = fetchedData;
+      tableData.addAll(fetchedData); // <-- append, don't replace
     });
   }
 
@@ -146,6 +147,9 @@ class _PendingPaymentReport extends State<PendingPaymentReport> {
               LazyDataTable(
                 tableData: tableData,
                 headers: headers,
+                onScroll: (offset) {
+                  _addRow();
+                },
               ),
               Container(
                 padding: EdgeInsets.only(left: screenWidth * 0.4),

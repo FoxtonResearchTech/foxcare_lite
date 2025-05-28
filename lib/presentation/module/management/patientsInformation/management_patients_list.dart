@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 
@@ -48,74 +49,93 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
     super.dispose();
   }
 
-  Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
+  Future<void> fetchData({
+    String? opNumber,
+    String? phoneNumber,
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
+    print('Fetching all data...');
+    DocumentSnapshot? lastDocument;
+    List<Map<String, dynamic>> allFetchedData = [];
+
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      while (true) {
+        Query query = FirebaseFirestore.instance.collection('patients');
 
-      if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
-      }
+        if (phoneNumber != null) {
+          query = query.where(Filter.or(
+            Filter('phone1', isEqualTo: phoneNumber),
+            Filter('phone2', isEqualTo: phoneNumber),
+          ));
+        }
 
-      final QuerySnapshot snapshot = await query.get();
+        if (lastDocument != null) {
+          query = query.startAfterDocument(lastDocument);
+        }
 
-      if (snapshot.docs.isEmpty) {
-        print("No patient records found");
+        query = query.limit(pageSize);
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          print('No more documents to fetch.');
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final docRef = doc.reference;
+
+          final opTicketsSnapshot = await docRef.collection('opTickets').get();
+          for (var opDoc in opTicketsSnapshot.docs) {
+            if (opNumber != null && opNumber.isNotEmpty) {
+              if (opDoc.data()['opTicket'] != opNumber) continue;
+            }
+
+            allFetchedData.add({
+              'Patient ID': data['opNumber'] ?? 'N/A',
+              'OP / IP Ticket': opDoc.id,
+              'Ticket Type': 'OP',
+              'Name':
+                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'Place': data['city'] ?? 'N/A',
+              'Phone No': data['phone1'] ?? 'N/A',
+              'DOB': data['dob'] ?? 'N/A',
+            });
+          }
+
+          final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
+          for (var ipDoc in ipTicketsSnapshot.docs) {
+            if (opNumber != null && opNumber.isNotEmpty) {
+              if (ipDoc.data()['ipTicket'] != opNumber) continue;
+            }
+
+            allFetchedData.add({
+              'Patient ID': data['opNumber'] ?? 'N/A',
+              'OP / IP Ticket': ipDoc.id,
+              'Ticket Type': 'IP',
+              'Name':
+                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'Place': data['state'] ?? 'N/A',
+              'Phone No': data['phone1'] ?? 'N/A',
+              'DOB': data['dob'] ?? 'N/A',
+            });
+          }
+        }
+
+        lastDocument = snapshot.docs.last;
+
+        // Optional throttle delay
+        await Future.delayed(delayBetweenPages);
         setState(() {
-          tableData1 = [];
+          tableData1 = allFetchedData;
+          print(tableData1);
         });
-        return;
       }
 
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final docRef = doc.reference;
-
-        final opTicketsSnapshot = await docRef.collection('opTickets').get();
-        for (var opDoc in opTicketsSnapshot.docs) {
-          if (opNumber != null && opNumber.isNotEmpty) {
-            if (opDoc.data()['opTicket'] != opNumber) continue;
-          }
-
-          fetchedData.add({
-            'Patient ID': data['opNumber'] ?? 'N/A',
-            'OP / IP Ticket': opDoc.id,
-            'Ticket Type': 'OP',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
-            'Place': data['city'] ?? 'N/A',
-            'Phone No': data['phone1'] ?? 'N/A',
-            'DOB': data['dob'] ?? 'N/A',
-          });
-        }
-
-        // Fetch all ipTickets
-        final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
-        for (var ipDoc in ipTicketsSnapshot.docs) {
-          if (opNumber != null && opNumber.isNotEmpty) {
-            if (ipDoc.data()['ipTicket'] != opNumber) continue;
-          }
-
-          fetchedData.add({
-            'Patient ID': data['opNumber'] ?? 'N/A',
-            'OP / IP Ticket': ipDoc.id,
-            'Ticket Type': 'IP',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
-            'Place': data['state'] ?? 'N/A',
-            'Phone No': data['phone1'] ?? 'N/A',
-            'DOB': data['dob'] ?? 'N/A',
-          });
-        }
-      }
-
-      setState(() {
-        tableData1 = fetchedData;
-      });
+      print('Finished fetching ${allFetchedData.length} total tickets.');
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -250,7 +270,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData1,
                 headers: headers1,
                 headerBackgroundColor: AppColors.blue,
@@ -261,7 +281,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                       : Colors.transparent;
                 },
               ),
-              SizedBox(height: screenHeight * 0.05),
+              SizedBox(height: screenHeight * 0.08),
             ],
           ),
         ),
