@@ -161,16 +161,13 @@ class _AdmissionStatus extends State<AdmissionStatus> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.only(top: screenWidth * 0.02),
-                child: Column(
-                  children: [
-                    CustomText(
-                      text: "Room Availability",
-                      size: screenWidth * 0.03,
-                    ),
-                  ],
-                ),
+              Column(
+                children: [
+                  CustomText(
+                    text: "Room Availability",
+                    size: screenWidth * 0.03,
+                  ),
+                ],
               ),
               Container(
                 width: screenWidth * 0.15,

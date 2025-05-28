@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
@@ -20,6 +21,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
   int selectedIndex = 7;
   TextEditingController _patientID = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
+  bool isPhoneLoading = false;
 
   final List<String> headers1 = [
     'OP No',
@@ -151,11 +153,12 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
       print('Error fetching data: $e');
     }
   }
-
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth < 600;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: isMobile
@@ -201,9 +204,10 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
   }
 
   Widget dashboard() {
-    double screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
@@ -243,37 +247,90 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+           //     mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomTextField(
-                    hintText: 'IP Number',
-                    width: screenWidth * 0.15,
-                    controller: _patientID,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'IP Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _patientID,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(ipNumber: _patientID.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+        Column(
+          children: [
+            SizedBox(height: 28),
+            isLoading
+            ? SizedBox(
+              width: buttonWidth,
+              height: buttonHeight,
+              child: Lottie.asset(
+                'assets/button_loading.json',
+                fit: BoxFit.contain,
+              ),
+            )
+                : CustomButton(
+            label: 'Search',
+            onPressed: () async {
+              setState(() => isLoading = true);
+
+              await fetchData(ipNumber: _patientID.text);
+
+              setState(() => isLoading = false);
+            },
+              width: buttonWidth,
+              height: buttonHeight,
                   ),
-                  SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+          ],
+        ),
+
+      SizedBox(width: screenHeight * 0.05),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Phone Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: 'Phone Number',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28),
+                      isPhoneLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json',
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isPhoneLoading = true);
+
+                          await fetchData(phoneNumber: _phoneNumber.text);
+
+                          setState(() => isPhoneLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
+
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),

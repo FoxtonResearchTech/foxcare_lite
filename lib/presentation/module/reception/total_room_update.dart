@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
@@ -85,9 +86,7 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
       "ICUStatus": updatedICUStatus,
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Room data updated successfully!')),
-    );
+
   }
 
   Future<void> setRooms() async {
@@ -304,15 +303,14 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
                   CustomButton(
                       label: 'Update',
                       onPressed: () {
-                        updateRooms();
-                        clearController();
+                        _showConfirmationDialog();
                       },
                       width: screenWidth * 0.17),
                   CustomButton(
                       label: 'Set',
                       onPressed: () {
-                        setRooms();
-                        clearController();
+                     _showSetConfirmationDialog();
+
                       },
                       width: screenWidth * 0.17),
                   SizedBox(width: screenWidth * 0.23),
@@ -323,5 +321,202 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
         ),
       ),
     );
+  }
+
+// Inside your _TotalRoomUpdateState class:
+  bool _isLoading = false;
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Update'),
+        content: const Text('Are you sure you want to update the room details?'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.red),
+                label: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _startUpdateProcess();
+                },
+                icon: const Icon(Icons.check_circle, color: Colors.white),
+                label: const Text(
+                  'Yes, Update',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 5,
+                ),
+              ),
+            ],
+          )
+
+
+        ],
+      ),
+    );
+  }
+
+  void _startUpdateProcess() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Optional: Show a non-dismissible loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: Container(
+          width: 150,
+          height: 150,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Lottie.asset('assets/login_lottie.json'), // Ensure this file exists
+        ),
+      ),
+    );
+
+    await Future.delayed(const Duration(seconds: 2)); // simulate API delay
+    await updateRooms(); // your real function
+
+    Navigator.of(context).pop(); // dismiss loading dialog
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    clearController();
+
+    // Optional: show a confirmation SnackBar
+    CustomSnackBar(context,
+        message: 'Room Updated Successfully', backgroundColor: Colors.green);
+  }
+  void _showSetConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Set'),
+        content: const Text('Are you sure you want to set the room details?'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.red),
+                label: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                 _startSetProcess();
+                },
+                icon: const Icon(Icons.check_circle, color: Colors.white),
+                label: const Text(
+                  'Yes, Set',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 5,
+                ),
+              ),
+            ],
+          )
+
+
+        ],
+      ),
+    );
+  }
+  void _startSetProcess() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Optional: Show a non-dismissible loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: Container(
+          width: 150,
+          height: 150,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Lottie.asset('assets/login_lottie.json'), // Ensure this file exists
+        ),
+      ),
+    );
+
+    await Future.delayed(const Duration(seconds: 2)); // simulate API delay
+    await    setRooms(); // your real function
+
+    Navigator.of(context).pop(); // dismiss loading dialog
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    clearController();
+
+    // Optional: show a confirmation SnackBar
+    CustomSnackBar(context,
+        message: 'Room  Details Set Successfully', backgroundColor: Colors.green);
   }
 }

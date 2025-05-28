@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -40,6 +41,8 @@ class _OpCardPrint extends State<OpCardPrint> {
     super.initState();
     fetchData();
   }
+  bool isPhoneLoading = false;
+  bool isOpLoading = false;
 
   @override
   void dispose() {
@@ -57,16 +60,6 @@ class _OpCardPrint extends State<OpCardPrint> {
       final firestore = FirebaseFirestore.instance;
 
       Query query = firestore.collection('patients');
-
-      if (opNumber != null) {
-        query = query.where('opNumber', isEqualTo: opNumber);
-      } else if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
-      }
-
       DocumentSnapshot? lastDoc;
 
       while (true) {
@@ -76,68 +69,61 @@ class _OpCardPrint extends State<OpCardPrint> {
         }
 
         final snapshot = await paginatedQuery.get();
-
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
 
-          if (!data.containsKey('opNumber') ||
-              !data.containsKey('opAdmissionDate')) {
+          if (!data.containsKey('opNumber') || !data.containsKey('opAdmissionDate')) {
             continue;
           }
 
-          double opAmount =
-              double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
+          // Case-insensitive local filtering
+          final docOp = data['opNumber']?.toString().toLowerCase();
+          final docPhone1 = data['phone1']?.toString().toLowerCase();
+          final docPhone2 = data['phone2']?.toString().toLowerCase();
+          final opQuery = opNumber?.toLowerCase();
+          final phoneQuery = phoneNumber?.toLowerCase();
+
+          if (opNumber != null && docOp != opQuery) continue;
+          if (phoneNumber != null &&
+              (docPhone1 != phoneQuery && docPhone2 != phoneQuery)) continue;
+
+          double opAmount = double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
           double opAmountCollected =
-              double.tryParse(data['opAmountCollected']?.toString() ?? '0') ??
-                  0;
+              double.tryParse(data['opAmountCollected']?.toString() ?? '0') ?? 0;
           double balance = opAmount - opAmountCollected;
 
           fetchedData.add({
             'OP No': data['opNumber']?.toString() ?? 'N/A',
             'Date': data['opAdmissionDate'] ?? 'N/A',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'.trim(),
             'City': data['city']?.toString() ?? 'N/A',
             'Phone Number': data['phone1'] ?? 'N/A',
             'Action': TextButton(
               onPressed: () async {
                 final pdf = pw.Document();
-                final myColor = PdfColor.fromInt(0xFF106ac2); // 0xAARRGGBB
-
-                final font =
-                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                final myColor = PdfColor.fromInt(0xFF106ac2);
+                final font = await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
-
                 final topImage = pw.MemoryImage(
-                  (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
-                      .buffer
-                      .asUint8List(),
+                  (await rootBundle.load('assets/opAssets/OP_Card_top.png')).buffer.asUint8List(),
                 );
-
                 final bottomImage = pw.MemoryImage(
-                  (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
-                      .buffer
-                      .asUint8List(),
+                  (await rootBundle.load('assets/opAssets/OP_Card_back.png')).buffer.asUint8List(),
                 );
                 final loc = pw.MemoryImage(
-                  (await rootBundle.load('assets/location_Icon.png'))
-                      .buffer
-                      .asUint8List(),
+                  (await rootBundle.load('assets/location_Icon.png')).buffer.asUint8List(),
                 );
 
                 pdf.addPage(
                   pw.Page(
-                    pageFormat: const PdfPageFormat(
-                        8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                    pageFormat: const PdfPageFormat(8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
                     margin: pw.EdgeInsets.zero,
                     build: (pw.Context context) {
                       return pw.Stack(
                         children: [
-                          pw.Positioned.fill(
-                            child: pw.Image(topImage, fit: pw.BoxFit.cover),
-                          ),
+                          pw.Positioned.fill(child: pw.Image(topImage, fit: pw.BoxFit.cover)),
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Column(
@@ -160,97 +146,64 @@ class _OpCardPrint extends State<OpCardPrint> {
                                 pw.SizedBox(height: 8),
                                 pw.Text(
                                   'OP Number: ${data['opNumber']}',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, font: ttf, color: myColor),
+                                  style: pw.TextStyle(fontSize: 10, font: ttf, color: myColor),
                                 ),
                                 pw.Text(
                                   'Name: ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, font: ttf, color: myColor),
+                                  style: pw.TextStyle(fontSize: 10, font: ttf, color: myColor),
                                 ),
                                 pw.Text(
                                   'Phone Number: ${data['phone1']}',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, font: ttf, color: myColor),
+                                  style: pw.TextStyle(fontSize: 10, font: ttf, color: myColor),
                                 ),
                               ],
                             ),
                           ),
-                          // Full-width background image at the bottom
                           pw.Positioned(
                             bottom: 0,
                             left: 0,
                             right: 0,
-                            child: pw.Image(
-                              bottomImage,
-                              fit: pw.BoxFit.cover,
-                            ),
+                            child: pw.Image(bottomImage, fit: pw.BoxFit.cover),
                           ),
-                          // Text content above the bottom image
                           pw.Padding(
-                            padding: const pw.EdgeInsets.only(
-                                left: 8, right: 8, top: 6),
+                            padding: const pw.EdgeInsets.only(left: 8, right: 8, top: 6),
                             child: pw.Column(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               crossAxisAlignment: pw.CrossAxisAlignment.start,
                               children: [
                                 pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                                   children: [
-                                    // Emergency and appointment info (left side)
                                     pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
+                                      crossAxisAlignment: pw.CrossAxisAlignment.start,
                                       children: [
                                         pw.Text(
                                           'Emergency No: ${Constants.emergencyNo}',
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white),
+                                          style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
                                         ),
                                         pw.Text(
                                           'Appointments: ${Constants.appointmentNo}',
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white),
+                                          style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
                                         ),
                                       ],
                                     ),
-
-                                    // City + District + Location Icon (right side)
                                     pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.end,
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.center,
                                       children: [
                                         pw.Column(
-                                          crossAxisAlignment:
-                                              pw.CrossAxisAlignment.end,
+                                          crossAxisAlignment: pw.CrossAxisAlignment.end,
                                           children: [
                                             pw.Text(
                                               '${Constants.hospitalCity}',
-                                              style: pw.TextStyle(
-                                                  fontSize: 8,
-                                                  font: ttf,
-                                                  color: PdfColors.white),
+                                              style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
                                             ),
                                             pw.Text(
                                               '${Constants.hospitalDistrict}',
-                                              style: pw.TextStyle(
-                                                  fontSize: 8,
-                                                  font: ttf,
-                                                  color: PdfColors.white),
+                                              style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
                                             ),
                                           ],
                                         ),
                                         pw.SizedBox(width: 4),
-                                        pw.Image(loc,
-                                            height: 20,
-                                            width: 10), // Icon on the right
+                                        pw.Image(loc, height: 20, width: 10),
                                       ],
                                     ),
                                   ],
@@ -263,17 +216,11 @@ class _OpCardPrint extends State<OpCardPrint> {
                     },
                   ),
                 );
-                // await Printing.layoutPdf(
-                //   onLayout: (PdfPageFormat format) async {
-                //     return pdf.save();
-                //   },
-                //   format: const PdfPageFormat(
-                //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
-                // );
 
                 await Printing.sharePdf(
-                    bytes: await pdf.save(),
-                    filename: '${data['opNumber']}.pdf');
+                  bytes: await pdf.save(),
+                  filename: '${data['opNumber']}.pdf',
+                );
               },
               child: const CustomText(text: 'Print'),
             )
@@ -290,12 +237,14 @@ class _OpCardPrint extends State<OpCardPrint> {
         setState(() {
           tableData = fetchedData;
         });
+
         await Future.delayed(delayBetweenPages);
       }
     } catch (e) {
       print('Error fetching data: $e');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +297,8 @@ class _OpCardPrint extends State<OpCardPrint> {
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
@@ -389,37 +339,86 @@ class _OpCardPrint extends State<OpCardPrint> {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+               // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomTextField(
-                    hintText: 'OP Number',
-                    width: screenWidth * 0.15,
-                    controller: _patientID,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: "OP Number"),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _patientID,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _patientID.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28,),
+                      isOpLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Ensure this path is correct
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isOpLoading = true);
+                          await fetchData(opNumber: _patientID.text);
+                          setState(() => isOpLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
+
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Phone Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28,),
+                      isPhoneLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Update the path to your Lottie file
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isPhoneLoading = true);
+                          await fetchData(phoneNumber: _phoneNumber.text);
+                          setState(() => isPhoneLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
+
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),

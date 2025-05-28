@@ -8,6 +8,7 @@ import 'package:foxcare_lite/presentation/module/reception/appointments_op_ticke
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -41,6 +42,7 @@ class _BookAppointments extends State<BookAppointments> {
   int selectedIndex = 6;
 
   String? selectedDoctor;
+  bool isLoading = false;
 
   DateTime now = DateTime.now();
 
@@ -82,62 +84,48 @@ class _BookAppointments extends State<BookAppointments> {
   }
 
   Future<void> searchPatients(
-    String opNumber,
-    String phoneNumber, {
-    int pageSize = 20,
-    Duration delayBetweenPages = const Duration(milliseconds: 100),
-  }) async {
+      String opNumber,
+      String phoneNumber, {
+        int pageSize = 20,
+        Duration delayBetweenPages = const Duration(milliseconds: 100),
+      }) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final lowerOp = opNumber.trim().toLowerCase();
+    final lowerPhone = phoneNumber.trim().toLowerCase();
+    DocumentSnapshot? lastDoc;
     DocumentSnapshot? matchedDoc;
 
-    // Paginated search helper with delay
-    Future<DocumentSnapshot?> searchByField(String field, String value) async {
-      DocumentSnapshot? lastDoc;
-      while (true) {
-        Query query = firestore
-            .collection('patients')
-            .where(field, isEqualTo: value)
-            .limit(pageSize);
+    while (true) {
+      Query query = firestore.collection('patients').limit(pageSize);
 
-        if (lastDoc != null) {
-          query = query.startAfterDocument(lastDoc);
-        }
-
-        final snapshot = await query.get();
-
-        if (snapshot.docs.isEmpty) {
-          return null;
-        }
-
-        for (final doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          if (data[field] == value) {
-            return doc;
-          }
-        }
-
-        lastDoc = snapshot.docs.last;
-
-        // Delay before next page
-        await Future.delayed(delayBetweenPages);
+      if (lastDoc != null) {
+        query = query.startAfterDocument(lastDoc);
       }
-    }
 
-    // Step 1: Try by opNumber
-    if (opNumber.isNotEmpty) {
-      matchedDoc = await searchByField('opNumber', opNumber);
-    }
+      final snapshot = await query.get();
 
-    // Step 2: Try phone1 and phone2
-    if (matchedDoc == null && phoneNumber.isNotEmpty) {
-      matchedDoc = await searchByField('phone1', phoneNumber);
-
-      if (matchedDoc == null) {
-        matchedDoc = await searchByField('phone2', phoneNumber);
+      if (snapshot.docs.isEmpty) {
+        break;
       }
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final docOp = data['opNumber']?.toString().toLowerCase();
+        final docPhone1 = data['phone1']?.toString().toLowerCase();
+        final docPhone2 = data['phone2']?.toString().toLowerCase();
+
+        if (docOp == lowerOp || docPhone1 == lowerPhone || docPhone2 == lowerPhone) {
+          matchedDoc = doc;
+          break;
+        }
+      }
+
+      if (matchedDoc != null) break;
+
+      lastDoc = snapshot.docs.last;
+      await Future.delayed(delayBetweenPages);
     }
 
-    // Step 3: UI Update
     if (matchedDoc != null) {
       final data = matchedDoc.data() as Map<String, dynamic>;
       setState(() {
@@ -145,9 +133,13 @@ class _BookAppointments extends State<BookAppointments> {
         opNumberSearch.text = data['opNumber'] ?? '';
       });
     } else {
-      patientName.clear();
+      setState(() {
+        patientName.clear();
+        opNumberSearch.clear();
+      });
     }
   }
+
 
   Future<void> fetchDoctorAndSpecialization() async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -451,15 +443,31 @@ class _BookAppointments extends State<BookAppointments> {
                     icon: Icon(Icons.date_range_outlined),
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
+                  isLoading
+                      ? SizedBox(
+                    width: screenWidth * 0.04,
+                    height: screenWidth * 0.04,
+                    child: Lottie.asset(
+                      'assets/button_loading.json',
+                      repeat: true,
+                    ),
+                  )
+                      : CustomButton(
                     label: 'Search',
-                    onPressed: () {
-                      fetchData(date: dateSearch.text);
+                    onPressed: () async {
+                      if (isLoading) return; // prevent double clicks
+                      setState(() => isLoading = true);
+
+                      await fetchData(date: dateSearch.text);
                       i = 1;
+
+                      setState(() => isLoading = false);
                     },
                     width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                    height: screenWidth * 0.03,
                   ),
+
+
                   Expanded(child: SizedBox()),
                   CustomButton(
                     label: 'Book Appointments',
@@ -607,7 +615,7 @@ class _BookAppointments extends State<BookAppointments> {
                       );
                     },
                     width: screenWidth * 0.175,
-                    height: screenWidth * 0.025,
+                    height: screenWidth * 0.035,
                   ),
                 ],
               ),

@@ -29,6 +29,8 @@ class OpTicketPage extends StatefulWidget {
 class _OpTicketPageState extends State<OpTicketPage> {
   final dateTime = DateTime.now();
   int selectedIndex = 2;
+  bool isSearching = false;
+  bool isSearching2 = false;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
   final TextEditingController specialization = TextEditingController();
@@ -1053,7 +1055,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                           CustomTextField(
                             hintText: '',
                             controller: searchOpNumber,
-                            width: 200,
+                            width: screenWidth * 0.15,
                           ),
                         ],
                       ),
@@ -1062,13 +1064,25 @@ class _OpTicketPageState extends State<OpTicketPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            CustomButton(
+                            isSearching
+                                ? SizedBox(
+                              width: 125,
+                              height: 35,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                                : CustomButton(
                               width: 125,
                               height: 35,
                               label: 'Search',
                               onPressed: () async {
-                                final searchResultsFetched =
-                                    await searchPatients(
+                                setState(() {
+                                  isSearching = true;
+                                });
+
+                                final searchResultsFetched = await searchPatients(
                                   searchOpNumber.text,
                                   searchPhoneNumber.text,
                                 );
@@ -1076,14 +1090,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
 
                                 setState(() {
                                   lastToken = token + 1;
-                                  searchResults =
-                                      searchResultsFetched; // Update searchResults
-                                  isSearchPerformed =
-                                      true; // Show the table after search
+                                  searchResults = searchResultsFetched;
+                                  isSearchPerformed = true;
+                                  isSearching = false;
                                 });
+
                                 print('Fetched token: $lastToken');
                               },
-                            ),
+                            )
+
                           ],
                         ),
                       ),
@@ -1095,7 +1110,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                           CustomTextField(
                             controller: searchPhoneNumber,
                             hintText: '',
-                            width: 200,
+                            width: screenWidth * 0.15,
                           ),
                         ],
                       ),
@@ -1104,13 +1119,25 @@ class _OpTicketPageState extends State<OpTicketPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            CustomButton(
+                            isSearching2
+                                ? SizedBox(
+                              width: 125,
+                              height: 35,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                                : CustomButton(
                               width: 125,
                               height: 35,
                               label: 'Search',
                               onPressed: () async {
-                                final searchResultsFetched =
-                                    await searchPatients(
+                                setState(() {
+                                  isSearching2 = true;
+                                });
+
+                                final searchResultsFetched = await searchPatients(
                                   searchOpNumber.text,
                                   searchPhoneNumber.text,
                                 );
@@ -1118,14 +1145,15 @@ class _OpTicketPageState extends State<OpTicketPage> {
 
                                 setState(() {
                                   lastToken = token + 1;
-                                  searchResults =
-                                      searchResultsFetched; // Update searchResults
-                                  isSearchPerformed =
-                                      true; // Show the table after search
+                                  searchResults = searchResultsFetched;
+                                  isSearchPerformed = true;
+                                  isSearching2 = false;
                                 });
+
                                 print('Fetched token: $lastToken');
                               },
                             ),
+
                           ],
                         ),
                       ),
@@ -1143,34 +1171,47 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 size: screenWidth * 0.025,
               ),
               Center(
-                child: DataTable(
-                  columnSpacing: 180,
-                  columns: [
-                    const DataColumn(label: CustomText(text: 'OP Number')),
-                    const DataColumn(label: CustomText(text: 'Name')),
-                    const DataColumn(label: CustomText(text: 'Age')),
-                    const DataColumn(label: CustomText(text: 'Phone')),
-                    const DataColumn(label: CustomText(text: 'Address')),
-                  ],
-                  rows: searchResults.map((result) {
-                    return DataRow(
-                      selected: selectedPatient == result,
-                      onSelectChanged: (isSelected) {
-                        setState(() {
-                          selectedPatient = result;
-                        });
-                      },
-                      cells: [
-                        DataCell(Text(result['opNumber']!)),
-                        DataCell(Text(result['name']!)),
-                        DataCell(Text(result['age']!)),
-                        DataCell(Text(result['phone']!)),
-                        DataCell(Text(result['address']!)),
-                      ],
-                    );
-                  }).toList(),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    checkboxTheme: CheckboxThemeData(
+                      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Colors.green;  // Your desired checked color
+                        }
+                        return Colors.grey; // Unchecked color
+                      }),
+                    ),
+                  ),
+                  child: DataTable(
+                    columnSpacing: 180,
+                    columns: const [
+                      DataColumn(label: CustomText(text: 'OP Number')),
+                      DataColumn(label: CustomText(text: 'Name')),
+                      DataColumn(label: CustomText(text: 'Age')),
+                      DataColumn(label: CustomText(text: 'Phone')),
+                      DataColumn(label: CustomText(text: 'Address')),
+                    ],
+                    rows: searchResults.map((result) {
+                      return DataRow(
+                        selected: selectedPatient == result,
+                        onSelectChanged: (isSelected) {
+                          setState(() {
+                            selectedPatient = result;
+                          });
+                        },
+                        cells: [
+                          DataCell(Text(result['opNumber']!)),
+                          DataCell(Text(result['name']!)),
+                          DataCell(Text(result['age']!)),
+                          DataCell(Text(result['phone']!)),
+                          DataCell(Text(result['address']!)),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
+
               const SizedBox(height: 30),
               if (selectedPatient != null) buildPatientDetailsForm(),
             ],

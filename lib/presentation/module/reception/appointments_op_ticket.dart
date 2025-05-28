@@ -1119,32 +1119,44 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                 size: screenWidth * 0.025,
               ),
               Center(
-                child: DataTable(
-                  columnSpacing: 180,
-                  columns: [
-                    const DataColumn(label: CustomText(text: 'OP Number')),
-                    const DataColumn(label: CustomText(text: 'Name')),
-                    const DataColumn(label: CustomText(text: 'Age')),
-                    const DataColumn(label: CustomText(text: 'Phone')),
-                    const DataColumn(label: CustomText(text: 'Address')),
-                  ],
-                  rows: searchResults.map((result) {
-                    return DataRow(
-                      selected: selectedPatient == result,
-                      onSelectChanged: (isSelected) {
-                        setState(() {
-                          selectedPatient = result;
-                        });
-                      },
-                      cells: [
-                        DataCell(Text(result['opNumber']!)),
-                        DataCell(Text(result['name']!)),
-                        DataCell(Text(result['age']!)),
-                        DataCell(Text(result['phone']!)),
-                        DataCell(Text(result['address']!)),
-                      ],
-                    );
-                  }).toList(),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    checkboxTheme: CheckboxThemeData(
+                      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Colors.green;  // Your desired checked color
+                        }
+                        return Colors.grey; // Unchecked color
+                      }),
+                    ),
+                  ),
+                  child: DataTable(
+                    columnSpacing: 180,
+                    columns: const [
+                      DataColumn(label: CustomText(text: 'OP Number')),
+                      DataColumn(label: CustomText(text: 'Name')),
+                      DataColumn(label: CustomText(text: 'Age')),
+                      DataColumn(label: CustomText(text: 'Phone')),
+                      DataColumn(label: CustomText(text: 'Address')),
+                    ],
+                    rows: searchResults.map((result) {
+                      return DataRow(
+                        selected: selectedPatient == result,
+                        onSelectChanged: (isSelected) {
+                          setState(() {
+                            selectedPatient = result;
+                          });
+                        },
+                        cells: [
+                          DataCell(Text(result['opNumber']!)),
+                          DataCell(Text(result['name']!)),
+                          DataCell(Text(result['age']!)),
+                          DataCell(Text(result['phone']!)),
+                          DataCell(Text(result['address']!)),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
@@ -1667,18 +1679,50 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
               isGeneratingToken
                   ? Lottie.asset('assets/button_loading.json',
                       height: 150, width: 150)
-                  : CustomButton(
-                      label: 'Generate',
-                      onPressed: () async {
-                        String? selectedPatientId =
-                            selectedPatient?['opNumber'];
-                        await initializeOpTicketID(selectedPatientId!);
-                        print(selectedPatientId);
-                        await incrementCounter();
-                        await _generateToken(selectedPatientId);
-                      },
-                      width: 200,
-                    ),
+                  :CustomButton(
+                label: 'Generate',
+                onPressed: () async {
+                  final collectedAmountText = opTicketCollectedAmount.text.trim();
+                  final totalAmountText = opTicketTotalAmount.text.trim();
+
+                  // Validate collected amount is not empty
+                  if (collectedAmountText.isEmpty) {
+                    CustomSnackBar(context, message: 'Please enter the collected amount',backgroundColor: Colors.orange);
+
+                    return;
+                  }
+
+                  // Validate total amount is not empty (optional)
+                  if (totalAmountText.isEmpty) {
+                    CustomSnackBar(context, message: 'Please enter the total amount',backgroundColor: Colors.orange);
+
+                    return;
+                  }
+
+                  // Parse and validate amount
+                  final collectedAmount = double.tryParse(collectedAmountText);
+                  if (collectedAmount == null || collectedAmount < 0) {
+                    CustomSnackBar(context, message: 'Please enter a valid collected amount',backgroundColor: Colors.orange);
+
+                    return;
+                  }
+
+                  String? selectedPatientId = selectedPatient?['opNumber'];
+                  if (selectedPatientId == null) {
+                    CustomSnackBar(context, message: 'No patient selected',backgroundColor: Colors.red);
+
+                    return;
+                  }
+
+                  await initializeOpTicketID(selectedPatientId);
+                  print(selectedPatientId);
+                  await incrementCounter();
+                  await _generateToken(selectedPatientId);
+                },
+                width: 200,
+              ),
+
+
             ],
           ),
         ],

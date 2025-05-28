@@ -30,6 +30,8 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
   TextEditingController _ipNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
   bool isFetchDataLoading = false;
+  bool isLoading = false;
+  bool isLoading2 = false;
   final List<String> headers1 = [
     'IP Ticket',
     'OP NO',
@@ -66,10 +68,9 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
   }) async {
     print('Fetching data with IP Number: $ipNumber');
 
-    DocumentSnapshot? lastPatientDoc; // for paging
+    DocumentSnapshot? lastPatientDoc;
     List<Map<String, dynamic>> allFetchedData = [];
-    final patientsCollection =
-        FirebaseFirestore.instance.collection('patients');
+    final patientsCollection = FirebaseFirestore.instance.collection('patients');
 
     try {
       while (true) {
@@ -81,7 +82,6 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
         final patientSnapshot = await query.get();
 
         if (patientSnapshot.docs.isEmpty) {
-          // No more patients to fetch
           break;
         }
 
@@ -90,7 +90,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           final patientData = patientDoc.data();
 
           Query ipTicketsQuery =
-              patientsCollection.doc(patientId).collection('ipTickets');
+          patientsCollection.doc(patientId).collection('ipTickets');
           final ipTicketsSnapshot = await ipTicketsQuery.get();
 
           for (var ipTicketDoc in ipTicketsSnapshot.docs) {
@@ -98,7 +98,13 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
 
             bool matches = false;
             if (patientData['isIP'] == true) {
-              if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+              if (ipNumber != null &&
+                  ipTicketData['ipTicket'] != null &&
+                  ipTicketData['ipTicket']
+                      .toString()
+                      .toLowerCase()
+                      .trim() ==
+                      ipNumber.toLowerCase().trim()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
@@ -147,8 +153,8 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                 'OP NO': patientData['opNumber'] ?? 'N/A',
                 'IP Ticket': ipTicketData['ipTicket'] ?? 'N/A',
                 'Name':
-                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                        .trim(),
+                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                    .trim(),
                 'Age': patientData['age'] ?? 'N/A',
                 'Place': patientData['city'] ?? 'N/A',
                 'Address': patientData['address1'] ?? 'N/A',
@@ -165,8 +171,8 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                           patientID: patientData['opNumber'] ?? 'N/A',
                           ipNumber: ipTicketData['ipTicket'] ?? 'N/A',
                           name:
-                              '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
-                                  .trim(),
+                          '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                              .trim(),
                           age: patientData['age'] ?? 'N/A',
                           place: patientData['state'] ?? 'N/A',
                           address: patientData['address1'] ?? 'N/A',
@@ -203,7 +209,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                     child: const CustomText(text: 'Abort')),
               });
 
-              break; // one matching ipTicket per patient only
+              break;
             }
           }
         }
@@ -214,7 +220,6 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           tableData1 = List.from(allFetchedData);
         });
 
-        // Optional small delay to ease UI update / avoid rate limits
         await Future.delayed(delayBetweenPages);
       }
 
@@ -224,12 +229,14 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     bool isMobile = screenWidth < 600;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     return Scaffold(
       appBar: isMobile
           ? AppBar(
@@ -284,7 +291,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(top: screenWidth * 0.07),
+                          padding: EdgeInsets.only(top: screenWidth * 0.03),
                           child: Column(
                             children: [
                               CustomText(
@@ -308,39 +315,113 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                       ],
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                    //  mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CustomTextField(
-                          hintText: 'IP Number',
-                          width: screenWidth * 0.15,
-                          controller: _ipNumber,
+                        // IP Number section
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(text: 'IP Number'),
+                                SizedBox(height: 5),
+                                CustomTextField(
+                                  hintText: '',
+                                  width: screenWidth * 0.18,
+                                  controller: _ipNumber,
+                                ),
+                              ],
+                            ),
+                            SizedBox(width: screenWidth * 0.02),
+
+                            // Button aligned with text field
+                            Column(
+                              children: [
+                                SizedBox(height: 28), // Adjust this value if needed
+                                isLoading
+                                    ? SizedBox(
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  child: Lottie.asset(
+                                    'assets/button_loading.json',
+                                    fit: BoxFit.contain,
+                                  ),
+                                )
+                                    : CustomButton(
+                                  label: 'Search',
+                                  onPressed: () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+
+                                    await fetchData(ipNumber: _ipNumber.text);
+
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  },
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        SizedBox(width: screenHeight * 0.02),
-                        CustomButton(
-                          label: 'Search',
-                          onPressed: () {
-                            fetchData(ipNumber: _ipNumber.text);
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.02,
-                        ),
+
                         SizedBox(width: screenHeight * 0.05),
-                        CustomTextField(
-                          hintText: 'Phone Number',
-                          width: screenWidth * 0.15,
-                          controller: _phoneNumber,
+
+                        // Phone Number section
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(text: 'Phone Number'),
+                            SizedBox(height: 5),
+                            CustomTextField(
+                              hintText: '',
+                              width: screenWidth * 0.18,
+
+                              controller: _phoneNumber,
+                            ),
+                          ],
                         ),
                         SizedBox(width: screenHeight * 0.02),
-                        CustomButton(
-                          label: 'Search',
-                          onPressed: () {
-                            fetchData(phoneNumber: _phoneNumber.text);
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.02,
+
+                        // Button aligned with text field
+                        Column(
+                          children: [
+                            SizedBox(height: 28), // Adjust this value to match the field
+                            isLoading2
+                                ? SizedBox(
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                                : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() {
+                                  isLoading2 = true;
+                                });
+
+                                await fetchData(phoneNumber: _phoneNumber.text);
+
+                                setState(() {
+                                  isLoading2 = false;
+                                });
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
+                          ],
                         ),
                       ],
                     ),
+
                     SizedBox(height: screenHeight * 0.08),
                     isFetchDataLoading
                         ? Container(
@@ -367,5 +448,6 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
         ],
       ),
     );
+
   }
 }
