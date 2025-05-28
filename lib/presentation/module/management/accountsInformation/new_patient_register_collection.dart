@@ -213,11 +213,12 @@ class _NewPatientRegisterCollection
 
         if (singleDate != null) {
           query = query.where('opAdmissionDate', isEqualTo: singleDate);
-          query = query;
+          query = query.orderBy('opAdmissionDate');
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('opAdmissionDate', isGreaterThanOrEqualTo: fromDate)
-              .where('opAdmissionDate', isLessThanOrEqualTo: toDate);
+              .where('opAdmissionDate', isLessThanOrEqualTo: toDate)
+              .orderBy('opAdmissionDate');
         } else {
           query = query;
         }

@@ -292,10 +292,12 @@ class _OtherExpense extends State<OtherExpense> {
 
         if (singleDate != null) {
           query = query.where('billDate', isEqualTo: singleDate);
+          query = query.orderBy('billDate');
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('billDate', isGreaterThanOrEqualTo: fromDate)
-              .where('billDate', isLessThanOrEqualTo: toDate);
+              .where('billDate', isLessThanOrEqualTo: toDate)
+              .orderBy('billDate');
         }
 
         if (lastDoc != null) {

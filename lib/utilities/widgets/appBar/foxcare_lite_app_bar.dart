@@ -36,7 +36,6 @@ import '../../constants.dart';
 import '../state/app_bar_selection_state.dart';
 
 class FoxCareLiteAppBar extends StatefulWidget implements PreferredSizeWidget {
-
   final Map<String, Map<String, WidgetBuilder>>? navigationMap;
 
   const FoxCareLiteAppBar({
@@ -219,8 +218,6 @@ class _FoxCareLiteAppBarState extends State<FoxCareLiteAppBar> {
                     'Sales Wise Statement': (context) =>
                         const SalesWiseStatement(),
                     'Non Moving Statement': (context) => const NonMovingStock(),
-                    'Pending Return Statement': (context) =>
-                        const PendingPaymentReport(),
                   },
                   'Tools': {
                     'Pharmacy Information': (context) => const PharmacyInfo(),

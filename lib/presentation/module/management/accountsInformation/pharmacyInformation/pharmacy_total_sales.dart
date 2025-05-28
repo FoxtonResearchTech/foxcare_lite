@@ -244,10 +244,13 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
 
           if (date != null) {
             query = query.where('billDate', isEqualTo: date);
+            query = query.orderBy('billDate');
           } else if (fromDate != null && toDate != null) {
             query = query
                 .where('billDate', isGreaterThanOrEqualTo: fromDate)
-                .where('billDate', isLessThanOrEqualTo: toDate);
+                .where('billDate', isLessThanOrEqualTo: toDate)
+                .orderBy('billDate');
+            query = query.orderBy('billDate');
           }
 
           QuerySnapshot snapshot = await query.get();

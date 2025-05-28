@@ -54,10 +54,8 @@ class _IpLabAccounts extends State<IpLabAccounts> {
       const int batchSize = 15; // Adjust as needed
 
       while (true) {
-        Query query = FirebaseFirestore.instance
-            .collection('patients')
-            .orderBy(FieldPath.documentId)
-            .limit(batchSize);
+        Query query =
+            FirebaseFirestore.instance.collection('patients').limit(batchSize);
         if (lastPatientDoc != null) {
           query = query.startAfterDocument(lastPatientDoc);
         }

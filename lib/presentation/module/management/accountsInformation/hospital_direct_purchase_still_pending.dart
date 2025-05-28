@@ -225,10 +225,12 @@ class _HospitalDirectPurchaseStillPending
 
         if (singleDate != null) {
           query = query.where('purchaseDate', isEqualTo: singleDate);
+          query = query.orderBy('purchaseDate');
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('purchaseDate', isGreaterThanOrEqualTo: fromDate)
-              .where('purchaseDate', isLessThanOrEqualTo: toDate);
+              .where('purchaseDate', isLessThanOrEqualTo: toDate)
+              .orderBy('purchaseDate');
         }
 
         if (lastDoc != null) {

@@ -123,36 +123,86 @@ class _MedicineReturn extends State<MedicineReturn> {
     final List<String> billingTypes = [
       'opbilling',
       'ipbilling',
-      'countersales'
+      'countersales',
     ];
+
+    const int batchSize = 1; // Number of docs to fetch per batch
+    List<Map<String, dynamic>> tempProducts = [];
 
     try {
       for (final type in billingTypes) {
-        final querySnapshot = await billingsDocRef
-            .collection(type)
-            .where('billNo', isEqualTo: billNo)
-            .get();
-        billingTypeFound = type;
+        DocumentSnapshot? lastDoc;
+        bool hasMore = true;
 
-        if (querySnapshot.docs.isNotEmpty) {
-          final doc = querySnapshot.docs.first;
-          final data = doc.data();
+        while (hasMore) {
+          Query query = billingsDocRef
+              .collection(type)
+              .where('billNo', isEqualTo: billNo)
+              .limit(batchSize);
+
+          if (lastDoc != null) {
+            query = query.startAfterDocument(lastDoc);
+          }
+
+          final querySnapshot = await query.get();
+
+          if (querySnapshot.docs.isEmpty) {
+            hasMore = false;
+            break;
+          }
+
+          // Process docs batch
+          for (final doc in querySnapshot.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+
+            tempProducts.add({
+              'docId': doc.id,
+              'billNo': data['billNo'],
+              'billDate': data['billDate'],
+              'discountPercentage': data['discountPercentage'],
+              'totalAmount': data['totalAmount'],
+              'paymentDetails': data['paymentDetails'],
+              'paymentMode': data['paymentMode'],
+              'discountAmount': data['discountAmount'],
+              'netTotalAmount': data['netTotalAmount'],
+              'entryProducts': data['entryProducts'],
+            });
+          }
+
+          // Update lastDoc for next batch
+          lastDoc = querySnapshot.docs.last;
+
+          // Artificial delay to avoid hammering Firestore (optional)
+          await Future.delayed(const Duration(milliseconds: 200));
+
+          // If less than batch size, no more docs
+          if (querySnapshot.docs.length < batchSize) {
+            hasMore = false;
+          }
+        }
+
+        if (tempProducts.isNotEmpty) {
+          // Just pick first matching bill for UI as original code does
+          final firstData = tempProducts.first;
 
           setState(() {
-            _billId.text = doc.id;
-            _date = TextEditingController(text: data['billDate']);
-            discount.text = data['discountPercentage'].toString();
-            totalAmountController.text = data['totalAmount'].toString();
+            billingTypeFound = type;
+            _billId.text = firstData['docId'];
+            _date = TextEditingController(text: firstData['billDate']);
+            discount.text = firstData['discountPercentage'].toString();
+            totalAmountController.text = firstData['totalAmount'].toString();
 
-            paymentDetails.text = data['paymentDetails'].toString();
-            selectedPaymentMode = data['paymentMode'].toString();
-            discountAmount = double.parse(data['discountAmount'].toString());
-            totalAmount = double.parse(data['netTotalAmount'].toString());
+            paymentDetails.text = firstData['paymentDetails'].toString();
+            selectedPaymentMode = firstData['paymentMode'].toString();
+            discountAmount =
+                double.parse(firstData['discountAmount'].toString());
+            totalAmount = double.parse(firstData['netTotalAmount'].toString());
 
-            allProducts = List<Map<String, dynamic>>.from(data['entryProducts'])
-                .asMap()
-                .entries
-                .map((entry) {
+            allProducts =
+                List<Map<String, dynamic>>.from(firstData['entryProducts'])
+                    .asMap()
+                    .entries
+                    .map((entry) {
               final index = entry.key;
               final product = Map<String, dynamic>.from(entry.value);
 
@@ -168,7 +218,8 @@ class _MedicineReturn extends State<MedicineReturn> {
               return product;
             }).toList();
           });
-          break; // Bill found, no need to search in other types
+
+          break; // Stop searching other billing types once found
         }
       }
 
