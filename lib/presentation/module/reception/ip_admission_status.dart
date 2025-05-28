@@ -193,10 +193,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
               ),
             ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: dashboard(),
-            ),
+            child: dashboard(),
           ),
         ],
       ),
@@ -213,10 +210,9 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.03,
-            left: screenWidth * 0.01,
-            right: screenWidth * 0.01,
-            bottom: screenWidth * 0.01,
+            top: screenHeight * 0.01,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
           ),
           child: Column(
             children: [
@@ -225,19 +221,19 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "Admission Status ",
-                          size: screenWidth * .015,
+                          size: screenWidth * .03,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -280,7 +276,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.06),
               LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,

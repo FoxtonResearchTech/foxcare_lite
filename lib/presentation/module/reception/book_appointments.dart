@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/presentation/module/reception/appointments_op_ticket.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utilities/colors.dart';
@@ -80,44 +81,63 @@ class _BookAppointments extends State<BookAppointments> {
     super.dispose();
   }
 
-  Future<void> searchPatients(String opNumber, String phoneNumber) async {
+  Future<void> searchPatients(
+    String opNumber,
+    String phoneNumber, {
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
+  }) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     DocumentSnapshot? matchedDoc;
 
-    if (opNumber.isNotEmpty) {
-      final snapshot = await firestore
-          .collection('patients')
-          .where('opNumber', isEqualTo: opNumber)
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        matchedDoc = snapshot.docs.first;
-      }
-    }
-
-    if (matchedDoc == null && phoneNumber.isNotEmpty) {
-      final snapshot1 = await firestore
-          .collection('patients')
-          .where('phone1', isEqualTo: phoneNumber)
-          .limit(1)
-          .get();
-
-      if (snapshot1.docs.isNotEmpty) {
-        matchedDoc = snapshot1.docs.first;
-      } else {
-        final snapshot2 = await firestore
+    // Paginated search helper with delay
+    Future<DocumentSnapshot?> searchByField(String field, String value) async {
+      DocumentSnapshot? lastDoc;
+      while (true) {
+        Query query = firestore
             .collection('patients')
-            .where('phone2', isEqualTo: phoneNumber)
-            .limit(1)
-            .get();
+            .where(field, isEqualTo: value)
+            .limit(pageSize);
 
-        if (snapshot2.docs.isNotEmpty) {
-          matchedDoc = snapshot2.docs.first;
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
         }
+
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          return null;
+        }
+
+        for (final doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (data[field] == value) {
+            return doc;
+          }
+        }
+
+        lastDoc = snapshot.docs.last;
+
+        // Delay before next page
+        await Future.delayed(delayBetweenPages);
       }
     }
 
+    // Step 1: Try by opNumber
+    if (opNumber.isNotEmpty) {
+      matchedDoc = await searchByField('opNumber', opNumber);
+    }
+
+    // Step 2: Try phone1 and phone2
+    if (matchedDoc == null && phoneNumber.isNotEmpty) {
+      matchedDoc = await searchByField('phone1', phoneNumber);
+
+      if (matchedDoc == null) {
+        matchedDoc = await searchByField('phone2', phoneNumber);
+      }
+    }
+
+    // Step 3: UI Update
     if (matchedDoc != null) {
       final data = matchedDoc.data() as Map<String, dynamic>;
       setState(() {
@@ -591,8 +611,8 @@ class _BookAppointments extends State<BookAppointments> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              SizedBox(height: screenHeight * 0.06),
+              LazyDataTable(
                 columnWidths: {
                   0: FixedColumnWidth(screenWidth * 0.04),
                   1: FixedColumnWidth(screenWidth * 0.07),

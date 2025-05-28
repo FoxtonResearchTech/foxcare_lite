@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -48,9 +49,14 @@ class _OpCardPrint extends State<OpCardPrint> {
   Future<void> fetchData({
     String? opNumber,
     String? phoneNumber,
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
   }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
+      List<Map<String, dynamic>> fetchedData = [];
+      final firestore = FirebaseFirestore.instance;
+
+      Query query = firestore.collection('patients');
 
       if (opNumber != null) {
         query = query.where('opNumber', isEqualTo: opNumber);
@@ -60,222 +66,232 @@ class _OpCardPrint extends State<OpCardPrint> {
           Filter('phone2', isEqualTo: phoneNumber),
         ));
       }
-      final QuerySnapshot snapshot = await query.get();
 
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
+      DocumentSnapshot? lastDoc;
 
-      List<Map<String, dynamic>> fetchedData = [];
+      while (true) {
+        Query paginatedQuery = query.limit(pageSize);
+        if (lastDoc != null) {
+          paginatedQuery = paginatedQuery.startAfterDocument(lastDoc);
+        }
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        if (!data.containsKey('opAdmissionDate')) continue;
+        final snapshot = await paginatedQuery.get();
 
-        double opAmount =
-            double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
-        double opAmountCollected =
-            double.tryParse(data['opAmountCollected']?.toString() ?? '0') ?? 0;
-        double balance = opAmount - opAmountCollected;
+        if (snapshot.docs.isEmpty) break;
 
-        fetchedData.add({
-          'OP No': data['opNumber']?.toString() ?? 'N/A',
-          'Date': data['opAdmissionDate'] ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'City': data['city']?.toString() ?? 'N/A',
-          'Phone Number': data['phone1'] ?? 'N/A',
-          'Action': TextButton(
-            onPressed: () async {
-              final pdf = pw.Document();
-              final myColor = PdfColor.fromInt(0xFF106ac2); // 0xAARRGGBB
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
 
-              final font =
-                  await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
-              final ttf = pw.Font.ttf(font);
+          if (!data.containsKey('opNumber') ||
+              !data.containsKey('opAdmissionDate')) {
+            continue;
+          }
 
-              final topImage = pw.MemoryImage(
-                (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
-                    .buffer
-                    .asUint8List(),
-              );
+          double opAmount =
+              double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
+          double opAmountCollected =
+              double.tryParse(data['opAmountCollected']?.toString() ?? '0') ??
+                  0;
+          double balance = opAmount - opAmountCollected;
 
-              final bottomImage = pw.MemoryImage(
-                (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
-                    .buffer
-                    .asUint8List(),
-              );
-              final loc = pw.MemoryImage(
-                (await rootBundle.load('assets/location_Icon.png'))
-                    .buffer
-                    .asUint8List(),
-              );
+          fetchedData.add({
+            'OP No': data['opNumber']?.toString() ?? 'N/A',
+            'Date': data['opAdmissionDate'] ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'City': data['city']?.toString() ?? 'N/A',
+            'Phone Number': data['phone1'] ?? 'N/A',
+            'Action': TextButton(
+              onPressed: () async {
+                final pdf = pw.Document();
+                final myColor = PdfColor.fromInt(0xFF106ac2); // 0xAARRGGBB
 
-              pdf.addPage(
-                pw.Page(
-                  pageFormat: const PdfPageFormat(
-                      8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
-                  margin: pw.EdgeInsets.zero,
-                  build: (pw.Context context) {
-                    return pw.Stack(
-                      children: [
-                        pw.Positioned.fill(
-                          child: pw.Image(topImage, fit: pw.BoxFit.cover),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Row(
-                                mainAxisAlignment: pw.MainAxisAlignment.end,
-                                children: [
-                                  pw.Text(
-                                    'ABC Hospital',
-                                    style: pw.TextStyle(
-                                      fontSize: 14,
-                                      font: ttf,
-                                      fontWeight: pw.FontWeight.bold,
-                                      color: PdfColors.red,
+                final font =
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                final ttf = pw.Font.ttf(font);
+
+                final topImage = pw.MemoryImage(
+                  (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+
+                final bottomImage = pw.MemoryImage(
+                  (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+                final loc = pw.MemoryImage(
+                  (await rootBundle.load('assets/location_Icon.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+
+                pdf.addPage(
+                  pw.Page(
+                    pageFormat: const PdfPageFormat(
+                        8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                    margin: pw.EdgeInsets.zero,
+                    build: (pw.Context context) {
+                      return pw.Stack(
+                        children: [
+                          pw.Positioned.fill(
+                            child: pw.Image(topImage, fit: pw.BoxFit.cover),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(8),
+                            child: pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Row(
+                                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                                  children: [
+                                    pw.Text(
+                                      'ABC Hospital',
+                                      style: pw.TextStyle(
+                                        fontSize: 14,
+                                        font: ttf,
+                                        fontWeight: pw.FontWeight.bold,
+                                        color: PdfColors.red,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              pw.SizedBox(height: 8),
-                              pw.Text(
-                                'OP Number: ${data['opNumber']}',
-                                style: pw.TextStyle(
-                                    fontSize: 10, font: ttf, color: myColor),
-                              ),
-                              pw.Text(
-                                'Name: ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}',
-                                style: pw.TextStyle(
-                                    fontSize: 10, font: ttf, color: myColor),
-                              ),
-                              pw.Text(
-                                'Phone Number: ${data['phone1']}',
-                                style: pw.TextStyle(
-                                    fontSize: 10, font: ttf, color: myColor),
-                              ),
-                            ],
+                                  ],
+                                ),
+                                pw.SizedBox(height: 8),
+                                pw.Text(
+                                  'OP Number: ${data['opNumber']}',
+                                  style: pw.TextStyle(
+                                      fontSize: 10, font: ttf, color: myColor),
+                                ),
+                                pw.Text(
+                                  'Name: ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}',
+                                  style: pw.TextStyle(
+                                      fontSize: 10, font: ttf, color: myColor),
+                                ),
+                                pw.Text(
+                                  'Phone Number: ${data['phone1']}',
+                                  style: pw.TextStyle(
+                                      fontSize: 10, font: ttf, color: myColor),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        // Full-width background image at the bottom
-                        pw.Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: pw.Image(
-                            bottomImage,
-                            fit: pw.BoxFit.cover,
+                          // Full-width background image at the bottom
+                          pw.Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: pw.Image(
+                              bottomImage,
+                              fit: pw.BoxFit.cover,
+                            ),
                           ),
-                        ),
-                        // Text content above the bottom image
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(
-                              left: 8, right: 8, top: 6),
-                          child: pw.Column(
-                            mainAxisAlignment: pw.MainAxisAlignment.end,
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Row(
-                                mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // Emergency and appointment info (left side)
-                                  pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    children: [
-                                      pw.Text(
-                                        'Emergency No: ${Constants.emergencyNo}',
-                                        style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            color: PdfColors.white),
-                                      ),
-                                      pw.Text(
-                                        'Appointments: ${Constants.appointmentNo}',
-                                        style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            color: PdfColors.white),
-                                      ),
-                                    ],
-                                  ),
+                          // Text content above the bottom image
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(
+                                left: 8, right: 8, top: 6),
+                            child: pw.Column(
+                              mainAxisAlignment: pw.MainAxisAlignment.end,
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                pw.Row(
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Emergency and appointment info (left side)
+                                    pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.start,
+                                      children: [
+                                        pw.Text(
+                                          'Emergency No: ${Constants.emergencyNo}',
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              font: ttf,
+                                              color: PdfColors.white),
+                                        ),
+                                        pw.Text(
+                                          'Appointments: ${Constants.appointmentNo}',
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              font: ttf,
+                                              color: PdfColors.white),
+                                        ),
+                                      ],
+                                    ),
 
-                                  // City + District + Location Icon (right side)
-                                  pw.Row(
-                                    mainAxisAlignment: pw.MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.center,
-                                    children: [
-                                      pw.Column(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.end,
-                                        children: [
-                                          pw.Text(
-                                            '${Constants.hospitalCity}',
-                                            style: pw.TextStyle(
-                                                fontSize: 8,
-                                                font: ttf,
-                                                color: PdfColors.white),
-                                          ),
-                                          pw.Text(
-                                            '${Constants.hospitalDistrict}',
-                                            style: pw.TextStyle(
-                                                fontSize: 8,
-                                                font: ttf,
-                                                color: PdfColors.white),
-                                          ),
-                                        ],
-                                      ),
-                                      pw.SizedBox(width: 4),
-                                      pw.Image(loc,
-                                          height: 20,
-                                          width: 10), // Icon on the right
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    // City + District + Location Icon (right side)
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.center,
+                                      children: [
+                                        pw.Column(
+                                          crossAxisAlignment:
+                                              pw.CrossAxisAlignment.end,
+                                          children: [
+                                            pw.Text(
+                                              '${Constants.hospitalCity}',
+                                              style: pw.TextStyle(
+                                                  fontSize: 8,
+                                                  font: ttf,
+                                                  color: PdfColors.white),
+                                            ),
+                                            pw.Text(
+                                              '${Constants.hospitalDistrict}',
+                                              style: pw.TextStyle(
+                                                  fontSize: 8,
+                                                  font: ttf,
+                                                  color: PdfColors.white),
+                                            ),
+                                          ],
+                                        ),
+                                        pw.SizedBox(width: 4),
+                                        pw.Image(loc,
+                                            height: 20,
+                                            width: 10), // Icon on the right
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              );
-              // await Printing.layoutPdf(
-              //   onLayout: (PdfPageFormat format) async {
-              //     return pdf.save();
-              //   },
-              //   format: const PdfPageFormat(
-              //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
-              // );
+                        ],
+                      );
+                    },
+                  ),
+                );
+                // await Printing.layoutPdf(
+                //   onLayout: (PdfPageFormat format) async {
+                //     return pdf.save();
+                //   },
+                //   format: const PdfPageFormat(
+                //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                // );
 
-              await Printing.sharePdf(
-                  bytes: await pdf.save(), filename: '${data['opNumber']}.pdf');
-            },
-            child: const CustomText(text: 'Print'),
-          )
+                await Printing.sharePdf(
+                    bytes: await pdf.save(),
+                    filename: '${data['opNumber']}.pdf');
+              },
+              child: const CustomText(text: 'Print'),
+            )
+          });
+        }
+
+        lastDoc = snapshot.docs.last;
+        fetchedData.sort((a, b) {
+          int tokenA = int.tryParse(a['OP No'].toString()) ?? 0;
+          int tokenB = int.tryParse(b['OP No'].toString()) ?? 0;
+          return tokenA.compareTo(tokenB);
         });
+
+        setState(() {
+          tableData = fetchedData;
+        });
+        await Future.delayed(delayBetweenPages);
       }
-
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Report No'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['Report No'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -322,10 +338,7 @@ class _OpCardPrint extends State<OpCardPrint> {
               ),
             ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: dashboard(),
-            ),
+            child: dashboard(),
           ),
         ],
       ),
@@ -342,9 +355,9 @@ class _OpCardPrint extends State<OpCardPrint> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.03,
-            left: screenWidth * 0.01,
-            right: screenWidth * 0.01,
+            top: screenHeight * 0.01,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
             bottom: screenWidth * 0.01,
           ),
           child: Column(
@@ -354,19 +367,19 @@ class _OpCardPrint extends State<OpCardPrint> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "OP Card Print ",
-                          size: screenWidth * .015,
+                          size: screenWidth * .03,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -410,7 +423,7 @@ class _OpCardPrint extends State<OpCardPrint> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

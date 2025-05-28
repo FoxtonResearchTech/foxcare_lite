@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:intl/intl.dart';
 
@@ -43,75 +44,86 @@ class _ReceptionAccountsOpTicketCollection
     String? singleDate,
     String? fromDate,
     String? toDate,
+    int pageSize = 20,
+    Duration delayBetweenPages = const Duration(milliseconds: 100),
   }) async {
     try {
-      final QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+      DocumentSnapshot? lastDoc;
+      List<Map<String, dynamic>> allFetchedData = [];
 
-      if (snapshot.docs.isEmpty) {
-        print("No patient records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
+      while (true) {
+        Query query =
+            FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final docRef = doc.reference;
-
-        final opTicketsSnapshot = await docRef.collection('opTickets').get();
-
-        for (var ticketDoc in opTicketsSnapshot.docs) {
-          final ticketData = ticketDoc.data();
-          final ticketDate = ticketData['tokenDate']?.toString();
-
-          if (singleDate != null && ticketDate != singleDate) continue;
-
-          if (fromDate != null &&
-              toDate != null &&
-              (ticketDate == null ||
-                  ticketDate.compareTo(fromDate) < 0 ||
-                  ticketDate.compareTo(toDate) > 0)) {
-            continue;
-          }
-
-          double opAmount = double.tryParse(
-                  ticketData['opTicketTotalAmount']?.toString() ?? '0') ??
-              0;
-          double opAmountCollected = double.tryParse(
-                  ticketData['opTicketCollectedAmount']?.toString() ?? '0') ??
-              0;
-          double balance = opAmount - opAmountCollected;
-
-          fetchedData.add({
-            'OP Ticket': ticketDoc.id,
-            'OP No': data['opNumber']?.toString() ?? 'N/A',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                .trim(),
-            'City': data['city']?.toString() ?? 'N/A',
-            'Doctor Name': ticketData['doctorName']?.toString() ?? 'N/A',
-            'Total Amount': opAmount.toString(),
-            'Collected': opAmountCollected.toString(),
-            'Balance': balance,
-          });
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
         }
+
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          print("No more patient records found");
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final docRef = doc.reference;
+
+          final opTicketsSnapshot = await docRef.collection('opTickets').get();
+
+          for (var ticketDoc in opTicketsSnapshot.docs) {
+            final ticketData = ticketDoc.data();
+            final ticketDate = ticketData['tokenDate']?.toString();
+
+            if (singleDate != null && ticketDate != singleDate) continue;
+
+            if (fromDate != null &&
+                toDate != null &&
+                (ticketDate == null ||
+                    ticketDate.compareTo(fromDate) < 0 ||
+                    ticketDate.compareTo(toDate) > 0)) {
+              continue;
+            }
+
+            double opAmount = double.tryParse(
+                    ticketData['opTicketTotalAmount']?.toString() ?? '0') ??
+                0;
+            double opAmountCollected = double.tryParse(
+                    ticketData['opTicketCollectedAmount']?.toString() ?? '0') ??
+                0;
+            double balance = opAmount - opAmountCollected;
+
+            allFetchedData.add({
+              'OP Ticket': ticketDoc.id,
+              'OP No': data['opNumber']?.toString() ?? 'N/A',
+              'Name':
+                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                      .trim(),
+              'City': data['city']?.toString() ?? 'N/A',
+              'Doctor Name': ticketData['doctorName']?.toString() ?? 'N/A',
+              'Total Amount': opAmount.toString(),
+              'Collected': opAmountCollected.toString(),
+              'Balance': balance,
+            });
+          }
+        }
+
+        lastDoc = snapshot.docs.last;
+
+        setState(() {
+          tableData = List.from(allFetchedData);
+          _totalAmountCollected();
+          _totalCollected();
+          _totalBalance();
+        });
+
+        if (snapshot.docs.length < pageSize) {
+          break;
+        }
+
+        await Future.delayed(delayBetweenPages);
       }
-
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['OP Ticket'].toString()) ?? 0;
-        int tokenB = int.tryParse(b['OP Ticket'].toString()) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-        _totalAmountCollected();
-        _totalCollected();
-        _totalBalance();
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -140,10 +152,14 @@ class _ReceptionAccountsOpTicketCollection
       (sum, entry) {
         var value = entry['Total Amount'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }
@@ -154,10 +170,14 @@ class _ReceptionAccountsOpTicketCollection
       (sum, entry) {
         var value = entry['Collected'];
         if (value == null) return sum;
+
         if (value is String) {
-          value = int.tryParse(value) ?? 0;
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
         }
-        return sum + (value as int);
+
+        return sum;
       },
     );
   }
@@ -240,9 +260,7 @@ class _ReceptionAccountsOpTicketCollection
               ),
             ),
           Expanded(
-            child: SingleChildScrollView(
-              child: dashboard(),
-            ),
+            child: dashboard(),
           ),
         ],
       ),
@@ -253,138 +271,153 @@ class _ReceptionAccountsOpTicketCollection
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return SingleChildScrollView(
-      child: Container(
-        height: screenHeight,
-        padding: EdgeInsets.only(
-          left: screenWidth * 0.01,
-          right: screenWidth * 0.01,
-          bottom: screenWidth * 0.01,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.02),
-                  child: Column(
-                    children: [
-                      CustomText(
-                        text: "OP Ticket Collection",
-                        size: screenWidth * 0.03,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: screenWidth * 0.15,
-                  height: screenWidth * 0.1,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/foxcare_lite_logo.png'),
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(
+            left: screenWidth * 0.01,
+            right: screenWidth * 0.01,
+            bottom: screenWidth * 0.01,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.02),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "OP Ticket Collection",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                CustomTextField(
-                  onTap: () => _selectDate(context, _dateController),
-                  icon: Icon(Icons.date_range),
-                  controller: _dateController,
-                  hintText: 'Date',
-                  width: screenWidth * 0.15,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomButton(
-                  label: 'Search',
-                  onPressed: () {
-                    fetchData(singleDate: _dateController.text);
-                  },
-                  width: screenWidth * 0.08,
-                  height: screenWidth * 0.02,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomText(text: 'OR'),
-                SizedBox(width: screenHeight * 0.02),
-                CustomTextField(
-                  onTap: () => _selectDate(context, _fromDateController),
-                  icon: Icon(Icons.date_range),
-                  controller: _fromDateController,
-                  hintText: 'From Date',
-                  width: screenWidth * 0.15,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomTextField(
-                  onTap: () => _selectDate(context, _toDateController),
-                  icon: Icon(Icons.date_range),
-                  controller: _toDateController,
-                  hintText: 'To Date',
-                  width: screenWidth * 0.15,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomButton(
-                  label: 'Search',
-                  onPressed: () {
-                    fetchData(
-                      fromDate: _fromDateController.text,
-                      toDate: _toDateController.text,
-                    );
-                  },
-                  width: screenWidth * 0.08,
-                  height: screenWidth * 0.02,
-                ),
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.05),
-            const Row(
-              children: [CustomText(text: 'Collection Report')],
-            ),
-            SizedBox(height: screenHeight * 0.04),
-            CustomDataTable(
-              headerBackgroundColor: AppColors.blue,
-              headerColor: Colors.white,
-              tableData: tableData,
-              headers: headers,
-            ),
-            Container(
-              width: screenWidth,
-              height: screenHeight * 0.030,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 0.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(width: screenWidth * 0.38),
-                  CustomText(
-                    text: 'Total : ',
-                  ),
-                  SizedBox(width: screenWidth * 0.086),
-                  CustomText(
-                    text: '${_totalAmountCollected()}',
-                  ),
-                  SizedBox(width: screenWidth * 0.08),
-                  CustomText(
-                    text: '${_totalCollected()}',
-                  ),
-                  SizedBox(width: screenWidth * 0.083),
-                  CustomText(
-                    text: '${_totalBalance()}',
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-            SizedBox(height: screenHeight * 0.05),
-          ],
+              Row(
+                children: [
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _dateController),
+                    icon: Icon(Icons.date_range),
+                    controller: _dateController,
+                    hintText: 'Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(singleDate: _dateController.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomText(text: 'OR'),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _fromDateController),
+                    icon: Icon(Icons.date_range),
+                    controller: _fromDateController,
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    onTap: () => _selectDate(context, _toDateController),
+                    icon: Icon(Icons.date_range),
+                    controller: _toDateController,
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(
+                        fromDate: _fromDateController.text,
+                        toDate: _toDateController.text,
+                      );
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.05),
+              Row(
+                children: [
+                  if (_dateController.text.isEmpty &&
+                      _fromDateController.text.isEmpty &&
+                      _toDateController.text.isEmpty)
+                    const CustomText(text: 'Collection Report Of Date ')
+                  else if (_dateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_dateController.text} ')
+                  else if (_fromDateController.text.isNotEmpty &&
+                      _toDateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              LazyDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
+                tableData: tableData,
+                headers: headers,
+              ),
+              Container(
+                width: screenWidth,
+                height: screenHeight * 0.030,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: screenWidth * 0.38),
+                    CustomText(
+                      text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.086),
+                    CustomText(
+                      text: '${_totalAmountCollected()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.08),
+                    CustomText(
+                      text: '${_totalCollected()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.083),
+                    CustomText(
+                      text: '${_totalBalance()}',
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.07),
+            ],
+          ),
         ),
       ),
     );
