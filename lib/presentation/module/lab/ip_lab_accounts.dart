@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -44,85 +45,93 @@ class _IpLabAccounts extends State<IpLabAccounts> {
   List<Map<String, dynamic>> tableData = [];
 
   Future<void> fetchData({
-    String? singleDate,
     String? fromDate,
     String? toDate,
   }) async {
     try {
-      final QuerySnapshot patientsSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
-
-      if (patientsSnapshot.docs.isEmpty) {
-        print("No patient records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
-
       List<Map<String, dynamic>> fetchedData = [];
+      DocumentSnapshot? lastPatientDoc;
+      const int batchSize = 15; // Adjust as needed
 
-      for (var patientDoc in patientsSnapshot.docs) {
-        final patientData = patientDoc.data() as Map<String, dynamic>;
+      while (true) {
+        Query query = FirebaseFirestore.instance
+            .collection('patients')
+            .orderBy(FieldPath.documentId)
+            .limit(batchSize);
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
+        }
 
-        final ipTicketsSnapshot =
-            await patientDoc.reference.collection('ipTickets').get();
+        final QuerySnapshot patientsSnapshot = await query.get();
 
-        for (var ticketDoc in ipTicketsSnapshot.docs) {
-          final ticketData = ticketDoc.data();
-          final ticketId = ticketDoc.id;
+        if (patientsSnapshot.docs.isEmpty) {
+          // No more patients to fetch, break the loop
+          break;
+        }
 
-          // Fetch examinations inside this ipTicket
-          final examSnapshot = await patientDoc.reference
-              .collection('ipTickets')
-              .doc(ticketId)
-              .collection('Examination')
-              .get();
+        for (var patientDoc in patientsSnapshot.docs) {
+          final patientData = patientDoc.data() as Map<String, dynamic>;
 
-          for (var examDoc in examSnapshot.docs) {
-            final examData = examDoc.data();
+          final ipTicketsSnapshot =
+              await patientDoc.reference.collection('ipTickets').get();
 
-            // Must have reportNo and reportDate to consider
-            if (!examData.containsKey('reportNo') ||
-                !examData.containsKey('reportDate')) continue;
+          for (var ticketDoc in ipTicketsSnapshot.docs) {
+            final ticketData = ticketDoc.data();
+            final ticketId = ticketDoc.id;
 
-            final String reportDate = examData['reportDate'].toString();
+            final examSnapshot = await patientDoc.reference
+                .collection('ipTickets')
+                .doc(ticketId)
+                .collection('Examination')
+                .get();
 
-            // Filter by dates
-            if (singleDate != null && reportDate != singleDate) continue;
-            if (fromDate != null &&
-                toDate != null &&
-                (reportDate.compareTo(fromDate) < 0 ||
-                    reportDate.compareTo(toDate) > 0)) {
-              continue;
+            for (var examDoc in examSnapshot.docs) {
+              final examData = examDoc.data();
+
+              if (!examData.containsKey('reportNo') ||
+                  !examData.containsKey('reportDate')) continue;
+
+              final String reportDate = examData['reportDate'].toString();
+
+              // Filter by date range if provided
+              if (fromDate != null &&
+                  toDate != null &&
+                  (reportDate.compareTo(fromDate) < 0 ||
+                      reportDate.compareTo(toDate) > 0)) {
+                continue;
+              }
+
+              fetchedData.add({
+                'Report Date': reportDate,
+                'Report No': examData['reportNo']?.toString() ?? 'N/A',
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'IP Ticket': ticketData['ipTicket']?.toString() ?? 'N/A',
+                'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+                'Total Amount': examData['labTotalAmount']?.toString() ?? '0',
+                'Collected': examData['labCollected']?.toString() ?? '0',
+                'Balance': examData['labBalance']?.toString() ?? '0',
+              });
             }
-
-            fetchedData.add({
-              'Report Date': reportDate,
-              'Report No': examData['reportNo']?.toString() ?? 'N/A',
-              'Name':
-                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'IP Ticket': ticketData['ipTicket']?.toString() ?? 'N/A',
-              'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
-              'Total Amount': examData['labTotalAmount']?.toString() ?? '0',
-              'Collected': examData['labCollected']?.toString() ?? '0',
-              'Balance': examData['labBalance']?.toString() ?? '0',
-            });
           }
         }
+
+        // Update last document to paginate in next loop iteration
+        lastPatientDoc = patientsSnapshot.docs.last;
+        // Sort by report number ascending
+        fetchedData.sort((a, b) {
+          int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
+          int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
+          return aNo.compareTo(bNo);
+        });
+
+        setState(() {
+          tableData = List.from(fetchedData);
+        });
+        // Small delay to avoid Firestore rate limits and keep UI responsive
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-
-      // Sort by report number ascending
-      fetchedData.sort((a, b) {
-        int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
-        int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
-        return aNo.compareTo(bNo);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching IP ticket data: $e');
     }
@@ -377,7 +386,7 @@ class _IpLabAccounts extends State<IpLabAccounts> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/lab/lab_module_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/secondary_data_table.dart';
 import 'package:intl/intl.dart';
 
@@ -27,6 +28,7 @@ class _LabDashboard extends State<LabDashboard> {
   Timer? _timer;
 
   final opHeader = [
+    'Token NO',
     'OP Ticket',
     'OP NO',
     'Name',
@@ -35,7 +37,7 @@ class _LabDashboard extends State<LabDashboard> {
     'Status',
     'List of Tests',
   ];
-  List<Map<String, dynamic>> opTableData = [{}];
+  List<Map<String, dynamic>> opTableData = [];
 
   final ipHeader = [
     'IP Ticket',
@@ -46,7 +48,7 @@ class _LabDashboard extends State<LabDashboard> {
     'Status',
     'List of Tests',
   ];
-  List<Map<String, dynamic>> ipTableData = [{}];
+  List<Map<String, dynamic>> ipTableData = [];
 
   int noOfPatientsTestCompleted = 0;
   int noOfPatientsTestInCompleted = 0;
@@ -54,42 +56,51 @@ class _LabDashboard extends State<LabDashboard> {
   int noOfWaitingQueue = 0;
   int noOfOp = 0;
 
-  Future<int> getNoOfOp() async {
+  Future<int> getNoOfOp({int pageSize = 20}) async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     int opCount = 0;
+    DocumentSnapshot? lastDoc;
 
     try {
-      final QuerySnapshot patientSnapshot =
-          await fireStore.collection('patients').get();
-
-      for (var doc in patientSnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        if (!data.containsKey('opNumber') ||
-            !data.containsKey('opAdmissionDate')) continue;
-
-        try {
-          final DocumentSnapshot tokenSnapshot = await fireStore
-              .collection('patients')
-              .doc(doc.id)
-              .collection('tokens')
-              .doc('currentToken')
-              .get();
-
-          if (tokenSnapshot.exists) {
-            final tokenData = tokenSnapshot.data() as Map<String, dynamic>?;
-
-            final String? tokenDate = tokenData?['date'];
-
-            if (tokenDate == today) {
-              opCount++;
-            }
-          }
-        } catch (e) {
-          print('Error fetching token for patient ${doc.id}: $e');
+      while (true) {
+        Query query = fireStore.collection('patients').limit(pageSize);
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
         }
+
+        final QuerySnapshot patientSnapshot = await query.get();
+        if (patientSnapshot.docs.isEmpty) break;
+
+        for (var doc in patientSnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          if (!data.containsKey('opNumber') ||
+              !data.containsKey('opAdmissionDate')) {
+            continue;
+          }
+
+          try {
+            final DocumentSnapshot tokenSnapshot = await doc.reference
+                .collection('tokens')
+                .doc('currentToken')
+                .get();
+
+            if (tokenSnapshot.exists) {
+              final tokenData = tokenSnapshot.data() as Map<String, dynamic>?;
+              final String? tokenDate = tokenData?['date'];
+
+              if (tokenDate == today) {
+                opCount++;
+              }
+            }
+          } catch (e) {
+            print('Error fetching token for patient ${doc.id}: $e');
+          }
+        }
+
+        lastDoc = patientSnapshot.docs.last;
       }
 
       setState(() {
@@ -98,7 +109,7 @@ class _LabDashboard extends State<LabDashboard> {
 
       return opCount;
     } catch (e) {
-      print('Error fetching patients: $e');
+      print('Error during pagination: $e');
       return 0;
     }
   }
@@ -107,37 +118,58 @@ class _LabDashboard extends State<LabDashboard> {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+    const int pageSize = 20;
+    DocumentSnapshot? lastPatientDoc;
+    int count = 0;
+    bool hasMore = true;
+
     try {
-      final QuerySnapshot patientsSnapshot =
-          await fireStore.collection('patients').get();
+      while (hasMore) {
+        Query<Map<String, dynamic>> patientQuery =
+            fireStore.collection('patients').limit(pageSize);
 
-      int count = 0;
+        if (lastPatientDoc != null) {
+          patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
+        }
 
-      for (var patientDoc in patientsSnapshot.docs) {
-        final opTicketsSnapshot = await fireStore
-            .collection('patients')
-            .doc(patientDoc.id)
-            .collection('opTickets')
-            .get();
+        QuerySnapshot<Map<String, dynamic>> patientSnapshot =
+            await patientQuery.get();
 
-        for (var ticketDoc in opTicketsSnapshot.docs) {
-          final data = ticketDoc.data();
+        if (patientSnapshot.docs.isEmpty) {
+          break;
+        }
 
-          if (data['labExaminationPrescribedDate'] == today &&
-              data['reportDate'] == today &&
-              data.containsKey('opTicket')) {
-            count++;
+        for (var patientDoc in patientSnapshot.docs) {
+          final opTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(patientDoc.id)
+              .collection('opTickets')
+              .get();
+
+          for (var ticketDoc in opTicketsSnapshot.docs) {
+            final data = ticketDoc.data();
+
+            if (data['labExaminationPrescribedDate'] == today &&
+                data['reportDate'] == today &&
+                data.containsKey('opTicket')) {
+              count++;
+            }
           }
         }
-      }
 
-      setState(() {
-        noOfPatientsTestCompleted = count;
-        noOfPatientsTestInCompleted =
-            (noOfWaitingQueue - noOfPatientsTestCompleted)
-                .clamp(0, double.infinity)
-                .toInt();
-      });
+        lastPatientDoc = patientSnapshot.docs.last;
+        hasMore = patientSnapshot.docs.length == pageSize;
+        setState(() {
+          noOfPatientsTestCompleted = count;
+          noOfPatientsTestInCompleted =
+              (noOfWaitingQueue - noOfPatientsTestCompleted)
+                  .clamp(0, double.infinity)
+                  .toInt();
+        });
+
+        // Optional delay to smooth things out
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
 
       return count;
     } catch (e) {
@@ -150,44 +182,65 @@ class _LabDashboard extends State<LabDashboard> {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+    const int pageSize = 20;
+    DocumentSnapshot? lastPatientDoc;
+    int missingCount = 0;
+    bool hasMore = true;
+
     try {
-      final QuerySnapshot patientsSnapshot =
-          await fireStore.collection('patients').get();
+      while (hasMore) {
+        Query<Map<String, dynamic>> patientQuery =
+            fireStore.collection('patients').limit(pageSize);
 
-      int missingCount = 0;
+        if (lastPatientDoc != null) {
+          patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
+        }
 
-      for (var patientDoc in patientsSnapshot.docs) {
-        final opTicketsSnapshot = await fireStore
-            .collection('patients')
-            .doc(patientDoc.id)
-            .collection('opTickets')
-            .get();
+        QuerySnapshot<Map<String, dynamic>> patientSnapshot =
+            await patientQuery.get();
 
-        for (var ticketDoc in opTicketsSnapshot.docs) {
-          final data = ticketDoc.data();
+        if (patientSnapshot.docs.isEmpty) {
+          break;
+        }
 
-          if (data['labExaminationPrescribedDate'] == today &&
-              data.containsKey('Examination') &&
-              data.containsKey('opTicket')) {
-            final testSnapshot = await fireStore
-                .collection('patients')
-                .doc(patientDoc.id)
-                .collection('opTickets')
-                .doc(ticketDoc.id)
-                .collection('tests')
-                .limit(1)
-                .get();
+        for (var patientDoc in patientSnapshot.docs) {
+          final opTicketsSnapshot = await fireStore
+              .collection('patients')
+              .doc(patientDoc.id)
+              .collection('opTickets')
+              .get();
 
-            if (testSnapshot.docs.isEmpty) {
-              missingCount++;
+          for (var ticketDoc in opTicketsSnapshot.docs) {
+            final data = ticketDoc.data();
+
+            if (data['labExaminationPrescribedDate'] == today &&
+                data.containsKey('Examination') &&
+                data.containsKey('opTicket')) {
+              final testSnapshot = await fireStore
+                  .collection('patients')
+                  .doc(patientDoc.id)
+                  .collection('opTickets')
+                  .doc(ticketDoc.id)
+                  .collection('tests')
+                  .limit(1)
+                  .get();
+
+              if (testSnapshot.docs.isEmpty) {
+                missingCount++;
+              }
             }
           }
         }
-      }
 
-      setState(() {
-        noOfWaitingQueue = missingCount;
-      });
+        lastPatientDoc = patientSnapshot.docs.last;
+        hasMore = patientSnapshot.docs.length == pageSize;
+        setState(() {
+          noOfWaitingQueue = missingCount;
+        });
+
+        // Optional short delay to avoid throttling
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
 
       return missingCount;
     } catch (e) {
@@ -201,84 +254,87 @@ class _LabDashboard extends State<LabDashboard> {
       final DateTime now = DateTime.now();
       final String todayDate =
           "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-      final QuerySnapshot patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
 
-      List<Map<String, dynamic>> fetchedData = [];
+      final int pageSize = 10;
+      DocumentSnapshot? lastDoc;
+      bool hasMore = true;
+      List<Map<String, dynamic>> finalList = [];
 
-      for (var patientDoc in patientSnapshot.docs) {
-        final patientData = patientDoc.data() as Map<String, dynamic>;
-        if (fetchedData.length >= 3) break;
+      while (hasMore) {
+        Query<Map<String, dynamic>> query =
+            FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
-        final opTicketsSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(patientDoc.id)
-            .collection('opTickets')
-            .get();
-
-        for (var ticketDoc in opTicketsSnapshot.docs) {
-          final data = ticketDoc.data();
-
-          if (!data.containsKey('opTicket')) continue;
-          if (data.containsKey('reportNo') && data.containsKey('reportDate'))
-            continue;
-          if (!data.containsKey('Examination') ||
-              (data['Examination'] as List).isEmpty) {
-            continue;
-          }
-
-          String tokenNo = '';
-          try {
-            final tokenSnapshot = await FirebaseFirestore.instance
-                .collection('patients')
-                .doc(patientDoc.id)
-                .collection('tokens')
-                .doc('currentToken')
-                .get();
-
-            if (tokenSnapshot.exists) {
-              final tokenData = tokenSnapshot.data();
-              if (tokenData != null && tokenData['tokenNumber'] != null) {
-                tokenNo = tokenData['tokenNumber'].toString();
-              }
-            }
-          } catch (e) {
-            print('Error fetching tokenNo for patient ${patientDoc.id}: $e');
-          }
-          final prescribedDate = data['labExaminationPrescribedDate'] ?? '';
-
-          if (prescribedDate != todayDate) {
-            continue;
-          }
-
-          fetchedData.add({
-            'Token NO': tokenNo,
-            'OP Ticket': data['opTicket'] ?? 'N/A',
-            'OP NO': patientData['opNumber'] ?? 'N/A',
-            'Name':
-                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                    .trim(),
-            'Age': patientData['age'] ?? 'N/A',
-            'Place': patientData['city'] ?? 'N/A',
-            'Address': patientData['address1'] ?? 'N/A',
-            'PinCode': patientData['pincode'] ?? 'N/A',
-            'Status': data['status'] ?? 'N/A',
-            'List of Tests': data['Examination'] ?? 'N/A',
-          });
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
         }
+
+        final snapshot = await query.get();
+        final docs = snapshot.docs;
+        if (docs.isEmpty) break;
+
+        for (final patientDoc in docs) {
+          final patientData = patientDoc.data();
+
+          final ticketsSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(patientDoc.id)
+              .collection('opTickets')
+              .get();
+
+          for (final ticketDoc in ticketsSnapshot.docs) {
+            final data = ticketDoc.data();
+
+            if (!data.containsKey('opTicket')) continue;
+            if (data.containsKey('reportNo') && data.containsKey('reportDate'))
+              continue;
+            if (!data.containsKey('Examination') ||
+                (data['Examination'] as List).isEmpty) continue;
+            if (data['labExaminationPrescribedDate'] != todayDate) continue;
+
+            String tokenNo = '';
+            try {
+              final tokenSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientDoc.id)
+                  .collection('tokens')
+                  .doc('currentToken')
+                  .get();
+              if (tokenSnapshot.exists) {
+                final tokenData = tokenSnapshot.data();
+                tokenNo = tokenData?['tokenNumber']?.toString() ?? '';
+              }
+            } catch (e) {
+              print('Token fetch error: $e');
+            }
+
+            finalList.add({
+              'Token NO': tokenNo,
+              'OP Ticket': data['opTicket'],
+              'OP NO': patientData['opNumber'],
+              'Name': '${patientData['firstName']} ${patientData['lastName']}',
+              'Age': patientData['age'],
+              'Place': patientData['city'],
+              'Address': patientData['address1'],
+              'PinCode': patientData['pincode'],
+              'Status': data['status'],
+              'List of Tests': data['Examination'],
+            });
+          }
+        }
+
+        lastDoc = docs.last;
+        hasMore = docs.length == pageSize;
+
+        setState(() {
+          opTableData = List.from(finalList);
+        });
+        await Future.delayed(Duration(milliseconds: 100));
       }
-
-      fetchedData.sort((a, b) {
-        int tokenA = int.tryParse(a['Token NO']) ?? 0;
-        int tokenB = int.tryParse(b['Token NO']) ?? 0;
-        return tokenA.compareTo(tokenB);
-      });
-
-      setState(() {
-        opTableData = fetchedData;
-      });
+      finalList.sort((a, b) =>
+          (int.tryParse(a['Token NO']) ?? 0) -
+          (int.tryParse(b['Token NO']) ?? 0));
     } catch (e) {
-      print('Error fetching data from Firestore: $e');
+      print('Error in OP: $e');
     }
   }
 
@@ -288,87 +344,98 @@ class _LabDashboard extends State<LabDashboard> {
       final String todayDate =
           "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
-      final QuerySnapshot patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+      final int pageSize = 10;
+      DocumentSnapshot? lastDoc;
+      bool hasMore = true;
+      List<Map<String, dynamic>> finalList = [];
 
-      List<Map<String, dynamic>> fetchedData = [];
+      while (hasMore) {
+        Query<Map<String, dynamic>> query =
+            FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
-      for (var patientDoc in patientSnapshot.docs) {
-        final patientData = patientDoc.data() as Map<String, dynamic>;
-        if (fetchedData.length >= 3) break;
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
 
-        final ipTicketsSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(patientDoc.id)
-            .collection('ipTickets')
-            .get();
+        final snapshot = await query.get();
+        final docs = snapshot.docs;
+        if (docs.isEmpty) break;
 
-        for (var ticketDoc in ipTicketsSnapshot.docs) {
-          final data = ticketDoc.data();
-          if (!data.containsKey('ipTicket')) continue;
+        for (final patientDoc in docs) {
+          final patientData = patientDoc.data();
 
-          final examSnapshot = await FirebaseFirestore.instance
+          final ticketsSnapshot = await FirebaseFirestore.instance
               .collection('patients')
               .doc(patientDoc.id)
               .collection('ipTickets')
-              .doc(ticketDoc.id)
-              .collection('Examination')
               .get();
 
-          for (var examDoc in examSnapshot.docs) {
-            final examData = examDoc.data();
-            final hasReport = examData.containsKey('reportNo') &&
-                examData.containsKey('reportDate');
-            if (hasReport) continue;
-            final examDate = examData['date'];
-            if (examDate != todayDate) continue;
-            final examItems = examData['items'];
-            final List<String> tests = (examItems is List)
-                ? examItems.whereType<String>().toList()
-                : [];
+          for (final ticketDoc in ticketsSnapshot.docs) {
+            final ticketData = ticketDoc.data();
+            if (!ticketData.containsKey('ipTicket')) continue;
 
-            if (tests.isEmpty) continue;
+            final examSnapshot = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientDoc.id)
+                .collection('ipTickets')
+                .doc(ticketDoc.id)
+                .collection('Examination')
+                .get();
 
-            fetchedData.add({
-              'IP Ticket': data['ipTicket'] ?? 'N/A',
-              'OP NO': patientData['opNumber'] ?? 'N/A',
-              'Name':
-                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'Age': patientData['age'] ?? 'N/A',
-              'Place': patientData['state'] ?? 'N/A',
-              'Address': patientData['address1'] ?? 'N/A',
-              'PinCode': patientData['pincode'] ?? 'N/A',
-              'Status': data['status'] ?? 'N/A',
-              'List of Tests': tests,
-            });
+            for (final examDoc in examSnapshot.docs) {
+              final examData = examDoc.data();
 
-            if (fetchedData.length >= 3) break;
+              final hasReport = examData.containsKey('reportNo') &&
+                  examData.containsKey('reportDate');
+              if (hasReport) continue;
+
+              if (examData['date'] != todayDate) continue;
+
+              final examItems = examData['items'];
+              final List<String> tests = (examItems is List)
+                  ? examItems.whereType<String>().toList()
+                  : [];
+
+              if (tests.isEmpty) continue;
+
+              finalList.add({
+                'IP Ticket': ticketData['ipTicket'],
+                'OP NO': patientData['opNumber'],
+                'Name':
+                    '${patientData['firstName']} ${patientData['lastName']}',
+                'Age': patientData['age'],
+                'Place': patientData['state'],
+                'Address': patientData['address1'],
+                'PinCode': patientData['pincode'],
+                'Status': ticketData['status'],
+                'List of Tests': tests,
+              });
+            }
           }
-
-          if (fetchedData.length >= 3) break;
         }
 
-        if (fetchedData.length >= 3) break;
+        lastDoc = docs.last;
+        hasMore = docs.length == pageSize;
+        setState(() {
+          ipTableData = List.from(finalList);
+        });
+        await Future.delayed(Duration(milliseconds: 100));
       }
-
-      setState(() {
-        ipTableData = fetchedData;
-      });
     } catch (e) {
-      print('Error fetching data from Firestore: $e');
+      print('Error in IP: $e');
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+
+    getWaitingLabTestOpPatients();
+    getWaitingLabTestIpPatients();
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       getNoOfOp();
       getNoOfPatientsTestDone();
       getNoOFWaitingQue();
-      getWaitingLabTestOpPatients();
-      getWaitingLabTestIpPatients();
     });
   }
 
@@ -519,7 +586,7 @@ class _LabDashboard extends State<LabDashboard> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                CustomDataTable(
+                LazyDataTable(
                   headerColor: Colors.white,
                   headerBackgroundColor: AppColors.blue,
                   headers: opHeader,
@@ -555,7 +622,7 @@ class _LabDashboard extends State<LabDashboard> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                CustomDataTable(
+                LazyDataTable(
                   headerColor: Colors.white,
                   headerBackgroundColor: AppColors.blue,
                   headers: ipHeader,

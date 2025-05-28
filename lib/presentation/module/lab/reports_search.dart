@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -625,99 +626,125 @@ class _ReportsSearch extends State<ReportsSearch> {
     String? fromDate,
     String? toDate,
     String? reportNo,
+    int pageSize = 20,
   }) async {
     try {
-      final QuerySnapshot patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
+      DocumentSnapshot? lastPatientDoc;
+      bool hasMore = true;
+      List<Map<String, dynamic>> allFetchedData = [];
 
-      List<Map<String, dynamic>> fetchedData = [];
+      while (hasMore) {
+        Query query =
+            FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
-      for (var patientDoc in patientSnapshot.docs) {
-        final patientData = patientDoc.data() as Map<String, dynamic>;
-        final patientId = patientDoc.id;
+        if (lastPatientDoc != null) {
+          query = query.startAfterDocument(lastPatientDoc);
+        }
 
-        final opTicketsSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(patientId)
-            .collection('opTickets')
-            .get();
+        final QuerySnapshot patientSnapshot = await query.get();
 
-        for (var ticketDoc in opTicketsSnapshot.docs) {
-          final ticketData = ticketDoc.data();
+        if (patientSnapshot.docs.isEmpty) {
+          break;
+        }
 
-          if (!ticketData.containsKey('reportNo') ||
-              !ticketData.containsKey('reportDate')) continue;
+        for (var patientDoc in patientSnapshot.docs) {
+          final patientData = patientDoc.data() as Map<String, dynamic>;
+          final patientId = patientDoc.id;
 
-          bool matches = false;
+          final opTicketsSnapshot = await FirebaseFirestore.instance
+              .collection('patients')
+              .doc(patientId)
+              .collection('opTickets')
+              .get();
 
-          if (singleDate != null) {
-            matches = ticketData['reportDate'] == singleDate;
-          } else if (fromDate != null && toDate != null) {
-            final date = ticketData['reportDate'];
-            matches =
-                date.compareTo(fromDate) >= 0 && date.compareTo(toDate) <= 0;
-          } else if (reportNo != null) {
-            matches = ticketData['reportNo'].toString() == reportNo;
-          } else {
-            matches = true;
-          }
+          for (var ticketDoc in opTicketsSnapshot.docs) {
+            final ticketData = ticketDoc.data();
 
-          if (matches) {
-            fetchedData.add({
-              'Report Date': ticketData['reportDate']?.toString() ?? 'N/A',
-              'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
-              'Name':
-                  '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
-              'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
-              'Report': TextButton(
-                onPressed: () async {
-                  setState(() {
-                    labTestData = (ticketData['tests'] as List)
-                        .whereType<Map<String, dynamic>>()
-                        .toList();
-                  });
+            if (!ticketData.containsKey('reportNo') ||
+                !ticketData.containsKey('reportDate')) continue;
 
-                  await printData(
-                    labTechName: ticketData['labTechnician'] ?? 'N/A',
-                    labQual: ticketData['labTechnicianDegree'] ?? 'N/A',
-                    name:
-                        '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                            .trim(),
-                    opTicket: ticketData['opTicket']?.toString() ?? 'N/A',
-                    opNumber: patientData['opNumber']?.toString() ?? 'N/A',
-                    address: patientData['address']?.toString() ?? 'N/A',
-                    age: patientData['age']?.toString() ?? 'N/A',
-                    bloodGroup: patientData['bloodGroup']?.toString() ?? 'N/A',
-                    city: patientData['city']?.toString() ?? 'N/A',
-                    phoneNo: patientData['phone1']?.toString() ?? 'N/A',
-                    sampleCollectedDate:
-                        ticketData['sampleCollectedDate']?.toString() ?? 'N/A',
-                    sampleDate: ticketData['sampleDate']?.toString() ?? 'N/A',
-                    reportNo: ticketData['reportNo']?.toString() ?? 'N/A',
-                    doctorName: ticketData['doctorName']?.toString() ?? 'N/A',
-                    specialization:
-                        ticketData['specialization']?.toString() ?? 'N/A',
-                    reportDate: ticketData['reportDate']?.toString() ?? 'N/A',
-                  );
-                },
-                child: CustomText(text: 'Print'),
-              ),
-            });
+            bool matches = false;
+
+            if (singleDate != null) {
+              matches = ticketData['reportDate'] == singleDate;
+            } else if (fromDate != null && toDate != null) {
+              final date = ticketData['reportDate'];
+              matches =
+                  date.compareTo(fromDate) >= 0 && date.compareTo(toDate) <= 0;
+            } else if (reportNo != null) {
+              matches = ticketData['reportNo'].toString() == reportNo;
+            } else {
+              matches = true;
+            }
+
+            if (matches) {
+              allFetchedData.add({
+                'Report Date': ticketData['reportDate']?.toString() ?? 'N/A',
+                'Report No': ticketData['reportNo']?.toString() ?? 'N/A',
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'OP Ticket': ticketData['opTicket']?.toString() ?? 'N/A',
+                'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+                'Report': TextButton(
+                  onPressed: () async {
+                    setState(() {
+                      labTestData = (ticketData['tests'] as List)
+                          .whereType<Map<String, dynamic>>()
+                          .toList();
+                    });
+
+                    await printData(
+                      labTechName: ticketData['labTechnician'] ?? 'N/A',
+                      labQual: ticketData['labTechnicianDegree'] ?? 'N/A',
+                      name:
+                          '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                              .trim(),
+                      opTicket: ticketData['opTicket']?.toString() ?? 'N/A',
+                      opNumber: patientData['opNumber']?.toString() ?? 'N/A',
+                      address: patientData['address']?.toString() ?? 'N/A',
+                      age: patientData['age']?.toString() ?? 'N/A',
+                      bloodGroup:
+                          patientData['bloodGroup']?.toString() ?? 'N/A',
+                      city: patientData['city']?.toString() ?? 'N/A',
+                      phoneNo: patientData['phone1']?.toString() ?? 'N/A',
+                      sampleCollectedDate:
+                          ticketData['sampleCollectedDate']?.toString() ??
+                              'N/A',
+                      sampleDate: ticketData['sampleDate']?.toString() ?? 'N/A',
+                      reportNo: ticketData['reportNo']?.toString() ?? 'N/A',
+                      doctorName: ticketData['doctorName']?.toString() ?? 'N/A',
+                      specialization:
+                          ticketData['specialization']?.toString() ?? 'N/A',
+                      reportDate: ticketData['reportDate']?.toString() ?? 'N/A',
+                    );
+                  },
+                  child: CustomText(text: 'Print'),
+                ),
+              });
+            }
           }
         }
+
+        // Sort after adding this batch
+        allFetchedData.sort((a, b) {
+          int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
+          int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
+          return aNo.compareTo(bNo);
+        });
+
+        setState(() {
+          tableData = List.from(allFetchedData); // update UI incrementally
+        });
+
+        // If fewer docs returned than pageSize, no more pages
+        if (patientSnapshot.docs.length < pageSize) {
+          hasMore = false;
+        } else {
+          lastPatientDoc = patientSnapshot.docs.last;
+          await Future.delayed(Duration(milliseconds: 100)); // throttle loop
+        }
       }
-
-      fetchedData.sort((a, b) {
-        int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
-        int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
-        return aNo.compareTo(bNo);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -918,7 +945,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,

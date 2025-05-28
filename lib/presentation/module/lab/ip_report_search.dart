@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -625,129 +626,156 @@ class _IpReportSearch extends State<IpReportSearch> {
     String? fromDate,
     String? toDate,
     String? reportNo,
+    int pageSize = 20, // adjust as needed
   }) async {
     try {
-      final QuerySnapshot patientSnapshot =
-          await FirebaseFirestore.instance.collection('patients').get();
-
       List<Map<String, dynamic>> fetchedData = [];
+      DocumentSnapshot? lastPatientDoc;
+      bool morePatients = true;
 
-      for (var patientDoc in patientSnapshot.docs) {
-        final patientData = patientDoc.data() as Map<String, dynamic>;
-        final patientId = patientDoc.id;
+      while (morePatients) {
+        Query patientQuery =
+            FirebaseFirestore.instance.collection('patients').limit(pageSize);
 
-        final ipTicketsSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(patientId)
-            .collection('ipTickets')
-            .get();
+        if (lastPatientDoc != null) {
+          patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
+        }
 
-        for (var ticketDoc in ipTicketsSnapshot.docs) {
-          final ticketData = ticketDoc.data();
-          final ticketId = ticketDoc.id;
+        final QuerySnapshot patientSnapshot = await patientQuery.get();
 
-          final examSnapshot = await FirebaseFirestore.instance
+        if (patientSnapshot.docs.isEmpty) {
+          morePatients = false;
+          break;
+        }
+
+        for (var patientDoc in patientSnapshot.docs) {
+          final patientData = patientDoc.data() as Map<String, dynamic>;
+          final patientId = patientDoc.id;
+
+          final ipTicketsSnapshot = await FirebaseFirestore.instance
               .collection('patients')
               .doc(patientId)
               .collection('ipTickets')
-              .doc(ticketId)
-              .collection('Examination')
               .get();
 
-          for (var examDoc in examSnapshot.docs) {
-            final examData = examDoc.data();
+          for (var ticketDoc in ipTicketsSnapshot.docs) {
+            final ticketData = ticketDoc.data();
+            final ticketId = ticketDoc.id;
 
-            if (!examData.containsKey('reportNo') ||
-                !examData.containsKey('reportDate')) continue;
+            final examSnapshot = await FirebaseFirestore.instance
+                .collection('patients')
+                .doc(patientId)
+                .collection('ipTickets')
+                .doc(ticketId)
+                .collection('Examination')
+                .get();
 
-            final String reportDate = examData['reportDate'].toString();
-            final String reportNumber = examData['reportNo'].toString();
+            for (var examDoc in examSnapshot.docs) {
+              final examData = examDoc.data();
 
-            bool matches = false;
+              if (!examData.containsKey('reportNo') ||
+                  !examData.containsKey('reportDate')) continue;
 
-            if (singleDate != null) {
-              matches = reportDate == singleDate;
-            } else if (fromDate != null && toDate != null) {
-              matches = reportDate.compareTo(fromDate) >= 0 &&
-                  reportDate.compareTo(toDate) <= 0;
-            } else if (reportNo != null) {
-              matches = reportNumber == reportNo;
-            } else {
-              matches = true;
-            }
+              final String reportDate = examData['reportDate'].toString();
+              final String reportNumber = examData['reportNo'].toString();
 
-            if (matches) {
-              final List<String> tests = (examData['items'] is List)
-                  ? (examData['items'] as List).whereType<String>().toList()
-                  : [];
-              final ipDetailsDoc = await FirebaseFirestore.instance
-                  .collection('patients')
-                  .doc(patientDoc.id)
-                  .collection('ipPrescription')
-                  .doc('details')
-                  .get();
+              bool matches = false;
 
-              final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
-              fetchedData.add({
-                'Report Date': reportDate,
-                'Report No': reportNumber,
-                'Name':
-                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                        .trim(),
-                'IP Ticket': ticketData['ipTicket']?.toString() ?? 'N/A',
-                'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
-                'Report': TextButton(
-                  onPressed: () async {
-                    setState(() {
-                      labTestData = (examData['tests'] as List)
-                          .whereType<Map<String, dynamic>>()
-                          .toList();
-                    });
-                    await printData(
-                      roomNo: ipAdmission['roomNo'] ?? 'N/A',
-                      roomType: ipAdmission['roomType'] ?? 'N/A',
-                      ipAdmitDate: ticketData['ipAdmitDate'] ?? 'N/A',
-                      labTechName: examData['labTechnician'] ?? 'N/A',
-                      labQual: examData['labTechnicianDegree'] ?? 'N/A',
-                      name:
-                          '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                              .trim(),
-                      ipTicket: ticketData['ipTicket']?.toString() ?? 'N/A',
-                      opNumber: patientData['opNumber']?.toString() ?? 'N/A',
-                      address: patientData['address']?.toString() ?? 'N/A',
-                      age: patientData['age']?.toString() ?? 'N/A',
-                      bloodGroup:
-                          patientData['bloodGroup']?.toString() ?? 'N/A',
-                      city: patientData['city']?.toString() ?? 'N/A',
-                      phoneNo: patientData['phone1']?.toString() ?? 'N/A',
-                      sampleCollectedDate:
-                          examData['sampleCollectedDate']?.toString() ?? 'N/A',
-                      sampleDate: examData['sampleDate']?.toString() ?? 'N/A',
-                      reportNo: examData['reportNo']?.toString() ?? 'N/A',
-                      doctorName: ticketData['doctorName']?.toString() ?? 'N/A',
-                      specialization:
-                          ticketData['specialization']?.toString() ?? 'N/A',
-                      reportDate: examData['reportDate']?.toString() ?? 'N/A',
-                    );
-                  },
-                  child: CustomText(text: 'Print'),
-                ),
-              });
+              if (singleDate != null) {
+                matches = reportDate == singleDate;
+              } else if (fromDate != null && toDate != null) {
+                matches = reportDate.compareTo(fromDate) >= 0 &&
+                    reportDate.compareTo(toDate) <= 0;
+              } else if (reportNo != null) {
+                matches = reportNumber == reportNo;
+              } else {
+                matches = true;
+              }
+
+              if (matches) {
+                final List<String> tests = (examData['items'] is List)
+                    ? (examData['items'] as List).whereType<String>().toList()
+                    : [];
+                final ipDetailsDoc = await FirebaseFirestore.instance
+                    .collection('patients')
+                    .doc(patientDoc.id)
+                    .collection('ipPrescription')
+                    .doc('details')
+                    .get();
+
+                final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
+                fetchedData.add({
+                  'Report Date': reportDate,
+                  'Report No': reportNumber,
+                  'Name':
+                      '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                          .trim(),
+                  'IP Ticket': ticketData['ipTicket']?.toString() ?? 'N/A',
+                  'OP Number': patientData['opNumber']?.toString() ?? 'N/A',
+                  'Report': TextButton(
+                    onPressed: () async {
+                      setState(() {
+                        labTestData = (examData['tests'] as List)
+                            .whereType<Map<String, dynamic>>()
+                            .toList();
+                      });
+                      await printData(
+                        roomNo: ipAdmission['roomNo'] ?? 'N/A',
+                        roomType: ipAdmission['roomType'] ?? 'N/A',
+                        ipAdmitDate: ticketData['ipAdmitDate'] ?? 'N/A',
+                        labTechName: examData['labTechnician'] ?? 'N/A',
+                        labQual: examData['labTechnicianDegree'] ?? 'N/A',
+                        name:
+                            '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                                .trim(),
+                        ipTicket: ticketData['ipTicket']?.toString() ?? 'N/A',
+                        opNumber: patientData['opNumber']?.toString() ?? 'N/A',
+                        address: patientData['address']?.toString() ?? 'N/A',
+                        age: patientData['age']?.toString() ?? 'N/A',
+                        bloodGroup:
+                            patientData['bloodGroup']?.toString() ?? 'N/A',
+                        city: patientData['city']?.toString() ?? 'N/A',
+                        phoneNo: patientData['phone1']?.toString() ?? 'N/A',
+                        sampleCollectedDate:
+                            examData['sampleCollectedDate']?.toString() ??
+                                'N/A',
+                        sampleDate: examData['sampleDate']?.toString() ?? 'N/A',
+                        reportNo: examData['reportNo']?.toString() ?? 'N/A',
+                        doctorName:
+                            ticketData['doctorName']?.toString() ?? 'N/A',
+                        specialization:
+                            ticketData['specialization']?.toString() ?? 'N/A',
+                        reportDate: examData['reportDate']?.toString() ?? 'N/A',
+                      );
+                    },
+                    child: CustomText(text: 'Print'),
+                  ),
+                });
+              }
             }
           }
         }
+
+        // update lastPatientDoc for next page
+        lastPatientDoc = patientSnapshot.docs.last;
+        // Sort by Report No
+        fetchedData.sort((a, b) {
+          int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
+          int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
+          return aNo.compareTo(bNo);
+        });
+
+        setState(() {
+          tableData = List.from(fetchedData); // update UI incrementally
+        });
+        // If less than pageSize docs fetched, no more pages
+        if (patientSnapshot.docs.length < pageSize) {
+          morePatients = false;
+        } else {
+          // small delay between pages to avoid overload
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
       }
-
-      // Sort by Report No
-      fetchedData.sort((a, b) {
-        int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
-        int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
-        return aNo.compareTo(bNo);
-      });
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching IP examination data: $e');
     }
@@ -948,7 +976,7 @@ class _IpReportSearch extends State<IpReportSearch> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 headerBackgroundColor: AppColors.blue,
                 headerColor: Colors.white,
                 tableData: tableData,
