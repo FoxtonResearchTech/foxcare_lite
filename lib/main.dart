@@ -16,6 +16,7 @@ import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.d
 import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:lottie/lottie.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -51,8 +52,8 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+          return Scaffold(
+            body: Center(child: Lottie.asset('assets/login_lottie.json')),
           );
         }
 
@@ -67,8 +68,8 @@ class AuthGate extends StatelessWidget {
               FirebaseFirestore.instance.collection('employees').doc(uid).get(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+              return  Scaffold(
+                body: Center(child: Lottie.asset('assets/login_lottie.json')),
               );
             }
 
