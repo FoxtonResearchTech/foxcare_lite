@@ -182,7 +182,6 @@ class _PatientRegistrationState extends State<PatientRegistration> {
         backgroundColor: Colors.green,
       );
 
-
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -406,9 +405,12 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                   //   format: const PdfPageFormat(
                   //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
                   // );
+                  await Printing.layoutPdf(
+                    onLayout: (format) async => pdf.save(),
+                  );
 
-                  await Printing.sharePdf(
-                      bytes: await pdf.save(), filename: '${uid}.pdf');
+                  // await Printing.sharePdf(
+                  //     bytes: await pdf.save(), filename: '${uid}.pdf');
                 },
                 child: CustomText(
                   text: 'Print',
@@ -1139,10 +1141,7 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
   Widget form2() {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(
-
-
-        context).size.height;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Container(
       width: screenWidth * 2,
       height: screenHeight * 0.9,
@@ -1442,13 +1441,9 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                       Container(
                         width: screenWidth * 0.6, // increased from 0.6 to 0.8
                         height: screenHeight * 0.3, // increased from 0.3 to 0.4
-                        child: Lottie.asset(
-                          'assets/new_patient.json',
-                          repeat: false
-
-                        ),
+                        child: Lottie.asset('assets/new_patient.json',
+                            repeat: false),
                       )
-
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.04),

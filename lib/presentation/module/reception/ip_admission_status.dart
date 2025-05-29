@@ -22,6 +22,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
   TextEditingController _patientID = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
   bool isPhoneLoading = false;
+  bool isLoading = false;
 
   final List<String> headers1 = [
     'OP No',
@@ -90,7 +91,8 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
             if (patientData['isIP'] == true) {
               if (ipNumber != null &&
                   ipTicketData['ipTicket'] != null &&
-                  ipTicketData['ipTicket'].toString().toLowerCase() == ipNumber.toLowerCase()) {
+                  ipTicketData['ipTicket'].toString().toLowerCase() ==
+                      ipNumber.toLowerCase()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
@@ -102,7 +104,6 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 matches = true;
               }
             }
-
 
             if (matches) {
               if (ipTicketData['discharged'] == true) {
@@ -156,7 +157,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
       print('Error fetching data: $e');
     }
   }
-  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -251,13 +252,15 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
               ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-           //     mainAxisAlignment: MainAxisAlignment.center,
+                //     mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'IP Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -266,39 +269,40 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                     ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-        Column(
-          children: [
-            SizedBox(height: 28),
-            isLoading
-            ? SizedBox(
-              width: buttonWidth,
-              height: buttonHeight,
-              child: Lottie.asset(
-                'assets/button_loading.json',
-                fit: BoxFit.contain,
-              ),
-            )
-                : CustomButton(
-            label: 'Search',
-            onPressed: () async {
-              setState(() => isLoading = true);
+                  Column(
+                    children: [
+                      SizedBox(height: 28),
+                      isLoading
+                          ? SizedBox(
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isLoading = true);
 
-              await fetchData(ipNumber: _patientID.text);
+                                await fetchData(ipNumber: _patientID.text);
 
-              setState(() => isLoading = false);
-            },
-              width: buttonWidth,
-              height: buttonHeight,
+                                setState(() => isLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
+                    ],
                   ),
-          ],
-        ),
-
-      SizedBox(width: screenHeight * 0.05),
+                  SizedBox(width: screenHeight * 0.05),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'Phone Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: 'Phone Number',
                         width: screenWidth * 0.18,
@@ -312,28 +316,27 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                       SizedBox(height: 28),
                       isPhoneLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json',
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isPhoneLoading = true);
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isPhoneLoading = true);
 
-                          await fetchData(phoneNumber: _phoneNumber.text);
+                                await fetchData(phoneNumber: _phoneNumber.text);
 
-                          setState(() => isPhoneLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                                setState(() => isPhoneLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
-
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
@@ -344,7 +347,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 headers: headers1,
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
+                      ? Colors.red.shade300
                       : Colors.transparent;
                 },
               ),

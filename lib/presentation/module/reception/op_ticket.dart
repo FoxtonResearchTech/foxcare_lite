@@ -1025,7 +1025,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
                       CustomText(
                         text: "OP Ticket Generation",
                         size: screenWidth * 0.025,
-                        color: AppColors.blue,
                       ),
                       Row(
                         children: [

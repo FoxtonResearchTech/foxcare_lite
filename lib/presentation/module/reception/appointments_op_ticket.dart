@@ -1001,7 +1001,6 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                       CustomText(
                         text: "OP Ticket Generation",
                         size: screenWidth * 0.025,
-                        color: AppColors.blue,
                       ),
                       Row(
                         children: [

@@ -41,6 +41,7 @@ class _OpCardPrint extends State<OpCardPrint> {
     super.initState();
     fetchData();
   }
+
   bool isPhoneLoading = false;
   bool isOpLoading = false;
 
@@ -74,7 +75,8 @@ class _OpCardPrint extends State<OpCardPrint> {
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
 
-          if (!data.containsKey('opNumber') || !data.containsKey('opAdmissionDate')) {
+          if (!data.containsKey('opNumber') ||
+              !data.containsKey('opAdmissionDate')) {
             continue;
           }
 
@@ -89,41 +91,53 @@ class _OpCardPrint extends State<OpCardPrint> {
           if (phoneNumber != null &&
               (docPhone1 != phoneQuery && docPhone2 != phoneQuery)) continue;
 
-          double opAmount = double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
+          double opAmount =
+              double.tryParse(data['opAmount']?.toString() ?? '0') ?? 0;
           double opAmountCollected =
-              double.tryParse(data['opAmountCollected']?.toString() ?? '0') ?? 0;
+              double.tryParse(data['opAmountCollected']?.toString() ?? '0') ??
+                  0;
           double balance = opAmount - opAmountCollected;
 
           fetchedData.add({
             'OP No': data['opNumber']?.toString() ?? 'N/A',
             'Date': data['opAdmissionDate'] ?? 'N/A',
-            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'.trim(),
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
             'City': data['city']?.toString() ?? 'N/A',
             'Phone Number': data['phone1'] ?? 'N/A',
             'Action': TextButton(
               onPressed: () async {
                 final pdf = pw.Document();
                 final myColor = PdfColor.fromInt(0xFF106ac2);
-                final font = await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                final font =
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
                 final topImage = pw.MemoryImage(
-                  (await rootBundle.load('assets/opAssets/OP_Card_top.png')).buffer.asUint8List(),
+                  (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
+                      .buffer
+                      .asUint8List(),
                 );
                 final bottomImage = pw.MemoryImage(
-                  (await rootBundle.load('assets/opAssets/OP_Card_back.png')).buffer.asUint8List(),
+                  (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
+                      .buffer
+                      .asUint8List(),
                 );
                 final loc = pw.MemoryImage(
-                  (await rootBundle.load('assets/location_Icon.png')).buffer.asUint8List(),
+                  (await rootBundle.load('assets/location_Icon.png'))
+                      .buffer
+                      .asUint8List(),
                 );
 
                 pdf.addPage(
                   pw.Page(
-                    pageFormat: const PdfPageFormat(8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                    pageFormat: const PdfPageFormat(
+                        8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
                     margin: pw.EdgeInsets.zero,
                     build: (pw.Context context) {
                       return pw.Stack(
                         children: [
-                          pw.Positioned.fill(child: pw.Image(topImage, fit: pw.BoxFit.cover)),
+                          pw.Positioned.fill(
+                              child: pw.Image(topImage, fit: pw.BoxFit.cover)),
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Column(
@@ -146,15 +160,18 @@ class _OpCardPrint extends State<OpCardPrint> {
                                 pw.SizedBox(height: 8),
                                 pw.Text(
                                   'OP Number: ${data['opNumber']}',
-                                  style: pw.TextStyle(fontSize: 10, font: ttf, color: myColor),
+                                  style: pw.TextStyle(
+                                      fontSize: 10, font: ttf, color: myColor),
                                 ),
                                 pw.Text(
                                   'Name: ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}',
-                                  style: pw.TextStyle(fontSize: 10, font: ttf, color: myColor),
+                                  style: pw.TextStyle(
+                                      fontSize: 10, font: ttf, color: myColor),
                                 ),
                                 pw.Text(
                                   'Phone Number: ${data['phone1']}',
-                                  style: pw.TextStyle(fontSize: 10, font: ttf, color: myColor),
+                                  style: pw.TextStyle(
+                                      fontSize: 10, font: ttf, color: myColor),
                                 ),
                               ],
                             ),
@@ -166,39 +183,55 @@ class _OpCardPrint extends State<OpCardPrint> {
                             child: pw.Image(bottomImage, fit: pw.BoxFit.cover),
                           ),
                           pw.Padding(
-                            padding: const pw.EdgeInsets.only(left: 8, right: 8, top: 6),
+                            padding: const pw.EdgeInsets.only(
+                                left: 8, right: 8, top: 6),
                             child: pw.Column(
                               mainAxisAlignment: pw.MainAxisAlignment.end,
                               crossAxisAlignment: pw.CrossAxisAlignment.start,
                               children: [
                                 pw.Row(
-                                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      pw.MainAxisAlignment.spaceBetween,
                                   children: [
                                     pw.Column(
-                                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.start,
                                       children: [
                                         pw.Text(
                                           'Emergency No: ${Constants.emergencyNo}',
-                                          style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              font: ttf,
+                                              color: PdfColors.white),
                                         ),
                                         pw.Text(
                                           'Appointments: ${Constants.appointmentNo}',
-                                          style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
+                                          style: pw.TextStyle(
+                                              fontSize: 8,
+                                              font: ttf,
+                                              color: PdfColors.white),
                                         ),
                                       ],
                                     ),
                                     pw.Row(
                                       children: [
                                         pw.Column(
-                                          crossAxisAlignment: pw.CrossAxisAlignment.end,
+                                          crossAxisAlignment:
+                                              pw.CrossAxisAlignment.end,
                                           children: [
                                             pw.Text(
                                               '${Constants.hospitalCity}',
-                                              style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
+                                              style: pw.TextStyle(
+                                                  fontSize: 8,
+                                                  font: ttf,
+                                                  color: PdfColors.white),
                                             ),
                                             pw.Text(
                                               '${Constants.hospitalDistrict}',
-                                              style: pw.TextStyle(fontSize: 8, font: ttf, color: PdfColors.white),
+                                              style: pw.TextStyle(
+                                                  fontSize: 8,
+                                                  font: ttf,
+                                                  color: PdfColors.white),
                                             ),
                                           ],
                                         ),
@@ -216,11 +249,14 @@ class _OpCardPrint extends State<OpCardPrint> {
                     },
                   ),
                 );
-
-                await Printing.sharePdf(
-                  bytes: await pdf.save(),
-                  filename: '${data['opNumber']}.pdf',
+                await Printing.layoutPdf(
+                  onLayout: (format) async => pdf.save(),
                 );
+
+                // await Printing.sharePdf(
+                //   bytes: await pdf.save(),
+                //   filename: '${data['opNumber']}.pdf',
+                // );
               },
               child: const CustomText(text: 'Print'),
             )
@@ -244,7 +280,6 @@ class _OpCardPrint extends State<OpCardPrint> {
       print('Error fetching data: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -340,13 +375,15 @@ class _OpCardPrint extends State<OpCardPrint> {
               ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-               // mainAxisAlignment: MainAxisAlignment.center,
+                // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: "OP Number"),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -357,35 +394,38 @@ class _OpCardPrint extends State<OpCardPrint> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isOpLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Ensure this path is correct
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure this path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isOpLoading = true);
-                          await fetchData(opNumber: _patientID.text);
-                          setState(() => isOpLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isOpLoading = true);
+                                await fetchData(opNumber: _patientID.text);
+                                setState(() => isOpLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
-
                   SizedBox(width: screenHeight * 0.05),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'Phone Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -396,29 +436,30 @@ class _OpCardPrint extends State<OpCardPrint> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isPhoneLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Update the path to your Lottie file
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Update the path to your Lottie file
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isPhoneLoading = true);
-                          await fetchData(phoneNumber: _phoneNumber.text);
-                          setState(() => isPhoneLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isPhoneLoading = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => isPhoneLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
-
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),

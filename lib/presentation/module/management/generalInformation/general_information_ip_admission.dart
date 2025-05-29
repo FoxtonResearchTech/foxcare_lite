@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
@@ -31,6 +32,8 @@ class _GeneralInformationIpAdmission
   TextEditingController _ipNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
   int selectedIndex = 1;
+  bool isLoading = false;
+  bool isLoading2 = false;
   final List<String> headers1 = [
     'IP Ticket',
     'OP NO',
@@ -68,7 +71,7 @@ class _GeneralInformationIpAdmission
   }) async {
     print('Fetching data with IP Number: $ipNumber');
 
-    DocumentSnapshot? lastPatientDoc; // for paging
+    DocumentSnapshot? lastPatientDoc;
     List<Map<String, dynamic>> allFetchedData = [];
     final patientsCollection =
         FirebaseFirestore.instance.collection('patients');
@@ -83,7 +86,6 @@ class _GeneralInformationIpAdmission
         final patientSnapshot = await query.get();
 
         if (patientSnapshot.docs.isEmpty) {
-          // No more patients to fetch
           break;
         }
 
@@ -100,7 +102,10 @@ class _GeneralInformationIpAdmission
 
             bool matches = false;
             if (patientData['isIP'] == true) {
-              if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+              if (ipNumber != null &&
+                  ipTicketData['ipTicket'] != null &&
+                  ipTicketData['ipTicket'].toString().toLowerCase().trim() ==
+                      ipNumber.toLowerCase().trim()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
@@ -163,6 +168,14 @@ class _GeneralInformationIpAdmission
                       context,
                       MaterialPageRoute(
                         builder: (context) => ReceptionIpPatient(
+                          specialization:
+                              ipTicketData['specialization'] ?? 'N/A',
+                          doctor: ipTicketData['doctorName'] ?? 'N/A',
+                          dob: patientData['dob'] ?? 'N/A',
+                          sex: patientData['sex'] ?? 'N/A',
+                          phone1: patientData['phone1'] ?? 'N/A',
+                          phone2: patientData['phone2'] ?? 'N/A',
+                          bloodGroup: patientData['bloodGroup'] ?? 'N/A',
                           date: ipTicketData['ipAdmitDate'] ?? 'N/A',
                           patientID: patientData['opNumber'] ?? 'N/A',
                           ipNumber: ipTicketData['ipTicket'] ?? 'N/A',
@@ -173,7 +186,13 @@ class _GeneralInformationIpAdmission
                           place: patientData['state'] ?? 'N/A',
                           address: patientData['address1'] ?? 'N/A',
                           pincode: patientData['pincode'] ?? 'N/A',
-                          primaryInfo: ipTicketData['otherComments'] ?? 'N/A',
+                          primaryInfo: (ipTicketData['investigationTests']
+                                      ?['diagnosisSigns'] ??
+                                  'N/A') +
+                              ' & ' +
+                              (ipTicketData['investigationTests']
+                                      ?['symptoms'] ??
+                                  'N/A'),
                           temperature: ipTicketData['temperature'] ?? 'N/A',
                           bloodPressure: ipTicketData['bloodPressure'] ?? 'N/A',
                           sugarLevel: ipTicketData['bloodSugarLevel'] ?? 'N/A',
@@ -205,7 +224,7 @@ class _GeneralInformationIpAdmission
                     child: const CustomText(text: 'Abort')),
               });
 
-              break; // one matching ipTicket per patient only
+              break;
             }
           }
         }
@@ -216,7 +235,6 @@ class _GeneralInformationIpAdmission
           tableData1 = List.from(allFetchedData);
         });
 
-        // Optional small delay to ease UI update / avoid rate limits
         await Future.delayed(delayBetweenPages);
       }
 
@@ -280,14 +298,14 @@ class _GeneralInformationIpAdmission
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
             left: screenWidth * 0.04,
             right: screenWidth * 0.04,
             bottom: screenWidth * 0.33,
@@ -300,19 +318,19 @@ class _GeneralInformationIpAdmission
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "IP Admission ",
-                          size: screenWidth * .015,
+                          size: screenWidth * .03,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -322,40 +340,113 @@ class _GeneralInformationIpAdmission
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                //  mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomTextField(
-                    hintText: 'IP Number',
-                    width: screenWidth * 0.15,
-                    controller: _ipNumber,
+                  // IP Number section
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(text: 'IP Number'),
+                          SizedBox(height: 5),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.18,
+                            controller: _ipNumber,
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: screenWidth * 0.02),
+
+                      // Button aligned with text field
+                      Column(
+                        children: [
+                          SizedBox(height: 28), // Adjust this value if needed
+                          isLoading
+                              ? SizedBox(
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  child: Lottie.asset(
+                                    'assets/button_loading.json',
+                                    fit: BoxFit.contain,
+                                  ),
+                                )
+                              : CustomButton(
+                                  label: 'Search',
+                                  onPressed: () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+
+                                    await fetchData(ipNumber: _ipNumber.text);
+
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  },
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                ),
+                        ],
+                      ),
+                    ],
                   ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(ipNumber: _ipNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+
+                  // Phone Number section
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Phone Number'),
+                      SizedBox(height: 5),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+
+                  // Button aligned with text field
+                  Column(
+                    children: [
+                      SizedBox(
+                          height: 28), // Adjust this value to match the field
+                      isLoading2
+                          ? SizedBox(
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() {
+                                  isLoading2 = true;
+                                });
+
+                                await fetchData(phoneNumber: _phoneNumber.text);
+
+                                setState(() {
+                                  isLoading2 = false;
+                                });
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.04),
               LazyDataTable(
                 headerColor: Colors.white,
                 headerBackgroundColor: AppColors.blue,

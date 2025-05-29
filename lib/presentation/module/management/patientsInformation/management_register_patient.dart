@@ -424,9 +424,12 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   //   format: const PdfPageFormat(
                   //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
                   // );
+                  await Printing.layoutPdf(
+                    onLayout: (format) async => pdf.save(),
+                  );
 
-                  await Printing.sharePdf(
-                      bytes: await pdf.save(), filename: '${uid}.pdf');
+                  // await Printing.sharePdf(
+                  //     bytes: await pdf.save(), filename: '${uid}.pdf');
                 },
                 child: CustomText(
                   text: 'Print',

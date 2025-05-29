@@ -43,6 +43,8 @@ class _BookAppointments extends State<BookAppointments> {
 
   String? selectedDoctor;
   bool isLoading = false;
+  bool opSearch = false;
+  bool phoneSearch = false;
 
   DateTime now = DateTime.now();
 
@@ -69,8 +71,9 @@ class _BookAppointments extends State<BookAppointments> {
 
   @override
   void initState() {
-    super.initState();
     fetchData(date: today);
+
+    super.initState();
     fetchDoctorAndSpecialization();
     // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
     //   fetchData();
@@ -84,14 +87,14 @@ class _BookAppointments extends State<BookAppointments> {
   }
 
   Future<void> searchPatients(
-    String opNumber,
-    String phoneNumber, {
+    String? opNumber,
+    String? phoneNumber, {
     int pageSize = 20,
     Duration delayBetweenPages = const Duration(milliseconds: 100),
   }) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
-    final lowerOp = opNumber.trim().toLowerCase();
-    final lowerPhone = phoneNumber.trim().toLowerCase();
+    final lowerOp = opNumber?.trim().toLowerCase();
+    final lowerPhone = phoneNumber?.trim().toLowerCase();
     DocumentSnapshot? lastDoc;
     DocumentSnapshot? matchedDoc;
 
@@ -111,8 +114,8 @@ class _BookAppointments extends State<BookAppointments> {
       for (final doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         final docOp = data['opNumber']?.toString().toLowerCase();
-        final docPhone1 = data['phone1']?.toString().toLowerCase();
-        final docPhone2 = data['phone2']?.toString().toLowerCase();
+        final docPhone1 = data['phone1']?.toString();
+        final docPhone2 = data['phone2']?.toString();
 
         if (docOp == lowerOp ||
             docPhone1 == lowerPhone ||
@@ -422,7 +425,8 @@ class _BookAppointments extends State<BookAppointments> {
   Widget dashboard() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
@@ -518,31 +522,57 @@ class _BookAppointments extends State<BookAppointments> {
                                           hintText: 'OP Number',
                                           width: screenWidth * 0.1,
                                         ),
-                                        CustomButton(
-                                          label: 'Search',
-                                          onPressed: () async {
-                                            await searchPatients(
-                                                opNumberSearch.text,
-                                                phoneNumberSearch.text);
-                                          },
-                                          width: screenWidth * 0.1,
-                                          height: screenHeight * 0.045,
-                                        ),
+                                        opSearch
+                                            ? SizedBox(
+                                                width: buttonWidth,
+                                                height: buttonHeight,
+                                                child: Lottie.asset(
+                                                  'assets/button_loading.json',
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              )
+                                            : CustomButton(
+                                                label: 'Search',
+                                                onPressed: () async {
+                                                  setState(
+                                                      () => opSearch = true);
+                                                  await searchPatients(
+                                                      opNumberSearch.text,
+                                                      phoneNumberSearch.text);
+                                                  setState(
+                                                      () => opSearch = false);
+                                                },
+                                                width: screenWidth * 0.1,
+                                                height: screenHeight * 0.045,
+                                              ),
                                         CustomTextField(
                                           controller: phoneNumberSearch,
                                           hintText: 'Mobile Number',
                                           width: screenWidth * 0.1,
                                         ),
-                                        CustomButton(
-                                          label: 'Search',
-                                          onPressed: () async {
-                                            await searchPatients(
-                                                opNumberSearch.text,
-                                                phoneNumberSearch.text);
-                                          },
-                                          width: screenWidth * 0.1,
-                                          height: screenHeight * 0.045,
-                                        )
+                                        phoneSearch
+                                            ? SizedBox(
+                                                width: buttonWidth,
+                                                height: buttonHeight,
+                                                child: Lottie.asset(
+                                                  'assets/button_loading.json',
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              )
+                                            : CustomButton(
+                                                label: 'Search',
+                                                onPressed: () async {
+                                                  setState(
+                                                      () => phoneSearch = true);
+                                                  await searchPatients(
+                                                      phoneNumberSearch.text,
+                                                      opNumberSearch.text);
+                                                  setState(() =>
+                                                      phoneSearch = false);
+                                                },
+                                                width: screenWidth * 0.1,
+                                                height: screenHeight * 0.045,
+                                              )
                                       ],
                                     ),
                                     SizedBox(height: screenHeight * 0.08),

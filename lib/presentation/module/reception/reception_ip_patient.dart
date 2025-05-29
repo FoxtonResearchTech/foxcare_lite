@@ -21,6 +21,13 @@ class ReceptionIpPatient extends StatefulWidget {
   final String name;
   final String age;
   final String place;
+  final String doctor;
+  final String specialization;
+  final String dob;
+  final String sex;
+  final String bloodGroup;
+  final String phone1;
+  final String phone2;
   final String address;
   final String pincode;
   final String primaryInfo;
@@ -42,6 +49,13 @@ class ReceptionIpPatient extends StatefulWidget {
     required this.sugarLevel,
     required this.ipNumber,
     required this.date,
+    required this.doctor,
+    required this.specialization,
+    required this.dob,
+    required this.sex,
+    required this.bloodGroup,
+    required this.phone1,
+    required this.phone2,
   }) : super(key: key);
   @override
   State<ReceptionIpPatient> createState() => _ReceptionIpPatient();
@@ -256,164 +270,289 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
-            left: screenWidth * 0.05,
-            right: screenWidth * 0.05,
-            bottom: screenWidth * 0.05,
+            top: screenHeight * 0.06,
+            left: screenWidth * 0.07,
+            right: screenWidth * 0.07,
+            bottom: screenWidth * 0.08,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(
-                height: 35,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                      child: CustomTextField(
-                    readOnly: true,
-                    controller: TextEditingController(text: widget.ipNumber),
-                    hintText: 'IP Number',
-                    obscureText: false,
-                    width: screenWidth * 0.05,
-                  )),
-                  const SizedBox(width: 100),
-                  Expanded(
-                      child: CustomTextField(
-                    controller: TextEditingController(text: widget.date),
-                    hintText: 'Date',
-                    readOnly: true,
-                    obscureText: false,
-                    width: screenWidth * 0.05,
-                  )),
-                ],
-              ),
-              const SizedBox(height: 26),
-
-              // Row 2: Full Name and Age
               Row(
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: CustomTextField(
-                      controller: TextEditingController(text: widget.name),
-                      hintText: 'Full Name',
-                      obscureText: false,
-                      readOnly: true,
-                      width: screenWidth * 0.05,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: CustomTextField(
-                      controller: TextEditingController(text: widget.age),
-                      hintText: 'Age',
-                      obscureText: false,
-                      readOnly: true,
-                      width: screenWidth * 0.05,
-                    ),
+                  CustomText(
+                    text: 'IP Admission ',
+                    size: screenWidth * 0.03,
+                    color: AppColors.blue,
                   ),
                 ],
               ),
-              const SizedBox(height: 26),
-
-              // Row 3: Address and Pincode
+              SizedBox(height: screenHeight * 0.03),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                      flex: 2,
-                      child: CustomTextField(
-                        controller: TextEditingController(text: widget.address),
-                        hintText: 'Address',
-                        readOnly: true,
-                        obscureText: false,
-                        width: screenWidth * 0.05,
-                      )),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: CustomTextField(
-                    controller: TextEditingController(text: widget.pincode),
-                    hintText: 'Pin code',
-                    readOnly: true,
-                    obscureText: false,
-                    width: screenWidth * 0.05,
-                  )),
-                ],
-              ),
-              const SizedBox(height: 26),
-              CustomTextField(
-                controller: TextEditingController(text: widget.primaryInfo),
-                readOnly: true,
-                obscureText: false,
-                hintText: 'Basic Info',
-                width: screenWidth * 0.9,
-                verticalSize: screenWidth * 0.03,
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                SizedBox(
-                  width: 250,
-                  child: CustomDropdown(
-                    label: 'Proceed To',
-                    items: [
-                      'Medication',
-                      'Examination',
-                      'Appointment',
-                      'Investigation'
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'IP Ticket No : ',
+                        size: screenWidth * 0.02,
+                      ),
+                      CustomText(
+                        text: widget.ipNumber,
+                        size: screenWidth * 0.02,
+                      ),
                     ],
-                    selectedItem: selectedValue,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedValue = value!;
-                      });
-                    },
                   ),
-                ),
-                SizedBox(
-                  width: 250,
-                  child: CustomDropdown(
-                    label: 'Select IP Admission Room',
-                    items: ['All', 'Room', 'Ward Room', 'VIP Room', 'ICU'],
-                    selectedItem: selectedIPAdmissionValue,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedIPAdmissionValue = value!;
-                      });
-                    },
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Admission Date : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: dateTime.year.toString() +
+                            '-' +
+                            dateTime.month.toString().padLeft(2, '0') +
+                            '-' +
+                            dateTime.day.toString().padLeft(2, '0'),
+                        size: screenWidth * 0.015,
+                      ),
+                      SizedBox(width: screenWidth * 0.02),
+                      CustomText(
+                        text: 'Admission Time : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: dateTime.hour.toString() +
+                            ':' +
+                            dateTime.minute.toString().padLeft(2, '0') +
+                            ':' +
+                            dateTime.second.toString().padLeft(2, '0'),
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
                   ),
-                ),
-                CustomTextField(
-                    controller: TextEditingController(
-                      text: dateTime.year.toString() +
-                          '-' +
-                          dateTime.month.toString().padLeft(2, '0') +
-                          '-' +
-                          dateTime.day.toString().padLeft(2, '0'),
-                    ),
-                    hintText: 'Date',
-                    width: screenWidth * 0.075),
-                CustomTextField(
-                    controller: TextEditingController(
-                      text: dateTime.hour.toString() +
-                          ':' +
-                          dateTime.minute.toString().padLeft(2, '0') +
-                          ':' +
-                          dateTime.second.toString().padLeft(2, '0'),
-                    ),
-                    hintText: 'Time',
-                    width: screenWidth * 0.075)
-              ]),
-              const SizedBox(
-                height: 35,
+                ],
               ),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Doctor Name : ',
+                    size: screenWidth * 0.015,
+                  ),
+                  CustomText(
+                    text: widget.doctor,
+                    size: screenWidth * 0.015,
+                  ),
+                  SizedBox(width: screenWidth * 0.02),
+                  CustomText(
+                    text: 'Specialization : ',
+                    size: screenWidth * 0.015,
+                  ),
+                  CustomText(
+                    text: widget.specialization,
+                    size: screenWidth * 0.015,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.03),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Patient Information ',
+                    size: screenWidth * 0.023,
+                    color: AppColors.blue,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.03),
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Name : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.name,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.2),
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'OP Number : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.patientID,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Age : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.age,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.1),
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'DOB : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.dob,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.1),
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Sex : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.sex,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.1),
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Blood Group : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.bloodGroup,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Phone 1 : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.phone1,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.1),
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Phone 2 : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.phone2,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      CustomText(
+                        text: 'Address : ',
+                        size: screenWidth * 0.015,
+                      ),
+                      CustomText(
+                        text: widget.address,
+                        size: screenWidth * 0.015,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Finding & Treatment ',
+                        size: screenWidth * 0.02,
+                        color: AppColors.blue,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      CustomText(
+                        text: '         * ${widget.primaryInfo}',
+                        size: screenWidth * 0.015,
+                      )
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Admissions : ',
+                    size: screenWidth * 0.02,
+                    color: AppColors.blue,
+                  ),
+                  SizedBox(width: screenWidth * 0.04),
+                  Padding(
+                    padding: EdgeInsets.only(top: screenHeight * 0.03),
+                    child: SizedBox(
+                      height: screenHeight * 0.04,
+                      width: screenWidth * 0.2,
+                      child: CustomDropdown(
+                        label: 'Select IP Admission Room',
+                        items: ['All', 'Room', 'Ward Room', 'VIP Room', 'ICU'],
+                        selectedItem: selectedIPAdmissionValue,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedIPAdmissionValue = value!;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.02),
               Center(child: getAdmissionWidget()),
-              const SizedBox(
-                height: 30,
+              SizedBox(
+                height: screenHeight * 0.05,
               ),
               Container(
                 padding: EdgeInsets.only(left: screenWidth * 0.05),
@@ -535,7 +674,6 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   ],
                 ),
               ),
-
               const SizedBox(
                 height: 35,
               ),
@@ -545,6 +683,45 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                   child: CustomButton(
                     label: 'Admit',
                     onPressed: () {
+                      final collectedAmountText =
+                          _ipAdmissionCollected.text.trim();
+                      final totalAmountText =
+                          _ipAdmissionTotalAmount.text.trim();
+                      if (selectedIPAdmissionValue == 'All') {
+                        CustomSnackBar(context,
+                            message: 'Please Choose Valid Room',
+                            backgroundColor: Colors.orange);
+
+                        return;
+                      }
+                      // Validate collected amount is not empty
+                      if (collectedAmountText.isEmpty) {
+                        CustomSnackBar(context,
+                            message: 'Please enter the collected amount',
+                            backgroundColor: Colors.orange);
+
+                        return;
+                      }
+
+                      // Validate total amount is not empty (optional)
+                      if (totalAmountText.isEmpty) {
+                        CustomSnackBar(context,
+                            message: 'Please enter the total amount',
+                            backgroundColor: Colors.orange);
+
+                        return;
+                      }
+
+                      // Parse and validate amount
+                      final collectedAmount =
+                          double.tryParse(collectedAmountText);
+                      if (collectedAmount == null || collectedAmount < 0) {
+                        CustomSnackBar(context,
+                            message: 'Please enter a valid collected amount',
+                            backgroundColor: Colors.orange);
+
+                        return;
+                      }
                       _savePrescriptionData();
                       updateRoomAvailability();
                     },

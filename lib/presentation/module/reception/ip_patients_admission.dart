@@ -70,7 +70,8 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
 
     DocumentSnapshot? lastPatientDoc;
     List<Map<String, dynamic>> allFetchedData = [];
-    final patientsCollection = FirebaseFirestore.instance.collection('patients');
+    final patientsCollection =
+        FirebaseFirestore.instance.collection('patients');
 
     try {
       while (true) {
@@ -90,7 +91,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
           final patientData = patientDoc.data();
 
           Query ipTicketsQuery =
-          patientsCollection.doc(patientId).collection('ipTickets');
+              patientsCollection.doc(patientId).collection('ipTickets');
           final ipTicketsSnapshot = await ipTicketsQuery.get();
 
           for (var ipTicketDoc in ipTicketsSnapshot.docs) {
@@ -100,10 +101,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
             if (patientData['isIP'] == true) {
               if (ipNumber != null &&
                   ipTicketData['ipTicket'] != null &&
-                  ipTicketData['ipTicket']
-                      .toString()
-                      .toLowerCase()
-                      .trim() ==
+                  ipTicketData['ipTicket'].toString().toLowerCase().trim() ==
                       ipNumber.toLowerCase().trim()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
@@ -153,8 +151,8 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                 'OP NO': patientData['opNumber'] ?? 'N/A',
                 'IP Ticket': ipTicketData['ipTicket'] ?? 'N/A',
                 'Name':
-                '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                    .trim(),
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
                 'Age': patientData['age'] ?? 'N/A',
                 'Place': patientData['city'] ?? 'N/A',
                 'Address': patientData['address1'] ?? 'N/A',
@@ -167,17 +165,31 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ReceptionIpPatient(
+                          specialization:
+                              ipTicketData['specialization'] ?? 'N/A',
+                          doctor: ipTicketData['doctorName'] ?? 'N/A',
+                          dob: patientData['dob'] ?? 'N/A',
+                          sex: patientData['sex'] ?? 'N/A',
+                          phone1: patientData['phone1'] ?? 'N/A',
+                          phone2: patientData['phone2'] ?? 'N/A',
+                          bloodGroup: patientData['bloodGroup'] ?? 'N/A',
                           date: ipTicketData['ipAdmitDate'] ?? 'N/A',
                           patientID: patientData['opNumber'] ?? 'N/A',
                           ipNumber: ipTicketData['ipTicket'] ?? 'N/A',
                           name:
-                          '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
-                              .trim(),
+                              '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                  .trim(),
                           age: patientData['age'] ?? 'N/A',
                           place: patientData['state'] ?? 'N/A',
                           address: patientData['address1'] ?? 'N/A',
                           pincode: patientData['pincode'] ?? 'N/A',
-                          primaryInfo: ipTicketData['otherComments'] ?? 'N/A',
+                          primaryInfo: (ipTicketData['investigationTests']
+                                      ?['diagnosisSigns'] ??
+                                  'N/A') +
+                              ' & ' +
+                              (ipTicketData['investigationTests']
+                                      ?['symptoms'] ??
+                                  'N/A'),
                           temperature: ipTicketData['temperature'] ?? 'N/A',
                           bloodPressure: ipTicketData['bloodPressure'] ?? 'N/A',
                           sugarLevel: ipTicketData['bloodSugarLevel'] ?? 'N/A',
@@ -228,7 +240,6 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
       print('Error fetching data: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +327,7 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                     ),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                    //  mainAxisAlignment: MainAxisAlignment.center,
+                      //  mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // IP Number section
                         Row(
@@ -339,32 +350,34 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                             // Button aligned with text field
                             Column(
                               children: [
-                                SizedBox(height: 28), // Adjust this value if needed
+                                SizedBox(
+                                    height: 28), // Adjust this value if needed
                                 isLoading
                                     ? SizedBox(
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  child: Lottie.asset(
-                                    'assets/button_loading.json',
-                                    fit: BoxFit.contain,
-                                  ),
-                                )
+                                        width: buttonWidth,
+                                        height: buttonHeight,
+                                        child: Lottie.asset(
+                                          'assets/button_loading.json',
+                                          fit: BoxFit.contain,
+                                        ),
+                                      )
                                     : CustomButton(
-                                  label: 'Search',
-                                  onPressed: () async {
-                                    setState(() {
-                                      isLoading = true;
-                                    });
+                                        label: 'Search',
+                                        onPressed: () async {
+                                          setState(() {
+                                            isLoading = true;
+                                          });
 
-                                    await fetchData(ipNumber: _ipNumber.text);
+                                          await fetchData(
+                                              ipNumber: _ipNumber.text);
 
-                                    setState(() {
-                                      isLoading = false;
-                                    });
-                                  },
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                ),
+                                          setState(() {
+                                            isLoading = false;
+                                          });
+                                        },
+                                        width: buttonWidth,
+                                        height: buttonHeight,
+                                      ),
                               ],
                             ),
                           ],
@@ -381,7 +394,6 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                             CustomTextField(
                               hintText: '',
                               width: screenWidth * 0.18,
-
                               controller: _phoneNumber,
                             ),
                           ],
@@ -391,37 +403,39 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                         // Button aligned with text field
                         Column(
                           children: [
-                            SizedBox(height: 28), // Adjust this value to match the field
+                            SizedBox(
+                                height:
+                                    28), // Adjust this value to match the field
                             isLoading2
                                 ? SizedBox(
-                              width: buttonWidth,
-                              height: buttonHeight,
-                              child: Lottie.asset(
-                                'assets/button_loading.json',
-                                fit: BoxFit.contain,
-                              ),
-                            )
+                                    width: buttonWidth,
+                                    height: buttonHeight,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
                                 : CustomButton(
-                              label: 'Search',
-                              onPressed: () async {
-                                setState(() {
-                                  isLoading2 = true;
-                                });
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isLoading2 = true;
+                                      });
 
-                                await fetchData(phoneNumber: _phoneNumber.text);
+                                      await fetchData(
+                                          phoneNumber: _phoneNumber.text);
 
-                                setState(() {
-                                  isLoading2 = false;
-                                });
-                              },
-                              width: buttonWidth,
-                              height: buttonHeight,
-                            ),
+                                      setState(() {
+                                        isLoading2 = false;
+                                      });
+                                    },
+                                    width: buttonWidth,
+                                    height: buttonHeight,
+                                  ),
                           ],
                         ),
                       ],
                     ),
-
                     SizedBox(height: screenHeight * 0.08),
                     isFetchDataLoading
                         ? Container(
@@ -448,6 +462,5 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
         ],
       ),
     );
-
   }
 }
