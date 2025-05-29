@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
+import 'package:foxcare_lite/presentation/module/reception/book_appointments.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
@@ -729,7 +730,8 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                   setState(() {
                     clearFields();
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => BookAppointments()));
                 },
                 child: const Text('Close'),
               ),
@@ -904,16 +906,17 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
     // Convert documents to map list
     for (var doc in docMap.values) {
       patientsList.add({
-        'opNumber': doc['opNumber'] ?? '',
-        'name':
-            ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '')).trim(),
-        'age': doc['age'] ?? '',
-        'phone': doc['phone1'] ?? '',
-        'address': doc['address1'] ?? '',
+        'opNumber': doc['opNumber'] ?? 'N/A',
+        'name': ((doc['firstName'] ?? 'N/A') + ' ' + (doc['lastName'] ?? 'N/A'))
+            .trim(),
+        'age': doc['age'] ?? 'N/A',
+        'phone': doc['phone1'] ?? 'N/A',
+        'phone2': doc['phone2'] ?? 'N/A',
+        'address': doc['address1'] ?? 'N/A',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
         'sex': doc['sex'] ?? 'N/A',
-        'dob': doc['dob'] ?? '',
+        'dob': doc['dob'] ?? 'N/A',
       });
     }
 

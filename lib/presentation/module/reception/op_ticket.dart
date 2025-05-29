@@ -723,7 +723,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   setState(() {
                     clearFields();
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => OpTicketPage()));
                 },
                 child: const Text('Close'),
               ),
@@ -899,16 +900,17 @@ class _OpTicketPageState extends State<OpTicketPage> {
     // Convert documents to map list
     for (var doc in docMap.values) {
       patientsList.add({
-        'opNumber': doc['opNumber'] ?? '',
-        'name':
-            ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '')).trim(),
-        'age': doc['age'] ?? '',
-        'phone': doc['phone1'] ?? '',
-        'address': doc['address1'] ?? '',
+        'opNumber': doc['opNumber'] ?? 'N/A',
+        'name': ((doc['firstName'] ?? 'N/A') + ' ' + (doc['lastName'] ?? 'N/A'))
+            .trim(),
+        'age': doc['age'] ?? 'N/A',
+        'phone': doc['phone1'] ?? 'N/A',
+        'phone2': doc['phone2'] ?? 'N/A',
+        'address': doc['address1'] ?? 'N/A',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
         'sex': doc['sex'] ?? 'N/A',
-        'dob': doc['dob'] ?? '',
+        'dob': doc['dob'] ?? 'N/A',
       });
     }
 

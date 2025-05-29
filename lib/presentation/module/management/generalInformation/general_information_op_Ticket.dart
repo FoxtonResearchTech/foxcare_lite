@@ -734,7 +734,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                   setState(() {
                     clearFields();
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => GeneralInformationOpTicket()));
                 },
                 child: const Text('Close'),
               ),
@@ -892,16 +893,17 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
     // Convert documents to map list
     for (var doc in docMap.values) {
       patientsList.add({
-        'opNumber': doc['opNumber'] ?? '',
-        'name':
-            ((doc['firstName'] ?? '') + ' ' + (doc['lastName'] ?? '')).trim(),
-        'age': doc['age'] ?? '',
-        'phone': doc['phone1'] ?? '',
-        'address': doc['address1'] ?? '',
+        'opNumber': doc['opNumber'] ?? 'N/A',
+        'name': ((doc['firstName'] ?? 'N/A') + ' ' + (doc['lastName'] ?? 'N/A'))
+            .trim(),
+        'age': doc['age'] ?? 'N/A',
+        'phone': doc['phone1'] ?? 'N/A',
+        'phone2': doc['phone2'] ?? 'N/A',
+        'address': doc['address1'] ?? 'N/A',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
         'sex': doc['sex'] ?? 'N/A',
-        'dob': doc['dob'] ?? '',
+        'dob': doc['dob'] ?? 'N/A',
       });
     }
 
@@ -1723,6 +1725,38 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                   : CustomButton(
                       label: 'Generate',
                       onPressed: () async {
+                        final collectedAmountText =
+                            opTicketCollectedAmount.text.trim();
+                        final totalAmountText = opTicketTotalAmount.text.trim();
+
+                        // Validate collected amount is not empty
+                        if (collectedAmountText.isEmpty) {
+                          CustomSnackBar(context,
+                              message: 'Please enter the collected amount',
+                              backgroundColor: Colors.orange);
+
+                          return;
+                        }
+
+                        // Validate total amount is not empty (optional)
+                        if (totalAmountText.isEmpty) {
+                          CustomSnackBar(context,
+                              message: 'Please enter the total amount',
+                              backgroundColor: Colors.orange);
+
+                          return;
+                        }
+
+                        // Parse and validate amount
+                        final collectedAmount =
+                            double.tryParse(collectedAmountText);
+                        if (collectedAmount == null || collectedAmount < 0) {
+                          CustomSnackBar(context,
+                              message: 'Please enter a valid collected amount',
+                              backgroundColor: Colors.orange);
+
+                          return;
+                        }
                         String? selectedPatientId =
                             selectedPatient?['opNumber'];
                         await initializeOpTicketID(selectedPatientId!);

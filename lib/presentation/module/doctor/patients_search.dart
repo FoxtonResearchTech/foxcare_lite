@@ -98,7 +98,11 @@ class _PatientsSearch extends State<PatientsSearch> {
           final opTicketsSnapshot = await docRef.collection('opTickets').get();
           for (var opDoc in opTicketsSnapshot.docs) {
             if (opNumber != null && opNumber.isNotEmpty) {
-              if (opDoc.data()['opTicket'] != opNumber) continue;
+              if (opNumber.isNotEmpty &&
+                  (opDoc.data()['opTicket']?.toString().toLowerCase() !=
+                      opNumber.toLowerCase())) {
+                continue;
+              }
             }
 
             allFetchedData.add({
@@ -117,7 +121,11 @@ class _PatientsSearch extends State<PatientsSearch> {
           final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
           for (var ipDoc in ipTicketsSnapshot.docs) {
             if (opNumber != null && opNumber.isNotEmpty) {
-              if (ipDoc.data()['ipTicket'] != opNumber) continue;
+              if (opNumber.isNotEmpty &&
+                  (ipDoc.data()['ipTicket']?.toString().toLowerCase() !=
+                      opNumber.toLowerCase())) {
+                continue;
+              }
             }
 
             allFetchedData.add({
@@ -135,13 +143,11 @@ class _PatientsSearch extends State<PatientsSearch> {
         }
 
         lastDocument = snapshot.docs.last;
-
+        setState(() {
+          tableData1 = List.from(allFetchedData);
+        });
         // Optional throttle delay
         await Future.delayed(delayBetweenPages);
-        setState(() {
-          tableData1 = allFetchedData;
-          print(tableData1);
-        });
       }
 
       print('Finished fetching ${allFetchedData.length} total tickets.');
