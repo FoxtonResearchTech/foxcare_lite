@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
 class MonthlyDoctorSchedule extends StatefulWidget {
@@ -183,19 +184,19 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.07),
+                  padding: EdgeInsets.only(top: screenWidth * 0.03),
                   child: Column(
                     children: [
                       CustomText(
                         text: "Monthly Doctor Schedule",
-                        size: screenWidth * .015,
+                        size: screenWidth * .025,
                       ),
                     ],
                   ),
                 ),
                 Container(
                   width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
                   decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -521,7 +522,9 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
                 ],
               ),
               child: FloatingActionButton.extended(
-                onPressed: _saveSchedules,
+                onPressed: () async {
+                  await _saveSchedules();
+                },
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 icon: const Icon(
@@ -578,12 +581,18 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
     );
   }
 
-  void _saveSchedules() async {
+  Future<void> _saveSchedules() async {
     try {
       final firestore = FirebaseFirestore.instance;
       final scheduleCollection = firestore.collection('doctorSchedulesMonthly');
 
       for (var schedule in schedules) {
+        if (schedule['doctorName'] == '' || schedule['specialization'] == '') {
+          CustomSnackBar(context,
+              message: 'Please Fill All The Fields',
+              backgroundColor: Colors.orange);
+          return;
+        }
         await scheduleCollection.add({
           'date': schedule['date'].toIso8601String(),
           'doctorName': schedule['doctorName'],
@@ -596,13 +605,12 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Schedules saved to Firestore ✅")),
-      );
+      CustomSnackBar(context,
+          message: 'Schedule Added Successfully',
+          backgroundColor: Colors.green);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving: $e")),
-      );
+      CustomSnackBar(context,
+          message: 'Failed To Save', backgroundColor: Colors.red);
     }
   }
 
@@ -630,11 +638,11 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
     );
 
     if (shouldDelete == true) {
-      deleteEntireCollection();
+      await deleteEntireCollection();
     }
   }
 
-  void deleteEntireCollection() async {
+  Future<void> deleteEntireCollection() async {
     try {
       final collectionRef =
           FirebaseFirestore.instance.collection('doctorSchedulesMonthly');
@@ -643,10 +651,13 @@ class _MonthlyDoctorScheduleState extends State<MonthlyDoctorSchedule> {
       for (DocumentSnapshot doc in snapshot.docs) {
         await doc.reference.delete();
       }
-
+      CustomSnackBar(context,
+          message: 'Schedules Deleted', backgroundColor: Colors.green);
       print('Entire collection deleted successfully');
     } catch (e) {
       print('Error deleting collection: $e');
+      CustomSnackBar(context,
+          message: 'Failed To Delete Schedules', backgroundColor: Colors.red);
     }
   }
 }

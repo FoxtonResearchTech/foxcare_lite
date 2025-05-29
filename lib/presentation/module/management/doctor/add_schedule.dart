@@ -19,7 +19,6 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
   @override
   void initState() {
     fetchDoctors();
-    // TODO: implement initState
     super.initState();
   }
 
@@ -189,19 +188,19 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "Doctor Daily Schedule ",
-                          size: screenWidth * .015,
+                          size: screenWidth * .025,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -517,7 +516,9 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
               const SizedBox(height: 30),
               Center(
                 child: InkWell(
-                  onTap: saveSchedule,
+                  onTap: () async {
+                    await saveSchedule();
+                  },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     width: 250,
@@ -560,14 +561,11 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     );
   }
 
-  void saveSchedule() async {
-    if (selectedDoctor == null ||
-        opTime == null ||
-        outTime == null ||
-        selectedCounter == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields.')),
-      );
+  Future<void> saveSchedule() async {
+    if (selectedDoctor == null || selectedCounter == null) {
+      CustomSnackBar(context,
+          message: 'Please Fill All The Fields',
+          backgroundColor: Colors.orange);
       return;
     }
 
@@ -577,14 +575,14 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     final scheduleData = {
       'doctor': selectedDoctor,
       'specialization': selectedSpecialization ?? '',
-      'morningOpIn': opTime!.format(context),
-      'morningOpOut': outTime!.format(context),
+      'morningOpIn': opTime?.format(context),
+      'morningOpOut': outTime?.format(context),
       'eveningOpIn': opTimeAfternoon?.format(context) ?? '',
       'eveningOpOut': outTimeAfternoon?.format(context) ?? '',
       'counter': selectedCounter,
       'createdAt': FieldValue.serverTimestamp(),
       'degree': selectedDegree,
-      'date': today, // 🔥 Add date field
+      'date': today,
     };
 
     try {
@@ -606,7 +604,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
       await collection.add(scheduleData);
 
       CustomSnackBar(context,
-          message: 'Schedule added successfully',
+          message: 'Schedule Added Successfully',
           backgroundColor: Colors.green);
 
       setState(() {
@@ -619,9 +617,8 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
         specializationController.clear();
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      CustomSnackBar(context,
+          message: 'Failed To Save', backgroundColor: Colors.red);
     }
   }
 }

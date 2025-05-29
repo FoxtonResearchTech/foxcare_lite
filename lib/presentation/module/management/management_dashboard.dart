@@ -711,9 +711,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       return opCount;
     } catch (e) {
       print('Error fetching patients: $e');
-      setState(() {
-        isTotalOpLoading = false;
-      });
+
       return 0;
     }
   }

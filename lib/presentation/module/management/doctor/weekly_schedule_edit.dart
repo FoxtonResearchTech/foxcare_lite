@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
 class WeeklyScheduleEdit extends StatefulWidget {
@@ -88,19 +89,19 @@ class _WeeklyScheduleEdit extends State<WeeklyScheduleEdit> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.07),
+                  padding: EdgeInsets.only(top: screenWidth * 0.03),
                   child: Column(
                     children: [
                       CustomText(
                         text: "Doctor Weekly Schedule Edit  ",
-                        size: screenWidth * .015,
+                        size: screenWidth * .025,
                       ),
                     ],
                   ),
                 ),
                 Container(
                   width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -464,25 +465,32 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
 
   // Save the updated schedule back to Firestore
   Future<void> saveChanges() async {
-    var docRef = FirebaseFirestore.instance
-        .collection('doctor_weekly_schedule')
-        .doc(widget.documentId);
+    try {
+      var docRef = FirebaseFirestore.instance
+          .collection('doctor_weekly_schedule')
+          .doc(widget.documentId);
 
-    var snapshot = await docRef.get();
-    var data = snapshot.data() as Map<String, dynamic>;
-    List schedules = List.from(data['schedules']);
+      var snapshot = await docRef.get();
+      var data = snapshot.data() as Map<String, dynamic>;
+      List schedules = List.from(data['schedules']);
 
-    schedules[widget.scheduleIndex] = {
-      'doctor': selectedDoctor,
-      'specialization': selectedSpecialization, // Use selectedSpecialization
-      'morning_in': morningInController.text,
-      'morning_out': morningOutController.text,
-      'evening_in': eveningInController.text,
-      'evening_out': eveningOutController.text,
-    };
-
-    await docRef.update({'schedules': schedules});
-    Navigator.pop(context);
+      schedules[widget.scheduleIndex] = {
+        'doctor': selectedDoctor,
+        'specialization': selectedSpecialization, // Use selectedSpecialization
+        'morning_in': morningInController.text,
+        'morning_out': morningOutController.text,
+        'evening_in': eveningInController.text,
+        'evening_out': eveningOutController.text,
+      };
+      CustomSnackBar(context,
+          message: 'Weekly Schedule Updated', backgroundColor: Colors.green);
+      await docRef.update({'schedules': schedules});
+      Navigator.pop(context);
+    } catch (e) {
+      CustomSnackBar(context,
+          message: 'Failed To Update Weekly Schedule',
+          backgroundColor: Colors.red);
+    }
   }
 
   @override

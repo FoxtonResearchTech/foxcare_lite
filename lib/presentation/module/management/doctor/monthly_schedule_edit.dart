@@ -352,19 +352,19 @@ class _MonthlyScheduleEdit extends State<MonthlyScheduleEdit> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(top: screenWidth * 0.07),
+                          padding: EdgeInsets.only(top: screenWidth * 0.03),
                           child: Column(
                             children: [
                               CustomText(
                                 text: "Monthly Doctor Schedule Edit ",
-                                size: screenWidth * .015,
+                                size: screenWidth * .025,
                               ),
                             ],
                           ),
                         ),
                         Container(
                           width: screenWidth * 0.15,
-                          height: screenWidth * 0.15,
+                          height: screenWidth * 0.1,
                           decoration: BoxDecoration(
                               shape: BoxShape.rectangle,
                               borderRadius:

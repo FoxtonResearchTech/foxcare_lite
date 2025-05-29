@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 
 class DoctorWeeklySchedule extends StatefulWidget {
@@ -130,19 +131,19 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.07),
+                  padding: EdgeInsets.only(top: screenWidth * 0.01),
                   child: Column(
                     children: [
                       CustomText(
                         text: "Doctor Weekly Schedule ",
-                        size: screenWidth * .015,
+                        size: screenWidth * .025,
                       ),
                     ],
                   ),
                 ),
                 Container(
                   width: screenWidth * 0.15,
-                  height: screenWidth * 0.15,
+                  height: screenWidth * 0.1,
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -529,7 +530,7 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     );
   }
 
-  void saveScheduleToFirestore() async {
+  Future<void> saveScheduleToFirestore() async {
     final scheduleCollection =
         FirebaseFirestore.instance.collection('doctor_weekly_schedule');
 
@@ -556,14 +557,13 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Schedule saved successfully!")),
-      );
+      CustomSnackBar(context,
+          message: 'Schedule Added Successfully',
+          backgroundColor: Colors.green);
     } catch (e) {
       print("Error saving schedule: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save schedule. Try again.")),
-      );
+      CustomSnackBar(context,
+          message: 'Failed To Save', backgroundColor: Colors.red);
     }
   }
 
@@ -591,11 +591,11 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
     );
 
     if (shouldDelete == true) {
-      deleteEntireCollection();
+      await deleteEntireCollection();
     }
   }
 
-  void deleteEntireCollection() async {
+  Future<void> deleteEntireCollection() async {
     try {
       final collectionRef =
           FirebaseFirestore.instance.collection('doctor_weekly_schedule');
@@ -604,10 +604,13 @@ class _DoctorWeeklyScheduleState extends State<DoctorWeeklySchedule> {
       for (DocumentSnapshot doc in snapshot.docs) {
         await doc.reference.delete();
       }
-
+      CustomSnackBar(context,
+          message: 'Schedules Deleted', backgroundColor: Colors.green);
       print('Entire collection deleted successfully');
     } catch (e) {
       print('Error deleting collection: $e');
+      CustomSnackBar(context,
+          message: 'Failed To Delete Schedules', backgroundColor: Colors.red);
     }
   }
 }

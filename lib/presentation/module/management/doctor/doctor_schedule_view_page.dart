@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../utilities/widgets/snackBar/snakbar.dart';
+
 class DayPickerScreen extends StatefulWidget {
   @override
   _DayPickerScreenState createState() => _DayPickerScreenState();
@@ -140,139 +142,138 @@ class DoctorSchedulePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+          ),
+          title: Text(
+            "$documentId Schedule",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          centerTitle: true,
+          elevation: 4,
         ),
-        title: Text(
-          "$documentId Schedule",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.blue,
-        centerTitle: true,
-        elevation: 4,
-      ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('doctor_weekly_schedule')
-            .doc(documentId)
-            .snapshots(), // 👈 Real-time stream
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.blue),
-            );
-          }
+        body: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('doctor_weekly_schedule')
+              .doc(documentId)
+              .snapshots(), // 👈 Real-time stream
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.blue),
+              );
+            }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(
-              child: Text(
-                "No data available for $documentId",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            );
-          }
-
-          var data = snapshot.data!.data() as Map<String, dynamic>;
-          var schedules = data['schedules'];
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 3 / 2,
-            ),
-            itemCount: schedules.length,
-            itemBuilder: (context, index) {
-              var schedule = schedules[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditScheduleScreen(
-                        documentId: documentId,
-                        scheduleIndex: index,
-                      ),
-                    ),
-                  );
-                },
-                child: Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.blue.shade100,
-                          child: Icon(Icons.person, color: Colors.blue, size: 28),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          schedule['doctor'] ?? 'Unknown Doctor',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          schedule['specialization'] ?? 'Specialization: N/A',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const Spacer(),
-                        Text(
-                          "Morning: ${schedule['morning_in'] ?? 'No time'} - ${schedule['morning_out'] ?? 'No time'}",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Evening: ${schedule['evening_in'] ?? 'No time'} - ${schedule['evening_out'] ?? 'No time'}",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return Center(
+                child: Text(
+                  "No data available for $documentId",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               );
-            },
-          );
-        },
-      )
+            }
 
-    );
+            var data = snapshot.data!.data() as Map<String, dynamic>;
+            var schedules = data['schedules'];
+
+            return GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 3 / 2,
+              ),
+              itemCount: schedules.length,
+              itemBuilder: (context, index) {
+                var schedule = schedules[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditScheduleScreen(
+                          documentId: documentId,
+                          scheduleIndex: index,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.blue.shade100,
+                            child: Icon(Icons.person,
+                                color: Colors.blue, size: 28),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            schedule['doctor'] ?? 'Unknown Doctor',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            schedule['specialization'] ?? 'Specialization: N/A',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const Spacer(),
+                          Text(
+                            "Morning: ${schedule['morning_in'] ?? 'No time'} - ${schedule['morning_out'] ?? 'No time'}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Evening: ${schedule['evening_in'] ?? 'No time'} - ${schedule['evening_out'] ?? 'No time'}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ));
   }
 }
 // edit_schedule_screen.dart
@@ -297,7 +298,7 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
 
   List<String> doctors = []; // To store fetched doctor names
   Map<String, String> doctorSpecializations =
-  {}; // To store doctor-specialization map
+      {}; // To store doctor-specialization map
   String? selectedDoctor; // Selected doctor for the dropdown
   String selectedSpecialization = ''; // Declare selectedSpecialization
 
@@ -311,11 +312,11 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
   // Fetch doctors and their specializations from Firestore
   void fetchDoctors() async {
     final snapshot =
-    await FirebaseFirestore.instance.collection('employees').get();
+        await FirebaseFirestore.instance.collection('employees').get();
 
     List<String> fetchedDoctors = [];
     Map<String, String> tempSpecializations =
-    {}; // Temporary map to store specializations
+        {}; // Temporary map to store specializations
 
     for (var doc in snapshot.docs) {
       if (doc['roles'] == 'Doctor') {
@@ -365,7 +366,8 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
       // Set the selected doctor and its specialization
       setState(() {
         selectedDoctor = schedule['doctor'];
-        selectedSpecialization = doctorSpecializations[selectedDoctor ?? ''] ?? '';  // Update selectedSpecialization
+        selectedSpecialization = doctorSpecializations[selectedDoctor ?? ''] ??
+            ''; // Update selectedSpecialization
         specializationController.text = selectedSpecialization;
       });
     }
@@ -373,25 +375,32 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
 
   // Save the updated schedule back to Firestore
   Future<void> saveChanges() async {
-    var docRef = FirebaseFirestore.instance
-        .collection('doctor_weekly_schedule')
-        .doc(widget.documentId);
+    try {
+      var docRef = FirebaseFirestore.instance
+          .collection('doctor_weekly_schedule')
+          .doc(widget.documentId);
 
-    var snapshot = await docRef.get();
-    var data = snapshot.data() as Map<String, dynamic>;
-    List schedules = List.from(data['schedules']);
+      var snapshot = await docRef.get();
+      var data = snapshot.data() as Map<String, dynamic>;
+      List schedules = List.from(data['schedules']);
 
-    schedules[widget.scheduleIndex] = {
-      'doctor': selectedDoctor,
-      'specialization': selectedSpecialization,  // Use selectedSpecialization
-      'morning_in': morningInController.text,
-      'morning_out': morningOutController.text,
-      'evening_in': eveningInController.text,
-      'evening_out': eveningOutController.text,
-    };
-
-    await docRef.update({'schedules': schedules});
-    Navigator.pop(context);
+      schedules[widget.scheduleIndex] = {
+        'doctor': selectedDoctor,
+        'specialization': selectedSpecialization, // Use selectedSpecialization
+        'morning_in': morningInController.text,
+        'morning_out': morningOutController.text,
+        'evening_in': eveningInController.text,
+        'evening_out': eveningOutController.text,
+      };
+      CustomSnackBar(context,
+          message: 'Schedule Updated Successfully',
+          backgroundColor: Colors.green);
+      await docRef.update({'schedules': schedules});
+      Navigator.pop(context);
+    } catch (e) {
+      CustomSnackBar(context,
+          message: 'Failed To Update Schedule', backgroundColor: Colors.red);
+    }
   }
 
   @override
@@ -434,48 +443,51 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
                     doctors.isEmpty
                         ? Center(child: CircularProgressIndicator())
                         : DropdownSearch<String>(
-                      items: doctors, // List of doctors
-                      selectedItem: selectedDoctor,
-                      dropdownDecoratorProps: DropDownDecoratorProps(
-                        dropdownSearchDecoration: InputDecoration(
-                          labelText: "Select Doctor",
-                          prefixIcon: Icon(Icons.person, color: Colors.blue),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.blue.shade50,
-                        ),
-                      ),
-                      popupProps: PopupProps.menu(
-                        showSearchBox: true, // Enable search box
-                        searchFieldProps: TextFieldProps(
-                          decoration: InputDecoration(
-                            labelText: "Search Doctor",
-                            prefixIcon: Icon(Icons.search),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            items: doctors, // List of doctors
+                            selectedItem: selectedDoctor,
+                            dropdownDecoratorProps: DropDownDecoratorProps(
+                              dropdownSearchDecoration: InputDecoration(
+                                labelText: "Select Doctor",
+                                prefixIcon:
+                                    Icon(Icons.person, color: Colors.blue),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.blue.shade50,
+                              ),
                             ),
+                            popupProps: PopupProps.menu(
+                              showSearchBox: true, // Enable search box
+                              searchFieldProps: TextFieldProps(
+                                decoration: InputDecoration(
+                                  labelText: "Search Doctor",
+                                  prefixIcon: Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedDoctor = value;
+                                selectedSpecialization = doctorSpecializations[
+                                        selectedDoctor ?? ''] ??
+                                    '';
+                                specializationController.text =
+                                    selectedSpecialization; // Update the specialization
+                              });
+                            },
                           ),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedDoctor = value;
-                          selectedSpecialization =
-                              doctorSpecializations[selectedDoctor ?? ''] ?? '';
-                          specializationController.text = selectedSpecialization;  // Update the specialization
-                        });
-                      },
-                    ),
                     const SizedBox(height: 16),
-
                     TextField(
                       controller: specializationController,
                       readOnly: true,
                       decoration: InputDecoration(
                         labelText: "Specialization",
-                        prefixIcon: Icon(Icons.medical_services, color: Colors.blue),
+                        prefixIcon:
+                            Icon(Icons.medical_services, color: Colors.blue),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -484,7 +496,6 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     _buildTimePickerField(
                       context,
                       controller: morningInController,
@@ -492,7 +503,6 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
                       icon: Icons.wb_sunny,
                     ),
                     const SizedBox(height: 12),
-
                     _buildTimePickerField(
                       context,
                       controller: morningOutController,
@@ -500,7 +510,6 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
                       icon: Icons.wb_sunny_outlined,
                     ),
                     const SizedBox(height: 12),
-
                     _buildTimePickerField(
                       context,
                       controller: eveningInController,
@@ -508,7 +517,6 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
                       icon: Icons.nights_stay,
                     ),
                     const SizedBox(height: 12),
-
                     _buildTimePickerField(
                       context,
                       controller: eveningOutController,
@@ -516,14 +524,14 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
                       icon: Icons.nights_stay_outlined,
                     ),
                     const SizedBox(height: 30),
-
                     Center(
                       child: SizedBox(
                         width: 220,
                         child: ElevatedButton.icon(
                           onPressed: saveChanges,
                           icon: Icon(Icons.save, color: Colors.white),
-                          label: Text("Save Changes", style: TextStyle(color: Colors.white)),
+                          label: Text("Save Changes",
+                              style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -549,7 +557,8 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
   }
 
   // Reusable time picker field
-  Widget _buildTimePickerField(BuildContext context, {
+  Widget _buildTimePickerField(
+    BuildContext context, {
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -576,44 +585,42 @@ class _EditScheduleScreenState extends State<EditScheduleScreen> {
 }
 
 // Create a reusable time field widget:
-    Widget _buildTimePickerField(BuildContext context, {
-      required TextEditingController controller,
-      required String label,
-      required IconData icon,
-    }) {
-      return GestureDetector(
-        onTap: () => _selectTime(context, controller),
-        child: AbsorbPointer(
-          child: TextFormField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: label,
-              prefixIcon: Icon(icon, color: Colors.blue),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.blue.shade50,
-            ),
-            keyboardType: TextInputType.none,
+Widget _buildTimePickerField(
+  BuildContext context, {
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+}) {
+  return GestureDetector(
+    onTap: () => _selectTime(context, controller),
+    child: AbsorbPointer(
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.blue),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
+          filled: true,
+          fillColor: Colors.blue.shade50,
         ),
-      );
-    }
+        keyboardType: TextInputType.none,
+      ),
+    ),
+  );
+}
 
+Future<void> _selectTime(
+    BuildContext context, TextEditingController controller) async {
+  TimeOfDay? pickedTime = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay.now(),
+  );
 
-
-  Future<void> _selectTime(
-      BuildContext context, TextEditingController controller) async {
-    TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (pickedTime != null) {
-      String formattedTime =
-          pickedTime.format(context); // Format the time as HH:mm
-      controller.text = formattedTime;
-    }
+  if (pickedTime != null) {
+    String formattedTime =
+        pickedTime.format(context); // Format the time as HH:mm
+    controller.text = formattedTime;
   }
-
+}
