@@ -20,7 +20,6 @@ import 'package:lottie/lottie.dart';
 import 'firebase_options.dart';
 
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -44,7 +43,8 @@ class MyApp extends StatelessWidget {
     final physicalWidth = logicalSize.width * pixelRatio;
     final physicalHeight = logicalSize.height * pixelRatio;
 
-    print('Physical pixels: ${physicalWidth.toInt()} x ${physicalHeight.toInt()}');
+    print(
+        'Physical pixels: ${physicalWidth.toInt()} x ${physicalHeight.toInt()}');
 
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -79,7 +79,7 @@ class AuthGate extends StatelessWidget {
               FirebaseFirestore.instance.collection('employees').doc(uid).get(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return  Scaffold(
+              return Scaffold(
                 body: Center(child: Lottie.asset('assets/login_lottie.json')),
               );
             }

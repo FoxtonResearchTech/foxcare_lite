@@ -247,7 +247,6 @@ class _AddProduct extends State<AddProduct> {
           child: Column(
             children: [
               TimeDateWidget(text: 'Add Product'),
-              SizedBox(height: screenHeight * 0.08),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -229,38 +229,38 @@ class _NonMovingStock extends State<NonMovingStock> {
               TimeDateWidget(text: 'Non-Moving Statement'),
               Row(
                 children: [
-                  PharmacyTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  singleDateSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
-                            ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => singleDateSearch = true);
-                            await fetchData(singleDate: _dateController.text);
-                            setState(() => singleDateSearch = false);
-                            i = 1;
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.025,
-                        ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
+                  // PharmacyTextField(
+                  //   onTap: () => _selectDate(context, _dateController),
+                  //   icon: Icon(Icons.date_range),
+                  //   controller: _dateController,
+                  //   hintText: 'Date',
+                  //   width: screenWidth * 0.15,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // singleDateSearch
+                  //     ? SizedBox(
+                  //         width: screenWidth * 0.1,
+                  //         height: screenHeight * 0.045,
+                  //         child: Center(
+                  //           child: Lottie.asset(
+                  //             'assets/button_loading.json',
+                  //           ),
+                  //         ),
+                  //       )
+                  //     : PharmacyButton(
+                  //         label: 'Search',
+                  //         onPressed: () async {
+                  //           setState(() => singleDateSearch = true);
+                  //           await fetchData(singleDate: _dateController.text);
+                  //           setState(() => singleDateSearch = false);
+                  //           i = 1;
+                  //         },
+                  //         width: screenWidth * 0.08,
+                  //         height: screenWidth * 0.025,
+                  //       ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomText(text: 'OR'),
+                  // SizedBox(width: screenHeight * 0.02),
                   PharmacyTextField(
                     onTap: () => _selectDate(context, _fromDateController),
                     icon: Icon(Icons.date_range),
@@ -303,9 +303,14 @@ class _NonMovingStock extends State<NonMovingStock> {
                         ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              const Row(
-                children: [CustomText(text: 'Available Non-Moving Stock List')],
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Available Non-Moving Stock List',
+                    size: screenWidth * 0.015,
+                  )
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               LazyDataTable(

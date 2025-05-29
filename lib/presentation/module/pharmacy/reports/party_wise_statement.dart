@@ -310,41 +310,41 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
-                  PharmacyTextField(
-                    onTap: () => _selectDate(context, _dateController),
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  singleDateSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
-                            ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => singleDateSearch = true);
-                            await fetchData(singleDate: _dateController.text);
-                            setState(() => singleDateSearch = false);
-                            calculateTotals();
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.02,
-                        ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
+                  // PharmacyTextField(
+                  //   onTap: () => _selectDate(context, _dateController),
+                  //   icon: Icon(Icons.date_range),
+                  //   controller: _dateController,
+                  //   hintText: 'Date',
+                  //   width: screenWidth * 0.15,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // singleDateSearch
+                  //     ? SizedBox(
+                  //         width: screenWidth * 0.1,
+                  //         height: screenHeight * 0.045,
+                  //         child: Center(
+                  //           child: Lottie.asset(
+                  //             'assets/button_loading.json',
+                  //           ),
+                  //         ),
+                  //       )
+                  //     : PharmacyButton(
+                  //         label: 'Search',
+                  //         onPressed: () async {
+                  //           setState(() => singleDateSearch = true);
+                  //           await fetchData(singleDate: _dateController.text);
+                  //           setState(() => singleDateSearch = false);
+                  //           calculateTotals();
+                  //         },
+                  //         width: screenWidth * 0.08,
+                  //         height: screenWidth * 0.02,
+                  //       ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomText(text: 'OR'),
+                  // SizedBox(width: screenHeight * 0.02),
                   PharmacyTextField(
                     onTap: () => _selectDate(context, _fromDateController),
                     icon: Icon(Icons.date_range),
@@ -383,13 +383,18 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
                             calculateTotals();
                           },
                           width: screenWidth * 0.08,
-                          height: screenWidth * 0.02,
+                          height: screenWidth * 0.025,
                         ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              const Row(
-                children: [CustomText(text: 'Available Party wise List')],
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Available Party wise Statement List',
+                    size: screenWidth * 0.015,
+                  )
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               LazyDataTable(

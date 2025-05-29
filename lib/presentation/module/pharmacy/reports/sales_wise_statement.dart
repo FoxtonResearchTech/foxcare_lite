@@ -534,112 +534,96 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
               TimeDateWidget(text: 'Sales Wise Statement'),
               Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'From Date',
-                        size: screenWidth * 0.015,
-                      ),
-                      PharmacyTextField(
-                        controller: _fromDate,
-                        hintText: '',
-                        width: screenWidth * 0.15,
-                        icon: Icon(Icons.date_range),
-                        onTap: () => _selectDate(context, _fromDate),
-                      ),
-                    ],
+                  PharmacyTextField(
+                    controller: _fromDate,
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, _fromDate),
                   ),
                   SizedBox(width: screenHeight * 0.05),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomText(
-                        text: 'To Date',
-                        size: screenWidth * 0.015,
-                      ),
-                      PharmacyTextField(
-                        controller: _toDate,
-                        hintText: '',
-                        width: screenWidth * 0.15,
-                        icon: Icon(Icons.date_range),
-                        onTap: () => _selectDate(context, _toDate),
-                      ),
-                    ],
+                  PharmacyTextField(
+                    controller: _toDate,
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                    icon: Icon(Icons.date_range),
+                    onTap: () => _selectDate(context, _toDate),
                   ),
                   SizedBox(width: screenHeight * 0.05),
-                  Padding(
-                    padding: EdgeInsets.only(top: screenHeight * 0.035),
-                    child: fromToDateSearching
-                        ? SizedBox(
-                            width: screenWidth * 0.1,
-                            height: screenHeight * 0.045,
-                            child: Center(
-                              child: Lottie.asset(
-                                'assets/button_loading.json',
-                              ),
+                  fromToDateSearching
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
                             ),
-                          )
-                        : PharmacyButton(
-                            label: 'Select',
-                            onPressed: () async {
-                              final today = DateTime.now();
-                              final enteredFromDate = _fromDate.text;
-
-                              final enteredToDate = _toDate.text;
-
-                              // Parse the enteredFromDate safely
-                              if (enteredFromDate.isNotEmpty) {
-                                try {
-                                  final parsedDate =
-                                      DateTime.parse(enteredFromDate);
-                                  if (parsedDate.year == today.year &&
-                                      parsedDate.month == today.month &&
-                                      parsedDate.day == today.day) {
-                                    CustomSnackBar(context,
-                                        message: "Today's Date Is Not Allowed",
-                                        backgroundColor: Colors.red);
-                                    return; // Stop execution
-                                  }
-                                } catch (e) {
-                                  CustomSnackBar(context,
-                                      message: "Invalid Date Format",
-                                      backgroundColor: Colors.red);
-                                  return;
-                                }
-                              }
-                              if (enteredFromDate.isNotEmpty &&
-                                  enteredToDate.isNotEmpty) {
-                                try {
-                                  if (enteredFromDate == enteredToDate) {
-                                    CustomSnackBar(context,
-                                        message:
-                                            "From & To Date Should Not Be Equal",
-                                        backgroundColor: Colors.red);
-                                    return; // Stop execution
-                                  }
-                                } catch (e) {
-                                  CustomSnackBar(context,
-                                      message: "Invalid Date Format",
-                                      backgroundColor: Colors.red);
-                                  return;
-                                }
-                              }
-
-                              setState(() => fromToDateSearching = true);
-                              await fetchProductsByDateRange(
-                                  from: _fromDate.text, to: _toDate.text);
-                              setState(() => fromToDateSearching = false);
-                            },
-                            width: screenWidth * 0.08,
-                            height: screenHeight * 0.045,
                           ),
-                  ),
+                        )
+                      : PharmacyButton(
+                          label: 'Select',
+                          onPressed: () async {
+                            final today = DateTime.now();
+                            final enteredFromDate = _fromDate.text;
+
+                            final enteredToDate = _toDate.text;
+
+                            // Parse the enteredFromDate safely
+                            if (enteredFromDate.isNotEmpty) {
+                              try {
+                                final parsedDate =
+                                    DateTime.parse(enteredFromDate);
+                                if (parsedDate.year == today.year &&
+                                    parsedDate.month == today.month &&
+                                    parsedDate.day == today.day) {
+                                  CustomSnackBar(context,
+                                      message: "Today's Date Is Not Allowed",
+                                      backgroundColor: Colors.red);
+                                  return; // Stop execution
+                                }
+                              } catch (e) {
+                                CustomSnackBar(context,
+                                    message: "Invalid Date Format",
+                                    backgroundColor: Colors.red);
+                                return;
+                              }
+                            }
+                            if (enteredFromDate.isNotEmpty &&
+                                enteredToDate.isNotEmpty) {
+                              try {
+                                if (enteredFromDate == enteredToDate) {
+                                  CustomSnackBar(context,
+                                      message:
+                                          "From & To Date Should Not Be Equal",
+                                      backgroundColor: Colors.red);
+                                  return; // Stop execution
+                                }
+                              } catch (e) {
+                                CustomSnackBar(context,
+                                    message: "Invalid Date Format",
+                                    backgroundColor: Colors.red);
+                                return;
+                              }
+                            }
+
+                            setState(() => fromToDateSearching = true);
+                            await fetchProductsByDateRange(
+                                from: _fromDate.text, to: _toDate.text);
+                            setState(() => fromToDateSearching = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenHeight * 0.045,
+                        ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              const Row(
-                children: [CustomText(text: 'Available Party wise List')],
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Available Sales wise Statement List',
+                    size: screenWidth * 0.015,
+                  )
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               CustomDataTable(
