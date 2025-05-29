@@ -98,7 +98,7 @@ class _RxPrescription extends State<RxPrescription> {
 
   final TextEditingController _appointmentTime = TextEditingController();
   final TextEditingController _appointmentDate = TextEditingController();
-
+  bool _isLoading = false;
   int selectedIndex = 1;
   String? selectedValue;
   final List<String> _allItems = [
@@ -1441,10 +1441,75 @@ class _RxPrescription extends State<RxPrescription> {
                     inactiveThumbColor: AppColors.lightBlue,
                     activeColor: AppColors.blue,
                     value: _isSwitched,
+                    onChanged: (bool value) async {
+                      final shouldToggle = await showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            backgroundColor: Colors.white,
+                            title: Row(
+                              children: [
+                                Icon(Icons.warning_amber_rounded,
+                                    color: Colors.orange, size: 28),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Please Confirm',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              'This action cannot be undone. Are you sure you want to proceed?',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            actions: [
+                              TextButton.icon(
+                                icon: Icon(Icons.cancel, color: Colors.red),
+                                label: const Text('Cancel'),
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red),
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                              ),
+                              ElevatedButton.icon(
+                                icon: Icon(Icons.check_circle,
+                                    color: Colors.white),
+                                label: const Text(
+                                  'Yes',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (shouldToggle == true) {
+                        _onToggle(value);
+                      }
+                    },
+                  ),
+
+                  /*
+                  Switch(
+                    inactiveThumbColor: AppColors.lightBlue,
+                    activeColor: AppColors.blue,
+                    value: _isSwitched,
                     onChanged: (bool value) {
                       _onToggle(value);
                     },
                   ),
+                  */
                   SizedBox(width: screenWidth * 0.01),
                   CustomText(text: 'IP Number'),
                 ],
@@ -2208,14 +2273,86 @@ class _RxPrescription extends State<RxPrescription> {
                     ),
                     SizedBox(
                       width: 300,
-                      child: CustomButton(
-                        label: 'Prescribed',
-                        onPressed: () {
-                          _prescribed();
-                        },
-                        width: screenWidth * 0.5,
-                      ),
-                    ),
+                      child: _isLoading
+                          ? Center(
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                // Make sure this file exists
+                                width: 100,
+                                height: 100,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Prescribed',
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16)),
+                                      title: Row(
+                                        children: [
+                                          Icon(Icons.warning_amber_rounded,
+                                              color: Colors.orange),
+                                          const SizedBox(width: 10),
+                                          const Text(
+                                            'Please Confirm',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      content: const Text(
+                                        'This action cannot be undone. Are you sure you want to proceed?',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      actions: [
+                                        TextButton.icon(
+                                          icon: Icon(Icons.cancel,
+                                              color: Colors.red),
+                                          label: const Text('Cancel'),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(false),
+                                        ),
+                                        ElevatedButton.icon(
+                                          icon: Icon(Icons.check,
+                                              color: Colors.white),
+                                          label: const Text('Proceed',style: TextStyle(color: Colors.white),),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (confirm == true) {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
+
+                                  await _prescribed(); // Your async function
+
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                  CustomSnackBar(context,backgroundColor: Colors.green,
+                                      message:
+                                          'Prescription submitted successfully');
+                                }
+                              },
+                              width: screenWidth * 0.5,
+                            ),
+                    )
                   ],
                 ),
               ),
@@ -2631,8 +2768,10 @@ class ExpandableFAB extends StatefulWidget {
   final Function(bool) toggleLabLoading;
   final Function(bool) toggleInvestLoading;
   final Function(bool) toggleAppointment;
+
   ExpandableFAB(this.toggleMedLoading, this.toggleLabLoading,
       this.toggleInvestLoading, this.toggleAppointment);
+
   @override
   _ExpandableFABState createState() => _ExpandableFABState();
 }

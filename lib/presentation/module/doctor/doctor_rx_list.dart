@@ -8,6 +8,7 @@ import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -119,9 +120,13 @@ class _DoctorRxList extends State<DoctorRxList> {
 
             if (opTicketData['doctorName'] == widget.doctorName &&
                 patientData['isIP'] == false) {
-              if (opNumber != null && opTicketData['opTicket'] == opNumber) {
+              if (opNumber != null &&
+                  opTicketData['opTicket'] != null &&
+                  opTicketData['opTicket'].toString().trim().toLowerCase() ==
+                      opNumber.trim().toLowerCase()) {
                 matches = true;
-              } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+              }
+              else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
                     patientData['phone2'] == phoneNumber) {
                   matches = true;
@@ -275,11 +280,14 @@ class _DoctorRxList extends State<DoctorRxList> {
       print('Error fetching data: $e');
     }
   }
-
+  bool isPhoneLoading = false;
+  bool isOpLoading = false;
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     bool isMobile = screenWidth < 600;
+
 
     return Scaffold(
       appBar: isMobile
@@ -333,7 +341,8 @@ class _DoctorRxList extends State<DoctorRxList> {
   Widget dashboard() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
@@ -389,38 +398,84 @@ class _DoctorRxList extends State<DoctorRxList> {
               ),
               SizedBox(height: screenHeight * 0.04),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    hintText: 'OP Ticket Number',
-                    width: screenWidth * 0.15,
-                    controller: _opNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'OP Ticket Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _opNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _opNumber.text);
-                      onSearchPressed();
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 28,),
+                      isOpLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Ensure this path is correct
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isOpLoading = true);
+                          await fetchData(opNumber:_opNumber.text);
+                          setState(() => isOpLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
+
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Phone Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                      onSearchPressed();
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28,),
+                      isPhoneLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Update the path to your Lottie file
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isPhoneLoading = true);
+                          await fetchData(phoneNumber: _phoneNumber.text);
+                          setState(() => isPhoneLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -432,24 +487,25 @@ class _DoctorRxList extends State<DoctorRxList> {
                 headers: headers1,
                 rowColorResolver: (row) {
                   if (row['Status'] == 'abscond') {
-                    return Colors.red.shade200;
+                    return Colors.red.shade300; // Strong red to show alert/critical
                   }
                   if (row['isTestOver'] == true) {
-                    return Colors.yellow.shade400;
+                    return Colors.deepOrange.shade200; // Bold warm tone to indicate tests done
                   }
-                  if (row['isMedPrescribed'] == true &&
-                      row['isLabPrescribed'] == true) {
-                    return Colors.greenAccent.shade100;
+                  if (row['isMedPrescribed'] == true && row['isLabPrescribed'] == true) {
+                    return Colors.green.shade300; // Darker green for both tasks done
                   }
                   if (row['isMedPrescribed'] == true) {
-                    return Colors.blueGrey.shade400;
+                    return Colors.teal.shade300; // Clear teal for medicine prescribed
                   }
                   if (row['isLabPrescribed'] == true) {
-                    return Colors.yellow.shade100;
+                    return Colors.amber.shade400; // Rich amber for lab prescribed
                   }
 
-                  return Colors.transparent;
+                  return Colors.grey.shade200; // Slightly darker neutral for default rows
                 },
+
+
               ),
               SizedBox(height: screenHeight * 0.05)
             ],

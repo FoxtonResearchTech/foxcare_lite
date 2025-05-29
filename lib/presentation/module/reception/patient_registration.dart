@@ -176,10 +176,12 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ':' +
             dateTime.minute.toString().padLeft(2, '0'),
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Patient registered successfully")),
+      CustomSnackBar(
+        context,
+        message: 'Patient registered successfully',
+        backgroundColor: Colors.green,
       );
+
 
       showDialog(
         context: context,
