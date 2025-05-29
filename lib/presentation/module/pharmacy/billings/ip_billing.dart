@@ -10,6 +10,7 @@ import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'op_billing_entry.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -25,6 +26,8 @@ class IpBilling extends StatefulWidget {
 class _IpBilling extends State<IpBilling> {
   final TextEditingController _ipTicket = TextEditingController();
   final TextEditingController _phoneNumber = TextEditingController();
+  bool ipTicketSearch = false;
+  bool phoneNoSearch = false;
 
   final List<String> headers = [
     'Token No',
@@ -329,15 +332,28 @@ class _IpBilling extends State<IpBilling> {
                     controller: _ipTicket,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(ipNumber: _ipTicket.text);
-                      onSearchPressed();
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  ipTicketSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => ipTicketSearch = true);
+                            await fetchData(ipNumber: _ipTicket.text);
+                            setState(() => ipTicketSearch = false);
+
+                            onSearchPressed();
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
                   SizedBox(width: screenHeight * 0.05),
                   PharmacyTextField(
                     hintText: 'Phone Number',
@@ -345,15 +361,29 @@ class _IpBilling extends State<IpBilling> {
                     controller: _phoneNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                      onSearchPressed();
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  phoneNoSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => phoneNoSearch = true);
+
+                            await fetchData(phoneNumber: _phoneNumber.text);
+                            setState(() => phoneNoSearch = false);
+
+                            onSearchPressed();
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

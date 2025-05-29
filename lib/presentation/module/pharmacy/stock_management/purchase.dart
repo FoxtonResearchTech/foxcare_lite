@@ -9,9 +9,11 @@ import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -26,7 +28,8 @@ class Purchase extends StatefulWidget {
 
 class _Purchase extends State<Purchase> {
   DateTime dateTime = DateTime.now();
-
+  bool distributorSearch = false;
+  bool billNoSearch = false;
   TextEditingController _distributor = TextEditingController();
   TextEditingController _billNo = TextEditingController();
 
@@ -209,23 +212,28 @@ class _Purchase extends State<Purchase> {
       } else if (billNo != null) {
         query = query.where('billNo', isEqualTo: billNo);
       }
-      final QuerySnapshot snapshot = await query.get();
 
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
+      const int batchSize = 15;
+      DocumentSnapshot? lastDoc;
+      List<Map<String, dynamic>> accumulatedData = [];
 
-      List<Map<String, dynamic>> fetchedData = [];
+      while (true) {
+        Query paginatedQuery = query.limit(batchSize);
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        if (lastDoc != null) {
+          paginatedQuery = paginatedQuery.startAfterDocument(lastDoc);
+        }
 
-        fetchedData.add(
-          {
+        final QuerySnapshot snapshot = await paginatedQuery.get();
+
+        if (snapshot.docs.isEmpty) {
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          accumulatedData.add({
             'Bill NO': data['billNo']?.toString() ?? 'N/A',
             'Bill Date': data['billDate']?.toString() ?? 'N/A',
             'Ref No': data['rfNo']?.toString() ?? 'N/A',
@@ -266,7 +274,7 @@ class _Purchase extends State<Purchase> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           title: const CustomText(
-                            text: 'Payment Details Details',
+                            text: 'Payment Details ',
                             size: 26,
                           ),
                           content: Container(
@@ -479,14 +487,27 @@ class _Purchase extends State<Purchase> {
                 ),
               ],
             ),
-          },
-        );
+          });
+        }
+
+        // Update UI after each batch
+        setState(() {
+          tableData = List.from(accumulatedData);
+        });
+
+        await Future.delayed(const Duration(milliseconds: 300)); // Smooth UI
+
+        lastDoc = snapshot.docs.last;
       }
 
-      setState(() {
-        tableData = fetchedData;
-      });
-      print(tableData);
+      if (accumulatedData.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+      } else {
+        print(tableData);
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -586,12 +607,24 @@ class _Purchase extends State<Purchase> {
                     verticalSize: screenHeight * 0.02,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        fetchData(billNo: _billNo.text);
-                      },
-                      width: screenWidth * 0.08),
+                  billNoSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => billNoSearch = true);
+                            await fetchData(billNo: _billNo.text);
+                            setState(() => billNoSearch = false);
+                          },
+                          width: screenWidth * 0.08),
                   SizedBox(width: screenHeight * 0.2),
                   SizedBox(
                     width: screenWidth * 0.15,
@@ -607,13 +640,25 @@ class _Purchase extends State<Purchase> {
                     ),
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(distributor: selectedDistributor);
-                    },
-                    width: screenWidth * 0.08,
-                  ),
+                  distributorSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => distributorSearch = true);
+                            await fetchData(distributor: selectedDistributor);
+                            setState(() => distributorSearch = false);
+                          },
+                          width: screenWidth * 0.08,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -621,7 +666,7 @@ class _Purchase extends State<Purchase> {
                 children: [CustomText(text: 'Bill List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 columnWidths: {
                   7: FixedColumnWidth(screenWidth * 0.15),
                 },

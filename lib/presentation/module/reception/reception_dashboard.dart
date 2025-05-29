@@ -221,9 +221,6 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       return missingCount;
     } catch (e) {
       print('Error fetching documents: $e');
-      setState(() {
-        isNoWaitingQueLoading = false;
-      });
       return 0;
     }
   }
@@ -421,9 +418,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
               .doc('currentToken')
               .get();
 
-          final detailsData = detailsDoc.exists
-              ? detailsDoc.data()
-              : null;
+          final detailsData = detailsDoc.exists ? detailsDoc.data() : null;
 
           final opTicketsSnapshot = await doc.reference
               .collection('opTickets')

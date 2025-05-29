@@ -182,55 +182,79 @@ class _StockReturnDataTable extends State<StockReturnDataTable> {
     super.dispose();
   }
 
-  Future<void> fetchMatchingProducts(int rowIndex, String query) async {
+  Future<void> fetchMatchingProducts(int rowIndex, String query,
+      {int pageSize = 10}) async {
     if (query.isEmpty) return;
 
-    QuerySnapshot productSnapshots = await FirebaseFirestore.instance
-        .collection('stock')
-        .doc('Products')
-        .collection('AddedProducts')
-        .where('productName', isGreaterThanOrEqualTo: '')
-        .where('productName', isLessThanOrEqualTo: 'z\uf8ff')
-        .get();
-
     List<Map<String, dynamic>> matches = [];
+    DocumentSnapshot? lastDoc;
+    bool hasMore = true;
 
-    for (var doc in productSnapshots.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      final productDocId = doc.id;
-      final productName = data['productName']?.toString() ?? '';
+    while (hasMore) {
+      Query queryRef = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts')
+          .orderBy('productName')
+          .limit(pageSize);
 
-      if (!productName.toLowerCase().contains(query.toLowerCase())) continue;
+      if (lastDoc != null) {
+        queryRef = queryRef.startAfterDocument(lastDoc);
+      }
 
-      QuerySnapshot entrySnapshots =
-          await doc.reference.collection('purchaseEntry').get();
+      QuerySnapshot productSnapshots = await queryRef.get();
 
-      for (var entryDoc in entrySnapshots.docs) {
-        final entryData = entryDoc.data() as Map<String, dynamic>;
-        final qty = int.tryParse(entryData['quantity'] ?? '0') ?? 0;
-        final free = int.tryParse(entryData['free'] ?? '0') ?? 0;
-        final totalQty = qty - free;
-        matches.add({
-          'productDocId': productDocId,
-          'purchaseEntryDocId': entryDoc.id,
-          'productName': data['productName'],
-          'quantity': totalQty.toString(),
-          'batchNumber': entryData['batchNumber'],
-          'expiry': entryData['expiry'],
-          'hsn': entryData['hsn'],
-          'free': entryData['free'],
-          'mrp': entryData['mrp'],
-          'rate': entryData['rate'],
-          'sgst': entryData['sgst'],
-          'cgst': entryData['cgst'],
-          'tax': entryData['tax'],
-        });
+      if (productSnapshots.docs.isEmpty) break;
+
+      for (var doc in productSnapshots.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final productDocId = doc.id;
+        final productName = data['productName']?.toString() ?? '';
+
+        if (!productName.toLowerCase().contains(query.toLowerCase())) continue;
+
+        QuerySnapshot entrySnapshots =
+            await doc.reference.collection('purchaseEntry').get();
+
+        for (var entryDoc in entrySnapshots.docs) {
+          final entryData = entryDoc.data() as Map<String, dynamic>;
+          final qty =
+              int.tryParse(entryData['quantity']?.toString() ?? '0') ?? 0;
+          final free = int.tryParse(entryData['free']?.toString() ?? '0') ?? 0;
+          final totalQty = qty - free;
+
+          matches.add({
+            'productDocId': productDocId,
+            'purchaseEntryDocId': entryDoc.id,
+            'productName': data['productName'],
+            'quantity': totalQty.toString(),
+            'batchNumber': entryData['batchNumber'],
+            'expiry': entryData['expiry'],
+            'hsn': entryData['hsn'],
+            'free': entryData['free'],
+            'mrp': entryData['mrp'],
+            'rate': entryData['rate'],
+            'sgst': entryData['sgst'],
+            'cgst': entryData['cgst'],
+            'tax': entryData['tax'],
+          });
+        }
+      }
+
+      lastDoc = productSnapshots.docs.last;
+
+      // Update UI incrementally
+      setState(() {
+        productSuggestions[rowIndex] = List.from(matches);
+      });
+
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Stop if fewer results than page size
+      if (productSnapshots.docs.length < pageSize) {
+        hasMore = false;
       }
     }
-
-    setState(() {
-      productSuggestions[rowIndex] = matches;
-    });
   }
 
   @override

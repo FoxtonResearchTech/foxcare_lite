@@ -128,31 +128,57 @@ class _PurchaseEntryDataTable extends State<PurchaseEntryDataTable> {
     super.dispose();
   }
 
-  Future<void> fetchMatchingProducts(int rowIndex, String query) async {
+  Future<void> fetchMatchingProducts(int rowIndex, String query,
+      {int pageSize = 10}) async {
     if (query.isEmpty) return;
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
+
+    Query queryRef = FirebaseFirestore.instance
         .collection('stock')
         .doc('Products')
         .collection('AddedProducts')
-        .get();
+        .limit(pageSize);
 
-    List<Map<String, dynamic>> matches = snapshot.docs
-        .map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          data['productDocId'] = doc.id;
-          return data;
-        })
-        .whereType<Map<String, dynamic>>()
-        .toList();
+    DocumentSnapshot? lastDoc;
+    bool hasMore = true;
 
-    matches = matches.where((product) {
-      final productName = product['productName'] as String;
-      return productName.toLowerCase().contains(query.toLowerCase());
-    }).toList();
+    List<Map<String, dynamic>> allMatches = [];
 
-    setState(() {
-      productSuggestions[rowIndex] = matches;
-    });
+    while (hasMore) {
+      if (lastDoc != null) {
+        queryRef = queryRef.startAfterDocument(lastDoc);
+      }
+
+      QuerySnapshot snapshot = await queryRef.get();
+
+      if (snapshot.docs.isEmpty) {
+        break;
+      }
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['productDocId'] = doc.id;
+
+        final productName = data['productName'] as String? ?? '';
+        if (productName.toLowerCase().contains(query.toLowerCase())) {
+          allMatches.add(data);
+        }
+      }
+
+      lastDoc = snapshot.docs.last;
+
+      // Stop pagination if fewer results than pageSize
+      if (snapshot.docs.length < pageSize) {
+        hasMore = false;
+      }
+
+      // Update UI after each batch
+      setState(() {
+        productSuggestions[rowIndex] = List.from(allMatches);
+      });
+
+      // Optional delay for smoother UI
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   @override

@@ -4,9 +4,11 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/appBar/app_bar.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/buttons/pharmacy_button.dart';
@@ -31,6 +33,7 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
   TextEditingController gstNoController = TextEditingController();
   TextEditingController address = TextEditingController();
   TextEditingController refNo = TextEditingController();
+  bool searching = false;
 
   TextEditingController emailId = TextEditingController();
   TextEditingController phoneNo1 = TextEditingController();
@@ -63,273 +66,299 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
   ];
   List<Map<String, dynamic>> tableData2 = [];
 
-  Future<void> fetchData(
-      {String? singleDate, String? fromDate, String? toDate}) async {
+  Future<void> fetchData({
+    String? singleDate,
+    String? fromDate,
+    String? toDate,
+  }) async {
     try {
-      Query query = FirebaseFirestore.instance
+      const int batchSize = 20;
+      List<Map<String, dynamic>> allFetchedData = [];
+
+      Query<Map<String, dynamic>> baseQuery = FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
-          .collection('ExpiryReturn');
+          .collection('ExpiryReturn')
+          .orderBy('returnDate'); // Required for pagination
 
+      // Apply date filters
       if (singleDate != null) {
-        query = query.where('returnDate', isEqualTo: singleDate);
+        baseQuery = baseQuery.where('returnDate', isEqualTo: singleDate);
       } else if (fromDate != null && toDate != null) {
-        query = query
+        baseQuery = baseQuery
             .where('returnDate', isGreaterThanOrEqualTo: fromDate)
             .where('returnDate', isLessThanOrEqualTo: toDate);
       }
-      final QuerySnapshot snapshot = await query.get();
 
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
+      QueryDocumentSnapshot<Map<String, dynamic>>? lastDoc;
+      bool hasMore = true;
 
-      List<Map<String, dynamic>> fetchedData = [];
+      // Clear table before adding new data
+      setState(() {
+        tableData = [];
+      });
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+      while (hasMore) {
+        Query<Map<String, dynamic>> paginatedQuery = baseQuery.limit(batchSize);
 
-        fetchedData.add({
-          'Ref No': data['rfNo']?.toString() ?? 'N/A',
-          'Bill date': data['returnDate']?.toString() ?? 'N/A',
-          'Distributor Name': data['distributor']?.toString() ?? 'N/A',
-          'Total Amount': data['netTotalAmount']?.toString() ?? 'N/A',
-          'Collected': data['collectedAmount']?.toString() ?? 'N/A',
-          'Balance': data['balance']?.toString() ?? 'N/A',
-          'Bill details': TextButton(
-            onPressed: () {
-              distributorNameController.text =
-                  data['distributor']?.toString() ?? 'N/A';
-              dlNo1Controller.text = data['dlNo1']?.toString() ?? 'N/A';
+        if (lastDoc != null) {
+          paginatedQuery = paginatedQuery.startAfterDocument(lastDoc);
+        }
 
-              dlNo2Controller.text = data['dlNo1']?.toString() ?? 'N/A';
+        final snapshot = await paginatedQuery.get();
 
-              address.text = data['address']?.toString() ?? 'N/A';
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
 
-              emailId.text = data['mail']?.toString() ?? 'N/A';
-              phoneNo1.text = data['phone']?.toString() ?? 'N/A';
-              refNo.text = data['rfNo']?.toString() ?? 'N/A';
-              returnDate.text = data['returnDate']?.toString() ?? 'N/A';
-              totalReturnAmount.text =
-                  data['netTotalAmount']?.toString() ?? 'N/A';
-              print(totalReturnAmount);
+        List<Map<String, dynamic>> batchData = [];
 
-              for (var product in data['entryProducts']) {
-                tableData2.add({
-                  'Product Name': product['Product Name'],
-                  'Batch': product['Batch'],
-                  'Expiry': product['Expiry'],
-                  'Free': product['Free'],
-                  'MRP': product['MRP'],
-                  'Rate': product['Rate'],
-                  'Tax': product['Tax'],
-                  'CGST': product['CGST'],
-                  'SGST': product['SGST'],
-                  'Total Tax': product['Tax Total'],
-                  'Return Quantity': product['Quantity'],
-                  'Product Total': product['Product Total'],
-                  'HSN Code': product['HSN Code'],
-                  'Category': product['Category'],
-                  'Company': product['Company'],
-                  'Distributor': product['Distributor'],
-                });
-              }
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const CustomText(
-                      text: 'View Bill',
-                      size: 26,
-                    ),
-                    content: Container(
-                      width: 950,
-                      height: 750,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SingleChildScrollView(
-                                  child: Container(
-                                    width: 950,
-                                    height: 750,
-                                    child: Column(
-                                      children: [
-                                        const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomText(
-                                              text: 'Distributor details ',
-                                              size: 20, // Adjusted size
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 15),
-                                        Row(
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                CustomText(
-                                                  text:
-                                                      'Distributor Name :${distributorNameController.text}',
-                                                  size: 16,
-                                                ),
-                                                CustomText(
-                                                  text:
-                                                      'DL / No 1 :${dlNo1Controller.text}',
-                                                  size: 16,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(width: 175),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                CustomText(
-                                                  text:
-                                                      'Return Date :${returnDate.text}',
-                                                  size: 16,
-                                                ),
-                                                CustomText(
-                                                  text:
-                                                      'DL / No 2 :${dlNo2Controller.text}',
-                                                  size: 16,
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 15),
-                                        const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            CustomText(
-                                              text: 'Stock Return Address',
-                                              size: 20,
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 15),
-                                        Row(
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                CustomText(
-                                                  text:
-                                                      'Return Number : ${refNo.text}',
-                                                  size: 16,
-                                                ),
-                                                CustomText(
-                                                  text:
-                                                      'E-Mail ID : ${emailId.text}',
-                                                  size: 16,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(width: 175),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                CustomText(
-                                                  text:
-                                                      'Address : ${address.text}',
-                                                  size: 16,
-                                                ),
-                                                CustomText(
-                                                  text:
-                                                      'Phone : ${phoneNo1.text}',
-                                                  size: 16,
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 20),
-                                        CustomDataTable(
-                                            headers: headers2,
-                                            tableData: tableData2),
-                                        Container(
-                                          padding:
-                                              const EdgeInsets.only(left: 650),
-                                          width: 1000,
-                                          height: 25,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black,
-                                              width: 0.5,
-                                            ),
-                                          ),
-                                          child: Column(
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+
+          batchData.add({
+            'Ref No': data['rfNo']?.toString() ?? 'N/A',
+            'Bill date': data['returnDate']?.toString() ?? 'N/A',
+            'Distributor Name': data['distributor']?.toString() ?? 'N/A',
+            'Total Amount': data['netTotalAmount']?.toString() ?? 'N/A',
+            'Collected': data['collectedAmount']?.toString() ?? 'N/A',
+            'Balance': data['balance']?.toString() ?? 'N/A',
+            'Bill details': TextButton(
+              onPressed: () {
+                distributorNameController.text =
+                    data['distributor']?.toString() ?? 'N/A';
+                dlNo1Controller.text = data['dlNo1']?.toString() ?? 'N/A';
+
+                dlNo2Controller.text = data['dlNo1']?.toString() ?? 'N/A';
+
+                address.text = data['address']?.toString() ?? 'N/A';
+
+                emailId.text = data['mail']?.toString() ?? 'N/A';
+                phoneNo1.text = data['phone']?.toString() ?? 'N/A';
+                refNo.text = data['rfNo']?.toString() ?? 'N/A';
+                returnDate.text = data['returnDate']?.toString() ?? 'N/A';
+                totalReturnAmount.text =
+                    data['netTotalAmount']?.toString() ?? 'N/A';
+                print(totalReturnAmount);
+
+                for (var product in data['entryProducts']) {
+                  tableData2.add({
+                    'Product Name': product['Product Name'],
+                    'Batch': product['Batch'],
+                    'Expiry': product['Expiry'],
+                    'Free': product['Free'],
+                    'MRP': product['MRP'],
+                    'Rate': product['Rate'],
+                    'Tax': product['Tax'],
+                    'CGST': product['CGST'],
+                    'SGST': product['SGST'],
+                    'Total Tax': product['Tax Total'],
+                    'Return Quantity': product['Quantity'],
+                    'Product Total': product['Product Total'],
+                    'HSN Code': product['HSN Code'],
+                    'Category': product['Category'],
+                    'Company': product['Company'],
+                    'Distributor': product['Distributor'],
+                  });
+                }
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const CustomText(
+                        text: 'View Bill',
+                        size: 26,
+                      ),
+                      content: Container(
+                        width: 950,
+                        height: 500,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SingleChildScrollView(
+                                    child: Container(
+                                      width: 950,
+                                      height: 750,
+                                      child: Column(
+                                        children: [
+                                          const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               CustomText(
-                                                text:
-                                                    'Total : ${totalReturnAmount.text}',
+                                                text: 'Distributor details ',
+                                                size: 20, // Adjusted size
                                               ),
                                             ],
                                           ),
-                                        ),
-                                        const SizedBox(height: 50),
-                                      ],
+                                          const SizedBox(height: 15),
+                                          Row(
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text:
+                                                        'Distributor Name :${distributorNameController.text}',
+                                                    size: 16,
+                                                  ),
+                                                  CustomText(
+                                                    text:
+                                                        'DL / No 1 :${dlNo1Controller.text}',
+                                                    size: 16,
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 175),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text:
+                                                        'Return Date :${returnDate.text}',
+                                                    size: 16,
+                                                  ),
+                                                  CustomText(
+                                                    text:
+                                                        'DL / No 2 :${dlNo2Controller.text}',
+                                                    size: 16,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 15),
+                                          const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              CustomText(
+                                                text: 'Stock Return Address',
+                                                size: 20,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 15),
+                                          Row(
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text:
+                                                        'Return Number : ${refNo.text}',
+                                                    size: 16,
+                                                  ),
+                                                  CustomText(
+                                                    text:
+                                                        'E-Mail ID : ${emailId.text}',
+                                                    size: 16,
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 175),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text:
+                                                        'Address : ${address.text}',
+                                                    size: 16,
+                                                  ),
+                                                  CustomText(
+                                                    text:
+                                                        'Phone : ${phoneNo1.text}',
+                                                    size: 16,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                          CustomDataTable(
+                                              headers: headers2,
+                                              tableData: tableData2),
+                                          Container(
+                                            padding: const EdgeInsets.only(
+                                                left: 650),
+                                            width: 1000,
+                                            height: 25,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.black,
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                CustomText(
+                                                  text:
+                                                      'Total : ${totalReturnAmount.text}',
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 50),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Ok ',
-                          color: AppColors.secondaryColor,
-                          size: 14,
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: CustomText(
+                            text: 'Ok ',
+                            color: AppColors.secondaryColor,
+                            size: 14,
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: CustomText(
-                          text: 'Cancel',
-                          color: AppColors.secondaryColor,
-                          size: 14,
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: CustomText(
+                            text: 'Cancel',
+                            color: AppColors.secondaryColor,
+                            size: 14,
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              ).then((_) {
-                tableData2.clear();
-              });
-            },
-            child: CustomText(text: 'Open'),
-          ),
-        });
-      }
+                      ],
+                    );
+                  },
+                ).then((_) {
+                  tableData2.clear();
+                });
+              },
+              child: const CustomText(text: 'Open'),
+            ),
+          });
+        }
 
-      setState(() {
-        tableData = fetchedData;
-        calculateTotals();
-      });
+        // Update table data in UI incrementally
+        setState(() {
+          tableData.addAll(batchData);
+          calculateTotals();
+        });
+
+        lastDoc = snapshot.docs.last;
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -402,17 +431,30 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.025,
-                  ),
+                  searching
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => searching = true);
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
+                            setState(() => searching = false);
+                            calculateTotals();
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -420,12 +462,12 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                 children: [CustomText(text: 'Available Stock Return List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(left: screenWidth * 0.23),
+                padding: EdgeInsets.only(left: screenWidth * 0.01),
                 width: screenWidth,
                 height: screenHeight * 0.030,
                 decoration: BoxDecoration(
@@ -446,7 +488,7 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomButton(
+                  PharmacyButton(
                       label: 'Print',
                       onPressed: () {},
                       width: screenWidth * 0.1)

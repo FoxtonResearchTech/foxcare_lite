@@ -8,6 +8,7 @@ import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
@@ -41,78 +42,100 @@ class _DeleteProduct extends State<DeleteProduct> {
   List<Map<String, dynamic>> filteredProducts = [];
   Future<void> fetchData() async {
     try {
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .get();
+      const int batchSize = 20;
+      List<Map<String, dynamic>> allFetchedData = [];
+      QueryDocumentSnapshot<Map<String, dynamic>>? lastDoc;
 
-      List<Map<String, dynamic>> fetchedData = [];
+      bool hasMore = true;
 
-      for (var doc in stockSnapshot.docs) {
-        final data = doc.data();
-        fetchedData.add({
-          'id': doc.id, // Store document ID for deletion
-          'Product Name': data['productName'],
-          'HSN Code': data['hsnCode'],
-          'Category': data['category'],
-          'Company': data['companyName'],
-          'Composition': data['composition'],
-          'Action': TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Deletion Confirmation'),
-                    content: const CustomText(
-                        text: 'Are you sure you want to delete?'),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () async {
-                          try {
-                            await FirebaseFirestore.instance
-                                .collection('stock')
-                                .doc('Products')
-                                .collection('AddedProducts')
-                                .doc(doc.id)
-                                .delete();
+      while (hasMore) {
+        Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .limit(batchSize);
 
-                            Navigator.of(context).pop(); // Close dialog
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
 
-                            fetchData();
-                            CustomSnackBar(context,
-                                message: 'Product Deleted',
-                                backgroundColor: Colors.green);
-                          } catch (e) {
-                            CustomSnackBar(context,
-                                message: 'Product not Deleted',
-                                backgroundColor: Colors.red);
-                          }
-                        },
-                        child: const CustomText(text: 'Delete'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const CustomText(text: 'Close'),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: const CustomText(text: 'Delete'),
-          ),
+        QuerySnapshot<Map<String, dynamic>> snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          allFetchedData.add({
+            'id': doc.id,
+            'Product Name': data['productName'],
+            'HSN Code': data['hsnCode'],
+            'Category': data['category'],
+            'Company': data['companyName'],
+            'Composition': data['composition'],
+            'Action': TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Deletion Confirmation'),
+                      content: const CustomText(
+                          text: 'Are you sure you want to delete?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () async {
+                            try {
+                              await FirebaseFirestore.instance
+                                  .collection('stock')
+                                  .doc('Products')
+                                  .collection('AddedProducts')
+                                  .doc(doc.id)
+                                  .delete();
+
+                              Navigator.of(context).pop();
+                              fetchData(); // Reload data
+                              CustomSnackBar(context,
+                                  message: 'Product Deleted',
+                                  backgroundColor: Colors.green);
+                            } catch (e) {
+                              CustomSnackBar(context,
+                                  message: 'Product not Deleted',
+                                  backgroundColor: Colors.red);
+                            }
+                          },
+                          child: const CustomText(text: 'Delete'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const CustomText(text: 'Close'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: const CustomText(text: 'Delete'),
+            ),
+          });
+        }
+
+        // Update the UI incrementally after each batch
+        setState(() {
+          allProducts.addAll(allFetchedData);
+          filteredProducts = List.from(allProducts);
         });
-      }
 
-      setState(() {
-        allProducts = fetchedData;
-        filteredProducts = List.from(allProducts);
-      });
+        allFetchedData.clear(); // clear current batch
+        lastDoc = snapshot.docs.last;
+
+        await Future.delayed(
+            const Duration(milliseconds: 100)); // Optional delay
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -216,7 +239,7 @@ class _DeleteProduct extends State<DeleteProduct> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(headers: headers, tableData: filteredProducts),
+              LazyDataTable(headers: headers, tableData: filteredProducts),
               SizedBox(height: screenHeight * 0.05),
             ],
           ),

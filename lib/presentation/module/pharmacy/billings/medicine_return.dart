@@ -31,7 +31,7 @@ class _MedicineReturn extends State<MedicineReturn> {
 
   TextEditingController discount = TextEditingController();
   DateTime dateTime = DateTime.now();
-
+  bool billSearch = false;
   final TextEditingController totalAmountController = TextEditingController();
 
   final TextEditingController paymentDetails = TextEditingController();
@@ -474,17 +474,29 @@ class _MedicineReturn extends State<MedicineReturn> {
                   SizedBox(width: screenWidth * 0.04),
                   Padding(
                     padding: EdgeInsets.only(top: screenWidth * 0.02),
-                    child: PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        setState(() {
-                          allProducts.clear();
-                        });
-                        searchBill(_billNo.text);
-                      },
-                      width: screenWidth * 0.1,
-                      height: screenHeight * 0.042,
-                    ),
+                    child: billSearch
+                        ? SizedBox(
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.045,
+                            child: Center(
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                              ),
+                            ),
+                          )
+                        : PharmacyButton(
+                            label: 'Search',
+                            onPressed: () async {
+                              setState(() {
+                                billSearch = true;
+                                allProducts.clear();
+                              });
+                              await searchBill(_billNo.text);
+                              setState(() => billSearch = false);
+                            },
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.042,
+                          ),
                   ),
                   SizedBox(width: screenWidth * 0.08),
                   Column(

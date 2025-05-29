@@ -6,9 +6,11 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -56,6 +58,7 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
     'Hospital Name',
     'Action',
   ];
+  bool searching = false;
   List<Map<String, dynamic>> tableData = [];
   Future<void> updatePharmacyInfo(String docId) async {
     try {
@@ -103,370 +106,408 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
     }
   }
 
-  Future<void> fetchData({
-    String? pharmacyName,
-  }) async {
+  Future<void> fetchData({String? pharmacyName}) async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('pharmacies')
-          .collection('pharmacy');
+      const int batchSize = 10;
+      DocumentSnapshot? lastDoc;
+      bool hasMore = true;
 
-      if (pharmacyName != null && pharmacyName.isNotEmpty) {
-        query = query.where('pharmacyName', isEqualTo: pharmacyName);
+      List<Map<String, dynamic>> allFetchedData = [];
+      int i = 1;
+
+      while (hasMore) {
+        Query query = FirebaseFirestore.instance
+            .collection('pharmacy')
+            .doc('pharmacies')
+            .collection('pharmacy')
+            .limit(batchSize);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final name = data['pharmacyName']?.toString() ?? '';
+
+          // Case-insensitive match in Dart
+          if (pharmacyName == null ||
+              pharmacyName.isEmpty ||
+              name.toLowerCase().contains(pharmacyName.toLowerCase())) {
+            allFetchedData.add({
+              'SL No': i++,
+              'Name': name,
+              'City': data['city'],
+              'Phone Number': data['phoneNo1'],
+              'Hospital Name': data['hospitalName'],
+              'Action': Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        final docId = doc.id;
+                        pharmacyNameController.text = data['pharmacyName'];
+                        hospitalName.text = data['hospitalName'];
+                        dlNo1Controller.text = data['dlNo1'];
+                        expiryDate1Controller.text = data['expiryDate1'];
+                        dlNo2Controller.text = data['dlNo2'];
+                        expiryDate2Controller.text = data['expiryDate2'];
+                        gstNoController.text = data['gstNo'];
+                        lane1.text = data['lane1'];
+                        lane2.text = data['lane2'];
+                        landMark.text = data['landMark'];
+                        city.text = data['city'];
+                        state.text = data['state'];
+                        pinCode.text = data['pinCode'];
+                        emailId.text = data['emailId'];
+                        phoneNo1.text = data['phoneNo1'];
+                        phoneNO2.text = data['phoneNO2'];
+                        bankAccountNumber.text = data['bankAccountNumber'];
+                        bankAccountName.text = data['bankAccountName'];
+                        ifsc.text = data['ifsc'];
+                        surfCode.text = data['surfCode'];
+                        bankName.text = data['bankName'];
+                        branchName.text = data['branchName'];
+                        bankPhoneNo.text = data['bankPhoneNo'];
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const CustomText(
+                                text: 'Edit Pharmacy',
+                                size: 25,
+                              ),
+                              content: Container(
+                                width: 850,
+                                height: 550,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SingleChildScrollView(
+                                            child: Container(
+                                              width: 850,
+                                              height: 850,
+                                              child: Column(
+                                                children: [
+                                                  const SizedBox(height: 10),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller:
+                                                            pharmacyNameController,
+                                                        hintText:
+                                                            'Pharmacy Name',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller:
+                                                            hospitalName,
+                                                        hintText:
+                                                            'Hospital Name',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller:
+                                                            dlNo1Controller,
+                                                        hintText: 'DL / No 1',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller:
+                                                            expiryDate1Controller,
+                                                        hintText: 'Expiry date',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller:
+                                                            dlNo2Controller,
+                                                        hintText: 'DL / No 2',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller:
+                                                            expiryDate2Controller,
+                                                        hintText: 'Expiry date',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller:
+                                                            gstNoController,
+                                                        hintText: 'GST NO',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 30),
+                                                  const Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      CustomText(
+                                                          text:
+                                                              'Pharmacy Address'),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 30),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: lane1,
+                                                        hintText: 'Lane 1',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: lane2,
+                                                        hintText: 'Lane 2',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: landMark,
+                                                        hintText: 'Landmark',
+                                                        width: 650,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: city,
+                                                        hintText: 'City',
+                                                        width: 200,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: state,
+                                                        hintText: 'State',
+                                                        width: 200,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: pinCode,
+                                                        hintText: 'Pin code',
+                                                        width: 200,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: emailId,
+                                                        hintText: 'E-Mail ID',
+                                                        width: 200,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: phoneNo1,
+                                                        hintText: 'Phone NO 1',
+                                                        width: 200,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: phoneNO2,
+                                                        hintText:
+                                                            'Phone Number 2',
+                                                        width: 200,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 30),
+                                                  const Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      CustomText(
+                                                          text: 'Bank Details'),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 30),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller:
+                                                            bankAccountNumber,
+                                                        hintText:
+                                                            'Bank Account Number',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller:
+                                                            bankAccountName,
+                                                        hintText:
+                                                            'Bank Account Name',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: ifsc,
+                                                        hintText: 'IFSC',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: surfCode,
+                                                        hintText: 'Surf Code',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: bankName,
+                                                        hintText: 'Bank Name',
+                                                        width: 300,
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      CustomTextField(
+                                                        controller: branchName,
+                                                        hintText: 'Branch Name',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      CustomTextField(
+                                                        controller: bankPhoneNo,
+                                                        hintText:
+                                                            'Bank Phone No',
+                                                        width: 300,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 50),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () {
+                                    updatePharmacyInfo(docId);
+                                  },
+                                  child: CustomText(
+                                    text: 'Submit ',
+                                    color: AppColors.secondaryColor,
+                                    size: 14,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: CustomText(
+                                    text: 'Cancel',
+                                    color: AppColors.secondaryColor,
+                                    size: 14,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: const CustomText(text: 'Edit')),
+                  TextButton(
+                      onPressed: () async {
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('pharmacy')
+                              .doc('pharmacies')
+                              .collection('pharmacy')
+                              .doc(doc.id)
+                              .delete();
+
+                          Navigator.of(context).pop(); // Close dialog
+
+                          fetchData();
+                          CustomSnackBar(context,
+                              message: 'Pharmacy Deleted',
+                              backgroundColor: Colors.green);
+                        } catch (e) {
+                          CustomSnackBar(context,
+                              message: 'Pharmacy not Deleted',
+                              backgroundColor: Colors.red);
+                        }
+                      },
+                      child: const CustomText(text: 'Delete'))
+                ],
+              ),
+            });
+          }
+        }
+
+        lastDoc = snapshot.docs.last;
+
+        setState(() {
+          tableData = List.from(allFetchedData);
+        });
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        if (snapshot.docs.length < batchSize) {
+          hasMore = false;
+        }
       }
 
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
+      if (allFetchedData.isEmpty) {
         print("No records found");
         setState(() {
           tableData = [];
         });
-        return;
       }
-
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        fetchedData.add({
-          'SL No': i++,
-          'Name': data['pharmacyName'],
-          'City': data['city'],
-          'Phone Number': data['phoneNo1'],
-          'Hospital Name': data['hospitalName'],
-          'Action': Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                  onPressed: () {
-                    final docId = doc.id;
-                    pharmacyNameController.text = data['pharmacyName'];
-                    hospitalName.text = data['hospitalName'];
-                    dlNo1Controller.text = data['dlNo1'];
-                    expiryDate1Controller.text = data['expiryDate1'];
-                    dlNo2Controller.text = data['dlNo2'];
-                    expiryDate2Controller.text = data['expiryDate2'];
-                    gstNoController.text = data['gstNo'];
-                    lane1.text = data['lane1'];
-                    lane2.text = data['lane2'];
-                    landMark.text = data['landMark'];
-                    city.text = data['city'];
-                    state.text = data['state'];
-                    pinCode.text = data['pinCode'];
-                    emailId.text = data['emailId'];
-                    phoneNo1.text = data['phoneNo1'];
-                    phoneNO2.text = data['phoneNO2'];
-                    bankAccountNumber.text = data['bankAccountNumber'];
-                    bankAccountName.text = data['bankAccountName'];
-                    ifsc.text = data['ifsc'];
-                    surfCode.text = data['surfCode'];
-                    bankName.text = data['bankName'];
-                    branchName.text = data['branchName'];
-                    bankPhoneNo.text = data['bankPhoneNo'];
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Edit Pharmacy'),
-                          content: Container(
-                            width: 850,
-                            height: 850,
-                            child: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SingleChildScrollView(
-                                        child: Container(
-                                          width: 850,
-                                          height: 850,
-                                          child: Column(
-                                            children: [
-                                              const SizedBox(height: 10),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller:
-                                                        pharmacyNameController,
-                                                    hintText: 'Pharmacy Name',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: hospitalName,
-                                                    hintText: 'Hospital Name',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: dlNo1Controller,
-                                                    hintText: 'DL / No 1',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller:
-                                                        expiryDate1Controller,
-                                                    hintText: 'Expiry date',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: dlNo2Controller,
-                                                    hintText: 'DL / No 2',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller:
-                                                        expiryDate2Controller,
-                                                    hintText: 'Expiry date',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: gstNoController,
-                                                    hintText: 'GST NO',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 30),
-                                              const Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomText(
-                                                      text: 'Pharmacy Address'),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 30),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: lane1,
-                                                    hintText: 'Lane 1',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: lane2,
-                                                    hintText: 'Lane 2',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: landMark,
-                                                    hintText: 'Landmark',
-                                                    width: 650,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: city,
-                                                    hintText: 'City',
-                                                    width: 200,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: state,
-                                                    hintText: 'State',
-                                                    width: 200,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: pinCode,
-                                                    hintText: 'Pin code',
-                                                    width: 200,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: emailId,
-                                                    hintText: 'E-Mail ID',
-                                                    width: 200,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: phoneNo1,
-                                                    hintText: 'Phone NO 1',
-                                                    width: 200,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: phoneNO2,
-                                                    hintText: 'Phone Number 2',
-                                                    width: 200,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 30),
-                                              const Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CustomText(
-                                                      text: 'Bank Details'),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 30),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller:
-                                                        bankAccountNumber,
-                                                    hintText:
-                                                        'Bank Account Number',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: bankAccountName,
-                                                    hintText:
-                                                        'Bank Account Name',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: ifsc,
-                                                    hintText: 'IFSC',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: surfCode,
-                                                    hintText: 'Surf Code',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: bankName,
-                                                    hintText: 'Bank Name',
-                                                    width: 300,
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  CustomTextField(
-                                                    controller: branchName,
-                                                    hintText: 'Branch Name',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: [
-                                                  CustomTextField(
-                                                    controller: bankPhoneNo,
-                                                    hintText: 'Bank Phone No',
-                                                    width: 300,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 50),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                updatePharmacyInfo(docId);
-                              },
-                              child: CustomText(
-                                text: 'Submit ',
-                                color: AppColors.secondaryColor,
-                                size: 14,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: CustomText(
-                                text: 'Cancel',
-                                color: AppColors.secondaryColor,
-                                size: 14,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: const CustomText(text: 'Edit')),
-              TextButton(
-                  onPressed: () async {
-                    try {
-                      await FirebaseFirestore.instance
-                          .collection('pharmacy')
-                          .doc('pharmacies')
-                          .collection('pharmacy')
-                          .doc(doc.id)
-                          .delete();
-
-                      Navigator.of(context).pop(); // Close dialog
-
-                      fetchData();
-                      CustomSnackBar(context,
-                          message: 'Pharmacy Deleted',
-                          backgroundColor: Colors.green);
-                    } catch (e) {
-                      CustomSnackBar(context,
-                          message: 'Pharmacy not Deleted',
-                          backgroundColor: Colors.red);
-                    }
-                  },
-                  child: const CustomText(text: 'Delete'))
-            ],
-          ),
-        });
-      }
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -568,18 +609,30 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                     controller: pharmacyName,
                   ),
                   SizedBox(width: screenHeight * 0.1),
-                  PharmacyButton(
-                      height: screenHeight * 0.04,
-                      label: 'Search',
-                      onPressed: () {
-                        fetchData(pharmacyName: pharmacyName.text);
-                        i = 1;
-                      },
-                      width: screenWidth * 0.08)
+                  searching
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          height: screenHeight * 0.04,
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => searching = true);
+                            await fetchData(pharmacyName: pharmacyName.text);
+                            i = 1;
+                            setState(() => searching = false);
+                          },
+                          width: screenWidth * 0.08)
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),

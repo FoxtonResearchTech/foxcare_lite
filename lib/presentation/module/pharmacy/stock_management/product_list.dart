@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart'
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
@@ -90,23 +91,39 @@ class _ProductListState extends State<ProductList> {
 
   Future<void> fetchData() async {
     try {
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .get();
+      final CollectionReference productsCollection = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts');
+
+      const int batchSize = 20;
+      DocumentSnapshot? lastDoc;
+      bool moreData = true;
 
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in stockSnapshot.docs) {
-        final data = doc.data();
-        fetchedData.add({
-          'Product Name': data['productName'],
-          'Category': data['category'],
-          'Company': data['companyName'],
-          'Composition': data['composition'],
-          'Action': TextButton(
+      while (moreData) {
+        Query query = productsCollection.limit(batchSize);
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          moreData = false;
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          fetchedData.add({
+            'Product Name': data['productName'],
+            'Category': data['category'],
+            'Company': data['companyName'],
+            'Composition': data['composition'],
+            'Action': TextButton(
               onPressed: () {
                 final selectedProduct = data;
                 final docId = doc.id;
@@ -126,10 +143,7 @@ class _ProductListState extends State<ProductList> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: CustomText(
-                        text: 'Add Product',
-                        size: 25,
-                      ),
+                      title: CustomText(text: 'Add Product', size: 25),
                       content: Container(
                         width: 600,
                         height: 325,
@@ -157,9 +171,8 @@ class _ProductListState extends State<ProductList> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 CustomText(
-                                                  text: 'Product Name',
-                                                  size: 20,
-                                                ),
+                                                    text: 'Product Name',
+                                                    size: 20),
                                                 SizedBox(height: 7),
                                                 PharmacyTextField(
                                                   controller: _productName,
@@ -173,34 +186,33 @@ class _ProductListState extends State<ProductList> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 CustomText(
-                                                  text: 'Category',
-                                                  size: 20,
-                                                ),
+                                                    text: 'Category', size: 20),
                                                 SizedBox(height: 7),
                                                 SizedBox(
                                                   width: 200,
                                                   child: PharmacyDropDown(
-                                                      label: '',
-                                                      items: const [
-                                                        'Tablets',
-                                                        'Capsules',
-                                                        'Powders',
-                                                        'Solutions',
-                                                        'Suspensions',
-                                                        'Topical Medicines',
-                                                        'Suppository',
-                                                        'Injections',
-                                                        'Inhales',
-                                                        'Patches',
-                                                      ],
-                                                      selectedItem:
-                                                          selectedCategory,
-                                                      onChanged: (value) {
-                                                        setState(() {
-                                                          selectedCategory =
-                                                              value;
-                                                        });
-                                                      }),
+                                                    label: '',
+                                                    items: const [
+                                                      'Tablets',
+                                                      'Capsules',
+                                                      'Powders',
+                                                      'Solutions',
+                                                      'Suspensions',
+                                                      'Topical Medicines',
+                                                      'Suppository',
+                                                      'Injections',
+                                                      'Inhales',
+                                                      'Patches',
+                                                    ],
+                                                    selectedItem:
+                                                        selectedCategory,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        selectedCategory =
+                                                            value;
+                                                      });
+                                                    },
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -215,9 +227,8 @@ class _ProductListState extends State<ProductList> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 CustomText(
-                                                  text: 'Composition',
-                                                  size: 20,
-                                                ),
+                                                    text: 'Composition',
+                                                    size: 20),
                                                 SizedBox(height: 7),
                                                 PharmacyTextField(
                                                   controller: _composition,
@@ -231,14 +242,14 @@ class _ProductListState extends State<ProductList> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 CustomText(
-                                                  text: 'Company Name',
-                                                  size: 20,
-                                                ),
+                                                    text: 'Company Name',
+                                                    size: 20),
                                                 SizedBox(height: 7),
                                                 PharmacyTextField(
-                                                    controller: _companyName,
-                                                    hintText: '',
-                                                    width: 200),
+                                                  controller: _companyName,
+                                                  hintText: '',
+                                                  width: 200,
+                                                ),
                                               ],
                                             ),
                                           ],
@@ -252,23 +263,22 @@ class _ProductListState extends State<ProductList> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 CustomText(
-                                                  text: 'Referred by Doctor',
-                                                  size: 20,
-                                                ),
+                                                    text: 'Referred by Doctor',
+                                                    size: 20),
                                                 SizedBox(height: 7),
                                                 SizedBox(
                                                   width: 200,
                                                   child: PharmacyDropDown(
-                                                      label: '',
-                                                      items: doctors,
-                                                      selectedItem:
-                                                          selectedDoctor,
-                                                      onChanged: (value) {
-                                                        setState(() {
-                                                          selectedDoctor =
-                                                              value;
-                                                        });
-                                                      }),
+                                                    label: '',
+                                                    items: doctors,
+                                                    selectedItem:
+                                                        selectedDoctor,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        selectedDoctor = value;
+                                                      });
+                                                    },
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -277,20 +287,20 @@ class _ProductListState extends State<ProductList> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 CustomText(
-                                                  text:
-                                                      'Additional Information',
-                                                  size: 20,
-                                                ),
+                                                    text:
+                                                        'Additional Information',
+                                                    size: 20),
                                                 SizedBox(height: 7),
                                                 PharmacyTextField(
-                                                    controller:
-                                                        _additionalInformation,
-                                                    hintText: '',
-                                                    width: 200),
+                                                  controller:
+                                                      _additionalInformation,
+                                                  hintText: '',
+                                                  width: 200,
+                                                ),
                                               ],
                                             ),
                                           ],
-                                        )
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -327,14 +337,27 @@ class _ProductListState extends State<ProductList> {
                   },
                 );
               },
-              child: CustomText(text: 'Edit')),
-        });
-      }
+              child: CustomText(text: 'Edit'),
+            ),
+          });
+        }
 
-      setState(() {
-        allProducts = fetchedData;
-        filteredProducts = List.from(allProducts); // Update filtered list too
-      });
+        setState(() {
+          allProducts = List.from(fetchedData);
+          filteredProducts = List.from(allProducts);
+        });
+
+        // Small delay before loading next batch
+        await Future.delayed(Duration(milliseconds: 100));
+
+        // Set last doc for next batch
+        lastDoc = snapshot.docs.last;
+
+        // If batch is less than batch size, we've reached the end
+        if (snapshot.docs.length < batchSize) {
+          moreData = false;
+        }
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -448,7 +471,7 @@ class _ProductListState extends State<ProductList> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
-              CustomDataTable(headers: headers, tableData: filteredProducts),
+              LazyDataTable(headers: headers, tableData: filteredProducts),
               SizedBox(height: screenHeight * 0.05),
             ],
           ),

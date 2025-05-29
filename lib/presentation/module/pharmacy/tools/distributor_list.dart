@@ -6,9 +6,11 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -55,6 +57,7 @@ class _DistributorList extends State<DistributorList> {
     'Representative Number',
     'Action',
   ];
+  bool searching = false;
   List<Map<String, dynamic>> tableData = [];
   Future<void> updateDistributor(String docId) async {
     try {
@@ -102,401 +105,441 @@ class _DistributorList extends State<DistributorList> {
     }
   }
 
-  Future<void> fetchData({
-    String? distributorName,
-  }) async {
+  Future<void> fetchData({String? distributorName}) async {
     try {
-      Query query = FirebaseFirestore.instance
-          .collection('pharmacy')
-          .doc('distributors')
-          .collection('distributor');
+      const int batchSize = 25;
+      DocumentSnapshot? lastDoc;
+      bool hasMore = true;
 
-      if (distributorName != null && distributorName.isNotEmpty) {
-        query = query.where('distributorName', isEqualTo: distributorName);
+      List<Map<String, dynamic>> allFetchedData = [];
+      int i = 1;
+
+      while (hasMore) {
+        Query query = FirebaseFirestore.instance
+            .collection('pharmacy')
+            .doc('distributors')
+            .collection('distributor')
+            .limit(batchSize);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final name = data['distributorName']?.toString() ?? '';
+
+          // Manual case-insensitive match
+          if (distributorName == null ||
+              distributorName.isEmpty ||
+              name.toLowerCase().contains(distributorName.toLowerCase())) {
+            allFetchedData.add({
+              'SL No': i++,
+              'Name': name,
+              'City': data['city'],
+              'Phone Number': data['phoneNo1'],
+              'Representative Number': data['representativeNumber'],
+              'Action':
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                TextButton(
+                    onPressed: () {
+                      final docId = doc.id;
+                      distributorNameController.text = data['distributorName'];
+                      dlNo1Controller.text = data['dlNo1'];
+                      expiryDate1Controller.text = data['expiryDate1'];
+                      dlNo2Controller.text = data['dlNo2'];
+                      expiryDate2Controller.text = data['expiryDate2'];
+                      gstNoController.text = data['gstNo'];
+                      lane1.text = data['lane1'];
+                      lane2.text = data['lane2'];
+                      landMark.text = data['landMark'];
+                      city.text = data['city'];
+                      state.text = data['state'];
+                      pinCode.text = data['pinCode'];
+                      emailId.text = data['emailId'];
+                      phoneNo1.text = data['phoneNo1'];
+                      phoneNO2.text = data['phoneNO2'];
+                      bankAccountNumber.text = data['bankAccountNumber'];
+                      bankAccountName.text = data['bankAccountName'];
+                      ifsc.text = data['ifsc'];
+                      surfCode.text = data['surfCode'];
+                      representativeNumber.text = data['representativeNumber'];
+                      bankName.text = data['bankName'];
+                      branchName.text = data['branchName'];
+                      bankPhoneNo.text = data['bankPhoneNo'];
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: CustomText(
+                              text: 'Edit Distributor',
+                              size: 25,
+                            ),
+                            content: Container(
+                              width: 850,
+                              height: 550,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SingleChildScrollView(
+                                          child: Container(
+                                            width: 850,
+                                            height: 850,
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomText(
+                                                      text:
+                                                          'Distributor details ',
+                                                      size: 16, // Adjusted size
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller:
+                                                          distributorNameController,
+                                                      hintText:
+                                                          'Distributor Name',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller:
+                                                          dlNo1Controller,
+                                                      hintText: 'DL / No 1',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller:
+                                                          expiryDate1Controller,
+                                                      hintText: 'Expiry date',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller:
+                                                          dlNo2Controller,
+                                                      hintText: 'DL / No 2',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller:
+                                                          expiryDate2Controller,
+                                                      hintText: 'Expiry date',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller:
+                                                          gstNoController,
+                                                      hintText: 'GST NO',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Pharmacy Address',
+                                                      size: 16,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: lane1,
+                                                      hintText: 'Lane 1',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: lane2,
+                                                      hintText: 'Lane 2',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: landMark,
+                                                      hintText: 'Landmark',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: city,
+                                                      hintText: 'City',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: state,
+                                                      hintText: 'State',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: pinCode,
+                                                      hintText: 'Pin code',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 16),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: emailId,
+                                                      hintText: 'E-Mail ID',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: phoneNo1,
+                                                      hintText: 'Phone NO 1',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: phoneNO2,
+                                                      hintText:
+                                                          'Phone Number 2',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 30),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Bank Details',
+                                                      size: 16,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 30),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller:
+                                                          bankAccountNumber,
+                                                      hintText:
+                                                          'Bank Account Number',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller:
+                                                          bankAccountName,
+                                                      hintText:
+                                                          'Bank Account Name',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 16),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: ifsc,
+                                                      hintText: 'IFSC',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: surfCode,
+                                                      hintText: 'Surf Code',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 16),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: bankName,
+                                                      hintText: 'Bank Name',
+                                                      width: 250,
+                                                    ),
+                                                    CustomTextField(
+                                                      controller: branchName,
+                                                      hintText: 'Branch Name',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 30),
+                                                Row(
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller:
+                                                          representativeNumber,
+                                                      hintText:
+                                                          'Representative Number',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 30),
+                                                Row(
+                                                  children: [
+                                                    CustomTextField(
+                                                      controller: bankPhoneNo,
+                                                      hintText: 'Phone No',
+                                                      width: 250,
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 50),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  updateDistributor(docId);
+                                  Navigator.of(context).pop();
+                                },
+                                child: CustomText(
+                                  text: 'Submit ',
+                                  color: AppColors.secondaryColor,
+                                  size: 14,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: CustomText(
+                                  text: 'Cancel',
+                                  color: AppColors.secondaryColor,
+                                  size: 14,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: const CustomText(text: 'Edit')),
+                TextButton(
+                    onPressed: () async {
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('pharmacy')
+                            .doc('distributors')
+                            .collection('distributor')
+                            .doc(doc.id)
+                            .delete();
+
+                        Navigator.of(context).pop(); // Close dialog
+
+                        fetchData();
+                        CustomSnackBar(context,
+                            message: 'Distributor Deleted',
+                            backgroundColor: Colors.green);
+                      } catch (e) {
+                        CustomSnackBar(context,
+                            message: 'Distributor not Deleted',
+                            backgroundColor: Colors.red);
+                      }
+                    },
+                    child: const CustomText(text: 'Delete'))
+              ]),
+            });
+          }
+        }
+
+        lastDoc = snapshot.docs.last;
+
+        // Update state with current batch
+        setState(() {
+          tableData = List.from(allFetchedData);
+        });
+
+        // Delay to avoid UI freeze
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        if (snapshot.docs.length < batchSize) {
+          hasMore = false;
+        }
       }
 
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
+      if (allFetchedData.isEmpty) {
         print("No records found");
         setState(() {
           tableData = [];
         });
-        return;
       }
-
-      List<Map<String, dynamic>> fetchedData = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        fetchedData.add({
-          'SL No': i++,
-          'Name': data['distributorName'],
-          'City': data['city'],
-          'Phone Number': data['phoneNo1'],
-          'Representative Number': data['representativeNumber'],
-          'Action': Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            TextButton(
-                onPressed: () {
-                  final docId = doc.id;
-                  distributorNameController.text = data['distributorName'];
-                  dlNo1Controller.text = data['dlNo1'];
-                  expiryDate1Controller.text = data['expiryDate1'];
-                  dlNo2Controller.text = data['dlNo2'];
-                  expiryDate2Controller.text = data['expiryDate2'];
-                  gstNoController.text = data['gstNo'];
-                  lane1.text = data['lane1'];
-                  lane2.text = data['lane2'];
-                  landMark.text = data['landMark'];
-                  city.text = data['city'];
-                  state.text = data['state'];
-                  pinCode.text = data['pinCode'];
-                  emailId.text = data['emailId'];
-                  phoneNo1.text = data['phoneNo1'];
-                  phoneNO2.text = data['phoneNO2'];
-                  bankAccountNumber.text = data['bankAccountNumber'];
-                  bankAccountName.text = data['bankAccountName'];
-                  ifsc.text = data['ifsc'];
-                  surfCode.text = data['surfCode'];
-                  representativeNumber.text = data['representativeNumber'];
-                  bankName.text = data['bankName'];
-                  branchName.text = data['branchName'];
-                  bankPhoneNo.text = data['bankPhoneNo'];
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Edit Distributor'),
-                        content: Container(
-                          width: 850,
-                          height: 850,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SingleChildScrollView(
-                                      child: Container(
-                                        width: 850,
-                                        height: 850,
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomText(
-                                                  text: 'Distributor details ',
-                                                  size: 16, // Adjusted size
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              children: [
-                                                CustomTextField(
-                                                  controller:
-                                                      distributorNameController,
-                                                  hintText: 'Distributor Name',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: dlNo1Controller,
-                                                  hintText: 'DL / No 1',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller:
-                                                      expiryDate1Controller,
-                                                  hintText: 'Expiry date',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: dlNo2Controller,
-                                                  hintText: 'DL / No 2',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller:
-                                                      expiryDate2Controller,
-                                                  hintText: 'Expiry date',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              children: [
-                                                CustomTextField(
-                                                  controller: gstNoController,
-                                                  hintText: 'GST NO',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomText(
-                                                  text: 'Pharmacy Address',
-                                                  size: 16,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: lane1,
-                                                  hintText: 'Lane 1',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: lane2,
-                                                  hintText: 'Lane 2',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              children: [
-                                                CustomTextField(
-                                                  controller: landMark,
-                                                  hintText: 'Landmark',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: city,
-                                                  hintText: 'City',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: state,
-                                                  hintText: 'State',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: pinCode,
-                                                  hintText: 'Pin code',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 16),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: emailId,
-                                                  hintText: 'E-Mail ID',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: phoneNo1,
-                                                  hintText: 'Phone NO 1',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: phoneNO2,
-                                                  hintText: 'Phone Number 2',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 30),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomText(
-                                                  text: 'Bank Details',
-                                                  size: 16,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 30),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: bankAccountNumber,
-                                                  hintText:
-                                                      'Bank Account Number',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: bankAccountName,
-                                                  hintText: 'Bank Account Name',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 16),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: ifsc,
-                                                  hintText: 'IFSC',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: surfCode,
-                                                  hintText: 'Surf Code',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 16),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                CustomTextField(
-                                                  controller: bankName,
-                                                  hintText: 'Bank Name',
-                                                  width: 250,
-                                                ),
-                                                CustomTextField(
-                                                  controller: branchName,
-                                                  hintText: 'Branch Name',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 30),
-                                            Row(
-                                              children: [
-                                                CustomTextField(
-                                                  controller:
-                                                      representativeNumber,
-                                                  hintText:
-                                                      'Representative Number',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 30),
-                                            Row(
-                                              children: [
-                                                CustomTextField(
-                                                  controller: bankPhoneNo,
-                                                  hintText: 'Phone No',
-                                                  width: 250,
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 50),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () {
-                              updateDistributor(docId);
-                              Navigator.of(context).pop();
-                            },
-                            child: CustomText(
-                              text: 'Submit ',
-                              color: AppColors.secondaryColor,
-                              size: 14,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: CustomText(
-                              text: 'Cancel',
-                              color: AppColors.secondaryColor,
-                              size: 14,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-                child: const CustomText(text: 'Edit')),
-            TextButton(
-                onPressed: () async {
-                  try {
-                    await FirebaseFirestore.instance
-                        .collection('pharmacy')
-                        .doc('distributors')
-                        .collection('distributor')
-                        .doc(doc.id)
-                        .delete();
-
-                    Navigator.of(context).pop(); // Close dialog
-
-                    fetchData();
-                    CustomSnackBar(context,
-                        message: 'Distributor Deleted',
-                        backgroundColor: Colors.green);
-                  } catch (e) {
-                    CustomSnackBar(context,
-                        message: 'Distributor not Deleted',
-                        backgroundColor: Colors.red);
-                  }
-                },
-                child: const CustomText(text: 'Delete'))
-          ]),
-        });
-      }
-
-      setState(() {
-        tableData = fetchedData;
-      });
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -598,18 +641,31 @@ class _DistributorList extends State<DistributorList> {
                     controller: _distributorName,
                   ),
                   SizedBox(width: screenHeight * 0.1),
-                  PharmacyButton(
-                      height: screenHeight * 0.04,
-                      label: 'Search',
-                      onPressed: () {
-                        fetchData(distributorName: _distributorName.text);
-                        i = 1;
-                      },
-                      width: screenWidth * 0.08)
+                  searching
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          height: screenHeight * 0.04,
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => searching = true);
+                            await fetchData(
+                                distributorName: _distributorName.text);
+                            i = 1;
+                            setState(() => searching = false);
+                          },
+                          width: screenWidth * 0.08)
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),

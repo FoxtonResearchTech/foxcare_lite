@@ -55,10 +55,12 @@ class _ReceptionAccountsNewPatientRegistrationCollection
 
         if (singleDate != null) {
           query = query.where('opAdmissionDate', isEqualTo: singleDate);
+          query = query.orderBy('opAdmissionDate');
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('opAdmissionDate', isGreaterThanOrEqualTo: fromDate)
-              .where('opAdmissionDate', isLessThanOrEqualTo: toDate);
+              .where('opAdmissionDate', isLessThanOrEqualTo: toDate)
+              .orderBy('opAdmissionDate');
         } else {
           query = query;
         }
@@ -266,8 +268,8 @@ class _ReceptionAccountsNewPatientRegistrationCollection
       child: Container(
         padding: EdgeInsets.only(
           left: screenWidth * 0.01,
-          right: screenWidth * 0.01,
-          bottom: screenWidth * 0.01,
+          right: screenWidth * 0.02,
+          bottom: screenWidth * 0.02,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -277,12 +279,12 @@ class _ReceptionAccountsNewPatientRegistrationCollection
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.02),
+                  padding: EdgeInsets.only(top: screenWidth * 0.03),
                   child: Column(
                     children: [
                       CustomText(
                         text: "New Patient Registration Collection",
-                        size: screenWidth * 0.025,
+                        size: screenWidth * 0.03,
                       ),
                     ],
                   ),
@@ -304,7 +306,11 @@ class _ReceptionAccountsNewPatientRegistrationCollection
               children: [
                 /*
                 CustomTextField(
-                  onTap: () => _selectDate(context, _dateController),
+                  onTap: () {
+                    _selectDate(context, _dateController);
+                    _fromDateController.clear();
+                    _toDateController.clear();
+                  },
                   icon: Icon(Icons.date_range),
                   controller: _dateController,
                   hintText: 'Date',
@@ -324,7 +330,10 @@ class _ReceptionAccountsNewPatientRegistrationCollection
                 SizedBox(width: screenHeight * 0.02),
                  */
                 CustomTextField(
-                  onTap: () => _selectDate(context, _fromDateController),
+                  onTap: () {
+                    _selectDate(context, _fromDateController);
+                    _dateController.clear();
+                  },
                   icon: Icon(Icons.date_range),
                   controller: _fromDateController,
                   hintText: 'From Date',
@@ -332,7 +341,10 @@ class _ReceptionAccountsNewPatientRegistrationCollection
                 ),
                 SizedBox(width: screenHeight * 0.02),
                 CustomTextField(
-                  onTap: () => _selectDate(context, _toDateController),
+                  onTap: () {
+                    _selectDate(context, _toDateController);
+                    _dateController.clear();
+                  },
                   icon: Icon(Icons.date_range),
                   controller: _toDateController,
                   hintText: 'To Date',

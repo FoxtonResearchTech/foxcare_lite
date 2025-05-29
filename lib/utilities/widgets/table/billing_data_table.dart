@@ -177,48 +177,73 @@ class _BillingDataTable extends State<BillingDataTable> {
   Future<void> fetchMatchingProducts(int rowIndex, String query) async {
     if (query.isEmpty) return;
 
-    QuerySnapshot productSnapshots = await FirebaseFirestore.instance
-        .collection('stock')
-        .doc('Products')
-        .collection('AddedProducts')
-        .where('productName', isGreaterThanOrEqualTo: '')
-        .where('productName', isLessThanOrEqualTo: 'z\uf8ff')
-        .get();
+    const int batchSize = 10; // Adjust the batch size as needed
+    DocumentSnapshot? lastDoc;
+    List<Map<String, dynamic>> allMatches = [];
 
-    List<Map<String, dynamic>> matches = [];
+    bool hasMore = true;
 
-    for (var doc in productSnapshots.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      final productDocId = doc.id;
-      final productName = data['productName']?.toString() ?? '';
+    while (hasMore) {
+      Query queryRef = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts')
+          .orderBy('productName')
+          .where('productName', isGreaterThanOrEqualTo: '')
+          .where('productName', isLessThanOrEqualTo: 'z\uf8ff')
+          .limit(batchSize);
 
-      if (!productName.toLowerCase().contains(query.toLowerCase())) continue;
+      if (lastDoc != null) {
+        queryRef = (queryRef as Query<Map<String, dynamic>>)
+            .startAfterDocument(lastDoc);
+      }
 
-      QuerySnapshot entrySnapshots =
-          await doc.reference.collection('purchaseEntry').get();
+      QuerySnapshot productSnapshots = await queryRef.get();
+      if (productSnapshots.docs.isEmpty) break;
 
-      for (var entryDoc in entrySnapshots.docs) {
-        final entryData = entryDoc.data() as Map<String, dynamic>;
-        matches.add({
-          'productDocId': productDocId,
-          'purchaseEntryDocId': entryDoc.id,
-          'productName': data['productName'],
-          'quantity': entryData['quantity'],
-          'batchNumber': entryData['batchNumber'],
-          'expiry': entryData['expiry'],
-          'hsn': entryData['hsn'],
-          'mrp': entryData['mrp'],
-          'rate': entryData['rate'],
-          'sgst': entryData['sgst'],
-          'cgst': entryData['cgst'],
-          'tax': entryData['tax'],
-        });
+      for (var doc in productSnapshots.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final productDocId = doc.id;
+        final productName = data['productName']?.toString() ?? '';
+
+        if (!productName.toLowerCase().contains(query.toLowerCase())) continue;
+
+        QuerySnapshot entrySnapshots =
+            await doc.reference.collection('purchaseEntry').get();
+
+        for (var entryDoc in entrySnapshots.docs) {
+          final entryData = entryDoc.data() as Map<String, dynamic>;
+          allMatches.add({
+            'productDocId': productDocId,
+            'purchaseEntryDocId': entryDoc.id,
+            'productName': productName,
+            'quantity': entryData['quantity'],
+            'batchNumber': entryData['batchNumber'],
+            'expiry': entryData['expiry'],
+            'hsn': entryData['hsn'],
+            'mrp': entryData['mrp'],
+            'rate': entryData['rate'],
+            'sgst': entryData['sgst'],
+            'cgst': entryData['cgst'],
+            'tax': entryData['tax'],
+          });
+        }
+      }
+
+      // Update UI after each batch
+      setState(() {
+        productSuggestions[rowIndex] = List.from(allMatches);
+      });
+
+      lastDoc = productSnapshots.docs.last;
+
+      if (productSnapshots.docs.length < batchSize) {
+        hasMore = false; // No more documents
+      } else {
+        await Future.delayed(
+            const Duration(milliseconds: 300)); // Add delay between batches
       }
     }
-
-    setState(() {
-      productSuggestions[rowIndex] = matches;
-    });
   }
 
   @override

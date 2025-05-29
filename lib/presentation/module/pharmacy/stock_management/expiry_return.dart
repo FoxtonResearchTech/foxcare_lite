@@ -11,9 +11,11 @@ import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
@@ -29,7 +31,8 @@ class ExpiryReturn extends StatefulWidget {
 
 class _ExpiryReturn extends State<ExpiryReturn> {
   DateTime dateTime = DateTime.now();
-
+  bool distributorSearch = false;
+  bool refNoSearch = false;
   TextEditingController _distributor = TextEditingController();
   TextEditingController _refNo = TextEditingController();
   List<String> distributorsNames = [];
@@ -198,34 +201,50 @@ class _ExpiryReturn extends State<ExpiryReturn> {
 
   Future<void> fetchData({String? distributor, String? refNo}) async {
     try {
-      CollectionReference productsCollection = FirebaseFirestore.instance
+      final CollectionReference productsCollection = FirebaseFirestore.instance
           .collection('stock')
           .doc('Products')
           .collection('ExpiryReturn');
 
-      Query query = productsCollection;
+      Query baseQuery = productsCollection;
       if (distributor != null) {
-        query = query.where('distributor', isEqualTo: distributor);
-      } else if (refNo != null) {
-        query = query.where('refNo', isEqualTo: refNo);
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData = [];
-        });
-        return;
+        baseQuery = baseQuery.where('distributor', isEqualTo: distributor);
       }
 
-      List<Map<String, dynamic>> fetchedData = [];
+      const int batchSize = 20;
+      DocumentSnapshot? lastDoc;
+      bool moreData = true;
+      List<Map<String, dynamic>> accumulatedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+      while (moreData) {
+        Query query = baseQuery.limit(batchSize);
 
-        fetchedData.add(
-          {
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        final QuerySnapshot snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          moreData = false;
+          break;
+        }
+
+        // Apply manual filtering for refNo (case-insensitive)
+        final filteredDocs = snapshot.docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (refNo != null) {
+            final docRefNo = data['rfNo']?.toString();
+            return docRefNo != null &&
+                docRefNo.toLowerCase() == refNo.toLowerCase();
+          }
+          return true;
+        }).toList();
+
+        for (var doc in filteredDocs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          accumulatedData.add({
             'Bill NO': data['billNo']?.toString() ?? 'N/A',
             'Return Date': data['returnDate']?.toString() ?? 'N/A',
             'Ref No': data['rfNo']?.toString() ?? 'N/A',
@@ -478,14 +497,33 @@ class _ExpiryReturn extends State<ExpiryReturn> {
                 ),
               ],
             ),
-          },
-        );
+          });
+        }
+
+        setState(() {
+          tableData = List.from(accumulatedData);
+        });
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        lastDoc = snapshot.docs.last;
+
+        // If no matches found in this batch and refNo is being searched, we can break early
+        if (refNo != null &&
+            filteredDocs.isEmpty &&
+            snapshot.docs.length < batchSize) {
+          break;
+        }
       }
 
-      setState(() {
-        tableData = fetchedData;
-      });
-      print(tableData);
+      if (accumulatedData.isEmpty) {
+        print("No records found");
+        setState(() {
+          tableData = [];
+        });
+      } else {
+        print(tableData);
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -568,12 +606,24 @@ class _ExpiryReturn extends State<ExpiryReturn> {
                     verticalSize: screenHeight * 0.02,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        fetchData(refNo: _refNo.text);
-                      },
-                      width: screenWidth * 0.08),
+                  refNoSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => refNoSearch = true);
+                            await fetchData(refNo: _refNo.text);
+                            setState(() => refNoSearch = false);
+                          },
+                          width: screenWidth * 0.08),
                   SizedBox(width: screenHeight * 0.2),
                   SizedBox(
                     width: screenWidth * 0.15,
@@ -589,13 +639,25 @@ class _ExpiryReturn extends State<ExpiryReturn> {
                     ),
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(distributor: selectedDistributor);
-                    },
-                    width: screenWidth * 0.08,
-                  ),
+                  distributorSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => distributorSearch = true);
+                            await fetchData(distributor: selectedDistributor);
+                            setState(() => distributorSearch = false);
+                          },
+                          width: screenWidth * 0.08,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -603,7 +665,7 @@ class _ExpiryReturn extends State<ExpiryReturn> {
                 children: [CustomText(text: 'Bill List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 columnWidths: {
                   6: FixedColumnWidth(screenWidth * 0.18),
                 },
