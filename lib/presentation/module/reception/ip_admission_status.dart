@@ -88,7 +88,9 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
             bool matches = false;
 
             if (patientData['isIP'] == true) {
-              if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+              if (ipNumber != null &&
+                  ipTicketData['ipTicket'] != null &&
+                  ipTicketData['ipTicket'].toString().toLowerCase() == ipNumber.toLowerCase()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
@@ -100,6 +102,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 matches = true;
               }
             }
+
 
             if (matches) {
               if (ipTicketData['discharged'] == true) {

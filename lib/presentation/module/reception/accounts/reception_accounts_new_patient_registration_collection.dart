@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
@@ -25,6 +26,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
   TextEditingController _dateController = TextEditingController();
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
+  bool isLoading = false;
 
   DateTime now = DateTime.now();
   final List<String> headers = [
@@ -302,6 +304,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
             ),
             Row(
               children: [
+                /*
                 CustomTextField(
                   onTap: () {
                     _selectDate(context, _dateController);
@@ -325,6 +328,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
                 SizedBox(width: screenHeight * 0.02),
                 CustomText(text: 'OR'),
                 SizedBox(width: screenHeight * 0.02),
+                 */
                 CustomTextField(
                   onTap: () {
                     _selectDate(context, _fromDateController);
@@ -347,17 +351,31 @@ class _ReceptionAccountsNewPatientRegistrationCollection
                   width: screenWidth * 0.15,
                 ),
                 SizedBox(width: screenHeight * 0.02),
-                CustomButton(
+                isLoading
+                    ? SizedBox(
+                  width: screenWidth * 0.09,
+                  height: screenWidth * 0.03,
+                  child: Lottie.asset(
+                    'assets/button_loading.json', // Ensure the file path is correct
+                    fit: BoxFit.contain,
+                  ),
+                )
+                    : CustomButton(
                   label: 'Search',
-                  onPressed: () {
-                    fetchData(
+                  onPressed: () async {
+                    setState(() => isLoading = true);
+
+                    await fetchData(
                       fromDate: _fromDateController.text,
                       toDate: _toDateController.text,
                     );
+
+                    setState(() => isLoading = false);
                   },
-                  width: screenWidth * 0.08,
-                  height: screenWidth * 0.02,
+                  width: screenWidth * 0.09,
+                  height: screenWidth * 0.03,
                 ),
+
               ],
             ),
             SizedBox(height: screenHeight * 0.05),

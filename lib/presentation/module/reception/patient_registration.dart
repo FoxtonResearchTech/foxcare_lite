@@ -1137,7 +1137,10 @@ class _PatientRegistrationState extends State<PatientRegistration> {
 
   Widget form2() {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    double screenHeight = MediaQuery.of(
+
+
+        context).size.height;
     return Container(
       width: screenWidth * 2,
       height: screenHeight * 0.9,
