@@ -385,9 +385,6 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
       print("Pharmacy Total Income: $pharmacyTotalIncome");
     } catch (e) {
       print("Error fetching pharmacy income: $e");
-      setState(() {
-        isPharmacyTotalIncomeLoading = false;
-      });
     }
   }
 

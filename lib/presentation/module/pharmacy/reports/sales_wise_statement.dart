@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 
 import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
+import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 
@@ -21,7 +23,7 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
   final TextEditingController _refNo = TextEditingController();
   final TextEditingController _fromDate = TextEditingController();
   final TextEditingController _toDate = TextEditingController();
-
+  bool fromToDateSearching = false;
   final List<String> headers = [
     'Sl No',
     'Product Name',
@@ -33,7 +35,7 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
     'Sales',
     'Closing',
     'Sales value',
-    'Closing Value'
+    'Closing value'
   ];
   List<Map<String, dynamic>> tableData = [];
 
@@ -57,207 +59,445 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
   Future<List<Map<String, dynamic>>> fetchProductsByDateRange({
     String? from,
     String? to,
+    int pageSize = 1,
   }) async {
     try {
       int i = 1;
-      DateTime? fromDateTime = (from != null && from.isNotEmpty)
-          ? DateTime.parse('$from 00:00')
-          : null;
-      DateTime? toDateTime =
-          (to != null && to.isNotEmpty) ? DateTime.parse('$to 23:59') : null;
+      DateTime now = DateTime.now();
 
-      print('Fetching products from $fromDateTime to $toDateTime');
+      // Opening Stock cutoff date
+      DateTime openingStockCutoffDate;
+      if (from != null && from.isNotEmpty) {
+        openingStockCutoffDate = DateTime.parse('$from 00:00');
+      } else {
+        openingStockCutoffDate = now.subtract(const Duration(days: 1));
+      }
 
-      final addedProductsSnapshot = await FirebaseFirestore.instance
-          .collection('stock')
-          .doc('Products')
-          .collection('AddedProducts')
-          .get();
+      bool applyDateFilter =
+          (from != null && from.isNotEmpty) && (to != null && to.isNotEmpty);
+
+      DateTime? fromDateTime;
+      DateTime? toDateTime;
+      if (applyDateFilter) {
+        fromDateTime = DateTime.parse('$from 00:00');
+        toDateTime = DateTime.parse('$to 23:59');
+      }
+
+      print('Opening Stock cutoff: $openingStockCutoffDate');
+      if (applyDateFilter) {
+        print('Filtering purchase/return from $fromDateTime to $toDateTime');
+      } else {
+        print('No date filtering for purchase/return, summing all data');
+      }
 
       List<Map<String, dynamic>> fetchedData = [];
+      QueryDocumentSnapshot? lastProductDoc;
 
-      for (var productDoc in addedProductsSnapshot.docs) {
-        final productData = productDoc.data();
-        final productId = productDoc.id;
+      bool moreDataAvailable = true;
 
-        print('Checking product: ${productData['productName']}');
-
-        // Fetch currentQty
-        final qtySnapshot = await FirebaseFirestore.instance
+      while (moreDataAvailable) {
+        Query query = FirebaseFirestore.instance
             .collection('stock')
             .doc('Products')
             .collection('AddedProducts')
-            .doc(productId)
-            .collection('currentQty')
-            .get();
+            .orderBy('productName')
+            .limit(pageSize);
 
-        List<QueryDocumentSnapshot> filteredDocs =
-            qtySnapshot.docs.where((doc) {
-          final dateStr = doc['date'];
-          String timeStr = doc['time'];
-          try {
-            List<String> timeParts = timeStr.split(':');
-            String hour = timeParts[0].padLeft(2, '0');
-            String minute = timeParts[1].padLeft(2, '0');
-            String paddedTime = '$hour:$minute';
-
-            final inputFormat = DateFormat('yyyy-MM-dd HH:mm');
-            final combined = inputFormat.parse('$dateStr $paddedTime');
-
-            if (fromDateTime != null && combined.isBefore(fromDateTime))
-              return false;
-            if (toDateTime != null && combined.isAfter(toDateTime))
-              return false;
-
-            return true;
-          } catch (_) {
-            return false;
-          }
-        }).toList();
-
-        filteredDocs.sort((a, b) {
-          try {
-            String dateA = a['date'];
-            String timeA = a['time'].padLeft(5, '0');
-            String dateB = b['date'];
-            String timeB = b['time'].padLeft(5, '0');
-
-            final dtA = DateTime.parse('$dateA $timeA');
-            final dtB = DateTime.parse('$dateB $timeB');
-
-            return dtB.compareTo(dtA);
-          } catch (_) {
-            return 0;
-          }
-        });
-
-        int latestQty = 0;
-        if (filteredDocs.isNotEmpty) {
-          latestQty =
-              int.tryParse(filteredDocs.first['quantity'].toString()) ?? 0;
+        if (lastProductDoc != null) {
+          query = query.startAfterDocument(lastProductDoc);
         }
 
-        // PURCHASE ENTRY
-        final purchaseEntrySnapshot = await FirebaseFirestore.instance
-            .collection('stock')
-            .doc('Products')
-            .collection('AddedProducts')
-            .doc(productId)
-            .collection('purchaseEntry')
-            .get();
+        final addedProductsSnapshot = await query.get();
 
-        int totalPurchaseQty = 0;
+        if (addedProductsSnapshot.docs.isEmpty) {
+          // No more data
+          moreDataAvailable = false;
+          break;
+        }
 
-        for (var purchaseDoc in purchaseEntrySnapshot.docs) {
-          final reportDateStr = purchaseDoc['reportDate'];
-          if (reportDateStr != null) {
+        for (var productDoc in addedProductsSnapshot.docs) {
+          final productData = productDoc.data() as Map<String, dynamic>;
+          final productId = productDoc.id;
+
+          print('Checking product: ${productData['productName']}');
+
+          // Calculate Opening Stock: sum qty records before openingStockCutoffDate
+          final qtySnapshot = await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .doc(productId)
+              .collection('currentQty')
+              .get();
+
+          List<QueryDocumentSnapshot> openingStockDocs =
+              qtySnapshot.docs.where((doc) {
+            final dateStr = doc['date'];
+            final timeStr = doc['time'];
             try {
-              DateTime reportDate = DateTime.parse(reportDateStr);
-              if ((fromDateTime == null ||
-                      !reportDate.isBefore(fromDateTime)) &&
-                  (toDateTime == null || !reportDate.isAfter(toDateTime))) {
-                totalPurchaseQty +=
-                    int.tryParse(purchaseDoc['qtyWithoutFree'].toString()) ?? 0;
-              }
-            } catch (_) {}
+              final paddedTime = timeStr.padLeft(5, '0');
+              final combined =
+                  DateFormat('yyyy-MM-dd HH:mm').parse('$dateStr $paddedTime');
+              return combined.isBefore(openingStockCutoffDate);
+            } catch (_) {
+              return false;
+            }
+          }).toList();
+
+          openingStockDocs.sort((a, b) {
+            try {
+              final dtA = DateFormat('yyyy-MM-dd HH:mm')
+                  .parse('${a['date']} ${a['time'].padLeft(5, '0')}');
+              final dtB = DateFormat('yyyy-MM-dd HH:mm')
+                  .parse('${b['date']} ${b['time'].padLeft(5, '0')}');
+              return dtB.compareTo(dtA);
+            } catch (_) {
+              return 0;
+            }
+          });
+
+          int openingStockQty = 0;
+          if (openingStockDocs.isNotEmpty) {
+            openingStockQty =
+                int.tryParse(openingStockDocs.first['quantity'].toString()) ??
+                    0;
           }
-        }
 
-        Future<int> sumReturnQty({
-          required String collectionName,
-          required String targetProductName,
-          required DateTime? fromDateTime,
-          required DateTime? toDateTime,
-        }) async {
-          int total = 0;
+          // PURCHASE ENTRY
+          final purchaseEntrySnapshot = await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .doc(productId)
+              .collection('purchaseEntry')
+              .get();
 
-          try {
-            final snapshot = await FirebaseFirestore.instance
-                .collection('stock')
-                .doc('Products')
-                .collection(collectionName)
-                .get();
+          int totalPurchaseQty = 0;
 
-            for (var doc in snapshot.docs) {
-              final data = doc.data();
-              final dateStr =
-                  data['returnDate'] ?? data['billDate']; // use correct field
-
-              if (dateStr != null) {
+          for (var purchaseDoc in purchaseEntrySnapshot.docs) {
+            if (applyDateFilter) {
+              final reportDateStr = purchaseDoc['reportDate'];
+              if (reportDateStr != null && reportDateStr is String) {
                 try {
-                  final billDate = DateTime.parse(dateStr);
-
-                  if ((fromDateTime == null ||
-                          !billDate.isBefore(fromDateTime)) &&
-                      (toDateTime == null || !billDate.isAfter(toDateTime))) {
-                    final entryProducts = List<Map<String, dynamic>>.from(
-                        data['entryProducts'] ?? []);
-
-                    for (var entry in entryProducts) {
-                      if (entry['Product Name'] == targetProductName) {
-                        int qty =
-                            int.tryParse(entry['Quantity'].toString()) ?? 0;
-                        int free = int.tryParse(entry['Free'].toString()) ?? 0;
-                        total += qty + free;
-                      }
-                    }
+                  final reportDate = DateTime.parse(reportDateStr);
+                  if (reportDate.isBefore(fromDateTime!) ||
+                      reportDate.isAfter(toDateTime!)) {
+                    continue; // skip out of date range
                   }
                 } catch (e) {
-                  print('Error parsing date in $collectionName: $e');
+                  print('Error parsing reportDate: $reportDateStr — $e');
                 }
               }
             }
-          } catch (e) {
-            print('Error fetching $collectionName: $e');
+            totalPurchaseQty +=
+                int.tryParse(purchaseDoc['qtyWithoutFree'].toString()) ?? 0;
           }
 
-          return total;
+          final productName = productData['productName'] ?? '';
+
+          final returnQty = await sumReturnQty(
+            collectionName: 'StockReturn',
+            targetProductName: productName,
+            fromDateTime: fromDateTime,
+            toDateTime: toDateTime,
+            applyDateFilter: applyDateFilter,
+          );
+
+          final damageQty = await sumReturnQty(
+            collectionName: 'DamageReturn',
+            targetProductName: productName,
+            fromDateTime: fromDateTime,
+            toDateTime: toDateTime,
+            applyDateFilter: applyDateFilter,
+          );
+
+          final expiryQty = await sumReturnQty(
+            collectionName: 'ExpiryReturn',
+            targetProductName: productName,
+            fromDateTime: fromDateTime,
+            toDateTime: toDateTime,
+            applyDateFilter: applyDateFilter,
+          );
+
+          final salesQty = await sumSalesQty(
+            targetProductName: productName,
+            fromDateTime: fromDateTime,
+            toDateTime: toDateTime,
+            applyDateFilter: applyDateFilter,
+          );
+
+          final latestRate = await getLatestPurchaseRate(productId);
+
+          final closingQty = (openingStockQty + totalPurchaseQty) -
+              (returnQty + damageQty + expiryQty + salesQty);
+
+          final salesValue = latestRate * salesQty;
+          final closingValue = latestRate * closingQty;
+
+          fetchedData.add({
+            'Sl No': i++,
+            'Product Name': productName,
+            'Opening Stock': openingStockQty,
+            'Purchase': totalPurchaseQty,
+            'Return': returnQty,
+            'Damage Return': damageQty,
+            'Expiry Return': expiryQty,
+            'Sales': salesQty,
+            'Closing': closingQty,
+            'Sales value': salesValue,
+            'Closing value': closingValue,
+          });
         }
 
-        final productName = productData['productName'] ?? '';
+        // Update lastProductDoc to last fetched doc for next iteration
+        lastProductDoc = addedProductsSnapshot.docs.last;
 
-        final returnQty = await sumReturnQty(
-          collectionName: 'StockReturn',
-          targetProductName: productName,
-          fromDateTime: fromDateTime,
-          toDateTime: toDateTime,
-        );
-
-        final damageQty = await sumReturnQty(
-          collectionName: 'DamageReturn',
-          targetProductName: productName,
-          fromDateTime: fromDateTime,
-          toDateTime: toDateTime,
-        );
-
-        final expiryQty = await sumReturnQty(
-          collectionName: 'ExpiryReturn',
-          targetProductName: productName,
-          fromDateTime: fromDateTime,
-          toDateTime: toDateTime,
-        );
-
-        fetchedData.add({
-          'Sl No': i++,
-          'Product Name': productData['productName'] ?? 'N/A',
-          'Opening Stock': latestQty,
-          'Purchase': totalPurchaseQty,
-          'Return': returnQty,
-          'Damage Return': damageQty,
-          'Expiry Return': expiryQty,
+        setState(() {
+          tableData = List.from(fetchedData);
+          _totalSalesValue();
+          _totalClosingValue();
         });
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        // Stop if fetched less than pageSize documents (last page)
+        if (addedProductsSnapshot.docs.length < pageSize) {
+          moreDataAvailable = false;
+        }
       }
 
-      setState(() {
-        tableData = fetchedData;
-      });
-
-      print('Fetched Data: $fetchedData');
+      print('Fetched all paginated Data: $fetchedData');
       return fetchedData;
     } catch (e) {
       print('Error fetching products: $e');
       return [];
     }
+  }
+
+  Future<int> sumReturnQty({
+    required String collectionName,
+    required String targetProductName,
+    DateTime? fromDateTime,
+    DateTime? toDateTime,
+    required bool applyDateFilter,
+    int pageSize = 20, // batch size per page
+  }) async {
+    int total = 0;
+
+    try {
+      Query query = FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection(collectionName)
+          .orderBy(
+              'returnDate'); // or 'billDate', if always present and sortable
+
+      // If you want to filter by date in query (optional optimization)
+      if (applyDateFilter && fromDateTime != null && toDateTime != null) {
+        // Firestore requires the same field for range queries.
+        // If you always have returnDate or billDate, adjust accordingly.
+        query = query
+            .where('returnDate',
+                isGreaterThanOrEqualTo: fromDateTime.toIso8601String())
+            .where('returnDate',
+                isLessThanOrEqualTo: toDateTime.toIso8601String());
+      }
+
+      QueryDocumentSnapshot? lastDoc;
+      bool moreData = true;
+
+      while (moreData) {
+        Query currentQuery = query.limit(pageSize);
+        if (lastDoc != null) {
+          currentQuery = currentQuery.startAfterDocument(lastDoc);
+        }
+
+        final snapshot = await currentQuery.get();
+
+        if (snapshot.docs.isEmpty) {
+          moreData = false;
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          // Date filtering (double check if not filtered by Firestore query)
+          final dateStr = data['returnDate'] ?? data['billDate'];
+          if (applyDateFilter && dateStr != null && dateStr is String) {
+            try {
+              final billDate = DateTime.parse(dateStr);
+              if (billDate.isBefore(fromDateTime!) ||
+                  billDate.isAfter(toDateTime!)) {
+                continue; // skip outside date range
+              }
+            } catch (e) {
+              print('Error parsing date in $collectionName: $e');
+            }
+          }
+
+          final entryProducts =
+              List<Map<String, dynamic>>.from(data['entryProducts'] ?? []);
+          for (var entry in entryProducts) {
+            if (entry['Product Name'] == targetProductName) {
+              total += int.tryParse(entry['Quantity'].toString()) ?? 0;
+            }
+          }
+        }
+
+        lastDoc = snapshot.docs.last;
+
+        // If fetched docs less than pageSize, then no more pages
+        if (snapshot.docs.length < pageSize) {
+          moreData = false;
+        }
+
+        // Small delay before next page to reduce Firestore load (optional)
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    } catch (e) {
+      print('Error fetching $collectionName: $e');
+    }
+
+    return total;
+  }
+
+  Future<double> getLatestPurchaseRate(String productId) async {
+    try {
+      final purchaseSnapshot = await FirebaseFirestore.instance
+          .collection('stock')
+          .doc('Products')
+          .collection('AddedProducts')
+          .doc(productId)
+          .collection('purchaseEntry')
+          .orderBy('reportDate', descending: true)
+          .limit(1)
+          .get();
+
+      if (purchaseSnapshot.docs.isNotEmpty) {
+        final latestPurchase = purchaseSnapshot.docs.first.data();
+        return double.tryParse(latestPurchase['rate'].toString()) ?? 0.0;
+      }
+    } catch (e) {
+      print('Error fetching latest purchase rate for product $productId: $e');
+    }
+    return 0.0;
+  }
+
+  Future<int> sumSalesQty({
+    required String targetProductName,
+    DateTime? fromDateTime,
+    DateTime? toDateTime,
+    required bool applyDateFilter,
+    int batchSize = 20, // adjustable batch size
+  }) async {
+    int total = 0;
+
+    try {
+      final billingSubcollections = ['countersales', 'opbilling', 'ipbilling'];
+
+      for (final subcollection in billingSubcollections) {
+        DocumentSnapshot? lastDoc;
+        bool hasMore = true;
+
+        while (hasMore) {
+          Query query = FirebaseFirestore.instance
+              .collection('pharmacy')
+              .doc('billings')
+              .collection(subcollection)
+              .orderBy('billDate');
+
+          if (lastDoc != null) {
+            query = query.startAfterDocument(lastDoc);
+          }
+
+          query = query.limit(batchSize);
+
+          final snapshot = await query.get();
+
+          if (snapshot.docs.isEmpty) {
+            hasMore = false;
+            break;
+          }
+
+          for (var doc in snapshot.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final billDateStr = data['billDate'];
+
+            if (applyDateFilter &&
+                billDateStr != null &&
+                billDateStr is String) {
+              try {
+                final billDate = DateTime.parse(billDateStr);
+                if (billDate.isBefore(fromDateTime!) ||
+                    billDate.isAfter(toDateTime!)) {
+                  continue; // skip outside date range
+                }
+              } catch (e) {
+                print('Error parsing billdate in $subcollection: $e');
+              }
+            }
+
+            final entryProducts =
+                List<Map<String, dynamic>>.from(data['entryProducts'] ?? []);
+
+            for (var entry in entryProducts) {
+              if (entry['Product Name'] == targetProductName) {
+                total += int.tryParse(entry['Quantity'].toString()) ?? 0;
+              }
+            }
+          }
+
+          lastDoc = snapshot.docs.last;
+
+          // Delay a bit between batches (e.g., 100ms)
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          if (snapshot.docs.length < batchSize) {
+            hasMore = false; // no more documents to fetch
+          }
+        }
+      }
+    } catch (e) {
+      print('Error fetching Sales quantity: $e');
+    }
+
+    return total;
+  }
+
+  int _totalSalesValue() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Sales value'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
+        }
+
+        return sum;
+      },
+    );
+  }
+
+  int _totalClosingValue() {
+    return tableData.fold<int>(
+      0,
+      (sum, entry) {
+        var value = entry['Closing value'];
+        if (value == null) return sum;
+
+        if (value is String) {
+          return sum + (double.tryParse(value)?.toInt() ?? 0);
+        } else if (value is num) {
+          return sum + value.toInt();
+        }
+
+        return sum;
+      },
+    );
   }
 
   @override
@@ -330,15 +570,70 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
                   SizedBox(width: screenHeight * 0.05),
                   Padding(
                     padding: EdgeInsets.only(top: screenHeight * 0.035),
-                    child: PharmacyButton(
-                      label: 'Select',
-                      onPressed: () async {
-                        await fetchProductsByDateRange(
-                            from: _fromDate.text, to: _toDate.text);
-                      },
-                      width: screenWidth * 0.08,
-                      height: screenHeight * 0.045,
-                    ),
+                    child: fromToDateSearching
+                        ? SizedBox(
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.045,
+                            child: Center(
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                              ),
+                            ),
+                          )
+                        : PharmacyButton(
+                            label: 'Select',
+                            onPressed: () async {
+                              final today = DateTime.now();
+                              final enteredFromDate = _fromDate.text;
+
+                              final enteredToDate = _toDate.text;
+
+                              // Parse the enteredFromDate safely
+                              if (enteredFromDate.isNotEmpty) {
+                                try {
+                                  final parsedDate =
+                                      DateTime.parse(enteredFromDate);
+                                  if (parsedDate.year == today.year &&
+                                      parsedDate.month == today.month &&
+                                      parsedDate.day == today.day) {
+                                    CustomSnackBar(context,
+                                        message: "Today's Date Is Not Allowed",
+                                        backgroundColor: Colors.red);
+                                    return; // Stop execution
+                                  }
+                                } catch (e) {
+                                  CustomSnackBar(context,
+                                      message: "Invalid Date Format",
+                                      backgroundColor: Colors.red);
+                                  return;
+                                }
+                              }
+                              if (enteredFromDate.isNotEmpty &&
+                                  enteredToDate.isNotEmpty) {
+                                try {
+                                  if (enteredFromDate == enteredToDate) {
+                                    CustomSnackBar(context,
+                                        message:
+                                            "From & To Date Should Not Be Equal",
+                                        backgroundColor: Colors.red);
+                                    return; // Stop execution
+                                  }
+                                } catch (e) {
+                                  CustomSnackBar(context,
+                                      message: "Invalid Date Format",
+                                      backgroundColor: Colors.red);
+                                  return;
+                                }
+                              }
+
+                              setState(() => fromToDateSearching = true);
+                              await fetchProductsByDateRange(
+                                  from: _fromDate.text, to: _toDate.text);
+                              setState(() => fromToDateSearching = false);
+                            },
+                            width: screenWidth * 0.08,
+                            height: screenHeight * 0.045,
+                          ),
                   ),
                 ],
               ),
@@ -352,7 +647,7 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(left: screenWidth * 0.32),
+                padding: EdgeInsets.only(left: screenWidth * 0.5),
                 width: screenWidth,
                 height: screenHeight * 0.030,
                 decoration: BoxDecoration(
@@ -361,10 +656,18 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
                     width: 0.5,
                   ),
                 ),
-                child: Column(
+                child: Row(
                   children: [
                     CustomText(
                       text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '${_totalSalesValue().toString()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '${_totalClosingValue().toString()}',
                     )
                   ],
                 ),

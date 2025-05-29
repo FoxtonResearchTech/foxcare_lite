@@ -719,12 +719,12 @@ class _CancelBill extends State<CancelBill> {
                   ),
                 );
                 //
-                // await Printing.layoutPdf(
-                //   onLayout: (format) async => pdf.save(),
-                // );
+                await Printing.layoutPdf(
+                  onLayout: (format) async => pdf.save(),
+                );
 
-                await Printing.sharePdf(
-                    bytes: await pdf.save(), filename: '${billNo}.pdf');
+                // await Printing.sharePdf(
+                //     bytes: await pdf.save(), filename: '${billNo}.pdf');
               },
               child: const Text('Print'),
             ),
@@ -1456,12 +1456,12 @@ class _CancelBill extends State<CancelBill> {
                   ),
                 );
                 //
-                // await Printing.layoutPdf(
-                //   onLayout: (format) async => pdf.save(),
-                // );
+                await Printing.layoutPdf(
+                  onLayout: (format) async => pdf.save(),
+                );
 
-                await Printing.sharePdf(
-                    bytes: await pdf.save(), filename: '${billNo}.pdf');
+                // await Printing.sharePdf(
+                //     bytes: await pdf.save(), filename: '${billNo}.pdf');
               },
               child: const Text('Print'),
             ),
@@ -2175,12 +2175,12 @@ class _CancelBill extends State<CancelBill> {
                   ),
                 );
                 //
-                // await Printing.layoutPdf(
-                //   onLayout: (format) async => pdf.save(),
-                // );
+                await Printing.layoutPdf(
+                  onLayout: (format) async => pdf.save(),
+                );
 
-                await Printing.sharePdf(
-                    bytes: await pdf.save(), filename: '${billNo}.pdf');
+                // await Printing.sharePdf(
+                //     bytes: await pdf.save(), filename: '${billNo}.pdf');
               },
               child: const Text('Print'),
             ),

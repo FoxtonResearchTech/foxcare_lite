@@ -182,10 +182,10 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                             return AlertDialog(
                               title: const CustomText(
                                 text: 'Edit Pharmacy',
-                                size: 25,
+                                size: 26,
                               ),
                               content: Container(
-                                width: 850,
+                                width: 725,
                                 height: 550,
                                 child: SingleChildScrollView(
                                   child: Column(
@@ -196,233 +196,526 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                                         children: [
                                           SingleChildScrollView(
                                             child: Container(
-                                              width: 850,
-                                              height: 850,
+                                              width: 725,
+                                              height: 1000,
                                               child: Column(
                                                 children: [
                                                   const SizedBox(height: 10),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller:
-                                                            pharmacyNameController,
-                                                        hintText:
-                                                            'Pharmacy Name',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text:
+                                                                'Pharmacy Name',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                pharmacyNameController,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                       const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller:
-                                                            hospitalName,
-                                                        hintText:
-                                                            'Hospital Name',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text:
+                                                                'Hospital Name',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                hospitalName,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 20),
-                                                  Row(
-                                                    children: [
-                                                      CustomTextField(
-                                                        controller:
-                                                            dlNo1Controller,
-                                                        hintText: 'DL / No 1',
-                                                        width: 300,
-                                                      ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller:
-                                                            expiryDate1Controller,
-                                                        hintText: 'Expiry date',
-                                                        width: 300,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 20),
-                                                  Row(
-                                                    children: [
-                                                      CustomTextField(
-                                                        controller:
-                                                            dlNo2Controller,
-                                                        hintText: 'DL / No 2',
-                                                        width: 300,
-                                                      ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller:
-                                                            expiryDate2Controller,
-                                                        hintText: 'Expiry date',
-                                                        width: 300,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 20),
-                                                  Row(
-                                                    children: [
-                                                      CustomTextField(
-                                                        controller:
-                                                            gstNoController,
-                                                        hintText: 'GST NO',
-                                                        width: 300,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 30),
                                                   const Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
                                                       CustomText(
-                                                          text:
-                                                              'Pharmacy Address'),
+                                                        text: 'Licence Details',
+                                                        size: 20,
+                                                      ),
                                                     ],
                                                   ),
-                                                  const SizedBox(height: 30),
+                                                  const SizedBox(height: 10),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller: lane1,
-                                                        hintText: 'Lane 1',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'DL / No 1',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                dlNo1Controller,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                       const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: lane2,
-                                                        hintText: 'Lane 2',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'DL / No 2',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                dlNo2Controller,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 20),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller: landMark,
-                                                        hintText: 'Landmark',
-                                                        width: 650,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'GST NO',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                gstNoController,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 20),
-                                                  Row(
-                                                    children: [
-                                                      CustomTextField(
-                                                        controller: city,
-                                                        hintText: 'City',
-                                                        width: 200,
-                                                      ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: state,
-                                                        hintText: 'State',
-                                                        width: 200,
-                                                      ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: pinCode,
-                                                        hintText: 'Pin code',
-                                                        width: 200,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 20),
-                                                  Row(
-                                                    children: [
-                                                      CustomTextField(
-                                                        controller: emailId,
-                                                        hintText: 'E-Mail ID',
-                                                        width: 200,
-                                                      ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: phoneNo1,
-                                                        hintText: 'Phone NO 1',
-                                                        width: 200,
-                                                      ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: phoneNO2,
-                                                        hintText:
-                                                            'Phone Number 2',
-                                                        width: 200,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 30),
                                                   const Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
                                                       CustomText(
-                                                          text: 'Bank Details'),
+                                                        text: 'Address',
+                                                        size: 20,
+                                                      ),
                                                     ],
                                                   ),
-                                                  const SizedBox(height: 30),
+                                                  const SizedBox(height: 10),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller:
-                                                            bankAccountNumber,
-                                                        hintText:
-                                                            'Bank Account Number',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Lane 1',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: lane1,
+                                                            hintText: '',
+                                                            width: 220,
+                                                          ),
+                                                        ],
                                                       ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller:
-                                                            bankAccountName,
-                                                        hintText:
-                                                            'Bank Account Name',
-                                                        width: 300,
+                                                      const SizedBox(width: 25),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Lane 2',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: lane2,
+                                                            hintText: '',
+                                                            width: 220,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(width: 25),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Landmark',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                landMark,
+                                                            hintText: '',
+                                                            width: 225,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 20),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller: ifsc,
-                                                        hintText: 'IFSC',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'City',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: city,
+                                                            hintText: '',
+                                                            width: 220,
+                                                          ),
+                                                        ],
                                                       ),
-                                                      const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: surfCode,
-                                                        hintText: 'Surf Code',
-                                                        width: 300,
+                                                      const SizedBox(width: 25),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'State',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: state,
+                                                            hintText: '',
+                                                            width: 220,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(width: 25),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Pincode',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: pinCode,
+                                                            hintText: '',
+                                                            width: 225,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 20),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller: bankName,
-                                                        hintText: 'Bank Name',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Email-ID',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: emailId,
+                                                            hintText: '',
+                                                            width: 220,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(width: 25),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Phone 1',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                phoneNo1,
+                                                            hintText: '',
+                                                            width: 220,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(width: 25),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Phone 2',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                phoneNo1,
+                                                            hintText: '',
+                                                            width: 225,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  const Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      CustomText(
+                                                        text: 'Bank Details',
+                                                        size: 20,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Row(
+                                                    children: [
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text:
+                                                                'Bank Account Number',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                bankAccountNumber,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                       const SizedBox(width: 50),
-                                                      CustomTextField(
-                                                        controller: branchName,
-                                                        hintText: 'Branch Name',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text:
+                                                                'Bank Account Name',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                bankAccountName,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 20),
                                                   Row(
                                                     children: [
-                                                      CustomTextField(
-                                                        controller: bankPhoneNo,
-                                                        hintText:
-                                                            'Bank Phone No',
-                                                        width: 300,
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'IFSC',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller: ifsc,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Surf Code',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                surfCode,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
-                                                  const SizedBox(height: 50),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Bank Name',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                bankName,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(width: 50),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text: 'Branch Name',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                branchName,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    children: [
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          CustomText(
+                                                            text:
+                                                                'Bank Phone No',
+                                                            size: 15,
+                                                          ),
+                                                          SizedBox(
+                                                            height: 7,
+                                                          ),
+                                                          PharmacyTextField(
+                                                            controller:
+                                                                bankPhoneNo,
+                                                            hintText: '',
+                                                            width: 300,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 10),
                                                 ],
                                               ),
                                             ),
