@@ -457,9 +457,14 @@ class _ExpiryReturnStatement extends State<ExpiryReturnStatement> {
                         ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              const Row(
-                children: [CustomText(text: 'Available Stock Return List')],
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Available Expiry Return List',
+                    size: screenWidth * 0.015,
+                  )
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               LazyDataTable(

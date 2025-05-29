@@ -659,9 +659,14 @@ class _DamageReturn extends State<DamageReturn> {
                         ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              const Row(
-                children: [CustomText(text: 'Bill List')],
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Damage Return Bill List',
+                    size: screenWidth * 0.015,
+                  )
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               LazyDataTable(
