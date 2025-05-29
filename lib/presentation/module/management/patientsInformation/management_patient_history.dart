@@ -5,6 +5,7 @@ import 'package:foxcare_lite/presentation/module/management/management_dashboard
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
@@ -26,6 +27,8 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
   int selectedIndex = 1;
   TextEditingController _opNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
+  bool opNumberSearch = false;
+  bool phoneNumberSearch = false;
 
   final List<String> headers1 = [
     'OP NO',
@@ -70,9 +73,8 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
       while (true) {
         Query query = FirebaseFirestore.instance.collection('patients');
 
-        if (opNumber != null) {
-          query = query.where('opNumber', isEqualTo: opNumber);
-        } else if (phoneNumber != null) {
+        // Only phone number can be used in Firestore query
+        if (phoneNumber != null) {
           query = query.where(Filter.or(
             Filter('phone1', isEqualTo: phoneNumber),
             Filter('phone2', isEqualTo: phoneNumber),
@@ -95,49 +97,53 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
           if (!data.containsKey('opNumber')) continue;
-          allFetchedData.add(
-            {
-              'OP NO': data['opNumber'] ?? 'N/A',
-              'Name':
-                  '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-                      .trim(),
-              'Place': data['state'] ?? 'N/A',
-              'Phone No': data['phone1'] ?? 'N/A',
-              'DOB': data['dob'] ?? 'N/A',
-              'View': TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return PatientHistoryDialog(
-                        firstName: data['firstName'],
-                        lastName: data['lastName'],
-                        dob: data['dob'],
-                        sex: data['sex'],
-                        phone1: data['phone1'],
-                        phone2: data['phone2'],
-                        opNumber: data['opNumber'],
-                        ipNumber: data['ipNumber'],
-                        bloodGroup: data['bloodGroup'],
-                      );
-                    },
-                  );
-                },
-                child: const CustomText(text: 'View'),
-              ),
-            },
-          );
+
+          // Case-insensitive check for opNumber match
+          if (opNumber != null &&
+              opNumber.isNotEmpty &&
+              (data['opNumber']?.toString().toLowerCase() !=
+                  opNumber.toLowerCase())) {
+            continue;
+          }
+
+          allFetchedData.add({
+            'OP NO': data['opNumber'] ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'Place': data['state'] ?? 'N/A',
+            'Phone No': data['phone1'] ?? 'N/A',
+            'DOB': data['dob'] ?? 'N/A',
+            'View': TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return PatientHistoryDialog(
+                      firstName: data['firstName'],
+                      lastName: data['lastName'],
+                      dob: data['dob'],
+                      sex: data['sex'],
+                      phone1: data['phone1'],
+                      phone2: data['phone2'],
+                      opNumber: data['opNumber'],
+                      ipNumber: data['ipNumber'],
+                      bloodGroup: data['bloodGroup'],
+                    );
+                  },
+                );
+              },
+              child: const CustomText(text: 'View'),
+            ),
+          });
         }
 
         lastDocument = snapshot.docs.last;
-
-        // Optional: throttle delay to reduce load
+        setState(() {
+          tableData1 = List.from(allFetchedData);
+        });
         await Future.delayed(delayBetweenPages);
       }
 
-      setState(() {
-        tableData1 = allFetchedData;
-      });
       print('Finished fetching ${allFetchedData.length} records.');
     } catch (e) {
       print('Error fetching data from Firestore: $e');
@@ -218,7 +224,7 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.02),
+                    padding: EdgeInsets.only(top: screenWidth * 0.01),
                     child: Column(
                       children: [
                         CustomText(
@@ -244,33 +250,57 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                 children: [
                   CustomTextField(
                     hintText: 'OP Number',
-                    width: screenWidth * 0.15,
+                    width: screenWidth * 0.18,
                     controller: _opNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _opNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  opNumberSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => opNumberSearch = true);
+                            await fetchData(opNumber: _opNumber.text);
+                            setState(() => opNumberSearch = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
                   SizedBox(width: screenHeight * 0.05),
                   CustomTextField(
                     hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
+                    width: screenWidth * 0.18,
                     controller: _phoneNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  phoneNumberSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => phoneNumberSearch = true);
+                            await fetchData(phoneNumber: _phoneNumber.text);
+                            setState(() => phoneNumberSearch = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -281,7 +311,7 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                 headers: headers1,
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
+                      ? Colors.red.shade300
                       : Colors.transparent;
                 },
               ),

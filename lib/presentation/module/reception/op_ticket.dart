@@ -794,7 +794,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
     } catch (e, stackTrace) {
       print("Error in incrementCounter: $e");
       print(stackTrace);
-      CustomSnackBar(context, message: 'Failed to update counter',backgroundColor: Colors.red);
+      CustomSnackBar(context,
+          message: 'Failed to update counter', backgroundColor: Colors.red);
     }
   }
 
@@ -827,6 +828,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           final docOp = (doc['opNumber'] ?? '').toString();
           if (docOp.toLowerCase() == opNumber.toLowerCase()) {
             docMap[doc.id] = doc;
@@ -857,6 +860,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           docMap[doc.id] = doc;
         }
 
@@ -882,6 +887,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           docMap[doc.id] = doc;
         }
 
@@ -889,7 +896,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
         hasMore = snapshot.docs.length == pageSize;
       }
     }
-
     // Convert documents to map list
     for (var doc in docMap.values) {
       patientsList.add({
@@ -901,6 +907,8 @@ class _OpTicketPageState extends State<OpTicketPage> {
         'address': doc['address1'] ?? '',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
+        'sex': doc['sex'] ?? 'N/A',
+        'dob': doc['dob'] ?? '',
       });
     }
 
@@ -1066,39 +1074,39 @@ class _OpTicketPageState extends State<OpTicketPage> {
                           children: [
                             isSearching
                                 ? SizedBox(
-                              width: 125,
-                              height: 35,
-                              child: Lottie.asset(
-                                'assets/button_loading.json',
-                                fit: BoxFit.contain,
-                              ),
-                            )
+                                    width: 125,
+                                    height: 35,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
                                 : CustomButton(
-                              width: 125,
-                              height: 35,
-                              label: 'Search',
-                              onPressed: () async {
-                                setState(() {
-                                  isSearching = true;
-                                });
+                                    width: 125,
+                                    height: 35,
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isSearching = true;
+                                      });
 
-                                final searchResultsFetched = await searchPatients(
-                                  searchOpNumber.text,
-                                  searchPhoneNumber.text,
-                                );
-                                final token = await fetchCounterValue();
+                                      final searchResultsFetched =
+                                          await searchPatients(
+                                        searchOpNumber.text,
+                                        searchPhoneNumber.text,
+                                      );
+                                      final token = await fetchCounterValue();
 
-                                setState(() {
-                                  lastToken = token + 1;
-                                  searchResults = searchResultsFetched;
-                                  isSearchPerformed = true;
-                                  isSearching = false;
-                                });
+                                      setState(() {
+                                        lastToken = token + 1;
+                                        searchResults = searchResultsFetched;
+                                        isSearchPerformed = true;
+                                        isSearching = false;
+                                      });
 
-                                print('Fetched token: $lastToken');
-                              },
-                            )
-
+                                      print('Fetched token: $lastToken');
+                                    },
+                                  )
                           ],
                         ),
                       ),
@@ -1121,39 +1129,39 @@ class _OpTicketPageState extends State<OpTicketPage> {
                           children: [
                             isSearching2
                                 ? SizedBox(
-                              width: 125,
-                              height: 35,
-                              child: Lottie.asset(
-                                'assets/button_loading.json',
-                                fit: BoxFit.contain,
-                              ),
-                            )
+                                    width: 125,
+                                    height: 35,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
                                 : CustomButton(
-                              width: 125,
-                              height: 35,
-                              label: 'Search',
-                              onPressed: () async {
-                                setState(() {
-                                  isSearching2 = true;
-                                });
+                                    width: 125,
+                                    height: 35,
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isSearching2 = true;
+                                      });
 
-                                final searchResultsFetched = await searchPatients(
-                                  searchOpNumber.text,
-                                  searchPhoneNumber.text,
-                                );
-                                final token = await fetchCounterValue();
+                                      final searchResultsFetched =
+                                          await searchPatients(
+                                        searchOpNumber.text,
+                                        searchPhoneNumber.text,
+                                      );
+                                      final token = await fetchCounterValue();
 
-                                setState(() {
-                                  lastToken = token + 1;
-                                  searchResults = searchResultsFetched;
-                                  isSearchPerformed = true;
-                                  isSearching2 = false;
-                                });
+                                      setState(() {
+                                        lastToken = token + 1;
+                                        searchResults = searchResultsFetched;
+                                        isSearchPerformed = true;
+                                        isSearching2 = false;
+                                      });
 
-                                print('Fetched token: $lastToken');
-                              },
-                            ),
-
+                                      print('Fetched token: $lastToken');
+                                    },
+                                  ),
                           ],
                         ),
                       ),
@@ -1174,9 +1182,10 @@ class _OpTicketPageState extends State<OpTicketPage> {
                 child: Theme(
                   data: Theme.of(context).copyWith(
                     checkboxTheme: CheckboxThemeData(
-                      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      fillColor:
+                          MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return Colors.green;  // Your desired checked color
+                          return Colors.green; // Your desired checked color
                         }
                         return Colors.grey; // Unchecked color
                       }),
@@ -1211,7 +1220,6 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
               if (selectedPatient != null) buildPatientDetailsForm(),
             ],
@@ -1735,34 +1743,45 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   : CustomButton(
                       label: 'Generate',
                       onPressed: () async {
-                        final collectedAmountText = opTicketCollectedAmount.text.trim();
+                        final collectedAmountText =
+                            opTicketCollectedAmount.text.trim();
                         final totalAmountText = opTicketTotalAmount.text.trim();
 
                         // Validate collected amount is not empty
                         if (collectedAmountText.isEmpty) {
-                          CustomSnackBar(context, message: 'Please enter the collected amount',backgroundColor: Colors.orange);
+                          CustomSnackBar(context,
+                              message: 'Please enter the collected amount',
+                              backgroundColor: Colors.orange);
 
                           return;
                         }
 
                         // Validate total amount is not empty (optional)
                         if (totalAmountText.isEmpty) {
-                          CustomSnackBar(context, message: 'Please enter the total amount',backgroundColor: Colors.orange);
+                          CustomSnackBar(context,
+                              message: 'Please enter the total amount',
+                              backgroundColor: Colors.orange);
 
                           return;
                         }
 
                         // Parse and validate amount
-                        final collectedAmount = double.tryParse(collectedAmountText);
+                        final collectedAmount =
+                            double.tryParse(collectedAmountText);
                         if (collectedAmount == null || collectedAmount < 0) {
-                          CustomSnackBar(context, message: 'Please enter a valid collected amount',backgroundColor: Colors.orange);
+                          CustomSnackBar(context,
+                              message: 'Please enter a valid collected amount',
+                              backgroundColor: Colors.orange);
 
                           return;
                         }
 
-                        String? selectedPatientId = selectedPatient?['opNumber'];
+                        String? selectedPatientId =
+                            selectedPatient?['opNumber'];
                         if (selectedPatientId == null) {
-                          CustomSnackBar(context, message: 'No patient selected',backgroundColor: Colors.red);
+                          CustomSnackBar(context,
+                              message: 'No patient selected',
+                              backgroundColor: Colors.red);
 
                           return;
                         }

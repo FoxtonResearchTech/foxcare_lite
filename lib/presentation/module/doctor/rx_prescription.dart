@@ -375,8 +375,9 @@ class _RxPrescription extends State<RxPrescription> {
     }
   }
 
-  void _filterItems(String query) {
-    setState(() {
+  void _filterItems(
+      String query, void Function(VoidCallback fn) localSetState) {
+    localSetState(() {
       _searchQuery = query;
       _filteredItems = _allItems
           .where((item) => item.toLowerCase().contains(query.toLowerCase()))
@@ -1756,7 +1757,9 @@ class _RxPrescription extends State<RxPrescription> {
                                               ),
                                               const SizedBox(height: 20),
                                               CustomTextField(
-                                                onChanged: _filterItems,
+                                                onChanged: (value) =>
+                                                    _filterItems(
+                                                        value, setState),
                                                 hintText: 'Search Tests',
                                                 width: screenWidth * 0.8,
                                                 verticalSize:
@@ -2319,7 +2322,11 @@ class _RxPrescription extends State<RxPrescription> {
                                         ElevatedButton.icon(
                                           icon: Icon(Icons.check,
                                               color: Colors.white),
-                                          label: const Text('Proceed',style: TextStyle(color: Colors.white),),
+                                          label: const Text(
+                                            'Proceed',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.blue,
                                             shape: RoundedRectangleBorder(
@@ -2345,7 +2352,8 @@ class _RxPrescription extends State<RxPrescription> {
                                   setState(() {
                                     _isLoading = false;
                                   });
-                                  CustomSnackBar(context,backgroundColor: Colors.green,
+                                  CustomSnackBar(context,
+                                      backgroundColor: Colors.green,
                                       message:
                                           'Prescription submitted successfully');
                                 }

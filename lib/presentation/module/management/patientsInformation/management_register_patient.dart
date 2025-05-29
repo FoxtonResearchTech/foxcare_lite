@@ -680,7 +680,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.only(top: screenWidth * 0.02),
+                padding: EdgeInsets.only(top: screenWidth * 0.01),
                 child: Column(
                   children: [
                     CustomText(

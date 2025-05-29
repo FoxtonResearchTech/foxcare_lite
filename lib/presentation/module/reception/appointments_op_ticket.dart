@@ -33,6 +33,8 @@ class AppointmentsOpTicket extends StatefulWidget {
 class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
   final dateTime = DateTime.now();
   int selectedIndex = 2;
+  bool isSearching = false;
+  bool isSearching2 = false;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
   final TextEditingController specialization = TextEditingController();
@@ -831,6 +833,8 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           final docOp = (doc['opNumber'] ?? '').toString();
           if (docOp.toLowerCase() == opNumber.toLowerCase()) {
             docMap[doc.id] = doc;
@@ -861,6 +865,8 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           docMap[doc.id] = doc;
         }
 
@@ -886,6 +892,8 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           docMap[doc.id] = doc;
         }
 
@@ -893,7 +901,6 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
         hasMore = snapshot.docs.length == pageSize;
       }
     }
-
     // Convert documents to map list
     for (var doc in docMap.values) {
       patientsList.add({
@@ -905,6 +912,8 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
         'address': doc['address1'] ?? '',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
+        'sex': doc['sex'] ?? 'N/A',
+        'dob': doc['dob'] ?? '',
       });
     }
 
@@ -1029,7 +1038,7 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                           CustomTextField(
                             hintText: '',
                             controller: searchOpNumber,
-                            width: 200,
+                            width: screenWidth * 0.15,
                           ),
                         ],
                       ),
@@ -1038,28 +1047,41 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            CustomButton(
-                              width: 125,
-                              height: 35,
-                              label: 'Search',
-                              onPressed: () async {
-                                final searchResultsFetched =
-                                    await searchPatients(
-                                  searchOpNumber.text,
-                                  searchPhoneNumber.text,
-                                );
-                                final token = await fetchCounterValue();
+                            isSearching
+                                ? SizedBox(
+                                    width: 125,
+                                    height: 35,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                : CustomButton(
+                                    width: 125,
+                                    height: 35,
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isSearching = true;
+                                      });
 
-                                setState(() {
-                                  lastToken = token + 1;
-                                  searchResults =
-                                      searchResultsFetched; // Update searchResults
-                                  isSearchPerformed =
-                                      true; // Show the table after search
-                                });
-                                print('Fetched token: $lastToken');
-                              },
-                            ),
+                                      final searchResultsFetched =
+                                          await searchPatients(
+                                        searchOpNumber.text,
+                                        searchPhoneNumber.text,
+                                      );
+                                      final token = await fetchCounterValue();
+
+                                      setState(() {
+                                        lastToken = token + 1;
+                                        searchResults = searchResultsFetched;
+                                        isSearchPerformed = true;
+                                        isSearching = false;
+                                      });
+
+                                      print('Fetched token: $lastToken');
+                                    },
+                                  )
                           ],
                         ),
                       ),
@@ -1071,7 +1093,7 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                           CustomTextField(
                             controller: searchPhoneNumber,
                             hintText: '',
-                            width: 200,
+                            width: screenWidth * 0.15,
                           ),
                         ],
                       ),
@@ -1080,28 +1102,41 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            CustomButton(
-                              width: 125,
-                              height: 35,
-                              label: 'Search',
-                              onPressed: () async {
-                                final searchResultsFetched =
-                                    await searchPatients(
-                                  searchOpNumber.text,
-                                  searchPhoneNumber.text,
-                                );
-                                final token = await fetchCounterValue();
+                            isSearching2
+                                ? SizedBox(
+                                    width: 125,
+                                    height: 35,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                : CustomButton(
+                                    width: 125,
+                                    height: 35,
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isSearching2 = true;
+                                      });
 
-                                setState(() {
-                                  lastToken = token + 1;
-                                  searchResults =
-                                      searchResultsFetched; // Update searchResults
-                                  isSearchPerformed =
-                                      true; // Show the table after search
-                                });
-                                print('Fetched token: $lastToken');
-                              },
-                            ),
+                                      final searchResultsFetched =
+                                          await searchPatients(
+                                        searchOpNumber.text,
+                                        searchPhoneNumber.text,
+                                      );
+                                      final token = await fetchCounterValue();
+
+                                      setState(() {
+                                        lastToken = token + 1;
+                                        searchResults = searchResultsFetched;
+                                        isSearchPerformed = true;
+                                        isSearching2 = false;
+                                      });
+
+                                      print('Fetched token: $lastToken');
+                                    },
+                                  ),
                           ],
                         ),
                       ),
@@ -1122,9 +1157,10 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                 child: Theme(
                   data: Theme.of(context).copyWith(
                     checkboxTheme: CheckboxThemeData(
-                      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      fillColor:
+                          MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return Colors.green;  // Your desired checked color
+                          return Colors.green; // Your desired checked color
                         }
                         return Colors.grey; // Unchecked color
                       }),
@@ -1679,50 +1715,59 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
               isGeneratingToken
                   ? Lottie.asset('assets/button_loading.json',
                       height: 150, width: 150)
-                  :CustomButton(
-                label: 'Generate',
-                onPressed: () async {
-                  final collectedAmountText = opTicketCollectedAmount.text.trim();
-                  final totalAmountText = opTicketTotalAmount.text.trim();
+                  : CustomButton(
+                      label: 'Generate',
+                      onPressed: () async {
+                        final collectedAmountText =
+                            opTicketCollectedAmount.text.trim();
+                        final totalAmountText = opTicketTotalAmount.text.trim();
 
-                  // Validate collected amount is not empty
-                  if (collectedAmountText.isEmpty) {
-                    CustomSnackBar(context, message: 'Please enter the collected amount',backgroundColor: Colors.orange);
+                        // Validate collected amount is not empty
+                        if (collectedAmountText.isEmpty) {
+                          CustomSnackBar(context,
+                              message: 'Please enter the collected amount',
+                              backgroundColor: Colors.orange);
 
-                    return;
-                  }
+                          return;
+                        }
 
-                  // Validate total amount is not empty (optional)
-                  if (totalAmountText.isEmpty) {
-                    CustomSnackBar(context, message: 'Please enter the total amount',backgroundColor: Colors.orange);
+                        // Validate total amount is not empty (optional)
+                        if (totalAmountText.isEmpty) {
+                          CustomSnackBar(context,
+                              message: 'Please enter the total amount',
+                              backgroundColor: Colors.orange);
 
-                    return;
-                  }
+                          return;
+                        }
 
-                  // Parse and validate amount
-                  final collectedAmount = double.tryParse(collectedAmountText);
-                  if (collectedAmount == null || collectedAmount < 0) {
-                    CustomSnackBar(context, message: 'Please enter a valid collected amount',backgroundColor: Colors.orange);
+                        // Parse and validate amount
+                        final collectedAmount =
+                            double.tryParse(collectedAmountText);
+                        if (collectedAmount == null || collectedAmount < 0) {
+                          CustomSnackBar(context,
+                              message: 'Please enter a valid collected amount',
+                              backgroundColor: Colors.orange);
 
-                    return;
-                  }
+                          return;
+                        }
 
-                  String? selectedPatientId = selectedPatient?['opNumber'];
-                  if (selectedPatientId == null) {
-                    CustomSnackBar(context, message: 'No patient selected',backgroundColor: Colors.red);
+                        String? selectedPatientId =
+                            selectedPatient?['opNumber'];
+                        if (selectedPatientId == null) {
+                          CustomSnackBar(context,
+                              message: 'No patient selected',
+                              backgroundColor: Colors.red);
 
-                    return;
-                  }
+                          return;
+                        }
 
-                  await initializeOpTicketID(selectedPatientId);
-                  print(selectedPatientId);
-                  await incrementCounter();
-                  await _generateToken(selectedPatientId);
-                },
-                width: 200,
-              ),
-
-
+                        await initializeOpTicketID(selectedPatientId);
+                        print(selectedPatientId);
+                        await incrementCounter();
+                        await _generateToken(selectedPatientId);
+                      },
+                      width: 200,
+                    ),
             ],
           ),
         ],

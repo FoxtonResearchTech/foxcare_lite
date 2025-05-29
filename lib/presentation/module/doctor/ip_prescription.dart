@@ -375,8 +375,9 @@ class _IpPrescription extends State<IpPrescription> {
     }
   }
 
-  void _filterItems(String query) {
-    setState(() {
+  void _filterItems(
+      String query, void Function(VoidCallback fn) localSetState) {
+    localSetState(() {
       _searchQuery = query;
       _filteredItems = _allItems
           .where((item) => item.toLowerCase().contains(query.toLowerCase()))
@@ -1611,7 +1612,9 @@ class _IpPrescription extends State<IpPrescription> {
                                               ),
                                               const SizedBox(height: 20),
                                               CustomTextField(
-                                                onChanged: _filterItems,
+                                                onChanged: (value) =>
+                                                    _filterItems(
+                                                        value, setState),
                                                 hintText: 'Search Tests',
                                                 width: screenWidth * 0.8,
                                                 verticalSize:

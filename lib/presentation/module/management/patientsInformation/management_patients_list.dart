@@ -4,6 +4,7 @@ import 'package:foxcare_lite/presentation/module/management/generalInformation/g
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
@@ -26,6 +27,8 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
   int selectedIndex = 2;
   TextEditingController _opNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
+  bool opNumberSearch = false;
+  bool phoneNumberSearch = false;
 
   final List<String> headers1 = [
     'Patient ID',
@@ -89,7 +92,11 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
           final opTicketsSnapshot = await docRef.collection('opTickets').get();
           for (var opDoc in opTicketsSnapshot.docs) {
             if (opNumber != null && opNumber.isNotEmpty) {
-              if (opDoc.data()['opTicket'] != opNumber) continue;
+              if (opNumber.isNotEmpty &&
+                  (opDoc.data()['opTicket']?.toString().toLowerCase() !=
+                      opNumber.toLowerCase())) {
+                continue;
+              }
             }
 
             allFetchedData.add({
@@ -108,7 +115,11 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
           final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
           for (var ipDoc in ipTicketsSnapshot.docs) {
             if (opNumber != null && opNumber.isNotEmpty) {
-              if (ipDoc.data()['ipTicket'] != opNumber) continue;
+              if (opNumber.isNotEmpty &&
+                  (ipDoc.data()['ipTicket']?.toString().toLowerCase() !=
+                      opNumber.toLowerCase())) {
+                continue;
+              }
             }
 
             allFetchedData.add({
@@ -126,13 +137,11 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
         }
 
         lastDocument = snapshot.docs.last;
-
+        setState(() {
+          tableData1 = List.from(allFetchedData);
+        });
         // Optional throttle delay
         await Future.delayed(delayBetweenPages);
-        setState(() {
-          tableData1 = allFetchedData;
-          print(tableData1);
-        });
       }
 
       print('Finished fetching ${allFetchedData.length} total tickets.');
@@ -196,7 +205,8 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
@@ -214,7 +224,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.02),
+                    padding: EdgeInsets.only(top: screenWidth * 0.01),
                     child: Column(
                       children: [
                         CustomText(
@@ -240,33 +250,57 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                 children: [
                   CustomTextField(
                     hintText: 'OP Number',
-                    width: screenWidth * 0.15,
+                    width: screenWidth * 0.18,
                     controller: _opNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _opNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  opNumberSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => opNumberSearch = true);
+                            await fetchData(opNumber: _opNumber.text);
+                            setState(() => opNumberSearch = false);
+                          },
+                          width: buttonWidth,
+                          height: buttonHeight,
+                        ),
                   SizedBox(width: screenHeight * 0.05),
                   CustomTextField(
                     hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
+                    width: screenWidth * 0.18,
                     controller: _phoneNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  phoneNumberSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => phoneNumberSearch = true);
+                            await fetchData(phoneNumber: _phoneNumber.text);
+                            setState(() => phoneNumberSearch = false);
+                          },
+                          width: buttonWidth,
+                          height: buttonHeight,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/mangement_module_drawer.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utilities/colors.dart';
@@ -22,7 +23,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
   final TextEditingController _toDate = TextEditingController();
 
   int selectedIndex = 0;
-
+  bool isSearching = false;
   Timer? _timer;
 
   bool isTotalOpLoading = false;
@@ -1071,7 +1072,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     icon: Icon(Icons.date_range),
                     controller: _fromDate,
                     hintText: 'From Date',
-                    width: screenWidth * 0.15,
+                    width: screenWidth * 0.18,
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
@@ -1079,40 +1080,52 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                     icon: Icon(Icons.date_range),
                     controller: _toDate,
                     hintText: 'To Date',
-                    width: screenWidth * 0.15,
+                    width: screenWidth * 0.18,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      getNoOfOp(
-                        fromDate: _fromDate.text,
-                        toDate: _toDate.text,
-                      );
-                      getNoOfIp(
-                        fromDate: _fromDate.text,
-                        toDate: _toDate.text,
-                      );
-                      getTotalIncome(
-                        fromDate: _fromDate.text,
-                        toDate: _toDate.text,
-                      );
-                      getTotalExpense(
-                        fromDate: _fromDate.text,
-                        toDate: _toDate.text,
-                      );
-                      getPharmacyIncome(
-                        fromDate: _fromDate.text,
-                        toDate: _toDate.text,
-                      );
-                      getPharmacyExpense(
-                        fromDate: _fromDate.text,
-                        toDate: _toDate.text,
-                      );
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.027,
-                  ),
+                  isSearching
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isSearching = true);
+                            await getNoOfOp(
+                              fromDate: _fromDate.text,
+                              toDate: _toDate.text,
+                            );
+                            await getNoOfIp(
+                              fromDate: _fromDate.text,
+                              toDate: _toDate.text,
+                            );
+                            await getTotalIncome(
+                              fromDate: _fromDate.text,
+                              toDate: _toDate.text,
+                            );
+                            await getTotalExpense(
+                              fromDate: _fromDate.text,
+                              toDate: _toDate.text,
+                            );
+                            await getPharmacyIncome(
+                              fromDate: _fromDate.text,
+                              toDate: _toDate.text,
+                            );
+                            await getPharmacyExpense(
+                              fromDate: _fromDate.text,
+                              toDate: _toDate.text,
+                            );
+                            setState(() => isSearching = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.027,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),

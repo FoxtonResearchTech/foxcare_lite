@@ -35,6 +35,8 @@ class GeneralInformationOpTicket extends StatefulWidget {
 class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
   final dateTime = DateTime.now();
   int selectedIndex = 0;
+  bool isSearching = false;
+  bool isSearching2 = false;
   final TextEditingController tokenDate = TextEditingController();
   final TextEditingController doctorName = TextEditingController();
   final TextEditingController degree = TextEditingController();
@@ -819,6 +821,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           final docOp = (doc['opNumber'] ?? '').toString();
           if (docOp.toLowerCase() == opNumber.toLowerCase()) {
             docMap[doc.id] = doc;
@@ -849,6 +853,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           docMap[doc.id] = doc;
         }
 
@@ -874,6 +880,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         if (snapshot.docs.isEmpty) break;
 
         for (var doc in snapshot.docs) {
+          if ((doc['isIP'] ?? false) == true) continue;
+
           docMap[doc.id] = doc;
         }
 
@@ -881,7 +889,6 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         hasMore = snapshot.docs.length == pageSize;
       }
     }
-
     // Convert documents to map list
     for (var doc in docMap.values) {
       patientsList.add({
@@ -893,6 +900,8 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         'address': doc['address1'] ?? '',
         'city': doc['city'] ?? 'N/A',
         'bloodGroup': doc['bloodGroup'] ?? 'N/A',
+        'sex': doc['sex'] ?? 'N/A',
+        'dob': doc['dob'] ?? '',
       });
     }
 
@@ -1047,7 +1056,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                           CustomTextField(
                             hintText: '',
                             controller: searchOpNumber,
-                            width: 200,
+                            width: screenWidth * 0.15,
                           ),
                         ],
                       ),
@@ -1056,26 +1065,41 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            CustomButton(
-                              width: 125,
-                              height: 35,
-                              label: 'Search',
-                              onPressed: () async {
-                                final searchResultsFetched =
-                                    await searchPatients(
-                                  searchOpNumber.text,
-                                  searchPhoneNumber.text,
-                                );
-                                final token = await fetchCounterValue();
+                            isSearching
+                                ? SizedBox(
+                                    width: 125,
+                                    height: 35,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                : CustomButton(
+                                    width: 125,
+                                    height: 35,
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isSearching = true;
+                                      });
 
-                                setState(() {
-                                  lastToken = token + 1;
-                                  searchResults =
-                                      searchResultsFetched; // Update searchResults
-                                  isSearchPerformed = true;
-                                });
-                              },
-                            ),
+                                      final searchResultsFetched =
+                                          await searchPatients(
+                                        searchOpNumber.text,
+                                        searchPhoneNumber.text,
+                                      );
+                                      final token = await fetchCounterValue();
+
+                                      setState(() {
+                                        lastToken = token + 1;
+                                        searchResults = searchResultsFetched;
+                                        isSearchPerformed = true;
+                                        isSearching = false;
+                                      });
+
+                                      print('Fetched token: $lastToken');
+                                    },
+                                  )
                           ],
                         ),
                       ),
@@ -1087,7 +1111,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                           CustomTextField(
                             controller: searchPhoneNumber,
                             hintText: '',
-                            width: 200,
+                            width: screenWidth * 0.15,
                           ),
                         ],
                       ),
@@ -1096,27 +1120,41 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            CustomButton(
-                              width: 125,
-                              height: 35,
-                              label: 'Search',
-                              onPressed: () async {
-                                final searchResultsFetched =
-                                    await searchPatients(
-                                  searchOpNumber.text,
-                                  searchPhoneNumber.text,
-                                );
-                                final token = await fetchCounterValue();
+                            isSearching2
+                                ? SizedBox(
+                                    width: 125,
+                                    height: 35,
+                                    child: Lottie.asset(
+                                      'assets/button_loading.json',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                : CustomButton(
+                                    width: 125,
+                                    height: 35,
+                                    label: 'Search',
+                                    onPressed: () async {
+                                      setState(() {
+                                        isSearching2 = true;
+                                      });
 
-                                setState(() {
-                                  lastToken = token + 1;
-                                  searchResults =
-                                      searchResultsFetched; // Update searchResults
-                                  isSearchPerformed =
-                                      true; // Show the table after search
-                                });
-                              },
-                            ),
+                                      final searchResultsFetched =
+                                          await searchPatients(
+                                        searchOpNumber.text,
+                                        searchPhoneNumber.text,
+                                      );
+                                      final token = await fetchCounterValue();
+
+                                      setState(() {
+                                        lastToken = token + 1;
+                                        searchResults = searchResultsFetched;
+                                        isSearchPerformed = true;
+                                        isSearching2 = false;
+                                      });
+
+                                      print('Fetched token: $lastToken');
+                                    },
+                                  ),
                           ],
                         ),
                       ),
