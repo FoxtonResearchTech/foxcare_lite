@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -25,7 +26,8 @@ class _OpTicketPrint extends State<OpTicketPrint> {
   int selectedIndex = 9;
   TextEditingController _patientID = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
-
+  bool isPhoneLoading = false;
+  bool isOpLoading = false;
   final List<String> headers = [
     'Token NO',
     'OP Ticket',
@@ -93,7 +95,9 @@ class _OpTicketPrint extends State<OpTicketPrint> {
             bool matches = false;
 
             if (patientData['isIP'] == false) {
-              if (opNumber != null && opTicketData['opTicket'] == opNumber) {
+              if (opNumber != null &&
+                  opTicketData['opTicket'] != null &&
+                  opTicketData['opTicket'].toString().toLowerCase() == opNumber.toLowerCase()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
@@ -709,7 +713,8 @@ class _OpTicketPrint extends State<OpTicketPrint> {
   Widget dashboard() {
     double screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     bool isMobile = screenWidth < 600;
 
     return Scaffold(
@@ -750,37 +755,86 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    hintText: 'OP Number',
-                    width: screenWidth * 0.15,
-                    controller: _patientID,
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'OP Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _patientID,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _patientID.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 28,),
+                      isOpLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Ensure this path is correct
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isOpLoading = true);
+                          await fetchData(opNumber: _patientID.text);
+                          setState(() => isOpLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
+
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Phone Number'),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28,),
+                      isPhoneLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Update the path to your Lottie file
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isPhoneLoading = true);
+                          await fetchData(phoneNumber: _phoneNumber.text);
+                          setState(() => isPhoneLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
+
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),

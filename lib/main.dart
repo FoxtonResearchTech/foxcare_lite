@@ -20,11 +20,13 @@ import 'package:lottie/lottie.dart';
 import 'firebase_options.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await UserSession.initUser();
+
   runApp(
     const MyApp(),
   );
@@ -35,6 +37,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final logicalSize = mediaQuery.size;
+    final pixelRatio = mediaQuery.devicePixelRatio;
+
+    final physicalWidth = logicalSize.width * pixelRatio;
+    final physicalHeight = logicalSize.height * pixelRatio;
+
+    print('Physical pixels: ${physicalWidth.toInt()} x ${physicalHeight.toInt()}');
+
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',

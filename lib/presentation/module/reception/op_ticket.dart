@@ -794,7 +794,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
     } catch (e, stackTrace) {
       print("Error in incrementCounter: $e");
       print(stackTrace);
-      showMessage("Failed to update counter: $e");
+      CustomSnackBar(context, message: 'Failed to update counter',backgroundColor: Colors.red);
     }
   }
 
@@ -1735,8 +1735,38 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   : CustomButton(
                       label: 'Generate',
                       onPressed: () async {
-                        String? selectedPatientId =
-                            selectedPatient?['opNumber'];
+                        final collectedAmountText = opTicketCollectedAmount.text.trim();
+                        final totalAmountText = opTicketTotalAmount.text.trim();
+
+                        // Validate collected amount is not empty
+                        if (collectedAmountText.isEmpty) {
+                          CustomSnackBar(context, message: 'Please enter the collected amount',backgroundColor: Colors.orange);
+
+                          return;
+                        }
+
+                        // Validate total amount is not empty (optional)
+                        if (totalAmountText.isEmpty) {
+                          CustomSnackBar(context, message: 'Please enter the total amount',backgroundColor: Colors.orange);
+
+                          return;
+                        }
+
+                        // Parse and validate amount
+                        final collectedAmount = double.tryParse(collectedAmountText);
+                        if (collectedAmount == null || collectedAmount < 0) {
+                          CustomSnackBar(context, message: 'Please enter a valid collected amount',backgroundColor: Colors.orange);
+
+                          return;
+                        }
+
+                        String? selectedPatientId = selectedPatient?['opNumber'];
+                        if (selectedPatientId == null) {
+                          CustomSnackBar(context, message: 'No patient selected',backgroundColor: Colors.red);
+
+                          return;
+                        }
+
                         await initializeOpTicketID(selectedPatientId!);
                         print(selectedPatientId);
                         await incrementCounter();
