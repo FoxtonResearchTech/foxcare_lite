@@ -5,10 +5,12 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
@@ -34,6 +36,8 @@ class _NonMovingStock extends State<NonMovingStock> {
     'Non-Moving Details',
   ];
   List<Map<String, dynamic>> tableData = [];
+  bool singleDateSearch = false;
+  bool fromToDateSearch = false;
 
   Future<void> fetchData({
     String? singleDate,
@@ -41,124 +45,142 @@ class _NonMovingStock extends State<NonMovingStock> {
     String? toDate,
   }) async {
     try {
-      final addedProductsSnapshot = await FirebaseFirestore.instance
-          .collection('stock')
-          .doc('Products')
-          .collection('AddedProducts')
-          .get();
+      const int batchSize = 15;
+      QueryDocumentSnapshot<Map<String, dynamic>>? lastProductDoc;
+      bool hasMoreProducts = true;
 
-      if (addedProductsSnapshot.docs.isEmpty) {
-        print("No products found");
-        setState(() {
-          tableData = [];
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> fetchedData = [];
+      List<Map<String, dynamic>> allFetchedData = [];
       int i = 1;
 
-      for (var productDoc in addedProductsSnapshot.docs) {
-        final productData = productDoc.data();
-        final docId = productDoc.id;
+      setState(() {
+        tableData = [];
+      });
 
-        final purchaseEntriesSnapshot = await FirebaseFirestore.instance
+      while (hasMoreProducts) {
+        Query<Map<String, dynamic>> productQuery = FirebaseFirestore.instance
             .collection('stock')
             .doc('Products')
             .collection('AddedProducts')
-            .doc(docId)
-            .collection('purchaseEntry')
-            .get();
+            .limit(batchSize);
 
-        for (var purchaseDoc in purchaseEntriesSnapshot.docs) {
-          final purchaseData = purchaseDoc.data();
+        if (lastProductDoc != null) {
+          productQuery = productQuery.startAfterDocument(lastProductDoc);
+        }
 
-          if (!purchaseData.containsKey('reportDate') ||
-              !purchaseData.containsKey('fixedQuantity') ||
-              !purchaseData.containsKey('quantity')) continue;
+        final addedProductsSnapshot = await productQuery.get();
 
-          String reportDateStr = purchaseData['reportDate'];
-          DateTime reportDate =
-              DateTime.tryParse(reportDateStr) ?? DateTime(1900);
+        if (addedProductsSnapshot.docs.isEmpty) {
+          hasMoreProducts = false;
+          break;
+        }
 
-          // Filtering logic
-          if (singleDate != null) {
-            if (reportDateStr != singleDate) continue;
-          } else if (fromDate != null && toDate != null) {
-            DateTime from = DateTime.parse(fromDate);
-            DateTime to = DateTime.parse(toDate);
-            if (reportDate.isBefore(from) || reportDate.isAfter(to)) continue;
-          }
+        for (var productDoc in addedProductsSnapshot.docs) {
+          final productData = productDoc.data();
+          final docId = productDoc.id;
 
-          // Check for non-moving condition
-          if (purchaseData['fixedQuantity'] == purchaseData['quantity']) {
-            fetchedData.add({
-              'SL No': i++,
-              'Product Name': productData['productName'],
-              'Opening Stock': purchaseData['fixedQuantity'],
-              'Remaining Stock': purchaseData['quantity'],
-              'Expiry Date': purchaseData['expiry'],
-              'Non-Moving Details': TextButton(
-                onPressed: () {
-                  int daysDifference =
-                      DateTime.now().difference(reportDate).inDays;
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Non-Moving Stocks Details'),
-                        content: Container(
-                          width: 350,
-                          height: 180,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CustomText(
-                                  text: 'Product Entry Date: $reportDateStr'),
-                              CustomText(
-                                  text:
-                                      'Product Name: ${productData['productName']}'),
-                              CustomText(
-                                  text:
-                                      'Opening Stock: ${purchaseData['fixedQuantity']}'),
-                              CustomText(
-                                  text:
-                                      'Remaining Stock: ${purchaseData['quantity']}'),
-                              CustomText(
-                                  text:
-                                      'Expiry Date: ${purchaseData['expiry']}'),
-                              CustomText(
-                                  text:
-                                      'Days Since Entry: $daysDifference days'),
-                            ],
-                          ),
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: CustomText(
-                              text: 'Close',
-                              color: AppColors.secondaryColor,
+          final purchaseEntriesSnapshot = await FirebaseFirestore.instance
+              .collection('stock')
+              .doc('Products')
+              .collection('AddedProducts')
+              .doc(docId)
+              .collection('purchaseEntry')
+              .get();
+
+          for (var purchaseDoc in purchaseEntriesSnapshot.docs) {
+            final purchaseData = purchaseDoc.data();
+
+            if (!purchaseData.containsKey('reportDate') ||
+                !purchaseData.containsKey('fixedQuantity') ||
+                !purchaseData.containsKey('quantity')) continue;
+
+            String reportDateStr = purchaseData['reportDate'];
+            DateTime reportDate =
+                DateTime.tryParse(reportDateStr) ?? DateTime(1900);
+
+            // Filter
+            if (singleDate != null) {
+              if (reportDateStr != singleDate) continue;
+            } else if (fromDate != null && toDate != null) {
+              DateTime from = DateTime.parse(fromDate);
+              DateTime to = DateTime.parse(toDate);
+              if (reportDate.isBefore(from) || reportDate.isAfter(to)) continue;
+            }
+
+            // Non-moving condition
+            if (purchaseData['fixedQuantity'] == purchaseData['quantity']) {
+              allFetchedData.add({
+                'SL No': i++,
+                'Product Name': productData['productName'],
+                'Opening Stock': purchaseData['fixedQuantity'],
+                'Remaining Stock': purchaseData['quantity'],
+                'Expiry Date': purchaseData['expiry'],
+                'Non-Moving Details': TextButton(
+                  onPressed: () {
+                    int daysDifference =
+                        DateTime.now().difference(reportDate).inDays;
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Non-Moving Stocks Details'),
+                          content: Container(
+                            width: 350,
+                            height: 180,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CustomText(
+                                    text: 'Product Entry Date: $reportDateStr'),
+                                CustomText(
+                                    text:
+                                        'Product Name: ${productData['productName']}'),
+                                CustomText(
+                                    text:
+                                        'Opening Stock: ${purchaseData['fixedQuantity']}'),
+                                CustomText(
+                                    text:
+                                        'Remaining Stock: ${purchaseData['quantity']}'),
+                                CustomText(
+                                    text:
+                                        'Expiry Date: ${purchaseData['expiry']}'),
+                                CustomText(
+                                    text:
+                                        'Days Since Entry: $daysDifference days'),
+                              ],
                             ),
                           ),
-                        ],
-                      );
-                    },
-                  );
-                },
-                child: CustomText(text: 'View Details'),
-              ),
-            });
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: CustomText(
+                                text: 'Close',
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: CustomText(text: 'View Details'),
+                ),
+              });
+            }
           }
         }
-      }
 
-      setState(() {
-        tableData = fetchedData;
-      });
+        // Add to table in batch
+        setState(() {
+          tableData.addAll(allFetchedData);
+        });
+
+        allFetchedData.clear();
+        lastProductDoc = addedProductsSnapshot.docs.last;
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
     } catch (e) {
       print('Error fetching data: $e');
     }
@@ -215,15 +237,27 @@ class _NonMovingStock extends State<NonMovingStock> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(singleDate: _dateController.text);
-                      i = 1;
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  singleDateSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => singleDateSearch = true);
+                            await fetchData(singleDate: _dateController.text);
+                            setState(() => singleDateSearch = false);
+                            i = 1;
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                   SizedBox(width: screenHeight * 0.02),
                   CustomText(text: 'OR'),
                   SizedBox(width: screenHeight * 0.02),
@@ -243,18 +277,30 @@ class _NonMovingStock extends State<NonMovingStock> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                      i = 1;
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  fromToDateSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => fromToDateSearch = true);
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
+                            setState(() => fromToDateSearch = false);
+                            i = 1;
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -262,7 +308,7 @@ class _NonMovingStock extends State<NonMovingStock> {
                 children: [CustomText(text: 'Available Non-Moving Stock List')],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData,
                 headers: headers,
               ),

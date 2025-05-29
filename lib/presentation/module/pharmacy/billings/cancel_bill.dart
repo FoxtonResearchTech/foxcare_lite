@@ -11,6 +11,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:flutter/services.dart';
@@ -48,6 +49,9 @@ class _CancelBill extends State<CancelBill> {
     'Product Total',
   ];
   String? selectedValue;
+  bool opBillSearch = false;
+  bool ipBillSearch = false;
+  bool csBillSearch = false;
   final List<String> opHeaders = [
     'Bill No',
     'Bill Date',
@@ -2351,14 +2355,26 @@ class _CancelBill extends State<CancelBill> {
                       width: screenWidth * 0.2,
                     ),
                     SizedBox(width: screenWidth * 0.03),
-                    PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        fetchOpBills(billNO: _opBillNo.text);
-                      },
-                      width: screenWidth * 0.1,
-                      height: screenHeight * 0.042,
-                    )
+                    opBillSearch
+                        ? SizedBox(
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.045,
+                            child: Center(
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                              ),
+                            ),
+                          )
+                        : PharmacyButton(
+                            label: 'Search',
+                            onPressed: () async {
+                              setState(() => opBillSearch = true);
+                              await fetchOpBills(billNO: _opBillNo.text);
+                              setState(() => opBillSearch = false);
+                            },
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.042,
+                          )
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
@@ -2390,14 +2406,26 @@ class _CancelBill extends State<CancelBill> {
                       width: screenWidth * 0.2,
                     ),
                     SizedBox(width: screenWidth * 0.03),
-                    PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        fetchIpBills(billNO: _ipBillNo.text);
-                      },
-                      width: screenWidth * 0.1,
-                      height: screenHeight * 0.042,
-                    )
+                    ipBillSearch
+                        ? SizedBox(
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.045,
+                            child: Center(
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                              ),
+                            ),
+                          )
+                        : PharmacyButton(
+                            label: 'Search',
+                            onPressed: () async {
+                              setState(() => ipBillSearch = true);
+                              await fetchIpBills(billNO: _ipBillNo.text);
+                              setState(() => ipBillSearch = false);
+                            },
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.042,
+                          )
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
@@ -2429,14 +2457,27 @@ class _CancelBill extends State<CancelBill> {
                       width: screenWidth * 0.2,
                     ),
                     SizedBox(width: screenWidth * 0.03),
-                    PharmacyButton(
-                      label: 'Search',
-                      onPressed: () {
-                        fetchCounterSalesBills(billNO: _csBillNo.text);
-                      },
-                      width: screenWidth * 0.1,
-                      height: screenHeight * 0.042,
-                    )
+                    csBillSearch
+                        ? SizedBox(
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.045,
+                            child: Center(
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                              ),
+                            ),
+                          )
+                        : PharmacyButton(
+                            label: 'Search',
+                            onPressed: () async {
+                              setState(() => csBillSearch = true);
+                              await fetchCounterSalesBills(
+                                  billNO: _csBillNo.text);
+                              setState(() => csBillSearch = false);
+                            },
+                            width: screenWidth * 0.1,
+                            height: screenHeight * 0.042,
+                          )
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),

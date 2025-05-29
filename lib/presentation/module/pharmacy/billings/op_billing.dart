@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'op_billing_entry.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -24,7 +25,8 @@ class OpBilling extends StatefulWidget {
 class _OpBilling extends State<OpBilling> {
   final TextEditingController _opNumber = TextEditingController();
   final TextEditingController _phoneNumber = TextEditingController();
-
+  bool opNumberSearch = false;
+  bool phoneNumberSearch = false;
   final List<String> headers = [
     'Token No',
     'OP Ticket',
@@ -318,15 +320,28 @@ class _OpBilling extends State<OpBilling> {
                     controller: _opNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _opNumber.text);
-                      onSearchPressed();
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  opNumberSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => opNumberSearch = true);
+                            await fetchData(opNumber: _opNumber.text);
+                            setState(() => opNumberSearch = false);
+
+                            onSearchPressed();
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
                   SizedBox(width: screenHeight * 0.05),
                   PharmacyTextField(
                     hintText: 'Phone Number',
@@ -334,15 +349,28 @@ class _OpBilling extends State<OpBilling> {
                     controller: _phoneNumber,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                      onSearchPressed();
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  phoneNumberSearch
+                      ? SizedBox(
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => phoneNumberSearch = true);
+                            await fetchData(phoneNumber: _phoneNumber.text);
+                            setState(() => phoneNumberSearch = false);
+
+                            onSearchPressed();
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.02,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

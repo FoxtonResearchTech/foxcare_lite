@@ -7,6 +7,7 @@ import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
@@ -39,47 +40,74 @@ class _AddProduct extends State<AddProduct> {
 
   List<Map<String, dynamic>> filteredProducts = [];
 
-  void fetchRecentProducts() async {
+  Future<void> fetchRecentProducts() async {
     try {
+      const int batchSize = 20;
       DateTime thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
 
-      QuerySnapshot<Map<String, dynamic>> stockSnapshot =
-          await FirebaseFirestore.instance
-              .collection('stock')
-              .doc('Products')
-              .collection('AddedProducts')
-              .get();
+      List<Map<String, dynamic>> allFetchedData = [];
+      QueryDocumentSnapshot<Map<String, dynamic>>? lastDoc;
 
-      List<Map<String, dynamic>> fetchedData = [];
+      bool hasMore = true;
 
-      for (var doc in stockSnapshot.docs) {
-        final data = doc.data();
-
-        DateTime? addedDate;
-        try {
-          addedDate = DateTime.parse(data['productAddedDate']);
-        } catch (e) {
-          print("Invalid date format: ${data['productAddedDate']}");
-          continue;
-        }
-
-        if (addedDate.isAfter(thirtyDaysAgo)) {
-          fetchedData.add({
-            'Product Name': data['productName'],
-            'Category': data['category'],
-            'Company': data['companyName'],
-            'Composition': data['composition'],
-            'Type': data['type'],
-          });
-        }
-      }
-
+      // Clear previous data before appending
       setState(() {
-        allProducts = fetchedData;
-        filteredProducts = List.from(allProducts);
+        allProducts.clear();
+        filteredProducts.clear();
       });
+
+      while (hasMore) {
+        Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+            .collection('stock')
+            .doc('Products')
+            .collection('AddedProducts')
+            .limit(batchSize);
+
+        if (lastDoc != null) {
+          query = query.startAfterDocument(lastDoc);
+        }
+
+        QuerySnapshot<Map<String, dynamic>> snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+
+          try {
+            DateTime addedDate = DateTime.parse(data['productAddedDate']);
+
+            if (addedDate.isAfter(thirtyDaysAgo)) {
+              allFetchedData.add({
+                'Product Name': data['productName'],
+                'Category': data['category'],
+                'Company': data['companyName'],
+                'Composition': data['composition'],
+                'Type': data['type'],
+              });
+            }
+          } catch (e) {
+            print("Invalid date format: ${data['productAddedDate']}");
+            continue;
+          }
+        }
+
+        // Append to UI table incrementally
+        setState(() {
+          allProducts.addAll(allFetchedData);
+          filteredProducts = List.from(allProducts);
+        });
+
+        allFetchedData.clear();
+        lastDoc = snapshot.docs.last;
+
+        await Future.delayed(const Duration(milliseconds: 100)); // Smooth load
+      }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching recent products: $e');
     }
   }
 
@@ -533,7 +561,7 @@ class _AddProduct extends State<AddProduct> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              CustomDataTable(headers: headers, tableData: filteredProducts),
+              LazyDataTable(headers: headers, tableData: filteredProducts),
               SizedBox(height: screenHeight * 0.05),
             ],
           ),
