@@ -171,6 +171,7 @@ class _OpBilling extends State<OpBilling> {
                       '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
                           .trim(),
                   'Place': patientData['city'] ?? 'N/A',
+                  'Status': opTicketData['status'] ?? 'N/A',
                   'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
                   'Specialization': opTicketData['specialization'] ?? 'N/A',
                   'Medication': opTicketData['Medications'] ?? [],

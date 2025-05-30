@@ -194,6 +194,7 @@ class _IpBilling extends State<IpBilling> {
                 'Name':
                     '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
                         .trim(),
+                'Status': ipTicketData['status'] ?? 'N/A',
                 'Place': patientData['city'] ?? 'N/A',
                 'Doctor Name': ipTicketData['doctorName'] ?? 'N/A',
                 'Specialization': ipTicketData['specialization'] ?? 'N/A',
@@ -201,7 +202,7 @@ class _IpBilling extends State<IpBilling> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -227,6 +228,7 @@ class _IpBilling extends State<IpBilling> {
                               ),
                             ),
                           );
+                          await fetchData();
                         },
                         child: const CustomText(text: 'Open')),
                     TextButton(

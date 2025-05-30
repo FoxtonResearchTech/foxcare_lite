@@ -210,7 +210,8 @@ class _CancelBill extends State<CancelBill> {
                       );
 
                       if (confirmed == true) {
-                        await cancelOpBill(bills.id, data['entryProducts']);
+                        await cancelOpBill(bills.id, data['entryProducts'],
+                            data['opNumber'], data['opTicket']);
                       }
                     },
                     child: const CustomText(text: 'Cancel'),
@@ -771,7 +772,8 @@ class _CancelBill extends State<CancelBill> {
     );
   }
 
-  Future<void> cancelOpBill(String billId, List<dynamic> items) async {
+  Future<void> cancelOpBill(String billId, List<dynamic> items,
+      String? opNumber, String? opTicket) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       WriteBatch batch = firestore.batch();
@@ -839,7 +841,12 @@ class _CancelBill extends State<CancelBill> {
       batch.delete(billRef);
 
       await batch.commit();
-
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(opNumber)
+          .collection('opTickets')
+          .doc(opTicket)
+          .update({'medicineGiven': false});
       CustomSnackBar(
         context,
         message: 'Bill Canceled Successfully',
