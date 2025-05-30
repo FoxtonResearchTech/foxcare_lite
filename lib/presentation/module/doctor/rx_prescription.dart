@@ -409,27 +409,52 @@ class _RxPrescription extends State<RxPrescription> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Rx Prescription'),
-          content: Container(
-            width: 125,
-            height: 50,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.description_outlined, color: Colors.teal, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Rx Prescription',
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 250,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CustomText(text: 'Do you want to print ?'),
-                const SizedBox(height: 8),
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.print_rounded, size: 48, color: Colors.teal),
+                SizedBox(height: 16),
+                CustomText(
+                  text: 'Do you want to print?',
+
+                ),
               ],
             ),
           ),
-          actions: <Widget>[
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () async {
                 final pdf = pw.Document();
                 const blue = PdfColor.fromInt(0xFF106ac2);
                 const lightBlue = PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
 
                 final font =
-                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
 
                 final topImage = pw.MemoryImage(
@@ -440,7 +465,7 @@ class _RxPrescription extends State<RxPrescription> {
 
                 final bottomImage = pw.MemoryImage(
                   (await rootBundle
-                          .load('assets/opAssets/OP_Card_back_original.png'))
+                      .load('assets/opAssets/OP_Card_back_original.png'))
                       .buffer
                       .asUint8List(),
                 );
@@ -462,8 +487,8 @@ class _RxPrescription extends State<RxPrescription> {
                       headers: headers,
                       data: data
                           .map((row) => headers
-                              .map((h) => row[h]?.toString() ?? '')
-                              .toList())
+                          .map((h) => row[h]?.toString() ?? '')
+                          .toList())
                           .toList(),
                       headerStyle: pw.TextStyle(
                         font: ttf,
@@ -536,13 +561,13 @@ class _RxPrescription extends State<RxPrescription> {
                             children: [
                               pw.Row(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   // Left Column
                                   pw.Column(
                                     crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
+                                    pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Emergency No: ${Constants.emergencyNo}',
@@ -566,7 +591,7 @@ class _RxPrescription extends State<RxPrescription> {
                                     padding: pw.EdgeInsets.only(top: 20),
                                     child: pw.Row(
                                       crossAxisAlignment:
-                                          pw.CrossAxisAlignment.end,
+                                      pw.CrossAxisAlignment.end,
                                       children: [
                                         pw.Text(
                                           'Mail: ${Constants.mail}',
@@ -604,13 +629,13 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Row(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Column(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
+                                    pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Dr. ${widget.doctorName}',
@@ -695,13 +720,13 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.Divider(thickness: 2, color: lightBlue),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
+                                    pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'OP Ticket No : ${widget.opTicket}',
@@ -717,7 +742,7 @@ class _RxPrescription extends State<RxPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Name : ${widget.name}',
@@ -742,7 +767,7 @@ class _RxPrescription extends State<RxPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Age : ${widget.age}',
@@ -785,7 +810,7 @@ class _RxPrescription extends State<RxPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Basic Diagnosis',
@@ -839,11 +864,11 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Signs ',
@@ -859,7 +884,7 @@ class _RxPrescription extends State<RxPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -887,11 +912,11 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Symptoms ',
@@ -907,7 +932,7 @@ class _RxPrescription extends State<RxPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -935,11 +960,11 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Lab Investigations ',
@@ -974,11 +999,11 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Medications ',
@@ -1013,11 +1038,11 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Investigations ',
@@ -1033,7 +1058,7 @@ class _RxPrescription extends State<RxPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -1061,12 +1086,12 @@ class _RxPrescription extends State<RxPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Container(
                                     child: pw.Row(
                                       mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
+                                      pw.MainAxisAlignment.spaceBetween,
                                       children: [
                                         pw.Column(
                                           children: [
@@ -1145,9 +1170,16 @@ class _RxPrescription extends State<RxPrescription> {
               child: const Text('Print'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 setState(() {});
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
               child: const Text('Close'),
             ),
@@ -1156,6 +1188,7 @@ class _RxPrescription extends State<RxPrescription> {
       },
     );
   }
+
 
   Future<void> _prescribed() async {
     try {

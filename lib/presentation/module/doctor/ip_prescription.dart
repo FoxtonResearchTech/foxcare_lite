@@ -5,11 +5,13 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:foxcare_lite/presentation/module/doctor/patient_history_dialog.dart';
+import 'package:foxcare_lite/presentation/module/doctor/rx_prescription.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +23,7 @@ import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/table/editable_drop_down_table.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../../login/fetch_user.dart';
-
+import 'package:http/http.dart' as http;
 class IpPrescription extends StatefulWidget {
   final String patientID;
   final String ipNumber;
@@ -475,27 +477,50 @@ class _IpPrescription extends State<IpPrescription> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Rx Prescription'),
-          content: Container(
-            width: 125,
-            height: 50,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CustomText(text: 'Do you want to print ?'),
-                const SizedBox(height: 8),
-              ],
-            ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.description_outlined, color: Colors.teal, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Rx Prescription',
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
-          actions: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.print_rounded, color: Colors.teal, size: 48),
+              SizedBox(height: 16),
+              Text(
+                'Do you want to print this prescription?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () async {
                 final pdf = pw.Document();
                 const blue = PdfColor.fromInt(0xFF106ac2);
                 const lightBlue = PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
 
                 final font =
-                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
 
                 final topImage = pw.MemoryImage(
@@ -506,7 +531,7 @@ class _IpPrescription extends State<IpPrescription> {
 
                 final bottomImage = pw.MemoryImage(
                   (await rootBundle
-                          .load('assets/opAssets/OP_Card_back_original.png'))
+                      .load('assets/opAssets/OP_Card_back_original.png'))
                       .buffer
                       .asUint8List(),
                 );
@@ -528,8 +553,8 @@ class _IpPrescription extends State<IpPrescription> {
                       headers: headers,
                       data: data
                           .map((row) => headers
-                              .map((h) => row[h]?.toString() ?? '')
-                              .toList())
+                          .map((h) => row[h]?.toString() ?? '')
+                          .toList())
                           .toList(),
                       headerStyle: pw.TextStyle(
                         font: ttf,
@@ -602,13 +627,13 @@ class _IpPrescription extends State<IpPrescription> {
                             children: [
                               pw.Row(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   // Left Column
                                   pw.Column(
                                     crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
+                                    pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Emergency No: ${Constants.emergencyNo}',
@@ -632,7 +657,7 @@ class _IpPrescription extends State<IpPrescription> {
                                     padding: pw.EdgeInsets.only(top: 20),
                                     child: pw.Row(
                                       crossAxisAlignment:
-                                          pw.CrossAxisAlignment.end,
+                                      pw.CrossAxisAlignment.end,
                                       children: [
                                         pw.Text(
                                           'Mail: ${Constants.mail}',
@@ -670,7 +695,7 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Row(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text(
                                     'IP Ticket No : ${widget.ipNumber}',
@@ -695,7 +720,7 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 6),
                               pw.Row(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text(
                                     'Doctor : Dr. ${widget.doctorName}',
@@ -720,7 +745,7 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 6),
                               pw.Row(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text(
                                     'Admission Date : ${widget.ipAdmitDate}',
@@ -736,13 +761,13 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 6),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
+                                    pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'OP Ticket No : ${widget.ipNumber}',
@@ -758,7 +783,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Name : ${widget.name}',
@@ -783,7 +808,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Age : ${widget.age}',
@@ -826,7 +851,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Basic Diagnosis',
@@ -880,11 +905,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Signs ',
@@ -900,7 +925,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -928,11 +953,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Symptoms ',
@@ -948,7 +973,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -976,11 +1001,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Lab Investigations ',
@@ -1015,11 +1040,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Medications ',
@@ -1054,11 +1079,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Investigations ',
@@ -1074,7 +1099,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                        pw.MainAxisAlignment.start,
+                                    pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -1102,12 +1127,12 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Container(
                                     child: pw.Row(
                                       mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
+                                      pw.MainAxisAlignment.spaceBetween,
                                       children: [
                                         pw.Column(
                                           children: [
@@ -1186,9 +1211,16 @@ class _IpPrescription extends State<IpPrescription> {
               child: const Text('Print'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 setState(() {});
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
               child: const Text('Close'),
             ),
@@ -1197,6 +1229,7 @@ class _IpPrescription extends State<IpPrescription> {
       },
     );
   }
+
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
@@ -1302,6 +1335,385 @@ class _IpPrescription extends State<IpPrescription> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          final TextEditingController _controller = TextEditingController();
+          final ScrollController _scrollController = ScrollController();
+
+          List<ChatMessage> _messages = [
+            ChatMessage(
+              text:
+              "👋 Hello! I'm your FoxCare assistant.\nHow can I help you today?",
+              isUser: false,
+            )
+          ];
+          bool _isLoading = false;
+
+          void _scrollToBottom() {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+          }
+
+          showDialog(
+            context: context,
+            barrierColor: Colors.black54,
+            builder: (context) {
+              return Align(
+                alignment: Alignment.bottomRight,
+                child: FractionallySizedBox(
+                  widthFactor: 0.3,
+                  heightFactor: 0.9,
+                  child: Material(
+                    color: Colors.white,
+                    elevation: 12,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
+                    ),
+                    child: StatefulBuilder(
+                      builder: (context, setState) {
+                        return Column(
+                          children: [
+                            // Header
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [AppColors.lightBlue, AppColors.blue],
+                                  begin: Alignment.bottomLeft,
+                                  end: Alignment.topRight,
+                                ),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.chat_bubble, color: Colors.white),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "FoxCare Assistant",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  IconButton(
+                                    icon:
+                                    Icon(Icons.close, color: Colors.white),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Chat Body
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  itemCount:
+                                  _messages.length + (_isLoading ? 1 : 0),
+                                  itemBuilder: (context, index) {
+                                    if (_isLoading &&
+                                        index == _messages.length) {
+                                      return Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8.0),
+                                          child: Lottie.asset(
+                                            'assets/ai_bot_loading.json',
+                                            width: 50,
+                                            height: 50,
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    final msg = _messages[index];
+                                    final isUser = msg.isUser;
+
+                                    return Container(
+                                      margin: EdgeInsets.symmetric(vertical: 8),
+                                      child: Row(
+                                        mainAxisAlignment: isUser
+                                            ? MainAxisAlignment.end
+                                            : MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          if (!isUser)
+                                            CircleAvatar(
+                                              radius: 18,
+                                              backgroundColor: Colors.white,
+                                              backgroundImage: AssetImage(
+                                                  'assets/fox_doc.png'),
+                                            ),
+                                          if (!isUser) SizedBox(width: 8),
+
+                                          // Message bubble
+                                          Flexible(
+                                            child: Container(
+                                              padding: EdgeInsets.all(14),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: isUser
+                                                      ? [
+                                                    Colors.blueAccent,
+                                                    Colors.lightBlueAccent
+                                                  ]
+                                                      : [
+                                                    Colors.grey.shade200,
+                                                    Colors.grey.shade300
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(16),
+                                                  topRight: Radius.circular(16),
+                                                  bottomLeft: Radius.circular(
+                                                      isUser
+                                                          ? 16
+                                                          : 0), // tail design
+                                                  bottomRight: Radius.circular(
+                                                      isUser
+                                                          ? 0
+                                                          : 16), // tail design
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black12,
+                                                    blurRadius: 6,
+                                                    offset: Offset(0, 3),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Text(
+                                                msg.text,
+                                                style: TextStyle(
+                                                  color: isUser
+                                                      ? Colors.white
+                                                      : Colors.black87,
+                                                  fontSize: 15.5,
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          if (isUser) SizedBox(width: 8),
+                                          if (isUser)
+                                            CircleAvatar(
+                                              radius: 18,
+                                              backgroundColor:
+                                              Colors.blueAccent,
+                                              child: Icon(Icons.person,
+                                                  color: Colors.white),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+
+                            // Input
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _controller,
+                                      decoration: InputDecoration(
+                                        hintText: "Type your message...",
+                                        filled: true,
+                                        fillColor: Colors.grey[100],
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(12),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                      onSubmitted: (userMessage) async {
+                                        userMessage = userMessage.trim();
+                                        if (userMessage.isEmpty) return;
+
+                                        setState(() {
+                                          _messages.add(ChatMessage(
+                                              text: userMessage, isUser: true));
+                                          _isLoading = true;
+                                        });
+                                        _scrollToBottom();
+                                        _controller.clear();
+
+                                        try {
+                                          final response = await http.post(
+                                            Uri.parse(
+                                                'https://chatbot-api-3ixb.onrender.com/analyze-plant'),
+                                            headers: {
+                                              'Content-Type': 'application/json'
+                                            },
+                                            body: jsonEncode(
+                                                {'user_input': userMessage}),
+                                          );
+
+                                          if (response.statusCode == 200) {
+                                            final data =
+                                            jsonDecode(response.body);
+                                            String botReply = data[
+                                            'response'] ??
+                                                "I'm sorry, I didn't understand that.";
+
+                                            setState(() {
+                                              _messages.add(ChatMessage(
+                                                  text: botReply,
+                                                  isUser: false));
+                                              _isLoading = false;
+                                            });
+                                          } else {
+                                            setState(() {
+                                              _messages.add(ChatMessage(
+                                                  text: "Bot is sleeping 😴",
+                                                  isUser: false));
+                                              _isLoading = false;
+                                            });
+                                          }
+                                        } catch (e) {
+                                          setState(() {
+                                            _messages.add(ChatMessage(
+                                                text:
+                                                "Error: Unable to get a response",
+                                                isUser: false));
+                                            _isLoading = false;
+                                          });
+                                        }
+                                        _scrollToBottom();
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      String userMessage =
+                                      _controller.text.trim();
+                                      if (userMessage.isEmpty) return;
+
+                                      setState(() {
+                                        _messages.add(ChatMessage(
+                                            text: userMessage, isUser: true));
+                                        _isLoading = true;
+                                      });
+                                      _scrollToBottom();
+                                      _controller.clear();
+
+                                      try {
+                                        final response = await http.post(
+                                          Uri.parse(
+                                              'https://chatbot-api-3ixb.onrender.com/analyze-plant'),
+                                          headers: {
+                                            'Content-Type': 'application/json'
+                                          },
+                                          body: jsonEncode(
+                                              {'user_input': userMessage}),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          final data =
+                                          jsonDecode(response.body);
+                                          String botReply = data['response'] ??
+                                              "I'm sorry, I didn't understand that.";
+
+                                          setState(() {
+                                            _messages.add(ChatMessage(
+                                                text: botReply, isUser: false));
+                                            _isLoading = false;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            _messages.add(ChatMessage(
+                                                text: "Bot is sleeping 😴",
+                                                isUser: false));
+                                            _isLoading = false;
+                                          });
+                                        }
+                                      } catch (e) {
+                                        setState(() {
+                                          _messages.add(ChatMessage(
+                                              text:
+                                              "Error: Unable to get a response",
+                                              isUser: false));
+                                          _isLoading = false;
+                                        });
+                                      }
+                                      _scrollToBottom();
+                                    },
+                                    child: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.lightBlue,
+                                            AppColors.blue
+                                          ],
+                                          begin: Alignment.bottomLeft,
+                                          end: Alignment.topRight,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.send,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        hoverElevation: 0,
+        child: Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: AssetImage('assets/fox_doc.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      ),
       appBar: AppBar(
         title: Center(
             child: CustomText(
