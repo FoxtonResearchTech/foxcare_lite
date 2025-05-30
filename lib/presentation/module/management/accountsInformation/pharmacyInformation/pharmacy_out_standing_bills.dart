@@ -651,7 +651,6 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
             left: screenWidth * 0.01,
             right: screenWidth * 0.01,
             bottom: screenWidth * 0.01,
@@ -686,7 +685,6 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
               ),
               Row(
                 children: [
-                  SizedBox(width: screenWidth * 0.02),
                   CustomTextField(
                     controller: fromDate,
                     hintText: 'From Date',
@@ -727,9 +725,14 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
                         ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
-              const Row(
-                children: [CustomText(text: 'Bill List')],
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Bill List',
+                    size: screenWidth * 0.0125,
+                  )
+                ],
               ),
               SizedBox(height: screenHeight * 0.04),
               LazyDataTable(
@@ -767,7 +770,7 @@ class _PharmacyOutStandingBills extends State<PharmacyOutStandingBills> {
                     CustomText(
                       text: '$balance',
                     ),
-                    SizedBox(width: screenWidth * 0.07)
+                    SizedBox(width: screenWidth * 0.15)
                   ],
                 ),
               ),

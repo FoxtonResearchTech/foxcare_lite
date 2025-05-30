@@ -736,7 +736,16 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                         ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.06),
+              SizedBox(height: screenHeight * 0.04),
+              Row(
+                children: [
+                  CustomText(
+                    text: 'Bill List',
+                    size: screenWidth * 0.0125,
+                  )
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
               LazyDataTable(
                 tableData: tableData,
                 headers: headers,

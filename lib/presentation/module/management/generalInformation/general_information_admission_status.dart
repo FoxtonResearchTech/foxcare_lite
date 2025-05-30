@@ -279,7 +279,7 @@ class _GeneralInformationAdmissionStatus
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28),
+                      SizedBox(height: 24),
                       isLoading
                           ? SizedBox(
                               width: buttonWidth,
@@ -321,7 +321,7 @@ class _GeneralInformationAdmissionStatus
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28),
+                      SizedBox(height: 24),
                       isPhoneLoading
                           ? SizedBox(
                               width: buttonWidth,

@@ -24,6 +24,7 @@ import '../../../utilities/widgets/table/editable_drop_down_table.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 import '../../login/fetch_user.dart';
 import 'package:http/http.dart' as http;
+
 class IpPrescription extends StatefulWidget {
   final String patientID;
   final String ipNumber;
@@ -420,6 +421,7 @@ class _IpPrescription extends State<IpPrescription> {
 
       final Map<String, dynamic> patientData = {
         'proceedTo': selectedValue,
+        'status': 'waiting',
         'basicDiagnosis': {
           'temperature': _temperatureController.text,
           'bloodPressure': _bloodPressureController.text,
@@ -477,7 +479,8 @@ class _IpPrescription extends State<IpPrescription> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: const [
               Icon(Icons.description_outlined, color: Colors.teal, size: 28),
@@ -504,7 +507,8 @@ class _IpPrescription extends State<IpPrescription> {
               ),
             ],
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           actions: [
             TextButton(
               style: TextButton.styleFrom(
@@ -520,7 +524,7 @@ class _IpPrescription extends State<IpPrescription> {
                 const lightBlue = PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
 
                 final font =
-                await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
 
                 final topImage = pw.MemoryImage(
@@ -531,7 +535,7 @@ class _IpPrescription extends State<IpPrescription> {
 
                 final bottomImage = pw.MemoryImage(
                   (await rootBundle
-                      .load('assets/opAssets/OP_Card_back_original.png'))
+                          .load('assets/opAssets/OP_Card_back_original.png'))
                       .buffer
                       .asUint8List(),
                 );
@@ -553,8 +557,8 @@ class _IpPrescription extends State<IpPrescription> {
                       headers: headers,
                       data: data
                           .map((row) => headers
-                          .map((h) => row[h]?.toString() ?? '')
-                          .toList())
+                              .map((h) => row[h]?.toString() ?? '')
+                              .toList())
                           .toList(),
                       headerStyle: pw.TextStyle(
                         font: ttf,
@@ -627,13 +631,13 @@ class _IpPrescription extends State<IpPrescription> {
                             children: [
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   // Left Column
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Emergency No: ${Constants.emergencyNo}',
@@ -657,7 +661,7 @@ class _IpPrescription extends State<IpPrescription> {
                                     padding: pw.EdgeInsets.only(top: 20),
                                     child: pw.Row(
                                       crossAxisAlignment:
-                                      pw.CrossAxisAlignment.end,
+                                          pw.CrossAxisAlignment.end,
                                       children: [
                                         pw.Text(
                                           'Mail: ${Constants.mail}',
@@ -695,7 +699,7 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text(
                                     'IP Ticket No : ${widget.ipNumber}',
@@ -720,7 +724,7 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 6),
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text(
                                     'Doctor : Dr. ${widget.doctorName}',
@@ -745,7 +749,7 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 6),
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Text(
                                     'Admission Date : ${widget.ipAdmitDate}',
@@ -761,13 +765,13 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 6),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.start,
+                                        pw.MainAxisAlignment.start,
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'OP Ticket No : ${widget.ipNumber}',
@@ -783,7 +787,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Name : ${widget.name}',
@@ -808,7 +812,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Age : ${widget.age}',
@@ -851,7 +855,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Basic Diagnosis',
@@ -905,11 +909,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Signs ',
@@ -925,7 +929,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.start,
+                                        pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -953,11 +957,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Symptoms ',
@@ -973,7 +977,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.start,
+                                        pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -1001,11 +1005,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Lab Investigations ',
@@ -1040,11 +1044,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Medications ',
@@ -1079,11 +1083,11 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Investigations ',
@@ -1099,7 +1103,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.start,
+                                        pw.MainAxisAlignment.start,
                                     children: [
                                       pw.SizedBox(width: 40),
                                       pw.Text(
@@ -1127,12 +1131,12 @@ class _IpPrescription extends State<IpPrescription> {
                               pw.SizedBox(height: 20),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Container(
                                     child: pw.Row(
                                       mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
+                                          pw.MainAxisAlignment.spaceBetween,
                                       children: [
                                         pw.Column(
                                           children: [
@@ -1229,7 +1233,6 @@ class _IpPrescription extends State<IpPrescription> {
       },
     );
   }
-
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
@@ -1343,7 +1346,7 @@ class _IpPrescription extends State<IpPrescription> {
           List<ChatMessage> _messages = [
             ChatMessage(
               text:
-              "👋 Hello! I'm your FoxCare assistant.\nHow can I help you today?",
+                  "👋 Hello! I'm your FoxCare assistant.\nHow can I help you today?",
               isUser: false,
             )
           ];
@@ -1412,7 +1415,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   Spacer(),
                                   IconButton(
                                     icon:
-                                    Icon(Icons.close, color: Colors.white),
+                                        Icon(Icons.close, color: Colors.white),
                                     onPressed: () => Navigator.pop(context),
                                   ),
                                 ],
@@ -1426,7 +1429,7 @@ class _IpPrescription extends State<IpPrescription> {
                                 child: ListView.builder(
                                   controller: _scrollController,
                                   itemCount:
-                                  _messages.length + (_isLoading ? 1 : 0),
+                                      _messages.length + (_isLoading ? 1 : 0),
                                   itemBuilder: (context, index) {
                                     if (_isLoading &&
                                         index == _messages.length) {
@@ -1454,7 +1457,7 @@ class _IpPrescription extends State<IpPrescription> {
                                             ? MainAxisAlignment.end
                                             : MainAxisAlignment.start,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           if (!isUser)
                                             CircleAvatar(
@@ -1473,13 +1476,13 @@ class _IpPrescription extends State<IpPrescription> {
                                                 gradient: LinearGradient(
                                                   colors: isUser
                                                       ? [
-                                                    Colors.blueAccent,
-                                                    Colors.lightBlueAccent
-                                                  ]
+                                                          Colors.blueAccent,
+                                                          Colors.lightBlueAccent
+                                                        ]
                                                       : [
-                                                    Colors.grey.shade200,
-                                                    Colors.grey.shade300
-                                                  ],
+                                                          Colors.grey.shade200,
+                                                          Colors.grey.shade300
+                                                        ],
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
                                                 ),
@@ -1521,7 +1524,7 @@ class _IpPrescription extends State<IpPrescription> {
                                             CircleAvatar(
                                               radius: 18,
                                               backgroundColor:
-                                              Colors.blueAccent,
+                                                  Colors.blueAccent,
                                               child: Icon(Icons.person,
                                                   color: Colors.white),
                                             ),
@@ -1547,7 +1550,7 @@ class _IpPrescription extends State<IpPrescription> {
                                         fillColor: Colors.grey[100],
                                         border: OutlineInputBorder(
                                           borderRadius:
-                                          BorderRadius.circular(12),
+                                              BorderRadius.circular(12),
                                           borderSide: BorderSide.none,
                                         ),
                                       ),
@@ -1576,9 +1579,9 @@ class _IpPrescription extends State<IpPrescription> {
 
                                           if (response.statusCode == 200) {
                                             final data =
-                                            jsonDecode(response.body);
+                                                jsonDecode(response.body);
                                             String botReply = data[
-                                            'response'] ??
+                                                    'response'] ??
                                                 "I'm sorry, I didn't understand that.";
 
                                             setState(() {
@@ -1599,7 +1602,7 @@ class _IpPrescription extends State<IpPrescription> {
                                           setState(() {
                                             _messages.add(ChatMessage(
                                                 text:
-                                                "Error: Unable to get a response",
+                                                    "Error: Unable to get a response",
                                                 isUser: false));
                                             _isLoading = false;
                                           });
@@ -1612,7 +1615,7 @@ class _IpPrescription extends State<IpPrescription> {
                                   GestureDetector(
                                     onTap: () async {
                                       String userMessage =
-                                      _controller.text.trim();
+                                          _controller.text.trim();
                                       if (userMessage.isEmpty) return;
 
                                       setState(() {
@@ -1636,7 +1639,7 @@ class _IpPrescription extends State<IpPrescription> {
 
                                         if (response.statusCode == 200) {
                                           final data =
-                                          jsonDecode(response.body);
+                                              jsonDecode(response.body);
                                           String botReply = data['response'] ??
                                               "I'm sorry, I didn't understand that.";
 
@@ -1657,7 +1660,7 @@ class _IpPrescription extends State<IpPrescription> {
                                         setState(() {
                                           _messages.add(ChatMessage(
                                               text:
-                                              "Error: Unable to get a response",
+                                                  "Error: Unable to get a response",
                                               isUser: false));
                                           _isLoading = false;
                                         });
@@ -2528,10 +2531,12 @@ class _IpPrescription extends State<IpPrescription> {
                           final confirmed = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
                               title: Row(
                                 children: const [
-                                  Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.orange),
                                   SizedBox(width: 8),
                                   Text('Confirm Action'),
                                 ],
@@ -2542,7 +2547,8 @@ class _IpPrescription extends State<IpPrescription> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
                                   child: const Text('Cancel'),
                                 ),
                                 ElevatedButton(
@@ -2550,7 +2556,8 @@ class _IpPrescription extends State<IpPrescription> {
                                     backgroundColor: Colors.orange,
                                     foregroundColor: Colors.white,
                                   ),
-                                  onPressed: () => Navigator.of(context).pop(true),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
                                   child: const Text('Confirm'),
                                 ),
                               ],
@@ -2564,7 +2571,6 @@ class _IpPrescription extends State<IpPrescription> {
                         width: screenWidth * 0.5,
                       ),
                     ),
-
                     SizedBox(
                       width: 300,
                       child: CustomButton(
@@ -2585,7 +2591,8 @@ class _IpPrescription extends State<IpPrescription> {
                             builder: (context) => AlertDialog(
                               title: Row(
                                 children: const [
-                                  Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.redAccent),
                                   SizedBox(width: 8),
                                   Text('Confirm Discharge'),
                                 ],
@@ -2595,28 +2602,32 @@ class _IpPrescription extends State<IpPrescription> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
                                   child: const Text('Cancel'),
                                 ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.redAccent,
                                   ),
-                                  onPressed: () => Navigator.of(context).pop(true),
-                                  child: const Text('Confirm',style: TextStyle(color:Colors.white),),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  child: const Text(
+                                    'Confirm',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
                               ],
                             ),
                           );
 
                           if (confirmed == true) {
-                         endIP(widget.patientID, widget.ipNumber);
+                            endIP(widget.patientID, widget.ipNumber);
                           }
                         },
                         width: screenWidth * 0.5,
                       ),
                     )
-
                   ],
                 ),
               ),

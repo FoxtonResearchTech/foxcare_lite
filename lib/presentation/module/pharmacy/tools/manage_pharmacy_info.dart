@@ -728,8 +728,8 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                               ),
                               actions: <Widget>[
                                 TextButton(
-                                  onPressed: () {
-                                    updatePharmacyInfo(docId);
+                                  onPressed: () async {
+                                    await updatePharmacyInfo(docId);
                                   },
                                   child: CustomText(
                                     text: 'Submit ',
@@ -755,24 +755,61 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                       child: const CustomText(text: 'Edit')),
                   TextButton(
                       onPressed: () async {
-                        try {
-                          await FirebaseFirestore.instance
-                              .collection('pharmacy')
-                              .doc('pharmacies')
-                              .collection('pharmacy')
-                              .doc(doc.id)
-                              .delete();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Row(
+                              children: const [
+                                Icon(Icons.warning_amber_rounded,
+                                    color: Colors.redAccent),
+                                SizedBox(width: 8),
+                                Text('Confirm Deletion'),
+                              ],
+                            ),
+                            content: const Text(
+                              'Are you sure you want to delete?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text(
+                                  'Confirm',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
 
-                          Navigator.of(context).pop(); // Close dialog
+                        if (confirmed == true) {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('pharmacy')
+                                .doc('pharmacies')
+                                .collection('pharmacy')
+                                .doc(doc.id)
+                                .delete();
 
-                          fetchData();
-                          CustomSnackBar(context,
-                              message: 'Pharmacy Deleted',
-                              backgroundColor: Colors.green);
-                        } catch (e) {
-                          CustomSnackBar(context,
-                              message: 'Pharmacy not Deleted',
-                              backgroundColor: Colors.red);
+                            Navigator.of(context).pop();
+
+                            fetchData();
+                            CustomSnackBar(context,
+                                message: 'Pharmacy Deleted',
+                                backgroundColor: Colors.green);
+                          } catch (e) {
+                            CustomSnackBar(context,
+                                message: 'Pharmacy not Deleted',
+                                backgroundColor: Colors.red);
+                          }
                         }
                       },
                       child: const CustomText(text: 'Delete'))
@@ -896,32 +933,48 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
               SizedBox(height: screenHeight * 0.05),
               Row(
                 children: [
-                  PharmacyTextField(
-                    hintText: 'Pharmacy Name',
-                    width: screenWidth * 0.25,
-                    controller: pharmacyName,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Pharmacy Name',
+                        size: screenWidth * 0.011,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.25,
+                        controller: pharmacyName,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: screenHeight * 0.1),
-                  searching
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
-                            ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          height: screenHeight * 0.04,
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => searching = true);
-                            await fetchData(pharmacyName: pharmacyName.text);
-                            i = 1;
-                            setState(() => searching = false);
-                          },
-                          width: screenWidth * 0.08)
+                  SizedBox(width: screenHeight * 0.05),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.038),
+                      searching
+                          ? SizedBox(
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              height: screenHeight * 0.04,
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => searching = true);
+                                await fetchData(
+                                    pharmacyName: pharmacyName.text);
+                                i = 1;
+                                setState(() => searching = false);
+                              },
+                              width: screenWidth * 0.08),
+                    ],
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

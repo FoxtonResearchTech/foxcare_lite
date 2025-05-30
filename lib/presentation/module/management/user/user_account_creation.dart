@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/presentation/module/management/user/doctor_and_counter_setup.dart';
+import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/user_information/user_information_drawer.dart';
 
 import 'package:iconsax/iconsax.dart';
@@ -31,7 +32,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
   String? selectedSpecialization;
 
   String? selectedSex;
-
+  bool isLoading = false;
   // Controllers for employee details
   final TextEditingController empCodeController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
@@ -119,6 +120,9 @@ class _UserAccountCreation extends State<UserAccountCreation> {
   }
 
   Future<void> registerEmployee() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -195,12 +199,19 @@ class _UserAccountCreation extends State<UserAccountCreation> {
           backgroundColor: Colors.green);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
-        showMessage('Email already in use.');
+        CustomSnackBar(context,
+            message: 'Email Already In Use', backgroundColor: Colors.orange);
       } else if (e.code == 'weak-password') {
-        showMessage('The password is too weak.');
+        CustomSnackBar(context,
+            message: 'The password is too weak',
+            backgroundColor: Colors.orange);
       } else {
-        showMessage('Registration failed: ${e.message}');
+        CustomSnackBar(context,
+            message: 'Registration failed', backgroundColor: Colors.red);
       }
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       CustomSnackBar(
         context,
@@ -292,7 +303,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: screenWidth * 0.03),
+                        padding: EdgeInsets.only(top: screenWidth * 0.01),
                         child: Column(
                           children: [
                             CustomText(
@@ -318,30 +329,50 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                   ),
                   Row(
                     children: [
-                      CustomDropdown(
-                        label: 'Position',
-                        items: const [
-                          'Management',
-                          'Pharmacist',
-                          'Receptionist',
-                          'Doctor',
-                          'Manager',
-                          'Lab Assistance',
-                          'X-Ray Technician'
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Position',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomDropdown(
+                            label: '',
+                            items: const [
+                              'Management',
+                              'Pharmacist',
+                              'Receptionist',
+                              'Doctor',
+                              'Manager',
+                              'Lab Assistance',
+                              'X-Ray Technician'
+                            ],
+                            selectedItem: positionSelectedValue,
+                            onChanged: (value) {
+                              setState(() {
+                                positionSelectedValue = value!;
+                                isDoctor(positionSelectedValue!);
+                              });
+                            },
+                          ),
                         ],
-                        selectedItem: positionSelectedValue,
-                        onChanged: (value) {
-                          setState(() {
-                            positionSelectedValue = value!;
-                            isDoctor(positionSelectedValue!);
-                          });
-                        },
                       ),
                       SizedBox(width: screenHeight * 0.2),
-                      CustomTextField(
-                        hintText: 'Emp Code',
-                        width: screenWidth * 0.25,
-                        controller: empCodeController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Emp Code',
+                            size: screenWidth * 0.015,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: empCodeController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -350,64 +381,113 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                   if (isDoc)
                     Row(
                       children: [
-                        CustomDropdown(
-                          label: 'Specialization',
-                          items: const [
-                            'General Physician',
-                            'Pediatrician',
-                            'Cardiologist',
-                            'Dermatologist',
-                            'Neurologist',
-                            'Orthopedic Surgeon',
-                            'ENT Specialist',
-                            'Gynecologist',
-                            'Ophthalmologist',
-                            'Psychiatrist',
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Specialization',
+                              size: screenWidth * 0.012,
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            CustomDropdown(
+                              label: '',
+                              items: const [
+                                'General Physician',
+                                'Pediatrician',
+                                'Cardiologist',
+                                'Dermatologist',
+                                'Neurologist',
+                                'Orthopedic Surgeon',
+                                'ENT Specialist',
+                                'Gynecologist',
+                                'Ophthalmologist',
+                                'Psychiatrist',
+                              ],
+                              selectedItem: selectedSpecialization,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedSpecialization = value!;
+                                });
+                              },
+                            ),
                           ],
-                          selectedItem: selectedSpecialization,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedSpecialization = value!;
-                            });
-                          },
                         ),
                       ],
                     ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'First Name',
-                        width: screenWidth * 0.25,
-                        controller: firstNameController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'First Name',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: firstNameController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.2),
-                      CustomTextField(
-                        hintText: 'Last Name',
-                        width: screenWidth * 0.25,
-                        controller: lastNameController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Last Name',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: lastNameController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText:
-                            "Father's Name / Mother's Name / Guardian's Name",
-                        width: screenWidth * 0.25,
-                        controller: relationNameController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: "Father's /Mother's /Guardian's Name",
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: "",
+                            width: screenWidth * 0.25,
+                            controller: relationNameController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.2),
-                      CustomDropdown(
-                        label: 'Relation',
-                        items: const ['Father', 'Mother', 'Guardian'],
-                        selectedItem: relationSelectedValue,
-                        onChanged: (value) {
-                          setState(() {
-                            relationSelectedValue = value!;
-                          });
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Relation',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomDropdown(
+                            label: '',
+                            items: const ['Father', 'Mother', 'Guardian'],
+                            selectedItem: relationSelectedValue,
+                            onChanged: (value) {
+                              setState(() {
+                                relationSelectedValue = value!;
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -415,222 +495,450 @@ class _UserAccountCreation extends State<UserAccountCreation> {
 
                   Row(
                     children: [
-                      CustomDropdown(
-                        label: 'Sex',
-                        items: const [
-                          'Male',
-                          'Female',
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Sex',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomDropdown(
+                            label: '',
+                            items: const [
+                              'Male',
+                              'Female',
+                            ],
+                            selectedItem: selectedSex,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedSex = value!;
+                              });
+                            },
+                          ),
                         ],
-                        selectedItem: selectedSex,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSex = value!;
-                          });
-                        },
                       ),
                       SizedBox(width: screenHeight * 0.2),
-                      CustomTextField(
-                        controller: dobController,
-                        hintText: 'Date of Birth',
-                        width: screenWidth * 0.15,
-                        icon: const Icon(Icons.date_range),
-                        onTap: () => _selectDate(context),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Date Of Birth',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            controller: dobController,
+                            hintText: '',
+                            width: screenWidth * 0.15,
+                            icon: const Icon(Icons.date_range),
+                            onTap: () => _selectDate(context),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.05),
-                  const CustomText(text: 'Permanent Address'),
                   SizedBox(height: screenHeight * 0.04),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Lane 1',
-                        width: screenWidth * 0.25,
-                        controller: lane1Controller,
+                      CustomText(
+                        text: 'Permanent Address',
+                        size: screenWidth * 0.02,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Lane 1',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: lane1Controller,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.2),
-                      CustomTextField(
-                        hintText: 'Lane 2',
-                        width: screenWidth * 0.25,
-                        controller: lane2Controller,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Lane 2',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: lane2Controller,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Landmark',
-                        width: screenWidth * 0.595,
-                        controller: landmarkController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Landmark',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.612,
+                            controller: landmarkController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'City',
-                        width: screenWidth * 0.20,
-                        controller: cityController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'City',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: cityController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'State',
-                        width: screenWidth * 0.20,
-                        controller: stateController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'State',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: stateController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'Pin code',
-                        width: screenWidth * 0.20,
-                        controller: pinCodeController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Pin code',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: pinCodeController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'E-Mail ID',
-                        width: screenWidth * 0.20,
-                        controller: emailController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'E-Mail ID',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: emailController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'Phone No 1',
-                        width: screenWidth * 0.20,
-                        controller: phone1Controller,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone No 1',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: phone1Controller,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'Phone No 2',
-                        width: screenWidth * 0.20,
-                        controller: phone2Controller,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Phone No 2',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: phone2Controller,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.02),
+                  SizedBox(height: screenHeight * 0.04),
                   // Checkboxes for Temporary Address
                   Row(
                     children: [
-                      Checkbox(
-                        value: isSameAsPermanent,
+                      Radio<bool>(
+                        activeColor: AppColors.blue,
+                        value: false,
+                        groupValue: isSameAsPermanent,
                         onChanged: (value) {
                           setState(() {
                             isSameAsPermanent = value!;
-                            if (isSameAsPermanent) {
-                              populateTemporaryAddress();
-                            } else {
-                              clearTemporaryAddress();
-                            }
+                            populateTemporaryAddress();
                           });
                         },
                       ),
-                      const Text('Same as Above'),
-                      SizedBox(width: screenWidth * 0.1),
-                      Checkbox(
-                        value: !isSameAsPermanent,
+                      const CustomText(text: 'Same as Above'),
+                      SizedBox(width: screenWidth * 0.08),
+                      Radio<bool>(
+                        activeColor: AppColors.blue,
+                        value: true,
+                        groupValue: isSameAsPermanent,
                         onChanged: (value) {
                           setState(() {
-                            isSameAsPermanent = !value!;
-                            if (isSameAsPermanent) {
-                              populateTemporaryAddress();
-                            } else {
-                              clearTemporaryAddress();
-                            }
+                            isSameAsPermanent = value!;
+                            clearTemporaryAddress();
                           });
                         },
                       ),
-                      const Text('Different'),
+                      const CustomText(text: 'Different'),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.02),
+
                   // Temporary Address Fields
-                  const CustomText(text: 'Temporary Address'),
                   SizedBox(height: screenHeight * 0.04),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Lane 1',
-                        width: screenWidth * 0.25,
-                        controller: tempLane1Controller,
+                      CustomText(
+                        text: 'Temporary Address',
+                        size: screenWidth * 0.02,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Lane 1',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: tempLane1Controller,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.2),
-                      CustomTextField(
-                        hintText: 'Lane 2',
-                        width: screenWidth * 0.25,
-                        controller: tempLane2Controller,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Lane 2',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: tempLane2Controller,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Landmark',
-                        width: screenWidth * 0.595,
-                        controller: tempLandmarkController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Landmark',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.612,
+                            controller: tempLandmarkController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'City',
-                        width: screenWidth * 0.20,
-                        controller: tempCityController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'City',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: tempCityController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'State',
-                        width: screenWidth * 0.20,
-                        controller: tempStateController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'State',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: tempStateController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'Pin code',
-                        width: screenWidth * 0.20,
-                        controller: tempPinCodeController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Pin code',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.20,
+                            controller: tempPinCodeController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.05),
-                  const CustomText(text: 'Education Qualification'),
-                  SizedBox(height: screenHeight * 0.05),
+                  SizedBox(height: screenHeight * 0.04),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Qualification',
-                        width: screenWidth * 0.25,
-                        controller: qualificationController,
+                      CustomText(
+                        text: 'Education Qualification',
+                        size: screenWidth * 0.02,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Qualification',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: qualificationController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Register No',
-                        width: screenWidth * 0.25,
-                        controller: registerNoController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Register No',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: registerNoController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'University',
-                        width: screenWidth * 0.25,
-                        controller: universityController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'University',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: universityController,
+                          ),
+                        ],
                       ),
                       SizedBox(width: screenHeight * 0.1),
-                      CustomTextField(
-                        hintText: 'College',
-                        width: screenWidth * 0.25,
-                        controller: collegeController,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'College',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: collegeController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -638,6 +946,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                   Row(
                     children: [
                       Checkbox(
+                        activeColor: AppColors.blue,
                         value: isPostgraduate,
                         onChanged: (value) {
                           setState(() {
@@ -645,56 +954,113 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                           });
                         },
                       ),
-                      const Text('Postgraduate Qualification'),
+                      const CustomText(text: 'Postgraduate Qualification'),
                     ],
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   if (isPostgraduate) ...[
                     Row(
                       children: [
-                        CustomTextField(
-                          hintText: 'Qualification',
-                          width: screenWidth * 0.25,
-                          controller: pgQualificationController,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Qualification',
+                              size: screenWidth * 0.012,
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            CustomTextField(
+                              hintText: '',
+                              width: screenWidth * 0.25,
+                              controller: pgQualificationController,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                     SizedBox(height: screenHeight * 0.02),
                     Row(
                       children: [
-                        CustomTextField(
-                          hintText: 'Register No',
-                          width: screenWidth * 0.25,
-                          controller: pgRegisterNoController,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Register No',
+                              size: screenWidth * 0.012,
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            CustomTextField(
+                              hintText: '',
+                              width: screenWidth * 0.25,
+                              controller: pgRegisterNoController,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                     SizedBox(height: screenHeight * 0.02),
                     Row(
                       children: [
-                        CustomTextField(
-                          hintText: 'University',
-                          width: screenWidth * 0.25,
-                          controller: pgUniversityController,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'University',
+                              size: screenWidth * 0.012,
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            CustomTextField(
+                              hintText: '',
+                              width: screenWidth * 0.25,
+                              controller: pgUniversityController,
+                            ),
+                          ],
                         ),
                         SizedBox(width: screenHeight * 0.1),
-                        CustomTextField(
-                          hintText: 'College',
-                          width: screenWidth * 0.25,
-                          controller: pgCollegeController,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'College',
+                              size: screenWidth * 0.012,
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            CustomTextField(
+                              hintText: '',
+                              width: screenWidth * 0.25,
+                              controller: pgCollegeController,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ],
-                  SizedBox(height: screenHeight * 0.02),
-                  const CustomText(text: 'Password Details'),
-                  SizedBox(height: screenHeight * 0.05),
+                  SizedBox(height: screenHeight * 0.04),
                   Row(
                     children: [
-                      CustomTextField(
-                        hintText: 'Password',
-                        width: screenWidth * 0.25,
-                        controller: passwordController,
+                      CustomText(
+                        text: 'Password',
+                        size: screenWidth * 0.02,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.04),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomText(
+                            text: 'Password',
+                            size: screenWidth * 0.012,
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          CustomTextField(
+                            hintText: '',
+                            width: screenWidth * 0.25,
+                            controller: passwordController,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -704,8 +1070,8 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                     children: [
                       CustomButton(
                         label: 'Create',
-                        onPressed: () {
-                          registerEmployee();
+                        onPressed: () async {
+                          await registerEmployee();
                         },
                         width: screenWidth * 0.08,
                         height: screenHeight * 0.05,

@@ -788,24 +788,59 @@ class _DistributorList extends State<DistributorList> {
                     child: const CustomText(text: 'Edit')),
                 TextButton(
                     onPressed: () async {
-                      try {
-                        await FirebaseFirestore.instance
-                            .collection('pharmacy')
-                            .doc('distributors')
-                            .collection('distributor')
-                            .doc(doc.id)
-                            .delete();
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Row(
+                            children: const [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Confirm Deletion'),
+                            ],
+                          ),
+                          content: const Text(
+                            'Are you sure you want to delete?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
 
-                        Navigator.of(context).pop(); // Close dialog
+                      if (confirmed == true) {
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('pharmacy')
+                              .doc('distributors')
+                              .collection('distributor')
+                              .doc(doc.id)
+                              .delete();
 
-                        fetchData();
-                        CustomSnackBar(context,
-                            message: 'Distributor Deleted',
-                            backgroundColor: Colors.green);
-                      } catch (e) {
-                        CustomSnackBar(context,
-                            message: 'Distributor not Deleted',
-                            backgroundColor: Colors.red);
+                          Navigator.of(context).pop(); // Close dialog
+
+                          fetchData();
+                          CustomSnackBar(context,
+                              message: 'Distributor Deleted',
+                              backgroundColor: Colors.green);
+                        } catch (e) {
+                          CustomSnackBar(context,
+                              message: 'Distributor not Deleted',
+                              backgroundColor: Colors.red);
+                        }
                       }
                     },
                     child: const CustomText(text: 'Delete'))
@@ -930,33 +965,48 @@ class _DistributorList extends State<DistributorList> {
               SizedBox(height: screenHeight * 0.05),
               Row(
                 children: [
-                  PharmacyTextField(
-                    hintText: 'Distributor Name',
-                    width: screenWidth * 0.25,
-                    controller: _distributorName,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Distributor Name',
+                        size: screenWidth * 0.011,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.25,
+                        controller: _distributorName,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: screenHeight * 0.1),
-                  searching
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
-                            ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          height: screenHeight * 0.04,
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => searching = true);
-                            await fetchData(
-                                distributorName: _distributorName.text);
-                            i = 1;
-                            setState(() => searching = false);
-                          },
-                          width: screenWidth * 0.08)
+                  SizedBox(width: screenHeight * 0.05),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.038),
+                      searching
+                          ? SizedBox(
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              height: screenHeight * 0.04,
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => searching = true);
+                                await fetchData(
+                                    distributorName: _distributorName.text);
+                                i = 1;
+                                setState(() => searching = false);
+                              },
+                              width: screenWidth * 0.08),
+                    ],
+                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

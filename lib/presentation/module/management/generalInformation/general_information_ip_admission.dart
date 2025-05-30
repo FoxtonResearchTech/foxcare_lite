@@ -364,7 +364,7 @@ class _GeneralInformationIpAdmission
                       // Button aligned with text field
                       Column(
                         children: [
-                          SizedBox(height: 28), // Adjust this value if needed
+                          SizedBox(height: 24), // Adjust this value if needed
                           isLoading
                               ? SizedBox(
                                   width: buttonWidth,
@@ -416,7 +416,7 @@ class _GeneralInformationIpAdmission
                   Column(
                     children: [
                       SizedBox(
-                          height: 28), // Adjust this value to match the field
+                          height: 24), // Adjust this value to match the field
                       isLoading2
                           ? SizedBox(
                               width: buttonWidth,

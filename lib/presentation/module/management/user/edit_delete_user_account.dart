@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
@@ -25,7 +26,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
   String? selectedSpecialization;
 
   String? selectedSex;
-
+  bool empLoading = false;
+  bool phoneNumberLoading = false;
   final TextEditingController empCodeSearch = TextEditingController();
   final TextEditingController phoneNumberSearch = TextEditingController();
   // Controllers for employee details
@@ -125,14 +127,14 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
     try {
       DocumentSnapshot? lastDoc;
       List<Map<String, dynamic>> allFetchedData = [];
+      final lowerEmpCode = empCode?.toLowerCase();
 
       while (true) {
         Query query =
             FirebaseFirestore.instance.collection('employees').limit(pageSize);
 
-        if (empCode != null) {
-          query = query.where('empCode', isEqualTo: empCode);
-        } else if (phoneNumber != null) {
+        // For phone number filter (no changes needed)
+        if (phoneNumber != null) {
           query = query.where(Filter.or(
             Filter('phone1', isEqualTo: phoneNumber),
             Filter('phone2', isEqualTo: phoneNumber),
@@ -152,14 +154,21 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
 
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
+
+          // Manual case-insensitive filtering for empCode
+          final fetchedEmpCode = (data['empCode'] ?? '').toString();
+          if (empCode != null && fetchedEmpCode.toLowerCase() != lowerEmpCode) {
+            continue; // Skip if not matching
+          }
+
           allFetchedData.add({
             'Name':
                 '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'.trim(),
-            'EMP Code': data['empCode'] ?? 'N/A',
-            'Role': data['role'] ?? 'N/A',
+            'EMP Code': fetchedEmpCode,
+            'Role': data['roles'] ?? 'N/A',
             'Email': data['email'] ?? 'N/A',
             'Phone Number': data['phone1'] ?? 'N/A',
-            'City': data['city'] ?? 'N/A',
+            'City': data['address']['permanent']['city'] ?? 'N/A',
             'Gender': data['gender'] ?? 'N/A',
             'Action': Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -238,11 +247,14 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: Text('Edit Employee Details'),
+                          title: CustomText(
+                            text: 'Edit Employee Details',
+                            size: 25,
+                          ),
                           content:
                               StatefulBuilder(builder: (context, setState) {
                             return Container(
-                              width: 800,
+                              width: 750,
                               height: 1000,
                               child: SingleChildScrollView(
                                 child: Column(
@@ -256,310 +268,668 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              CustomDropdown(
-                                                label: 'Position',
-                                                items: const [
-                                                  'Management',
-                                                  'Pharmacist',
-                                                  'Receptionist',
-                                                  'Doctor',
-                                                  'Manager',
-                                                  'Lab Assistance',
-                                                  'X-Ray Technician'
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Position',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomDropdown(
+                                                    label: '',
+                                                    items: const [
+                                                      'Management',
+                                                      'Pharmacist',
+                                                      'Receptionist',
+                                                      'Doctor',
+                                                      'Manager',
+                                                      'Lab Assistance',
+                                                      'X-Ray Technician'
+                                                    ],
+                                                    selectedItem:
+                                                        positionSelectedValue,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        positionSelectedValue =
+                                                            value!;
+                                                        isDoctor(
+                                                            positionSelectedValue!);
+                                                      });
+                                                    },
+                                                  ),
                                                 ],
-                                                selectedItem:
-                                                    positionSelectedValue,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    positionSelectedValue =
-                                                        value!;
-                                                    isDoctor(
-                                                        positionSelectedValue!);
-                                                  });
-                                                },
                                               ),
-                                              SizedBox(width: 100),
-                                              CustomTextField(
-                                                hintText: 'Emp Code',
-                                                width: 300,
-                                                controller: empCodeController,
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Emp Code',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        empCodeController,
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
+                                          SizedBox(height: 10),
                                           if (isDoc)
                                             Row(
                                               children: [
-                                                CustomDropdown(
-                                                  label: 'Specialization',
-                                                  items: const [
-                                                    'General Physician',
-                                                    'Pediatrician',
-                                                    'Cardiologist',
-                                                    'Dermatologist',
-                                                    'Neurologist',
-                                                    'Orthopedic Surgeon',
-                                                    'ENT Specialist',
-                                                    'Gynecologist',
-                                                    'Ophthalmologist',
-                                                    'Psychiatrist',
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'Specialization',
+                                                      size: 15,
+                                                    ),
+                                                    SizedBox(height: 7),
+                                                    CustomDropdown(
+                                                      label: '',
+                                                      items: const [
+                                                        'General Physician',
+                                                        'Pediatrician',
+                                                        'Cardiologist',
+                                                        'Dermatologist',
+                                                        'Neurologist',
+                                                        'Orthopedic Surgeon',
+                                                        'ENT Specialist',
+                                                        'Gynecologist',
+                                                        'Ophthalmologist',
+                                                        'Psychiatrist',
+                                                      ],
+                                                      selectedItem:
+                                                          selectedSpecialization,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          selectedSpecialization =
+                                                              value!;
+                                                        });
+                                                      },
+                                                    ),
                                                   ],
-                                                  selectedItem:
-                                                      selectedSpecialization,
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      selectedSpecialization =
-                                                          value!;
-                                                    });
-                                                  },
                                                 ),
                                               ],
                                             ),
-                                          SizedBox(height: 20),
+                                          SizedBox(height: 10),
                                           Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              CustomTextField(
-                                                hintText: 'First Name',
-                                                width: 300,
-                                                controller: firstNameController,
-                                              ),
-                                              SizedBox(width: 100),
-                                              CustomTextField(
-                                                hintText: 'Last Name',
-                                                width: 300,
-                                                controller: lastNameController,
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 20),
-                                          Row(
-                                            children: [
-                                              CustomTextField(
-                                                hintText:
-                                                    "Father's Name / Mother's Name / Guardian's Name",
-                                                width: 300,
-                                                controller:
-                                                    relationNameController,
-                                              ),
-                                              SizedBox(width: 100),
-                                              CustomDropdown(
-                                                label: 'Relation',
-                                                items: const [
-                                                  'Father',
-                                                  'Mother',
-                                                  'Guardian'
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'First Name',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        firstNameController,
+                                                  ),
                                                 ],
-                                                selectedItem:
-                                                    relationSelectedValue,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    relationSelectedValue =
-                                                        value!;
-                                                  });
-                                                },
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Last Name',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        lastNameController,
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
+                                          SizedBox(height: 10),
                                           Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              CustomDropdown(
-                                                label: 'Sex',
-                                                items: const ['Male', 'Female'],
-                                                selectedItem: selectedSex,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    selectedSex = value!;
-                                                  });
-                                                },
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text:
+                                                        "Father's / Mother's / Guardian's Name",
+                                                    size: 17,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        relationNameController,
+                                                  ),
+                                                ],
                                               ),
-                                              SizedBox(width: 100),
-                                              CustomTextField(
-                                                controller: dobController,
-                                                hintText: 'Date of Birth',
-                                                width: 200,
-                                                icon: const Icon(
-                                                    Icons.date_range),
-                                                onTap: () =>
-                                                    _selectDate(context),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Relation',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  SizedBox(
+                                                    width: 300,
+                                                    height: 40,
+                                                    child: CustomDropdown(
+                                                      label: '',
+                                                      items: const [
+                                                        'Father',
+                                                        'Mother',
+                                                        'Guardian'
+                                                      ],
+                                                      selectedItem:
+                                                          relationSelectedValue,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          relationSelectedValue =
+                                                              value!;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 40),
-                                          const CustomText(
-                                              text: 'Permanent Address'),
+                                          SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Sex',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  SizedBox(
+                                                    width: 300,
+                                                    height: 40,
+                                                    child: CustomDropdown(
+                                                      label: '',
+                                                      items: const [
+                                                        'Male',
+                                                        'Female'
+                                                      ],
+                                                      selectedItem: selectedSex,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          selectedSex = value!;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Date Of Birth',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    controller: dobController,
+                                                    hintText: '',
+                                                    width: 300,
+                                                    icon: const Icon(
+                                                        Icons.date_range),
+                                                    onTap: () =>
+                                                        _selectDate(context),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                           SizedBox(height: 30),
                                           Row(
                                             children: [
-                                              CustomTextField(
-                                                hintText: 'Lane 1',
-                                                width: 300,
-                                                controller: lane1Controller,
-                                              ),
-                                              SizedBox(width: 100),
-                                              CustomTextField(
-                                                hintText: 'Lane 2',
-                                                width: 300,
-                                                controller: lane2Controller,
+                                              CustomText(
+                                                text: 'Permanent Address',
+                                                size: 25,
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
-                                          CustomTextField(
-                                            hintText: 'Landmark',
-                                            width: 700,
-                                            controller: landmarkController,
-                                          ),
-                                          SizedBox(height: 20),
+                                          SizedBox(height: 30),
                                           Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Lane 1',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller: lane1Controller,
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Lane 2',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller: lane2Controller,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              CustomText(
+                                                text: 'Landmark',
+                                                size: 18,
+                                              ),
+                                              SizedBox(height: 7),
                                               CustomTextField(
-                                                  hintText: 'City',
-                                                  width: 200,
-                                                  controller: cityController),
-                                              SizedBox(width: 60),
-                                              CustomTextField(
-                                                  hintText: 'State',
-                                                  width: 200,
-                                                  controller: stateController),
-                                              SizedBox(width: 60),
-                                              CustomTextField(
-                                                  hintText: 'Pin code',
-                                                  width: 200,
-                                                  controller:
-                                                      pinCodeController),
+                                                verticalSize: 15,
+                                                hintText: '',
+                                                width: 800,
+                                                controller: landmarkController,
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'City',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          cityController),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'State',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          stateController),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Pin code',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          pinCodeController),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'E-Mail ID',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          emailController),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Phone No 1',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          phone1Controller),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Phone No 2',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          phone2Controller),
+                                                ],
+                                              ),
                                             ],
                                           ),
                                           SizedBox(height: 20),
                                           Row(
                                             children: [
-                                              CustomTextField(
-                                                  hintText: 'E-Mail ID',
-                                                  width: 200,
-                                                  controller: emailController),
-                                              SizedBox(width: 60),
-                                              CustomTextField(
-                                                  hintText: 'Phone No 1',
-                                                  width: 200,
-                                                  controller: phone1Controller),
-                                              SizedBox(width: 60),
-                                              CustomTextField(
-                                                  hintText: 'Phone No 2',
-                                                  width: 200,
-                                                  controller: phone2Controller),
-                                            ],
-                                          ),
-                                          SizedBox(height: 20),
-                                          Row(
-                                            children: [
-                                              Checkbox(
-                                                value: isSameAsPermanent,
+                                              Radio<bool>(
+                                                activeColor: AppColors.blue,
+                                                value: false,
+                                                groupValue: isSameAsPermanent,
                                                 onChanged: (value) {
                                                   setState(() {
                                                     isSameAsPermanent = value!;
-                                                    if (isSameAsPermanent) {
-                                                      populateTemporaryAddress();
-                                                    } else {
-                                                      clearTemporaryAddress();
-                                                    }
+                                                    populateTemporaryAddress();
                                                   });
                                                 },
                                               ),
-                                              const Text('Same as Above'),
+                                              const CustomText(
+                                                  text: 'Same as Above'),
                                               SizedBox(width: 100),
-                                              Checkbox(
-                                                value: !isSameAsPermanent,
+                                              Radio<bool>(
+                                                activeColor: AppColors.blue,
+                                                value: true,
+                                                groupValue: isSameAsPermanent,
                                                 onChanged: (value) {
                                                   setState(() {
-                                                    isSameAsPermanent = !value!;
-                                                    if (isSameAsPermanent) {
-                                                      populateTemporaryAddress();
-                                                    } else {
-                                                      clearTemporaryAddress();
-                                                    }
+                                                    isSameAsPermanent = value!;
+                                                    clearTemporaryAddress();
                                                   });
                                                 },
                                               ),
-                                              const Text('Different'),
+                                              const CustomText(
+                                                  text: 'Different'),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
-                                          const CustomText(
-                                              text: 'Temporary Address'),
                                           SizedBox(height: 30),
                                           Row(
                                             children: [
-                                              CustomTextField(
-                                                hintText: 'Lane 1',
-                                                width: 300,
-                                                controller: tempLane1Controller,
-                                              ),
-                                              SizedBox(width: 100),
-                                              CustomTextField(
-                                                hintText: 'Lane 2',
-                                                width: 300,
-                                                controller: tempLane2Controller,
+                                              CustomText(
+                                                text: 'Temporary Address',
+                                                size: 25,
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
-                                          CustomTextField(
-                                            hintText: 'Landmark',
-                                            width: 700,
-                                            controller: tempLandmarkController,
-                                          ),
-                                          SizedBox(height: 20),
-                                          Row(
-                                            children: [
-                                              CustomTextField(
-                                                  hintText: 'City',
-                                                  width: 200,
-                                                  controller:
-                                                      tempCityController),
-                                              SizedBox(width: 60),
-                                              CustomTextField(
-                                                  hintText: 'State',
-                                                  width: 200,
-                                                  controller:
-                                                      tempStateController),
-                                              SizedBox(width: 60),
-                                              CustomTextField(
-                                                  hintText: 'Pin code',
-                                                  width: 200,
-                                                  controller:
-                                                      tempPinCodeController),
-                                            ],
-                                          ),
-                                          SizedBox(height: 40),
-                                          const CustomText(
-                                              text: 'Education Qualification'),
                                           SizedBox(height: 30),
-                                          CustomTextField(
-                                            hintText: 'Qualification',
-                                            width: 300,
-                                            controller: qualificationController,
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Lane 1',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        tempLane1Controller,
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Lane 2',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        tempLane2Controller,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
-                                          SizedBox(height: 20),
-                                          CustomTextField(
-                                            hintText: 'Register No',
-                                            width: 300,
-                                            controller: registerNoController,
+                                          SizedBox(height: 10),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              CustomText(
+                                                text: 'Landmark',
+                                                size: 18,
+                                              ),
+                                              SizedBox(height: 7),
+                                              CustomTextField(
+                                                verticalSize: 15,
+                                                hintText: '',
+                                                width: 800,
+                                                controller:
+                                                    tempLandmarkController,
+                                              ),
+                                            ],
                                           ),
-                                          SizedBox(height: 20),
+                                          SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'City',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          tempCityController),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'State',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          tempStateController),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'Pin code',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                      hintText: '',
+                                                      width: 200,
+                                                      controller:
+                                                          tempPinCodeController),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 30),
                                           Row(
                                             children: [
+                                              CustomText(
+                                                text: 'Education Qualification',
+                                                size: 25,
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 30),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              CustomText(
+                                                text: 'Qualification',
+                                                size: 18,
+                                              ),
+                                              SizedBox(height: 7),
                                               CustomTextField(
-                                                hintText: 'University',
+                                                hintText: '',
                                                 width: 300,
                                                 controller:
-                                                    universityController,
+                                                    qualificationController,
                                               ),
-                                              SizedBox(width: 60),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              CustomText(
+                                                text: 'Register No',
+                                                size: 18,
+                                              ),
+                                              SizedBox(height: 7),
                                               CustomTextField(
-                                                hintText: 'College',
+                                                hintText: '',
                                                 width: 300,
-                                                controller: collegeController,
+                                                controller:
+                                                    registerNoController,
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'University',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        universityController,
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  CustomText(
+                                                    text: 'College',
+                                                    size: 18,
+                                                  ),
+                                                  SizedBox(height: 7),
+                                                  CustomTextField(
+                                                    hintText: '',
+                                                    width: 300,
+                                                    controller:
+                                                        collegeController,
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
@@ -567,6 +937,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                           Row(
                                             children: [
                                               Checkbox(
+                                                activeColor: AppColors.blue,
                                                 value: isPostgraduate,
                                                 onChanged: (value) {
                                                   setState(() {
@@ -574,52 +945,116 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                   });
                                                 },
                                               ),
-                                              const Text(
-                                                  'Postgraduate Qualification'),
+                                              const CustomText(
+                                                  text:
+                                                      'Postgraduate Qualification'),
                                             ],
                                           ),
                                           SizedBox(height: 20),
                                           if (isPostgraduate) ...[
-                                            CustomTextField(
-                                              hintText: 'Qualification',
-                                              width: 300,
-                                              controller:
-                                                  pgQualificationController,
-                                            ),
-                                            SizedBox(height: 20),
-                                            CustomTextField(
-                                              hintText: 'Register No',
-                                              width: 300,
-                                              controller:
-                                                  pgRegisterNoController,
-                                            ),
-                                            SizedBox(height: 20),
-                                            Row(
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                CustomTextField(
-                                                  hintText: 'University',
-                                                  width: 300,
-                                                  controller:
-                                                      pgUniversityController,
+                                                CustomText(
+                                                  text: 'Qualification',
+                                                  size: 18,
                                                 ),
-                                                SizedBox(width: 60),
+                                                SizedBox(height: 7),
                                                 CustomTextField(
-                                                  hintText: 'College',
+                                                  hintText: '',
                                                   width: 300,
                                                   controller:
-                                                      pgCollegeController,
+                                                      pgQualificationController,
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 10),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                CustomText(
+                                                  text: 'Register No',
+                                                  size: 18,
+                                                ),
+                                                SizedBox(height: 7),
+                                                CustomTextField(
+                                                  hintText: '',
+                                                  width: 300,
+                                                  controller:
+                                                      pgRegisterNoController,
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 10),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'University',
+                                                      size: 18,
+                                                    ),
+                                                    SizedBox(height: 7),
+                                                    CustomTextField(
+                                                      hintText: '',
+                                                      width: 300,
+                                                      controller:
+                                                          pgUniversityController,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomText(
+                                                      text: 'College',
+                                                      size: 18,
+                                                    ),
+                                                    SizedBox(height: 7),
+                                                    CustomTextField(
+                                                      hintText: '',
+                                                      width: 300,
+                                                      controller:
+                                                          pgCollegeController,
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
                                           ],
-                                          SizedBox(height: 20),
-                                          const CustomText(
-                                              text: 'Password Details'),
                                           SizedBox(height: 30),
-                                          CustomTextField(
-                                            hintText: 'Password',
-                                            width: 300,
-                                            controller: passwordController,
+                                          Row(
+                                            children: [
+                                              CustomText(
+                                                text: 'Password',
+                                                size: 25,
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 30),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              CustomText(
+                                                text: 'Password',
+                                                size: 18,
+                                              ),
+                                              SizedBox(height: 7),
+                                              CustomTextField(
+                                                hintText: '',
+                                                width: 300,
+                                                controller: passwordController,
+                                              ),
+                                            ],
                                           ),
                                           SizedBox(height: 40),
                                         ],
@@ -716,6 +1151,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                     backgroundColor: Colors.green,
                                   );
                                   Navigator.of(context).pop();
+                                  fetchData(empCode: empCodeController.text);
                                 } catch (e) {
                                   CustomSnackBar(
                                     context,
@@ -753,7 +1189,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: Text('Deletion Conformation'),
+                          title: Text('Deletion Confirmation'),
                           content: Container(
                             width: 100,
                             height: 25,
@@ -775,19 +1211,22 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                         .delete();
 
                                     CustomSnackBar(context,
-                                        message: 'Employee Details Deleted');
+                                        message: 'Employee Details Deleted',
+                                        backgroundColor: Colors.green);
                                   } catch (e) {
                                     print(
                                         'Error updating status for patient ${data['patientID']}: $e');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content:
-                                              Text('Failed to update status')),
-                                    );
+                                    CustomSnackBar(context,
+                                        message:
+                                            'Failed To Delete Employee Details',
+                                        backgroundColor: Colors.red);
                                   }
                                   Navigator.pop(context);
                                 },
-                                child: CustomText(text: 'Delete')),
+                                child: CustomText(
+                                  text: 'Delete',
+                                  color: Colors.red,
+                                )),
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -812,7 +1251,6 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
           employeeData = List.from(allFetchedData);
         });
 
-        // Optional delay to avoid hitting Firestore too fast
         await Future.delayed(delayBetweenPages);
       }
     } catch (e) {
@@ -888,7 +1326,6 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.01,
             left: screenWidth * 0.02,
             right: screenWidth * 0.02,
             bottom: screenWidth * 0.25,
@@ -924,36 +1361,89 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    hintText: 'EMP Code',
-                    width: screenWidth * 0.15,
-                    controller: empCodeSearch,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'EMP Code',
+                        size: screenWidth * 0.01,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.15,
+                        controller: empCodeSearch,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(empCode: empCodeSearch.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28),
+                      empLoading
+                          ? SizedBox(
+                              width: screenWidth * 0.09,
+                              height: screenWidth * 0.03,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure the file path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => empLoading = true);
+                                await fetchData(empCode: empCodeSearch.text);
+                                setState(() => empLoading = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.02,
+                            ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: phoneNumberSearch,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Phone Number',
+                        size: screenWidth * 0.01,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.15,
+                        controller: phoneNumberSearch,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: phoneNumberSearch.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28),
+                      phoneNumberLoading
+                          ? SizedBox(
+                              width: screenWidth * 0.09,
+                              height: screenWidth * 0.03,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure the file path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => phoneNumberLoading = true);
+                                await fetchData(
+                                    phoneNumber: phoneNumberSearch.text);
+                                setState(() => phoneNumberLoading = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.02,
+                            ),
+                    ],
                   ),
                 ],
               ),

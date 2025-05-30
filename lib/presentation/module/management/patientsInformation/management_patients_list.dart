@@ -248,62 +248,92 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomTextField(
-                    hintText: 'OP Number',
-                    width: screenWidth * 0.18,
-                    controller: _opNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Ticket Number ',
+                        size: screenWidth * 0.01,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _opNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  opNumberSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
+                  Column(
+                    children: [
+                      SizedBox(height: 28),
+                      opNumberSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => opNumberSearch = true);
+                                await fetchData(opNumber: _opNumber.text);
+                                setState(() => opNumberSearch = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
                             ),
-                          ),
-                        )
-                      : CustomButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => opNumberSearch = true);
-                            await fetchData(opNumber: _opNumber.text);
-                            setState(() => opNumberSearch = false);
-                          },
-                          width: buttonWidth,
-                          height: buttonHeight,
-                        ),
+                    ],
+                  ),
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.18,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Phone Number ',
+                        size: screenWidth * 0.01,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: 'Number',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  phoneNumberSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
+                  Column(
+                    children: [
+                      SizedBox(height: 28),
+                      phoneNumberSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => phoneNumberSearch = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => phoneNumberSearch = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
                             ),
-                          ),
-                        )
-                      : CustomButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => phoneNumberSearch = true);
-                            await fetchData(phoneNumber: _phoneNumber.text);
-                            setState(() => phoneNumberSearch = false);
-                          },
-                          width: buttonWidth,
-                          height: buttonHeight,
-                        ),
+                    ],
+                  ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.08),
+              SizedBox(height: screenHeight * 0.04),
               LazyDataTable(
                 tableData: tableData1,
                 headers: headers1,
