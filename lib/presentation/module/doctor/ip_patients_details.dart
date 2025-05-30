@@ -8,6 +8,7 @@ import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/doctor/doctor_module_drawer.dart';
@@ -20,6 +21,7 @@ import 'doctor_rx_list.dart';
 
 class IpPatientsDetails extends StatefulWidget {
   final String doctorName;
+
   const IpPatientsDetails({Key? key, required this.doctorName})
       : super(key: key);
 
@@ -32,7 +34,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   TextEditingController _phoneNumber = TextEditingController();
 
   DateTime now = DateTime.now();
-
+  bool isPhoneLoading = false;
+  bool isOpLoading = false;
   final List<String> headers1 = [
     'Token NO',
     'IP Ticket',
@@ -107,13 +110,18 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
 
             bool matches = false;
 
-            if (ipTicketData['doctorName'] == widget.doctorName &&
+            if (ipTicketData['doctorName'].toString().toLowerCase() ==
+                    widget.doctorName.toLowerCase() &&
                 patientData['isIP'] == true) {
-              if (ipNumber != null && ipTicketData['ipTicket'] == ipNumber) {
+              if (ipNumber != null &&
+                  ipTicketData['ipTicket'].toString().toLowerCase() ==
+                      ipNumber.toLowerCase()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
-                if (patientData['phone1'] == phoneNumber ||
-                    patientData['phone2'] == phoneNumber) {
+                if (patientData['phone1'].toString().toLowerCase() ==
+                        phoneNumber.toLowerCase() ||
+                    patientData['phone2'].toString().toLowerCase() ==
+                        phoneNumber.toLowerCase()) {
                   matches = true;
                 }
               } else if (ipNumber == null &&
@@ -226,7 +234,81 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                     },
                     child: const CustomText(text: 'Prescribe')),
                 'Abscond': TextButton(
-                    onPressed: () async {
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => Dialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 350),
+                          // Limit width
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.warning_amber_rounded,
+                                    size: 48, color: Colors.redAccent),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Confirm Abort',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Are you sure you want to mark this IP status as "abscond"?',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.grey[700]),
+                                ),
+                                SizedBox(height: 24),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.grey[700],
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 12),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: Text('Cancel',
+                                          style: TextStyle(fontSize: 16)),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: Text('Confirm',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+
+                    if (confirmed == true) {
                       try {
                         await FirebaseFirestore.instance
                             .collection('patients')
@@ -244,8 +326,10 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                               content: Text('Failed to update status')),
                         );
                       }
-                    },
-                    child: const CustomText(text: 'Abort')),
+                    }
+                  },
+                  child: const CustomText(text: 'Abort'),
+                ),
               });
 
               break; // Don't process more ipTickets for this patient
@@ -334,7 +418,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   Widget dashboard() {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final double buttonWidth = screenWidth * 0.08;
+    final double buttonHeight = screenHeight * 0.040;
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
@@ -391,36 +476,83 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
               ),
               SizedBox(height: screenHeight * 0.04),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    hintText: 'IP Number',
-                    width: screenWidth * 0.15,
-                    controller: _ipNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'IP Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _ipNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(ipNumber: _ipNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 28,),
+                      isOpLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Ensure this path is correct
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isOpLoading = true);
+                          await fetchData(ipNumber:_ipNumber.text);
+                          setState(() => isOpLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Phone Number'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.15,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: 28,),
+                      isPhoneLoading
+                          ? SizedBox(
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Update the path to your Lottie file
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                          : CustomButton(
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isPhoneLoading = true);
+                          await fetchData(phoneNumber: _phoneNumber.text);
+                          setState(() => isPhoneLoading = false);
+                        },
+                        width: buttonWidth,
+                        height: buttonHeight,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -432,8 +564,8 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                 headers: headers1,
                 rowColorResolver: (row) {
                   return row['Status'] == 'abscond'
-                      ? Colors.red.shade200
-                      : Colors.transparent;
+                      ? Colors.red.shade300
+                      : Colors.grey.shade200;
                 },
               ),
             ],

@@ -273,27 +273,42 @@ class _PharmacyStocks extends State<PharmacyStocks> {
               SizedBox(height: screenHeight * 0.04),
               Row(
                 children: [
-                  CustomTextField(
-                    hintText: 'Product Name',
-                    width: screenWidth * 0.20,
-                    onChanged: (value) {
-                      productName = value;
-                      filterProducts();
-                    },
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Product Name'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.20,
+                        onChanged: (value) {
+                          productName = value;
+                          filterProducts();
+                        },
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  CustomTextField(
-                    hintText: 'Company Name',
-                    width: screenWidth * 0.20,
-                    onChanged: (value) {
-                      companyName = value;
-                      filterProducts();
-                    },
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(text: 'Company Name'),
+                      SizedBox(height: 5,),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.20,
+                        onChanged: (value) {
+                          companyName = value;
+                          filterProducts();
+                        },
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.045),
                   CustomButton(
                     label: 'Search',
                     onPressed: filterProducts,
+                    height: screenWidth * 0.03,
                     width: screenWidth * 0.1,
                   ),
                 ],
