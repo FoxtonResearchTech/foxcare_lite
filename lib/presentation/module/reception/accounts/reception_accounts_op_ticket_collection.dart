@@ -33,6 +33,7 @@ class _ReceptionAccountsOpTicketCollection
   final List<String> headers = [
     'OP Ticket',
     'OP No',
+    'Date',
     'Name',
     'City',
     'Doctor Name',
@@ -99,6 +100,7 @@ class _ReceptionAccountsOpTicketCollection
             allFetchedData.add({
               'OP Ticket': ticketDoc.id,
               'OP No': data['opNumber']?.toString() ?? 'N/A',
+              'Date': ticketData['tokenDate']?.toString() ?? 'N/A',
               'Name':
                   '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
                       .trim(),
@@ -314,7 +316,7 @@ class _ReceptionAccountsOpTicketCollection
               ),
               Row(
                 children: [
-                 /*
+                  /*
                   CustomTextField(
                     onTap: () => _selectDate(context, _dateController),
                     icon: Icon(Icons.date_range),
@@ -353,28 +355,28 @@ class _ReceptionAccountsOpTicketCollection
                   SizedBox(width: screenHeight * 0.02),
                   isLoading
                       ? SizedBox(
-                    width: screenWidth * 0.09,
-                    height: screenWidth * 0.03,
-                    child: Lottie.asset(
-                      'assets/button_loading.json', // Ensure the file path is correct
-                      fit: BoxFit.contain,
-                    ),
-                  )
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
                       : CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      setState(() => isLoading = true);
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
 
-                      await fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
 
-                      setState(() => isLoading = false);
-                    },
-                    width: screenWidth * 0.09,
-                    height: screenWidth * 0.03,
-                  ),
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

@@ -185,6 +185,8 @@ class _PaymentDialogState extends State<PaymentDialog> {
         return Icons.account_balance;
       case "Cash":
         return Icons.money;
+      case "Cheque":
+        return Icons.local_post_office_rounded;
       default:
         return Icons.help_outline;
     }
@@ -463,6 +465,17 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     title: CustomText(
                         text: 'Debit Card', size: screenWidth * 0.010),
                     value: 'Debit Card',
+                    groupValue: _selectedPaymentMethod,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedPaymentMethod = value.toString();
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title:
+                        CustomText(text: 'Cheque', size: screenWidth * 0.010),
+                    value: 'Cheque',
                     groupValue: _selectedPaymentMethod,
                     onChanged: (value) {
                       setState(() {
@@ -978,12 +991,12 @@ class _PaymentDialogState extends State<PaymentDialog> {
               ),
             );
             //
-            // await Printing.layoutPdf(
-            //   onLayout: (format) async => pdf.save(),
-            // );
+            await Printing.layoutPdf(
+              onLayout: (format) async => pdf.save(),
+            );
 
-            await Printing.sharePdf(
-                bytes: await pdf.save(), filename: '${widget.ipTicket}.pdf');
+            // await Printing.sharePdf(
+            //     bytes: await pdf.save(), filename: '${widget.ipTicket}.pdf');
             await updateIpAdmitBillNo(billNo);
           },
           child: CustomText(
@@ -995,6 +1008,12 @@ class _PaymentDialogState extends State<PaymentDialog> {
         TextButton(
           onPressed: () async {
             if (widget.timeLine == true) {
+              if (balance.text.isNotEmpty || balance.text == '') {
+                CustomSnackBar(context,
+                    message: 'Enter Payment Amount',
+                    backgroundColor: Colors.orange);
+                return;
+              }
               await addPaymentAmount(widget.docId.toString());
               await updateBalance(widget.docId.toString(),
                   double.parse(balance.text.replaceAll('₹ ', '')));

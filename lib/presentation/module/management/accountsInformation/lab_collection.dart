@@ -15,6 +15,7 @@ import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
@@ -53,6 +54,7 @@ class _LabCollection extends State<LabCollection> {
     }
   }
 
+  bool isLoading = false;
   final TextEditingController totalAmountController = TextEditingController();
   final TextEditingController collectedAmountController =
       TextEditingController();
@@ -175,7 +177,7 @@ class _LabCollection extends State<LabCollection> {
       CustomSnackBar(
         context,
         message: "Please fill all the required fields",
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.orange,
       );
       return;
     }
@@ -296,6 +298,233 @@ class _LabCollection extends State<LabCollection> {
               'Total Amount': opAmount.toString(),
               'Collected': opAmountCollected.toString(),
               'Balance': balance,
+              'Pay': TextButton(
+                onPressed: () async {
+                  await historyData(
+                      opNumber: data['opNumber'].toString(),
+                      opTicket: ticketData['opTicket'].toString());
+                  paymentDetails.clear();
+
+                  double originalCollected = double.tryParse(
+                          ticketData['labCollected']?.toString() ?? '0') ??
+                      0.0;
+                  double total = double.tryParse(
+                          ticketData['labTotalAmount']?.toString() ?? '0') ??
+                      0.0;
+
+                  setState(() {
+                    _originalCollected = originalCollected;
+                    totalAmountController.text = total.toStringAsFixed(2);
+                    collectedAmountController.text =
+                        originalCollected.toStringAsFixed(2);
+                    balanceController.text =
+                        (total - originalCollected).toStringAsFixed(2);
+                    currentlyPayingAmount.text = '';
+                  });
+
+                  currentlyPayingAmount.removeListener(_payingAmountListener);
+                  currentlyPayingAmount.addListener(_payingAmountListener);
+
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const CustomText(
+                          text: 'Payment Details ',
+                          size: 26,
+                        ),
+                        content: Container(
+                          width: 750,
+                          height: 400,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 25),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Total Amount',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        CustomTextField(
+                                            readOnly: true,
+                                            controller: totalAmountController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Collected',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        CustomTextField(
+                                            readOnly: true,
+                                            controller:
+                                                collectedAmountController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const CustomText(
+                                          text: 'Balance',
+                                          size: 20,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        CustomTextField(
+                                            readOnly: true,
+                                            controller: balanceController,
+                                            hintText: '',
+                                            width: 175),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 50),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Paying Amount ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        CustomTextField(
+                                          hintText: '',
+                                          controller: currentlyPayingAmount,
+                                          width: 175,
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Payment Mode ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        SizedBox(
+                                          width: 175,
+                                          child: CustomDropdown(
+                                            label: '',
+                                            items: Constants.paymentMode,
+                                            onChanged: (value) {
+                                              setState(
+                                                () {
+                                                  selectedPaymentMode = value;
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomText(
+                                          text: 'Payment Details ',
+                                          size: 20,
+                                        ),
+                                        SizedBox(height: 7),
+                                        CustomTextField(
+                                          hintText: '',
+                                          controller: paymentDetails,
+                                          width: 175,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 15),
+                                CustomText(
+                                  text: 'History Of Payments',
+                                  size: 20,
+                                ),
+                                SizedBox(height: 10),
+                                if (historyTableData.isNotEmpty) ...[
+                                  CustomDataTable(
+                                      headers: historyHeaders,
+                                      tableData: historyTableData),
+                                ],
+                                if (historyTableData.isEmpty) ...[
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        SizedBox(height: 20),
+                                        CustomText(text: 'No Payment History'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () async {
+                              await savePayment(
+                                  opTicket: ticketData['opTicket'].toString(),
+                                  opNumber: data['opNumber'].toString(),
+                                  amount: totalAmountController.text.toString(),
+                                  collected:
+                                      collectedAmountController.text.toString(),
+                                  balance: balanceController.text.toString(),
+                                  paymentMode: selectedPaymentMode.toString(),
+                                  payingAmount:
+                                      currentlyPayingAmount.text.toString());
+                            },
+                            child: CustomText(
+                              text: 'Pay',
+                              color: AppColors.secondaryColor,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: CustomText(
+                              text: 'Close',
+                              color: AppColors.secondaryColor,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ).then((_) {
+                    historyTableData.clear();
+                  });
+                },
+                child: CustomText(
+                  text: 'Pay',
+                  color: AppColors.blue,
+                ),
+              ),
             });
           }
         }
@@ -490,19 +719,19 @@ class _LabCollection extends State<LabCollection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "OP Lab Collection ",
-                          size: screenWidth * .015,
+                          size: screenWidth * .025,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -513,29 +742,29 @@ class _LabCollection extends State<LabCollection> {
               ),
               Row(
                 children: [
-                  CustomTextField(
-                    onTap: () {
-                      _selectDate(context, _dateController);
-                      _fromDateController.clear();
-                      _toDateController.clear();
-                    },
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(singleDate: _dateController.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
+                  // CustomTextField(
+                  //   onTap: () {
+                  //     _selectDate(context, _dateController);
+                  //     _fromDateController.clear();
+                  //     _toDateController.clear();
+                  //   },
+                  //   icon: Icon(Icons.date_range),
+                  //   controller: _dateController,
+                  //   hintText: 'Date',
+                  //   width: screenWidth * 0.15,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomButton(
+                  //   label: 'Search',
+                  //   onPressed: () {
+                  //     fetchData(singleDate: _dateController.text);
+                  //   },
+                  //   width: screenWidth * 0.08,
+                  //   height: screenWidth * 0.02,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomText(text: 'OR'),
+                  // SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
                     onTap: () {
                       _selectDate(context, _fromDateController);
@@ -558,17 +787,28 @@ class _LabCollection extends State<LabCollection> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  isLoading
+                      ? SizedBox(
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

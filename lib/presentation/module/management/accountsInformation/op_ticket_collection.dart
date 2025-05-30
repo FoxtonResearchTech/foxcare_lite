@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/constants.dart';
@@ -27,7 +28,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
   TextEditingController _fromDateController = TextEditingController();
   TextEditingController _toDateController = TextEditingController();
   int hoveredIndex = -1;
-
+  bool isLoading = false;
   final TextEditingController totalAmountController = TextEditingController();
   final TextEditingController collectedAmountController =
       TextEditingController();
@@ -64,6 +65,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
   final List<String> headers = [
     'OP Ticket',
     'OP No',
+    'Date',
     'Name',
     'City',
     'Doctor Name',
@@ -131,6 +133,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
             allFetchedData.add({
               'OP Ticket': ticketDoc.id,
               'OP No': data['opNumber']?.toString() ?? 'N/A',
+              'Date': ticketData['tokenDate']?.toString() ?? 'N/A',
               'Name':
                   '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
                       .trim(),
@@ -470,7 +473,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
       CustomSnackBar(
         context,
         message: "Please fill all the required fields",
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.orange,
       );
       return;
     }
@@ -678,19 +681,19 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: screenWidth * 0.07),
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
                     child: Column(
                       children: [
                         CustomText(
                           text: "OP Ticket Collection ",
-                          size: screenWidth * .015,
+                          size: screenWidth * .025,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -701,29 +704,29 @@ class _OpTicketCollection extends State<OpTicketCollection> {
               ),
               Row(
                 children: [
-                  CustomTextField(
-                    onTap: () {
-                      _selectDate(context, _dateController);
-                      _fromDateController.clear();
-                      _toDateController.clear();
-                    },
-                    icon: Icon(Icons.date_range),
-                    controller: _dateController,
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(singleDate: _dateController.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
+                  // CustomTextField(
+                  //   onTap: () {
+                  //     _selectDate(context, _dateController);
+                  //     _fromDateController.clear();
+                  //     _toDateController.clear();
+                  //   },
+                  //   icon: Icon(Icons.date_range),
+                  //   controller: _dateController,
+                  //   hintText: 'Date',
+                  //   width: screenWidth * 0.15,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomButton(
+                  //   label: 'Search',
+                  //   onPressed: () {
+                  //     fetchData(singleDate: _dateController.text);
+                  //   },
+                  //   width: screenWidth * 0.08,
+                  //   height: screenWidth * 0.02,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomText(text: 'OR'),
+                  // SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
                     onTap: () {
                       _selectDate(context, _fromDateController);
@@ -746,17 +749,28 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  isLoading
+                      ? SizedBox(
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

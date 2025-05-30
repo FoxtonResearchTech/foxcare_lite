@@ -31,6 +31,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
   DateTime now = DateTime.now();
   final List<String> headers = [
     'OP No',
+    'Date',
     'Name',
     'City',
     'Total Amount',
@@ -95,6 +96,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
 
           allFetchedData.add({
             'OP No': data['opNumber']?.toString() ?? 'N/A',
+            'Date': data['opAdmissionDate']?.toString() ?? 'N/A',
             'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
                 .trim(),
             'City': data['city']?.toString() ?? 'N/A',
@@ -353,29 +355,28 @@ class _ReceptionAccountsNewPatientRegistrationCollection
                 SizedBox(width: screenHeight * 0.02),
                 isLoading
                     ? SizedBox(
-                  width: screenWidth * 0.09,
-                  height: screenWidth * 0.03,
-                  child: Lottie.asset(
-                    'assets/button_loading.json', // Ensure the file path is correct
-                    fit: BoxFit.contain,
-                  ),
-                )
+                        width: screenWidth * 0.09,
+                        height: screenWidth * 0.03,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Ensure the file path is correct
+                          fit: BoxFit.contain,
+                        ),
+                      )
                     : CustomButton(
-                  label: 'Search',
-                  onPressed: () async {
-                    setState(() => isLoading = true);
+                        label: 'Search',
+                        onPressed: () async {
+                          setState(() => isLoading = true);
 
-                    await fetchData(
-                      fromDate: _fromDateController.text,
-                      toDate: _toDateController.text,
-                    );
+                          await fetchData(
+                            fromDate: _fromDateController.text,
+                            toDate: _toDateController.text,
+                          );
 
-                    setState(() => isLoading = false);
-                  },
-                  width: screenWidth * 0.09,
-                  height: screenWidth * 0.03,
-                ),
-
+                          setState(() => isLoading = false);
+                        },
+                        width: screenWidth * 0.09,
+                        height: screenWidth * 0.03,
+                      ),
               ],
             ),
             SizedBox(height: screenHeight * 0.05),
