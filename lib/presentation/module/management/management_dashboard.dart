@@ -1083,7 +1083,7 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                   SizedBox(width: screenHeight * 0.02),
                   isSearching
                       ? SizedBox(
-                          width: screenWidth * 0.1,
+                          width: screenWidth * 0.08,
                           height: screenHeight * 0.045,
                           child: Center(
                             child: Lottie.asset(

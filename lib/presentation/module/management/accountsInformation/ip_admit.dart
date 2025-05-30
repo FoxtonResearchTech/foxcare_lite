@@ -450,31 +450,46 @@ class _IpAdmit extends State<IpAdmit> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    hintText: 'IP Number',
-                    width: screenWidth * 0.15,
-                    controller: _ipNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'IP Number',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.15,
+                        controller: _ipNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  isIPLoading
-                      ? SizedBox(
-                          width: screenWidth * 0.09,
-                          height: screenWidth * 0.03,
-                          child: Lottie.asset(
-                            'assets/button_loading.json', // Ensure the file path is correct
-                            fit: BoxFit.contain,
-                          ),
-                        )
-                      : CustomButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => isIPLoading = true);
-                            await fetchData(ipNumber: _ipNumber.text);
-                            setState(() => isIPLoading = false);
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.025,
-                        ),
+                  Column(
+                    children: [
+                      SizedBox(height: 30),
+                      isIPLoading
+                          ? SizedBox(
+                              width: screenWidth * 0.09,
+                              height: screenWidth * 0.025,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure the file path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isIPLoading = true);
+                                await fetchData(ipNumber: _ipNumber.text);
+                                setState(() => isIPLoading = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.025,
+                            ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.025),

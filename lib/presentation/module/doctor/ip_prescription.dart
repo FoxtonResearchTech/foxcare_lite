@@ -2131,9 +2131,9 @@ class _IpPrescription extends State<IpPrescription> {
                     SizedBox(
                       width: 300,
                       child: CustomButton(
-                        label: 'Prescribed',
-                        onPressed: () {
-                          _savePrescriptionData();
+                        label: 'Discharged',
+                        onPressed: () async {
+                          await endIP(widget.patientID, widget.ipNumber);
                         },
                         width: screenWidth * 0.5,
                       ),
