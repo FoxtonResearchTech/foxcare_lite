@@ -264,7 +264,12 @@ class _OpBillingEntry extends State<OpBillingEntry> {
           });
         }
       }
-
+      await FirebaseFirestore.instance
+          .collection('patients')
+          .doc(widget.opNumber)
+          .collection('opTickets')
+          .doc(widget.opTicket)
+          .update({'status': 'waiting'});
       DocumentReference billRef = FirebaseFirestore.instance
           .collection('pharmacy')
           .doc('billings')
@@ -332,7 +337,6 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       );
       setState(() {
         isSubmitting = false;
-        isPrinting = true;
       });
     }
   }
@@ -380,19 +384,37 @@ class _OpBillingEntry extends State<OpBillingEntry> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Invoice'),
-          content: Container(
-            width: 125,
-            height: 50,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CustomText(text: 'Do you want to print ?'),
-                const SizedBox(height: 8),
-              ],
-            ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.description_outlined, color: Colors.teal, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Invoice',
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
-          actions: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.print_rounded, color: Colors.teal, size: 48),
+              SizedBox(height: 16),
+              Text(
+                'Do you want to print this bill?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
             TextButton(
               onPressed: () async {
                 final pdf = pw.Document();
@@ -842,12 +864,26 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                 // await Printing.sharePdf(
                 //     bytes: await pdf.save(), filename: '${billNO}.pdf');
               },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               child: const Text('Print'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 setState(() {});
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
               child: const Text('Close'),
             ),
@@ -1351,8 +1387,7 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                         : PharmacyButton(
                             color: AppColors.blue,
                             label: 'Submit',
-                            onPressed: () {
-                              submitBill();
+                            onPressed: () async {
                               final collectedAmountText =
                                   collectedAmountController.text.trim();
 
@@ -1377,6 +1412,44 @@ class _OpBillingEntry extends State<OpBillingEntry> {
                                     backgroundColor: Colors.orange);
 
                                 return;
+                              }
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Row(
+                                    children: const [
+                                      Icon(Icons.warning_amber_rounded,
+                                          color: Colors.redAccent),
+                                      SizedBox(width: 8),
+                                      Text('Confirm Bill Submission'),
+                                    ],
+                                  ),
+                                  content: const Text(
+                                    'Are you sure you want to submit the bill?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text(
+                                        'Confirm',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true) {
+                                await submitBill();
                               }
                             },
                             width: screenWidth * 0.1),

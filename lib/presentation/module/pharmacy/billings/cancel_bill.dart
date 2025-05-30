@@ -176,44 +176,42 @@ class _CancelBill extends State<CancelBill> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      showDialog(
+                      final confirmed = await showDialog<bool>(
                         context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Delete Confirmation'),
-                            content: Container(
-                              width: 200,
-                              height: 35,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  CustomText(text: 'Are you sure ?'),
-                                  SizedBox(height: 8),
-                                ],
+                        builder: (context) => AlertDialog(
+                          title: Row(
+                            children: const [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Confirm Bill Cancellation'),
+                            ],
+                          ),
+                          content: const Text(
+                            'Are you sure you want to submit the bill?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () async {
-                                  await cancelOpBill(
-                                      bills.id, data['entryProducts']);
-                                },
-                                child: const CustomText(
-                                  text: 'Sure',
-                                  color: Colors.red,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {});
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
+                          ],
+                        ),
                       );
+
+                      if (confirmed == true) {
+                        await cancelOpBill(bills.id, data['entryProducts']);
+                      }
                     },
                     child: const CustomText(text: 'Cancel'),
                   ),
@@ -264,19 +262,37 @@ class _CancelBill extends State<CancelBill> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Invoice'),
-          content: Container(
-            width: 125,
-            height: 50,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CustomText(text: 'Do you want to print ?'),
-                const SizedBox(height: 8),
-              ],
-            ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.description_outlined, color: Colors.teal, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Invoice',
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
-          actions: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.print_rounded, color: Colors.teal, size: 48),
+              SizedBox(height: 16),
+              Text(
+                'Do you want to print this bill?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
             TextButton(
               onPressed: () async {
                 final pdf = pw.Document();
@@ -726,12 +742,26 @@ class _CancelBill extends State<CancelBill> {
                 // await Printing.sharePdf(
                 //     bytes: await pdf.save(), filename: '${billNo}.pdf');
               },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               child: const Text('Print'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 setState(() {});
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
               child: const Text('Close'),
             ),
@@ -812,7 +842,7 @@ class _CancelBill extends State<CancelBill> {
 
       CustomSnackBar(
         context,
-        message: 'Bill canceled, and product quantities updated successfully',
+        message: 'Bill Canceled Successfully',
         backgroundColor: Colors.green,
       );
 
@@ -822,7 +852,7 @@ class _CancelBill extends State<CancelBill> {
     } catch (e) {
       CustomSnackBar(
         context,
-        message: 'Failed to cancel bill and update product quantities',
+        message: 'Failed to Cancel bill ',
         backgroundColor: Colors.red,
       );
 
@@ -902,44 +932,42 @@ class _CancelBill extends State<CancelBill> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      showDialog(
+                      final confirmed = await showDialog<bool>(
                         context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Delete Confirmation'),
-                            content: Container(
-                              width: 200,
-                              height: 35,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  CustomText(text: 'Are you sure ?'),
-                                  SizedBox(height: 8),
-                                ],
+                        builder: (context) => AlertDialog(
+                          title: Row(
+                            children: const [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Confirm Bill Cancellation'),
+                            ],
+                          ),
+                          content: const Text(
+                            'Are you sure you want to submit the bill?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () async {
-                                  await cancelIpBill(
-                                      bills.id, data['entryProducts']);
-                                },
-                                child: const CustomText(
-                                  text: 'Sure',
-                                  color: Colors.red,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {});
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
+                          ],
+                        ),
                       );
+
+                      if (confirmed == true) {
+                        await cancelIpBill(bills.id, data['entryProducts']);
+                      }
                     },
                     child: const CustomText(text: 'Cancel'),
                   ),
@@ -992,19 +1020,37 @@ class _CancelBill extends State<CancelBill> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Invoice'),
-          content: Container(
-            width: 125,
-            height: 50,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CustomText(text: 'Do you want to print ?'),
-                const SizedBox(height: 8),
-              ],
-            ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.description_outlined, color: Colors.teal, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Invoice',
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
-          actions: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.print_rounded, color: Colors.teal, size: 48),
+              SizedBox(height: 16),
+              Text(
+                'Do you want to print this bill?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
             TextButton(
               onPressed: () async {
                 final pdf = pw.Document();
@@ -1463,12 +1509,26 @@ class _CancelBill extends State<CancelBill> {
                 // await Printing.sharePdf(
                 //     bytes: await pdf.save(), filename: '${billNo}.pdf');
               },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               child: const Text('Print'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 setState(() {});
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
               child: const Text('Close'),
             ),
@@ -1549,7 +1609,7 @@ class _CancelBill extends State<CancelBill> {
 
       CustomSnackBar(
         context,
-        message: 'Bill canceled, and product quantities updated successfully',
+        message: 'Bill Canceled Successfully',
         backgroundColor: Colors.green,
       );
 
@@ -1560,7 +1620,7 @@ class _CancelBill extends State<CancelBill> {
     } catch (e) {
       CustomSnackBar(
         context,
-        message: 'Failed to cancel bill and update product quantities',
+        message: 'Failed to Cancel Bill ',
         backgroundColor: Colors.red,
       );
 
@@ -1636,44 +1696,43 @@ class _CancelBill extends State<CancelBill> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      showDialog(
+                      final confirmed = await showDialog<bool>(
                         context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Delete Confirmation'),
-                            content: Container(
-                              width: 200,
-                              height: 35,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  CustomText(text: 'Are you sure ?'),
-                                  SizedBox(height: 8),
-                                ],
+                        builder: (context) => AlertDialog(
+                          title: Row(
+                            children: const [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Confirm Bill Cancellation'),
+                            ],
+                          ),
+                          content: const Text(
+                            'Are you sure you want to submit the bill?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () async {
-                                  await cancelCounterSalesBill(
-                                      bills.id, data['entryProducts']);
-                                },
-                                child: const CustomText(
-                                  text: 'Sure',
-                                  color: Colors.red,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {});
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
+                          ],
+                        ),
                       );
+
+                      if (confirmed == true) {
+                        await cancelCounterSalesBill(
+                            bills.id, data['entryProducts']);
+                      }
                     },
                     child: const CustomText(text: 'Cancel'),
                   ),
@@ -1726,19 +1785,37 @@ class _CancelBill extends State<CancelBill> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Invoice'),
-          content: Container(
-            width: 125,
-            height: 50,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CustomText(text: 'Do you want to print ?'),
-                const SizedBox(height: 8),
-              ],
-            ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.description_outlined, color: Colors.teal, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Invoice',
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
-          actions: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.print_rounded, color: Colors.teal, size: 48),
+              SizedBox(height: 16),
+              Text(
+                'Do you want to print this bill?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
             TextButton(
               onPressed: () async {
                 final pdf = pw.Document();
@@ -2182,12 +2259,26 @@ class _CancelBill extends State<CancelBill> {
                 // await Printing.sharePdf(
                 //     bytes: await pdf.save(), filename: '${billNo}.pdf');
               },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               child: const Text('Print'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 setState(() {});
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
               },
               child: const Text('Close'),
             ),

@@ -877,8 +877,45 @@ class _StockReturnEntry extends State<StockReturnEntry> {
                         : PharmacyButton(
                             color: AppColors.blue,
                             label: 'Submit',
-                            onPressed: () {
-                              submitBill();
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Row(
+                                    children: const [
+                                      Icon(Icons.warning_amber_rounded,
+                                          color: Colors.redAccent),
+                                      SizedBox(width: 8),
+                                      Text('Confirm Bill Submission'),
+                                    ],
+                                  ),
+                                  content: const Text(
+                                    'Are you sure you want to submit the bill?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text(
+                                        'Confirm',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true) {
+                                await submitBill();
+                              }
                             },
                             width: screenWidth * 0.1),
                   ],

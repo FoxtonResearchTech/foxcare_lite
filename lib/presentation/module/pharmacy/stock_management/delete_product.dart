@@ -76,50 +76,64 @@ class _DeleteProduct extends State<DeleteProduct> {
             'Company': data['companyName'],
             'Composition': data['composition'],
             'Action': TextButton(
-              onPressed: () {
-                showDialog(
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Deletion Confirmation'),
-                      content: const CustomText(
-                          text: 'Are you sure you want to delete?'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () async {
-                            try {
-                              await FirebaseFirestore.instance
-                                  .collection('stock')
-                                  .doc('Products')
-                                  .collection('AddedProducts')
-                                  .doc(doc.id)
-                                  .delete();
-
-                              Navigator.of(context).pop();
-                              fetchData(); // Reload data
-                              CustomSnackBar(context,
-                                  message: 'Product Deleted',
-                                  backgroundColor: Colors.green);
-                            } catch (e) {
-                              CustomSnackBar(context,
-                                  message: 'Product not Deleted',
-                                  backgroundColor: Colors.red);
-                            }
-                          },
-                          child: const CustomText(text: 'Delete'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const CustomText(text: 'Close'),
-                        ),
+                  builder: (context) => AlertDialog(
+                    title: Row(
+                      children: const [
+                        Icon(Icons.warning_amber_rounded,
+                            color: Colors.redAccent),
+                        SizedBox(width: 8),
+                        Text('Confirm Bill Submission'),
                       ],
-                    );
-                  },
+                    ),
+                    content: const Text(
+                      'Are you sure you want to submit the bill?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text(
+                          'Confirm',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
+
+                if (confirmed == true) {
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('stock')
+                        .doc('Products')
+                        .collection('AddedProducts')
+                        .doc(doc.id)
+                        .delete();
+
+                    Navigator.of(context).pop();
+                    fetchData(); // Reload data
+                    CustomSnackBar(context,
+                        message: 'Product Deleted',
+                        backgroundColor: Colors.green);
+                  } catch (e) {
+                    CustomSnackBar(context,
+                        message: 'Product not Deleted',
+                        backgroundColor: Colors.red);
+                  }
+                }
               },
-              child: const CustomText(text: 'Delete'),
+              child: const CustomText(
+                text: 'Delete',
+              ),
             ),
           });
         }

@@ -322,68 +322,96 @@ class _IpBilling extends State<IpBilling> {
           child: Column(
             children: [
               TimeDateWidget(text: 'IP Billings'),
-              SizedBox(height: screenHeight * 0.05),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  PharmacyTextField(
-                    hintText: 'IP Ticket Number',
-                    width: screenWidth * 0.15,
-                    controller: _ipTicket,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'OP Ticket Number',
+                        size: screenWidth * 0.011,
+                      ),
+                      SizedBox(height: screenWidth * 0.007),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.15,
+                        controller: _ipTicket,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  ipTicketSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
-                            ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => ipTicketSearch = true);
-                            await fetchData(ipNumber: _ipTicket.text);
-                            setState(() => ipTicketSearch = false);
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      ipTicketSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => ipTicketSearch = true);
+                                await fetchData(ipNumber: _ipTicket.text);
+                                setState(() => ipTicketSearch = false);
 
-                            onSearchPressed();
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.02,
-                        ),
+                                onSearchPressed();
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.025,
+                            ),
+                    ],
+                  ),
                   SizedBox(width: screenHeight * 0.05),
-                  PharmacyTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Phone Number',
+                        size: screenWidth * 0.011,
+                      ),
+                      SizedBox(height: screenWidth * 0.007),
+                      PharmacyTextField(
+                        hintText: 'Phone Number',
+                        width: screenWidth * 0.15,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  phoneNoSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      phoneNoSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => phoneNoSearch = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => phoneNoSearch = false);
+
+                                onSearchPressed();
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.025,
                             ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => phoneNoSearch = true);
-
-                            await fetchData(phoneNumber: _phoneNumber.text);
-                            setState(() => phoneNoSearch = false);
-
-                            onSearchPressed();
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenWidth * 0.02,
-                        ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),
