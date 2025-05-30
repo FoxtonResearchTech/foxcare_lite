@@ -1,12 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_out_standing_bills.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_purchase.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:iconsax/iconsax.dart';
+
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../../utilities/colors.dart';
 import '../../../../../utilities/constants.dart';
 import '../../../../../utilities/widgets/buttons/primary_button.dart';
@@ -17,12 +13,6 @@ import '../../../../../utilities/widgets/table/data_table.dart';
 import '../../../../../utilities/widgets/table/lazy_data_table.dart';
 import '../../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../../utilities/widgets/textField/primary_textField.dart';
-import '../../../../../utilities/widgets/buttons/primary_button.dart';
-import '../../../../../utilities/widgets/drawer/management/accounts/pharmacy/management_pharmacy_accounts.dart';
-import '../../../../../utilities/widgets/table/data_table.dart';
-import '../../../../../utilities/widgets/text/primary_text.dart';
-import '../../../../../utilities/widgets/textField/primary_textField.dart';
-import '../new_patient_register_collection.dart';
 
 class PharmacyPendingSalesBills extends StatefulWidget {
   @override
@@ -47,7 +37,10 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
   double _originalCollected = 0.0;
 
   double totalAmount = 0.0;
+  double collected = 0.0;
+  double balance = 0.0;
 
+  bool isLoading = false;
   String? chooseType;
   final List<String> headers = [
     'Bill NO',
@@ -257,7 +250,8 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
           } else if (fromDate != null && toDate != null) {
             query = query
                 .where('billDate', isGreaterThanOrEqualTo: fromDate)
-                .where('billDate', isLessThanOrEqualTo: toDate);
+                .where('billDate', isLessThanOrEqualTo: toDate)
+                .orderBy('billDate');
           }
 
           QuerySnapshot snapshot = await query.get();
@@ -558,12 +552,25 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
           double.tryParse(item['Total Amount']?.toString() ?? '0') ?? 0;
       return sum + amount;
     });
+    balance = tableData.fold(0.0, (sum, item) {
+      double amount = double.tryParse(item['Balance']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
+    collected = tableData.fold(0.0, (sum, item) {
+      double amount =
+          double.tryParse(item['Collected']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
 
     totalAmount = double.parse(totalAmount.toStringAsFixed(2));
+    collected = double.parse(collected.toStringAsFixed(2));
+    balance = double.parse(balance.toStringAsFixed(2));
   }
 
   void resetTotals() {
     totalAmount = 0.00;
+    collected = 0.00;
+    balance = 0.00;
   }
 
   @override
@@ -655,7 +662,7 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
                       children: [
                         CustomText(
                           text: "Pending Total Sales Bill",
-                          size: screenWidth * .03,
+                          size: screenWidth * .025,
                         ),
                       ],
                     ),
@@ -673,25 +680,25 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
               ),
               Row(
                 children: [
-                  CustomTextField(
-                    controller: date,
-                    onTap: () => _selectDate(context, date),
-                    icon: Icon(Icons.date_range),
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(date: date.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
+                  // CustomTextField(
+                  //   controller: date,
+                  //   onTap: () => _selectDate(context, date),
+                  //   icon: Icon(Icons.date_range),
+                  //   hintText: 'Date',
+                  //   width: screenWidth * 0.15,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomButton(
+                  //   label: 'Search',
+                  //   onPressed: () {
+                  //     fetchData(date: date.text);
+                  //   },
+                  //   width: screenWidth * 0.08,
+                  //   height: screenWidth * 0.02,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomText(text: 'OR'),
+                  // SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
                     onTap: () => _selectDate(context, fromDate),
                     controller: fromDate,
@@ -708,14 +715,26 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(fromDate: fromDate.text, toDate: toDate.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  isLoading
+                      ? SizedBox(
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
+                            await fetchData(
+                                fromDate: fromDate.text, toDate: toDate.text);
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
@@ -739,8 +758,21 @@ class _PharmacyPendingSalesBills extends State<PharmacyPendingSalesBills> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     CustomText(
-                      text: 'Total :        $totalAmount',
+                      text: 'Total : ',
                     ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '$totalAmount',
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '$collected',
+                    ),
+                    SizedBox(width: screenWidth * 0.04),
+                    CustomText(
+                      text: '$balance',
+                    ),
+                    SizedBox(width: screenWidth * 0.07)
                   ],
                 ),
               ),

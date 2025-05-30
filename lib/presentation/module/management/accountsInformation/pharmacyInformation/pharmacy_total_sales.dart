@@ -5,6 +5,7 @@ import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/pharma
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../../utilities/constants.dart';
 import '../../../../../utilities/widgets/buttons/primary_button.dart';
@@ -35,7 +36,10 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
   double _originalCollected = 0.0;
 
   double totalAmount = 0.0;
+  double collected = 0.0;
+  double balance = 0.0;
 
+  bool isLoading = false;
   int selectedIndex = 0;
 
   String? chooseType;
@@ -75,7 +79,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
       CustomSnackBar(
         context,
         message: "Please fill all the required fields",
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.orange,
       );
       return;
     }
@@ -250,7 +254,6 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                 .where('billDate', isGreaterThanOrEqualTo: fromDate)
                 .where('billDate', isLessThanOrEqualTo: toDate)
                 .orderBy('billDate');
-            query = query.orderBy('billDate');
           }
 
           QuerySnapshot snapshot = await query.get();
@@ -548,12 +551,25 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
           double.tryParse(item['Total Amount']?.toString() ?? '0') ?? 0;
       return sum + amount;
     });
+    balance = tableData.fold(0.0, (sum, item) {
+      double amount = double.tryParse(item['Balance']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
+    collected = tableData.fold(0.0, (sum, item) {
+      double amount =
+          double.tryParse(item['Collected']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
 
     totalAmount = double.parse(totalAmount.toStringAsFixed(2));
+    collected = double.parse(collected.toStringAsFixed(2));
+    balance = double.parse(balance.toStringAsFixed(2));
   }
 
   void resetTotals() {
     totalAmount = 0.00;
+    collected = 0.00;
+    balance = 0.00;
   }
 
   @override
@@ -645,7 +661,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                       children: [
                         CustomText(
                           text: "Pharmacy Total Sales",
-                          size: screenWidth * .03,
+                          size: screenWidth * .025,
                         ),
                       ],
                     ),
@@ -663,25 +679,25 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
               ),
               Row(
                 children: [
-                  CustomTextField(
-                    controller: date,
-                    onTap: () => _selectDate(context, date),
-                    icon: Icon(Icons.date_range),
-                    hintText: 'Date',
-                    width: screenWidth * 0.15,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(date: date.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
-                  SizedBox(width: screenHeight * 0.02),
-                  CustomText(text: 'OR'),
-                  SizedBox(width: screenHeight * 0.02),
+                  // CustomTextField(
+                  //   controller: date,
+                  //   onTap: () => _selectDate(context, date),
+                  //   icon: Icon(Icons.date_range),
+                  //   hintText: 'Date',
+                  //   width: screenWidth * 0.15,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomButton(
+                  //   label: 'Search',
+                  //   onPressed: () {
+                  //     fetchData(date: date.text);
+                  //   },
+                  //   width: screenWidth * 0.08,
+                  //   height: screenWidth * 0.02,
+                  // ),
+                  // SizedBox(width: screenHeight * 0.02),
+                  // CustomText(text: 'OR'),
+                  // SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
                     onTap: () => _selectDate(context, fromDate),
                     controller: fromDate,
@@ -698,14 +714,26 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                     width: screenWidth * 0.15,
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(fromDate: fromDate.text, toDate: toDate.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
-                  ),
+                  isLoading
+                      ? SizedBox(
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
+                            await fetchData(
+                                fromDate: fromDate.text, toDate: toDate.text);
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.025,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),
@@ -729,8 +757,21 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     CustomText(
-                      text: 'Total :        $totalAmount',
+                      text: 'Total : ',
                     ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '$totalAmount',
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '$collected',
+                    ),
+                    SizedBox(width: screenWidth * 0.04),
+                    CustomText(
+                      text: '$balance',
+                    ),
+                    SizedBox(width: screenWidth * 0.07)
                   ],
                 ),
               ),

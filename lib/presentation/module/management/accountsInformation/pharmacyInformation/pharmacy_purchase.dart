@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../../utilities/colors.dart';
 import '../../../../../utilities/constants.dart';
@@ -47,14 +48,18 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
   List<String> distributorsNames = [];
   String? selectedDistributor;
   double _originalCollected = 0.0;
+  double totalAmount = 0.0;
+  double collected = 0.0;
+  double balance = 0.0;
 
+  bool isLoading = false;
   final List<String> headers = [
     'Bill NO',
     'Bill Date',
     'Ref No',
     'Distributor',
-    'Amount',
-    'Paid',
+    'Total Amount',
+    'Collected',
     'Balance',
     'Action'
   ];
@@ -214,8 +219,7 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
       if (fromDate != null && toDate != null) {
         baseQuery = baseQuery
             .where('billDate', isGreaterThanOrEqualTo: fromDate)
-            .where('billDate', isLessThanOrEqualTo: toDate)
-            .orderBy('billDate');
+            .where('billDate', isLessThanOrEqualTo: toDate);
       }
 
       List<Map<String, dynamic>> allData = [];
@@ -244,8 +248,8 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
             'Bill Date': data['billDate']?.toString() ?? 'N/A',
             'Ref No': data['rfNo']?.toString() ?? 'N/A',
             'Distributor': '${data['distributor'] ?? 'N/A'}'.trim(),
-            'Amount': data['netTotalAmount']?.toString() ?? 'N/A',
-            'Paid': data['collectedAmount']?.toString() ?? 'N/A',
+            'Total Amount': data['netTotalAmount']?.toString() ?? 'N/A',
+            'Collected': data['collectedAmount']?.toString() ?? 'N/A',
             'Balance': data['balance']?.toString() ?? 'N/A',
             'Action': Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -483,6 +487,7 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
 
         setState(() {
           tableData = List.from(allData);
+          calculateTotals();
         });
         await Future.delayed(Duration(milliseconds: 100));
 
@@ -491,11 +496,43 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
           hasMore = false;
         }
       }
-
+      if (allData.isEmpty) {
+        setState(() {
+          tableData = [];
+          resetTotals();
+        });
+      }
       print(tableData);
     } catch (e) {
       print('Error fetching data: $e');
     }
+  }
+
+  void calculateTotals() {
+    totalAmount = tableData.fold(0.0, (sum, item) {
+      double amount =
+          double.tryParse(item['Total Amount']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
+    balance = tableData.fold(0.0, (sum, item) {
+      double amount = double.tryParse(item['Balance']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
+    collected = tableData.fold(0.0, (sum, item) {
+      double amount =
+          double.tryParse(item['Collected']?.toString() ?? '0') ?? 0;
+      return sum + amount;
+    });
+
+    totalAmount = double.parse(totalAmount.toStringAsFixed(2));
+    collected = double.parse(collected.toStringAsFixed(2));
+    balance = double.parse(balance.toStringAsFixed(2));
+  }
+
+  void resetTotals() {
+    totalAmount = 0.00;
+    collected = 0.00;
+    balance = 0.00;
   }
 
   Future<void> _selectDate(
@@ -607,14 +644,14 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
                       children: [
                         CustomText(
                           text: "Pharmacy Purchase",
-                          size: screenWidth * .03,
+                          size: screenWidth * .025,
                         ),
                       ],
                     ),
                   ),
                   Container(
                     width: screenWidth * 0.15,
-                    height: screenWidth * 0.11,
+                    height: screenWidth * 0.1,
                     decoration: BoxDecoration(
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(screenWidth * 0.05),
@@ -644,14 +681,26 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
                     onTap: () => _selectDate(context, toDate),
                   ),
                   SizedBox(width: screenWidth * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(fromDate: fromDate.text, toDate: toDate.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenHeight * 0.05,
-                  ),
+                  isLoading
+                      ? SizedBox(
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
+                            await fetchData(
+                                fromDate: fromDate.text, toDate: toDate.text);
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenHeight * 0.05,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
@@ -665,6 +714,38 @@ class _PharmacyPurchase extends State<PharmacyPurchase> {
                 },
                 tableData: tableData,
                 headers: headers,
+              ),
+              Container(
+                padding: EdgeInsets.only(right: screenWidth * 0.03),
+                width: screenWidth,
+                height: screenHeight * 0.030,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CustomText(
+                      text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '$totalAmount',
+                    ),
+                    SizedBox(width: screenWidth * 0.05),
+                    CustomText(
+                      text: '$collected',
+                    ),
+                    SizedBox(width: screenWidth * 0.04),
+                    CustomText(
+                      text: '$balance',
+                    ),
+                    SizedBox(width: screenWidth * 0.07)
+                  ],
+                ),
               ),
               SizedBox(height: screenHeight * 0.05),
             ],
