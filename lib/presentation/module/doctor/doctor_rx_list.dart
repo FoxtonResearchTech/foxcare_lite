@@ -238,7 +238,67 @@ class _DoctorRxList extends State<DoctorRxList> {
                       child:
                           CustomText(text: isAbscond ? 'Open' : 'Prescribe')),
                   'Abscond': TextButton(
-                      onPressed: () async {
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => Dialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 350), // limit width
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, size: 48, color: Colors.redAccent),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Confirm Abort',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Are you sure you want to mark this status as "abscond"?',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                                  ),
+                                  SizedBox(height: 24),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.grey[700],
+                                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                        ),
+                                        onPressed: () => Navigator.of(context).pop(false),
+                                        child: Text('Cancel', style: TextStyle(fontSize: 16)),
+                                      ),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.redAccent,
+                                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: () => Navigator.of(context).pop(true),
+                                        child: Text('Confirm', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+
+                      if (confirmed == true) {
                         try {
                           await FirebaseFirestore.instance
                               .collection('patients')
@@ -246,17 +306,19 @@ class _DoctorRxList extends State<DoctorRxList> {
                               .collection('opTickets')
                               .doc(opTicketData['opTicket'])
                               .update({'status': 'abscond'});
-                          CustomSnackBar(context,
-                              message: 'Status updated to abscond');
+
+                          CustomSnackBar(context, message: 'Status updated to abscond');
                         } catch (e) {
                           print('Error updating status: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Failed to update status')),
+                            const SnackBar(content: Text('Failed to update status')),
                           );
                         }
-                      },
-                      child: const CustomText(text: 'Abort')),
+                      }
+                    },
+                    child: const CustomText(text: 'Abort'),
+                  )
+                  ,
                 });
               }
             }

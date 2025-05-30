@@ -2112,12 +2112,47 @@ class _IpPrescription extends State<IpPrescription> {
                       width: 300,
                       child: CustomButton(
                         label: 'Process',
-                        onPressed: () {
-                          _savePrescriptionData();
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              title: Row(
+                                children: const [
+                                  Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text('Confirm Action'),
+                                ],
+                              ),
+                              content: const Text(
+                                'Are you sure you want to process this prescription?',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Confirm'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true) {
+                            _savePrescriptionData();
+                          }
                         },
                         width: screenWidth * 0.5,
                       ),
                     ),
+
                     SizedBox(
                       width: 300,
                       child: CustomButton(
@@ -2131,13 +2166,45 @@ class _IpPrescription extends State<IpPrescription> {
                     SizedBox(
                       width: 300,
                       child: CustomButton(
-                        label: 'Prescribed',
-                        onPressed: () {
-                          _savePrescriptionData();
+                        label: 'Discharge',
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Row(
+                                children: const [
+                                  Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                                  SizedBox(width: 8),
+                                  Text('Confirm Discharge'),
+                                ],
+                              ),
+                              content: const Text(
+                                'Are you sure you want to discharge the patient?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Confirm',style: TextStyle(color:Colors.white),),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true) {
+                         endIP(widget.patientID, widget.ipNumber);
+                          }
                         },
                         width: screenWidth * 0.5,
                       ),
-                    ),
+                    )
+
                   ],
                 ),
               ),

@@ -2255,14 +2255,78 @@ class _RxPrescription extends State<RxPrescription> {
                   children: [
                     SizedBox(
                       width: 300,
-                      child: CustomButton(
+                      child:CustomButton(
                         label: 'Process',
                         onPressed: () async {
-                          await _savePrescriptionData();
-                          await clearPrescriptionDraft(widget.patientID);
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => Dialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: 300),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.warning_amber_rounded, size: 48, color: Colors.orange),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'Confirm Action',
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        'Are you sure you want to process this prescription?',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                                      ),
+                                      SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.grey[700],
+                                              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                            ),
+                                            onPressed: () => Navigator.of(context).pop(false),
+                                            child: Text('Cancel', style: TextStyle(fontSize: 16)),
+                                          ),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.orange,
+                                              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            onPressed: () => Navigator.of(context).pop(true),
+                                            child: Text('Confirm', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+
+
+                          if (confirmed == true) {
+                            await _savePrescriptionData();
+                            await clearPrescriptionDraft(widget.patientID);
+                          }
                         },
                         width: screenWidth * 0.5,
                       ),
+
+
                     ),
                     SizedBox(
                       width: 300,
