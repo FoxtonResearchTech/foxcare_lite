@@ -47,20 +47,45 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
     'Sample Data',
   ];
   List<Map<String, dynamic>> tableData1 = [];
-  Timer? _timer;
+
+  List<StreamSubscription> refreshListeners = [];
+  Map<String, bool> hasFetchedOnce = {};
 
   @override
   void initState() {
     super.initState();
     fetchData();
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
+    final refreshDocs = [
+      'doctorOpRefresh',
+      'labOpRefresh',
+    ];
+
+    for (var docId in refreshDocs) {
+      hasFetchedOnce[docId] = false;
+
+      var sub = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc(docId)
+          .snapshots()
+          .listen((event) {
+        if (hasFetchedOnce[docId] == true) {
+          fetchData();
+        } else {
+          hasFetchedOnce[docId] = true;
+        }
+      });
+
+      refreshListeners.add(sub);
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    for (var sub in refreshListeners) {
+      sub.cancel();
+    }
+    refreshListeners.clear();
+
     super.dispose();
   }
 

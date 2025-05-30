@@ -326,7 +326,7 @@ class _IpPrescription extends State<IpPrescription> {
   void initState() {
     super.initState();
     loadPrescriptionDraft(widget.ipNumber);
-
+    getAndIncrementRefreshNo();
     _filteredItems = _allItems;
     _filteredMedicine = medicineNames;
 
@@ -344,6 +344,44 @@ class _IpPrescription extends State<IpPrescription> {
     _notesController.dispose();
     _diagnosisSignsController.dispose();
     _symptomsController.dispose();
+  }
+
+  String refreshNO = '';
+  int newRefreshNo = 0;
+
+  Future<String?> getAndIncrementRefreshNo() async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc('doctorIpRefresh');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['number'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
+
+        setState(() {
+          refreshNO = '${currentNewBillNo}';
+          newRefreshNo = currentNewBillNo;
+        });
+
+        return refreshNO;
+      } else {
+        print('Document does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateRefreshNo(int newRefreshNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('refresh').doc('doctorIpRefresh');
+
+    await docRef.set({'number': newRefreshNo});
   }
 
   Future<void> fetchMedicine() async {
@@ -457,7 +495,7 @@ class _IpPrescription extends State<IpPrescription> {
           'date': formattedDate,
         });
       }
-
+      await updateRefreshNo(newRefreshNo);
       await clearPrescriptionDraft(widget.ipNumber);
 
       CustomSnackBar(
@@ -596,7 +634,7 @@ class _IpPrescription extends State<IpPrescription> {
                                     mainAxisAlignment: pw.MainAxisAlignment.end,
                                     children: [
                                       pw.Text(
-                                        'ABC Hospital',
+                                        Constants.hospitalName,
                                         style: pw.TextStyle(
                                           fontSize: 30,
                                           font: ttf,

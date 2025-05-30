@@ -518,12 +518,9 @@ class _SalesChartScreenState extends State<SalesChartScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      countTotalBillsToday();
-      getLastOPFewBills();
-      if (!mounted) return;
-    });
 
+    countTotalBillsToday();
+    getLastOPFewBills();
     fetchNonMovingStocksData();
     fetchNearExpiryData();
     getPharmacyIncome();

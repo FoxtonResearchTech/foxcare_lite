@@ -496,18 +496,16 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      getNoOfOp();
-      getNoOfNewPatients();
-      getNoOFWaitingQue();
-      getMissingOp();
-      fetchCounterData(1);
-      fetchCounterData(2);
-      fetchCounterData(3);
-      fetchCounterData(4);
-      fetchCounterData(5);
-      _showTablesWithDelay();
-    });
+    getNoOfOp();
+    getNoOfNewPatients();
+    getNoOFWaitingQue();
+    getMissingOp();
+    fetchCounterData(1);
+    fetchCounterData(2);
+    fetchCounterData(3);
+    fetchCounterData(4);
+    fetchCounterData(5);
+    _showTablesWithDelay();
   }
 
   @override

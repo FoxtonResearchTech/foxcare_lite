@@ -65,8 +65,47 @@ class _OpTicketPageState extends State<OpTicketPage> {
   @override
   void initState() {
     super.initState();
+    getAndIncrementRefreshNo();
     opTicketTotalAmount.addListener(_updateBalance);
     opTicketCollectedAmount.addListener(_updateBalance);
+  }
+
+  String refreshNO = '';
+  int newRefreshNo = 0;
+
+  Future<String?> getAndIncrementRefreshNo() async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc('opTicketRefresh');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['number'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
+
+        setState(() {
+          refreshNO = '${currentNewBillNo}';
+          newRefreshNo = currentNewBillNo;
+        });
+
+        return refreshNO;
+      } else {
+        print('Document does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateRefreshNo(int newRefreshNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('refresh').doc('opTicketRefresh');
+
+    await docRef.set({'number': newRefreshNo});
   }
 
   void _updateBalance() {
@@ -300,7 +339,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
                                     mainAxisAlignment: pw.MainAxisAlignment.end,
                                     children: [
                                       pw.Text(
-                                        'ABC Hospital',
+                                        Constants.hospitalName,
                                         style: pw.TextStyle(
                                           fontSize: 30,
                                           font: ttf,
@@ -732,6 +771,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
           );
         },
       );
+      await updateRefreshNo(newRefreshNo);
       setState(() {
         isGeneratingToken = false;
       });

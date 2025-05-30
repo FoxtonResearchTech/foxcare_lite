@@ -403,15 +403,12 @@ class _DoctorDashboard extends State<DoctorDashboard> {
   @override
   void initState() {
     super.initState();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      getNoOfOp();
-      getNoOfNewPatients();
-      getNoOFWaitingQue();
-      getLabOp();
-      fetchCounterOneData();
-      _showTablesWithDelay();
-    });
+    getNoOfOp();
+    getNoOfNewPatients();
+    getNoOFWaitingQue();
+    getLabOp();
+    fetchCounterOneData();
+    _showTablesWithDelay();
   }
 
   @override

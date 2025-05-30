@@ -47,23 +47,50 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
   Timer? _timer;
   bool _isSearching = false;
 
+  List<StreamSubscription> refreshListeners = [];
+  Map<String, bool> hasFetchedOnce = {};
+
   @override
   void initState() {
     super.initState();
     fetchData();
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
+    final refreshDocs = [
+      'doctorIpRefresh',
+      'labIpRefresh',
+    ];
+
+    for (var docId in refreshDocs) {
+      hasFetchedOnce[docId] = false;
+
+      var sub = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc(docId)
+          .snapshots()
+          .listen((event) {
+        if (hasFetchedOnce[docId] == true) {
+          fetchData();
+        } else {
+          hasFetchedOnce[docId] = true;
+        }
+      });
+
+      refreshListeners.add(sub);
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    for (var sub in refreshListeners) {
+      sub.cancel();
+    }
+    refreshListeners.clear();
+
     super.dispose();
   }
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
     try {
+      print('fecthing');
       final DateTime now = DateTime.now();
       final String todayDate =
           "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
@@ -279,7 +306,10 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                                 backgroundColor: Colors.red);
                           }
                         },
-                        child: const CustomText(text: 'Enter Sample Data'),
+                        child: const CustomText(
+                          text: 'Enter Sample Data',
+                          maxLines: 2,
+                        ),
                       ),
               });
             }

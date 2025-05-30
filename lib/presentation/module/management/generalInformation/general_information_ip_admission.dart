@@ -52,9 +52,6 @@ class _GeneralInformationIpAdmission
   void initState() {
     super.initState();
     fetchData();
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
   }
 
   @override

@@ -219,6 +219,7 @@ class _OpBilling extends State<OpBilling> {
 
                               CustomSnackBar(context,
                                   message: 'Status updated to abscond');
+                              fetchData();
                             } catch (e) {
                               print('Error updating status: $e');
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -245,7 +246,7 @@ class _OpBilling extends State<OpBilling> {
         fetchedData.sort((a, b) {
           int tokenA = int.tryParse(a['Token No']) ?? 0;
           int tokenB = int.tryParse(b['Token No']) ?? 0;
-          return tokenA.compareTo(tokenB);
+          return tokenB.compareTo(tokenA);
         });
 
         // Update UI incrementally after each batch
@@ -279,10 +280,6 @@ class _OpBilling extends State<OpBilling> {
   void initState() {
     super.initState();
     fetchData();
-    //
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
   }
 
   @override
@@ -408,7 +405,7 @@ class _OpBilling extends State<OpBilling> {
                 tableData: tableData,
                 rowColorResolver: (row) {
                   if (row['Status'] == 'abscond') {
-                    return Colors.red.shade200;
+                    return Colors.red.shade300;
                   }
 
                   return Colors.transparent;

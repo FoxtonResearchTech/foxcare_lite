@@ -432,11 +432,9 @@ class _LabDashboard extends State<LabDashboard> {
 
     getWaitingLabTestOpPatients();
     getWaitingLabTestIpPatients();
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      getNoOfOp();
-      getNoOfPatientsTestDone();
-      getNoOFWaitingQue();
-    });
+    getNoOfOp();
+    getNoOfPatientsTestDone();
+    getNoOFWaitingQue();
   }
 
   @override

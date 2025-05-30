@@ -115,11 +115,8 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': '12',
       'Reference Range': 'AFC	12	Fertility and Sterility. 2006;85(4): 917-922.',
     },
-    'Hemoglobin': {
-      'Unit': '7.1 g/dl',
-      'Reference Range': 'Hemoglobin	7.1 g/dl	14.0-18.0',
-    },
-    'White blood cell': {
+    'BLOOD ROUTINE[R/E]': {'Unit': 'x10⁹/L', 'Reference Range': '4.0 – 11.0'},
+    'TOTAL WBC COUNT[TC]': {
       'Unit': '2.8x10^3/mm^3',
       'Reference Range': '4.0-10.8',
     },
@@ -127,7 +124,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': '%',
       'Reference Range': '40 – 75 %',
     },
-    'Reticulocyte': {
+    'RETICULOCYTE COUNT': {
       'Unit': '0.6%',
       'Reference Range': '0.8-2.1',
     },
@@ -139,13 +136,9 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'g/dL',
       'Reference Range': 'Male: 13.0 – 17.0',
     },
-    'BT': {
+    'BT CT': {
       'Unit': 'Minutes',
       'Reference Range': '2 – 7 minutes',
-    },
-    'CT': {
-      'Unit': 'Minutes',
-      'Reference Range': '4 – 8 minutes',
     },
     'MP SMEAR': {
       'Unit': 'Presence / Absence',
@@ -163,7 +156,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'PT',
       'Reference Range': '11 – 13.5 seconds',
     },
-    'Bloog group': {
+    'BLOOD GROUP': {
       'Unit': 'None',
       'Reference Range': 'A, B, AB, O',
     },
@@ -199,35 +192,35 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': '1:40,1:80',
       'Reference Range': '< 1:80',
     },
-    'Blood Sugar': {
-      'Unit': '	mg/dL (milligrams per deciliter)',
+    'BLOOD SUGAR': {
+      'Unit': 'mg/dL (milligrams per deciliter)',
       'Reference Range': '70 – 99 mg/dL (normal)',
     },
-    'GTT [5 SAMPLE]': {
+    'GTT[5 SAMPLE]': {
       'Unit': 'mg/dL (milligrams per deciliter)',
       'Reference Range': '70 – 99 mg/dL',
     },
-    'GTT [4 SAMPLE]': {
+    'GTT[4 SAMPLE]': {
       'Unit': 'mg/dL (milligrams per deciliter)',
       'Reference Range': '70 – 99 mg/dL',
     },
-    'GTT [3 SAMPLE]': {
+    'GTT[3 SAMPLE]': {
       'Unit': 'mg/dL (milligrams per deciliter)',
       'Reference Range': '70 – 99 mg/dL',
     },
-    'Triglycerides': {
+    'TRIGLYCERIDES': {
       'Unit': 'mg/dL',
       'Reference Range': '< 150 mg/dL (Normal)',
     },
-    'GCT (50g glucose, 1-hr)': {
+    'GCT': {
       'Unit': 'mg/dL',
       'Reference Range': '< 140 mg/dL (Normal)',
     },
-    'HDL (High-Density Lipoprotein – "Good Cholesterol")': {
+    'HDL': {
       'Unit': 'mg/dL',
       'Reference Range': 'Men: > 40 mg/dL',
     },
-    'LDL (Low-Density Lipoprotein – "Bad Cholesterol")': {
+    'LDL': {
       'Unit': 'mg/dL',
       'Reference Range': '< 100 mg/dL (optimal)',
     },
@@ -235,7 +228,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'mg/dL',
       'Reference Range': '< 200 mg/dL (Desirable)',
     },
-    'UREA (Blood Urea / BUN)': {
+    'UREA': {
       'Unit': 'mg/dL',
       'Reference Range': '15 – 40 mg/dL',
     },
@@ -251,19 +244,19 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'mg/dL',
       'Reference Range': '8.5 – 10.5 mg/dL',
     },
-    'PHOSPHOROUS (Serum Phosphate)': {
+    'PHOSPHOROUS': {
       'Unit': 'mg/dL',
       'Reference Range': '2.5 – 4.5 mg/dL',
     },
-    'LDH (Lactate Dehydrogenase)': {
+    'LDH': {
       'Unit': 'U/L (units per liter)',
       'Reference Range': '100 – 190 U/L (varies by lab)',
     },
-    'CPX (Creatine Phosphokinase / Creatine Kinase, Total)': {
+    'CPX': {
       'Unit': 'U/L',
       'Reference Range': '20 – 200 U/L (varies by lab)',
     },
-    'CK-MB (Creatine Kinase – MB Isoenzyme)': {
+    'CKMB': {
       'Unit': 'ng/mL or U/L',
       'Reference Range': '0 – 5 ng/mL (or < 25 U/L)',
     },
@@ -275,7 +268,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'mg/dL',
       'Reference Range': '< 200 mg/dL (Desirable)',
     },
-    'LFT (Liver Function Test)': {
+    'LFT': {
       'Unit': 'U/L',
       'Reference Range': '7 – 56 U/L',
     },
@@ -295,11 +288,11 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'mg/dL',
       'Reference Range': '0.1 – 1.2 mg/dL',
     },
-    'SGOT (AST - Aspartate Aminotransferase)': {
+    'SGOT': {
       'Unit': 'U/L',
       'Reference Range': '10 – 40 U/L',
     },
-    'SGPT (ALT - Alanine Aminotransferase)': {
+    'SGPT': {
       'Unit': 'U/L',
       'Reference Range': '7 – 56 U/L',
     },
@@ -307,7 +300,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'g/dL',
       'Reference Range': '6.0 – 8.3 g/dL',
     },
-    'RFT (Renal Function Test)': {
+    'RFT': {
       'Unit': 'mg/dL',
       'Reference Range': '0.6 – 1.2 mg/dL',
     },
@@ -319,21 +312,14 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'U/L',
       'Reference Range': '44 – 147 U/L',
     },
-    'GCT (Glucose Challenge Test)': {
-      'Unit': 'mg/dL',
-      'Reference Range': '< 140 mg/dL (1 hour post 50g glucose load)',
-    },
-    'HbA1c (Glycated Hemoglobin)': {
-      'Unit': '%',
-      'Reference Range': '	< 5.7% (Normal)'
-    },
+    'HBA1C': {'Unit': '%', 'Reference Range': '< 5.7% (Normal)'},
     'TROPONIN': {'Unit': 'ng/mL', 'Reference Range': '< 0.04 ng/mL (normal)'},
     'URINE ROUTINE': {
       'Unit': '/HPF (high power field)',
       'Reference Range': '0 – 3/HPF'
     },
     'URINE SUGAR': {'Unit': 'mg/mL', 'Reference Range': 'Negative (0 mg/dL)'},
-    'BS SP (Blood Sugar - Spot)': {
+    'BS SP': {
       'Unit': 'mg/mL',
       'Reference Range': '70 – 140 mg/dL (varies by timing)'
     },
@@ -342,7 +328,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Reference Range': '0 – 3 /HPF'
     },
     'ACETONES': {'Unit': 'mg/dL', 'Reference Range': 'Negative'},
-    'BENCE JONES PROTEIN': {
+    'BENSE JONES PROTEIN': {
       'Unit': 'mg/dL or qualitative',
       'Reference Range': 'Negative/Not detected'
     },
@@ -362,14 +348,17 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'Qualitative',
       'Reference Range': 'Positive or Negative result'
     },
-    'STOOL ROUTINE(color)': {'Unit': '-----', 'Reference Range': 'Brown'},
-    'STOOL REDUCING SUBSTANCES': {
+    'STOOL ROUTINE': {'Unit': 'Positive/Negative', 'Reference Range': 'Brown'},
+    'STOOL REDUCING SUBST': {
       'Unit': 'Qualitative',
       'Reference Range': 'Negative / Absent'
     },
     'OCCULT BLOOD': {'Unit': 'Qualitative', 'Reference Range': 'Negative'},
-    'STOOL MANAGING DROP': {'Unit': '-----', 'Reference Range': '-----'},
-    'HBsAg CARD': {
+    'STOOL MANAGING DROP': {
+      'Unit': '% or mg/dL',
+      'Reference Range': '< 0.25% or < 0.5 g/dL'
+    },
+    'HBSAG CARD': {
       'Unit': 'Qualitative',
       'Reference Range': 'Positive or Negative'
     },
@@ -381,7 +370,7 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'Qualitative',
       'Reference Range': 'Positive or Negative'
     },
-    'DENGUE CARD': {
+    'DENQUE CARD': {
       'Unit': 'Qualitative',
       'Reference Range': 'Positive or Negative'
     },
@@ -393,70 +382,61 @@ class _IpPatientReport extends State<IpPatientReport> {
       'Unit': 'Qualitative',
       'Reference Range': 'Positive or Negative'
     },
-    'URINE C/S (Culture and Sensitivity)': {
+    'URINE C/S': {
       'Unit': 'Qualitative',
       'Reference Range': 'No growth (Negative) or Positive (specify organism)'
     },
-    'SPUTUM C/S (Culture and Sensitivity)': {
+    'SPUTUM C/S': {
       'Unit': 'Qualitative',
       'Reference Range': 'No growth (Negative) or Positive (specify organism)'
     },
-    'STOOL C/S (Culture and Sensitivity)': {
+    'STOOL C/S': {
       'Unit': 'Qualitative',
       'Reference Range': 'No growth (Negative) or Positive (specify organism)'
     },
-    'PUS C/S (Culture and Sensitivity)': {
+    'PUS C/S': {
       'Unit': 'Qualitative',
       'Reference Range': 'No growth (Negative) or Positive (specify organism)'
     },
-    'OTHER FLUIDS C/S (Culture and Sensitivity)': {
+    'OTHER FLUIDS C/S': {
       'Unit': 'Qualitative',
       'Reference Range': 'No growth (Negative) or Positive (specify organism)'
     },
-    'T3 (Triiodothyronine)': {
+    'T3': {
       'Unit': 'ng/dL or nmol/L',
       'Reference Range': '80 – 200 ng/dL (1.2 – 3.1 nmol/L)'
     },
-    'T4 (Thyroxine)': {
+    'T4': {
       'Unit': 'ng/dL or nmol/L',
       'Reference Range': '5.0 – 12.0 μg/dL (64 – 154 nmol/L)'
     },
-    'TSH (Thyroid Stimulating Hormone)': {
-      'Unit': 'μIU/mL',
-      'Reference Range': '0.4 – 4.0 μIU/mL'
-    },
-    'TFT [T3, T4 & TSH] (Thyroid Function Test)': {
+    'TSH': {'Unit': 'μIU/mL', 'Reference Range': '0.4 – 4.0 μIU/mL'},
+    'TFT [T3, T4 & TSH]': {
       'Unit': 'ng/dL μg/dL μIU/mL',
       'Reference Range': '80 – 200 ng/dL 5.0 – 12.0 μg/dL 0.4 – 4.0 μIU/mL'
     },
-    'FT3 (Free Triiodothyronine)': {
-      'Unit': 'pg/mL',
-      'Reference Range': '2.3 – 4.2 pg/mL'
-    },
-    'FT4 (Free Thyroxine)': {
-      'Unit': 'pg/mL',
-      'Reference Range': '0.8 – 1.8 ng/dL'
-    },
+    'FT3': {'Unit': 'pg/mL', 'Reference Range': '2.3 – 4.2 pg/mL'},
+    'FT4': {'Unit': 'pg/mL', 'Reference Range': '0.8 – 1.8 ng/dL'},
     'VITAMIN D3': {
       'Unit': 'ng/mL',
       'Reference Range': '30 – 100 ng/mL (sufficient)'
     },
-    'B-HCG (Beta Human Chorionic Gonadotropin)': {
-      'Unit': 'mIU/mL',
-      'Reference Range': '< 5 mIU/mL (non-pregnant)'
-    },
-    'IGE (Immunoglobulin E)': {
+    'B-HCG': {'Unit': 'mIU/mL', 'Reference Range': '< 5 mIU/mL (non-pregnant)'},
+    'IGE': {
       'Unit': 'IU/mL',
       'Reference Range': '0 – 100 IU/mL (varies by lab)'
     },
-    'DENTAL DIGITAL X-RAY': {'Unit': '-----', 'Reference Range': '-----'},
-    'ECG (Electrocardiogram)': {'Unit': '-----', 'Reference Range': '-----'},
+    'DENTAL DIGITAL X-RAY': {
+      'Unit': 'microsieverts (µSv)',
+      'Reference Range': 'Periapical: ~1–8 µSv'
+    },
+    'ECG': {'Unit': '	millivolts (mV)', 'Reference Range': '60 – 100 bpm'},
     'SEMEN ANALYSIS': {'Unit': 'mL', 'Reference Range': '≥ 1.5 mL'},
   };
   @override
   void initState() {
     getAndIncrementBillNo();
-
+    getAndIncrementRefreshNo();
     super.initState();
     totalAmountController.addListener(_updateBalance);
     paidController.addListener(_updateBalance);
@@ -471,6 +451,43 @@ class _IpPatientReport extends State<IpPatientReport> {
         };
       }).toList();
     }
+  }
+
+  String refreshNO = '';
+  int newRefreshNo = 0;
+
+  Future<String?> getAndIncrementRefreshNo() async {
+    try {
+      final docRef =
+          FirebaseFirestore.instance.collection('refresh').doc('labOpRefresh');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['number'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
+
+        setState(() {
+          refreshNO = '${currentNewBillNo}';
+          newRefreshNo = currentNewBillNo;
+        });
+
+        return refreshNO;
+      } else {
+        print('Document does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateRefreshNo(int newRefreshNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('refresh').doc('labIpRefresh');
+
+    await docRef.set({'number': newRefreshNo});
   }
 
   Future<String?> getAndIncrementBillNo() async {
@@ -546,6 +563,7 @@ class _IpPatientReport extends State<IpPatientReport> {
             dateTime.minute.toString().padLeft(2, '0'),
       });
       await updateBillNo(newReportNo);
+      await updateRefreshNo(newRefreshNo);
       CustomSnackBar(context,
           message: 'All values have been successfully submitted',
           backgroundColor: Colors.cyan);

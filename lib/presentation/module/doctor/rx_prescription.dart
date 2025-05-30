@@ -262,6 +262,7 @@ class _RxPrescription extends State<RxPrescription> {
     super.initState();
     initializeIpTicketID();
     loadPrescriptionDraft(widget.patientID);
+    getAndIncrementRefreshNo();
     _filteredItems = _allItems;
     _filteredMedicine = medicineNames;
     fetchMedicine();
@@ -1264,7 +1265,7 @@ class _RxPrescription extends State<RxPrescription> {
           'appointmentTime': _appointmentTime.text,
         }, SetOptions(merge: true));
       }
-
+      await updateRefreshNo(newRefreshNo);
       await clearPrescriptionDraft(widget.patientID);
       CustomSnackBar(context,
           message: 'Details saved successfully!',
@@ -1273,6 +1274,44 @@ class _RxPrescription extends State<RxPrescription> {
       CustomSnackBar(context,
           message: 'Failed to save: $e', backgroundColor: Colors.red);
     }
+  }
+
+  String refreshNO = '';
+  int newRefreshNo = 0;
+
+  Future<String?> getAndIncrementRefreshNo() async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc('doctorOpRefresh');
+
+      final docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        int currentBillNo = data?['number'] ?? 0;
+        int currentNewBillNo = currentBillNo + 1;
+
+        setState(() {
+          refreshNO = '${currentNewBillNo}';
+          newRefreshNo = currentNewBillNo;
+        });
+
+        return refreshNO;
+      } else {
+        print('Document does not exist.');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching or incrementing billNo: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateRefreshNo(int newRefreshNo) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('refresh').doc('doctorOpRefresh');
+
+    await docRef.set({'number': newRefreshNo});
   }
 
   Future<void> _selectDate(

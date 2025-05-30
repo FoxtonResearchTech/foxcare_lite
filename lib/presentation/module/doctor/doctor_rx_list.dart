@@ -46,30 +46,43 @@ class _DoctorRxList extends State<DoctorRxList> {
     'Abscond',
   ];
   List<Map<String, dynamic>> tableData1 = [];
-  late Timer? _timer;
+
+  List<StreamSubscription> refreshListeners = [];
+  Map<String, bool> hasFetchedOnce = {};
 
   @override
   void initState() {
     super.initState();
-    print(widget.doctorName);
     fetchData();
+    final refreshDocs = ['opTicketRefresh', 'doctorOpRefresh', 'labOpRefresh'];
 
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
+    for (var docId in refreshDocs) {
+      hasFetchedOnce[docId] = false;
+
+      var sub = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc(docId)
+          .snapshots()
+          .listen((event) {
+        if (hasFetchedOnce[docId] == true) {
+          fetchData();
+        } else {
+          hasFetchedOnce[docId] = true;
+        }
+      });
+
+      refreshListeners.add(sub);
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void onSearchPressed() {
-    if (_timer != null && _timer!.isActive) {
-      _timer!.cancel();
-      _timer = null;
+    for (var sub in refreshListeners) {
+      sub.cancel();
     }
+    refreshListeners.clear();
+
+    super.dispose();
   }
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
@@ -125,8 +138,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   opTicketData['opTicket'].toString().trim().toLowerCase() ==
                       opNumber.trim().toLowerCase()) {
                 matches = true;
-              }
-              else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+              } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
                     patientData['phone2'] == phoneNumber) {
                   matches = true;
@@ -242,15 +254,18 @@ class _DoctorRxList extends State<DoctorRxList> {
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (context) => Dialog(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
                           child: ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: 350), // limit width
+                            constraints:
+                                BoxConstraints(maxWidth: 350), // limit width
                             child: Padding(
                               padding: const EdgeInsets.all(20),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.warning_amber_rounded, size: 48, color: Colors.redAccent),
+                                  Icon(Icons.warning_amber_rounded,
+                                      size: 48, color: Colors.redAccent),
                                   SizedBox(height: 16),
                                   Text(
                                     'Confirm Abort',
@@ -264,30 +279,41 @@ class _DoctorRxList extends State<DoctorRxList> {
                                   Text(
                                     'Are you sure you want to mark this status as "abscond"?',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.grey[700]),
                                   ),
                                   SizedBox(height: 24),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
                                     children: [
                                       TextButton(
                                         style: TextButton.styleFrom(
                                           foregroundColor: Colors.grey[700],
-                                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 12),
                                         ),
-                                        onPressed: () => Navigator.of(context).pop(false),
-                                        child: Text('Cancel', style: TextStyle(fontSize: 16)),
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
+                                        child: Text('Cancel',
+                                            style: TextStyle(fontSize: 16)),
                                       ),
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.redAccent,
-                                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 12),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
-                                        onPressed: () => Navigator.of(context).pop(true),
-                                        child: Text('Confirm', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(true),
+                                        child: Text('Confirm',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white)),
                                       ),
                                     ],
                                   ),
@@ -306,19 +332,20 @@ class _DoctorRxList extends State<DoctorRxList> {
                               .collection('opTickets')
                               .doc(opTicketData['opTicket'])
                               .update({'status': 'abscond'});
-
-                          CustomSnackBar(context, message: 'Status updated to abscond');
+                          await fetchData();
+                          CustomSnackBar(context,
+                              message: 'Status updated to abscond');
                         } catch (e) {
                           print('Error updating status: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Failed to update status')),
+                            const SnackBar(
+                                content: Text('Failed to update status')),
                           );
                         }
                       }
                     },
                     child: const CustomText(text: 'Abort'),
-                  )
-                  ,
+                  ),
                 });
               }
             }
@@ -330,11 +357,11 @@ class _DoctorRxList extends State<DoctorRxList> {
         fetchedData.sort((a, b) {
           int tokenA = int.tryParse(a['Token NO']) ?? 0;
           int tokenB = int.tryParse(b['Token NO']) ?? 0;
-          return tokenA.compareTo(tokenB);
+          return tokenB.compareTo(tokenA);
         });
 
         setState(() {
-          tableData1 = fetchedData;
+          tableData1 = List.from(fetchedData);
         });
         await Future.delayed(const Duration(milliseconds: 100)); // small delay
       }
@@ -342,6 +369,7 @@ class _DoctorRxList extends State<DoctorRxList> {
       print('Error fetching data: $e');
     }
   }
+
   bool isPhoneLoading = false;
   bool isOpLoading = false;
   @override
@@ -349,7 +377,6 @@ class _DoctorRxList extends State<DoctorRxList> {
     double screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     bool isMobile = screenWidth < 600;
-
 
     return Scaffold(
       appBar: isMobile
@@ -466,7 +493,9 @@ class _DoctorRxList extends State<DoctorRxList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'OP Ticket Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -478,35 +507,38 @@ class _DoctorRxList extends State<DoctorRxList> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isOpLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Ensure this path is correct
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure this path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isOpLoading = true);
-                          await fetchData(opNumber:_opNumber.text);
-                          setState(() => isOpLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isOpLoading = true);
+                                await fetchData(opNumber: _opNumber.text);
+                                setState(() => isOpLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
-
                   SizedBox(width: screenHeight * 0.05),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'Phone Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -517,26 +549,28 @@ class _DoctorRxList extends State<DoctorRxList> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isPhoneLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Update the path to your Lottie file
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Update the path to your Lottie file
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isPhoneLoading = true);
-                          await fetchData(phoneNumber: _phoneNumber.text);
-                          setState(() => isPhoneLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isPhoneLoading = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => isPhoneLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
                 ],
@@ -549,25 +583,30 @@ class _DoctorRxList extends State<DoctorRxList> {
                 headers: headers1,
                 rowColorResolver: (row) {
                   if (row['Status'] == 'abscond') {
-                    return Colors.red.shade300; // Strong red to show alert/critical
+                    return Colors
+                        .red.shade300; // Strong red to show alert/critical
                   }
                   if (row['isTestOver'] == true) {
-                    return Colors.deepOrange.shade200; // Bold warm tone to indicate tests done
+                    return Colors.deepOrange
+                        .shade200; // Bold warm tone to indicate tests done
                   }
-                  if (row['isMedPrescribed'] == true && row['isLabPrescribed'] == true) {
-                    return Colors.green.shade300; // Darker green for both tasks done
+                  if (row['isMedPrescribed'] == true &&
+                      row['isLabPrescribed'] == true) {
+                    return Colors
+                        .green.shade300; // Darker green for both tasks done
                   }
                   if (row['isMedPrescribed'] == true) {
-                    return Colors.teal.shade300; // Clear teal for medicine prescribed
+                    return Colors
+                        .teal.shade300; // Clear teal for medicine prescribed
                   }
                   if (row['isLabPrescribed'] == true) {
-                    return Colors.amber.shade400; // Rich amber for lab prescribed
+                    return Colors
+                        .amber.shade400; // Rich amber for lab prescribed
                   }
 
-                  return Colors.grey.shade200; // Slightly darker neutral for default rows
+                  return Colors.grey
+                      .shade200; // Slightly darker neutral for default rows
                 },
-
-
               ),
               SizedBox(height: screenHeight * 0.05)
             ],

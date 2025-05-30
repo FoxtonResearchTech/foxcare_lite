@@ -54,18 +54,41 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
   String? roomNumber;
   String? roomType;
 
+  List<StreamSubscription> refreshListeners = [];
+  Map<String, bool> hasFetchedOnce = {};
+
   @override
   void initState() {
     super.initState();
     fetchData();
-    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    //   fetchData();
-    // });
+    final refreshDocs = ['doctorIpRefresh', 'labIpRefresh'];
+
+    for (var docId in refreshDocs) {
+      hasFetchedOnce[docId] = false;
+
+      var sub = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc(docId)
+          .snapshots()
+          .listen((event) {
+        if (hasFetchedOnce[docId] == true) {
+          fetchData();
+        } else {
+          hasFetchedOnce[docId] = true;
+        }
+      });
+
+      refreshListeners.add(sub);
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    for (var sub in refreshListeners) {
+      sub.cancel();
+    }
+    refreshListeners.clear();
+
     super.dispose();
   }
 
@@ -316,7 +339,7 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                             .collection('ipTickets')
                             .doc(ipTicketData['ipTicket'])
                             .update({'status': 'abscond'});
-
+                        await fetchData();
                         CustomSnackBar(context,
                             message: 'Status updated to abscond');
                       } catch (e) {
@@ -482,7 +505,9 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'IP Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -494,26 +519,28 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isOpLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Ensure this path is correct
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure this path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isOpLoading = true);
-                          await fetchData(ipNumber:_ipNumber.text);
-                          setState(() => isOpLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isOpLoading = true);
+                                await fetchData(ipNumber: _ipNumber.text);
+                                setState(() => isOpLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
                   SizedBox(width: screenHeight * 0.05),
@@ -521,7 +548,9 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'Phone Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.15,
@@ -532,26 +561,28 @@ class _IpPatientsDetails extends State<IpPatientsDetails> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isPhoneLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Update the path to your Lottie file
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Update the path to your Lottie file
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isPhoneLoading = true);
-                          await fetchData(phoneNumber: _phoneNumber.text);
-                          setState(() => isPhoneLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isPhoneLoading = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => isPhoneLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
                 ],

@@ -914,15 +914,14 @@ class _ManagementDashboard extends State<ManagementDashboard> {
   void initState() {
     super.initState();
     fetchMessage();
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      getTodayNoOfOp();
-      getNoOfNewPatients();
-    });
+
     final now = DateTime.now();
     final String fromDate = DateFormat('yyyy-MM-01').format(now);
     final String toDate = DateFormat('yyyy-MM-dd').format(
       DateTime(now.year, now.month + 1, 0),
     );
+    getTodayNoOfOp();
+    getNoOfNewPatients();
     getNoOfOp(fromDate: fromDate, toDate: toDate);
     getNoOfIp(fromDate: fromDate, toDate: toDate);
     getTotalExpense(fromDate: fromDate, toDate: toDate);
