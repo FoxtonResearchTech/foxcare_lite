@@ -1461,7 +1461,7 @@ class _IpPrescription extends State<IpPrescription> {
                                               radius: 18,
                                               backgroundColor: Colors.white,
                                               backgroundImage: AssetImage(
-                                                  'assets/fox_doc.png'),
+                                                  'assets/AI.png'),
                                             ),
                                           if (!isUser) SizedBox(width: 8),
 
@@ -1708,7 +1708,7 @@ class _IpPrescription extends State<IpPrescription> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             image: DecorationImage(
-              image: AssetImage('assets/fox_doc.png'),
+              image: AssetImage('assets/AI.png'),
               fit: BoxFit.cover,
             ),
           ),

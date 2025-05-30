@@ -93,19 +93,27 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           final patientData = patientDoc.data() as Map<String, dynamic>;
 
           // Filter by phone number
+          // Filter by phone number (case-insensitive)
           if (phoneNumber != null && phoneNumber.isNotEmpty) {
-            if ((patientData['phone1'] ?? '') != phoneNumber &&
-                (patientData['phone2'] ?? '') != phoneNumber) {
+            final inputPhone = phoneNumber.toLowerCase();
+            final phone1 = (patientData['phone1'] ?? '').toString().toLowerCase();
+            final phone2 = (patientData['phone2'] ?? '').toString().toLowerCase();
+
+            if (phone1 != inputPhone && phone2 != inputPhone) {
               continue;
             }
           }
 
-          // Filter by opNumber (patientID)
-          if (patientID != null &&
-              patientID.isNotEmpty &&
-              (patientData['opNumber'] ?? '') != patientID) {
-            continue;
+// Filter by patientID (case-insensitive)
+          if (patientID != null && patientID.isNotEmpty) {
+            final inputPatientID = patientID.toLowerCase();
+            final opNumber = (patientData['opNumber'] ?? '').toString().toLowerCase();
+
+            if (opNumber != inputPatientID) {
+              continue;
+            }
           }
+
 
           final opTicketsSnapshot = await FirebaseFirestore.instance
               .collection('patients')
@@ -366,6 +374,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 ],
               ),
               Row(
+crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SizedBox(width: screenHeight * 0.1),
