@@ -140,49 +140,11 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 10),
-                    contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    title: Row(
-                      children: [
-                        const Icon(Iconsax.warning_2, color: Colors.red, size: 28),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Logout Confirmation',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                    title: const Text('Logout Confirmation'),
                     content: const CustomText(
-                      text: 'Are you sure you want to logout?',
-                      //textAlign: TextAlign.center,
-                      //     fontSize: 16,
-                    ),
-                    actionsAlignment: MainAxisAlignment.end,
+                        text: 'Are you sure you want to Logout?'),
                     actions: <Widget>[
                       TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey[700],
-                          textStyle: const TextStyle(fontSize: 15),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
                         onPressed: () async {
                           try {
                             await FirebaseAuth.instance.signOut();
@@ -191,7 +153,7 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(builder: (_) => LoginScreen()),
-                                  (route) => false,
+                              (route) => false,
                             );
                             CustomSnackBar(context,
                                 message: 'Logout Successful',
@@ -202,7 +164,16 @@ class _DoctorModuleDrawer extends State<DoctorModuleDrawer> {
                                 backgroundColor: Colors.red);
                           }
                         },
-                        child: const Text('Logout'),
+                        child: const CustomText(
+                          text: 'Sure',
+                          color: Colors.red,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const CustomText(text: 'Close'),
                       ),
                     ],
                   );
