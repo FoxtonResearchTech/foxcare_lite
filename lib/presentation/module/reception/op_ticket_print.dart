@@ -850,7 +850,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                 rowColorResolver: (row) {
                   return row['Status'] == 'abscond'
                       ? Colors.red.shade200
-                      : Colors.transparent;
+                      : Colors.grey.shade200;
                 },
               ),
               SizedBox(height: screenHeight * 0.05),

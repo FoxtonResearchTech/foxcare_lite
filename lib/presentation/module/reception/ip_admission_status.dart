@@ -348,7 +348,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 rowColorResolver: (row) {
                   return row['Status'] == 'abscond'
                       ? Colors.red.shade300
-                      : Colors.transparent;
+                      : Colors.grey.shade200;
                 },
               ),
               SizedBox(height: screenHeight * 0.05),
