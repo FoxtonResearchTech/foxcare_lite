@@ -463,13 +463,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "OP Number",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                            color: Colors.black87),
-                      ),
+                      CustomText(text: 'OP Number'),
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: opNumberSearch,
@@ -483,13 +477,8 @@ crossAxisAlignment: CrossAxisAlignment.start,
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Mobile Number",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                            color: Colors.black87),
-                      ),
+                      CustomText(text: 'Mobile Number'),
+
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: phoneNumberSearch,
