@@ -121,10 +121,10 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
           if (opNumber != null &&
               opNumber.isNotEmpty &&
-              (patientData['opNumber'] ?? '').toString().toLowerCase() != opNumber.toLowerCase()) {
+              (patientData['opNumber'] ?? '').toString().toLowerCase() !=
+                  opNumber.toLowerCase()) {
             continue;
           }
-
 
           final ipTicketsSnapshot = await FirebaseFirestore.instance
               .collection('patients')
@@ -224,154 +224,168 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
               final ipAdmission = ipDetailsDoc.data()?['ipAdmission'] ?? {};
 
-              fetchedData.add({
-                'Token NO': tokenNo,
-                'IP Ticket': data['ipTicket'] ?? 'N/A',
-                'OP NO': patientData['opNumber'] ?? 'N/A',
-                'Name':
-                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                        .trim(),
-                'Age': patientData['age'] ?? 'N/A',
-                'Place': patientData['state'] ?? 'N/A',
-                'Address': patientData['address1'] ?? 'N/A',
-                'PinCode': patientData['pincode'] ?? 'N/A',
-                'Status': data['status'] ?? 'N/A',
-                'List of Tests': tests,
-                'Action': TextButton(
-                  onPressed: () {
-                    final investigation =
-                        data['investigationTests'] as Map<String, dynamic>?;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => IpPatientReport(
-                          city: patientData['city'] ?? 'N/A',
-                          phoneNo: patientData['phone1'] ?? 'N/A',
-                          doctorName: data['doctorName'] ?? 'N/A',
-                          examDocId: examDoc.id.toString(),
-                          sampleDate: sampleDate ?? 'N/A',
-                          patientID: patientData['opNumber'] ?? 'N/A',
-                          bloodGroup: patientData['bloodGroup'] ?? 'N/A',
-                          specialization: data['specialization'] ?? 'N/A',
-                          ipTicket: data['ipTicket'] ?? 'N/A',
-                          name:
-                              '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
-                                  .trim(),
-                          age: patientData['age'] ?? 'N/A',
-                          roomNo: ipAdmission['roomNo'],
-                          roomType: ipAdmission['roomType'],
-                          ipAdmitDate: data['ipAdmitDate'],
-                          sex: patientData['sex'] ?? 'N/A',
-                          place: patientData['state'] ?? 'N/A',
-                          dob: patientData['dob'] ?? 'N/A',
-                          medication: tests,
-                          address: patientData['address1'] ?? 'N/A',
-                          pincode: patientData['pincode'] ?? 'N/A',
-                          primaryInfo:
-                              investigation?['diagnosisSigns'] ?? 'N/A',
-                          temperature: data['temperature'] ?? 'N/A',
-                          bloodPressure: data['bloodPressure'] ?? 'N/A',
-                          sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+              fetchedData.add(
+                {
+                  'Token NO': tokenNo,
+                  'IP Ticket': data['ipTicket'] ?? 'N/A',
+                  'OP NO': patientData['opNumber'] ?? 'N/A',
+                  'Name':
+                      '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                          .trim(),
+                  'Age': patientData['age'] ?? 'N/A',
+                  'Place': patientData['state'] ?? 'N/A',
+                  'Address': patientData['address1'] ?? 'N/A',
+                  'PinCode': patientData['pincode'] ?? 'N/A',
+                  'Status': data['status'] ?? 'N/A',
+                  'List of Tests': tests,
+                  'Action': TextButton(
+                    onPressed: () {
+                      final investigation =
+                          data['investigationTests'] as Map<String, dynamic>?;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => IpPatientReport(
+                            city: patientData['city'] ?? 'N/A',
+                            phoneNo: patientData['phone1'] ?? 'N/A',
+                            doctorName: data['doctorName'] ?? 'N/A',
+                            examDocId: examDoc.id.toString(),
+                            sampleDate: sampleDate ?? 'N/A',
+                            patientID: patientData['opNumber'] ?? 'N/A',
+                            bloodGroup: patientData['bloodGroup'] ?? 'N/A',
+                            specialization: data['specialization'] ?? 'N/A',
+                            ipTicket: data['ipTicket'] ?? 'N/A',
+                            name:
+                                '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
+                                    .trim(),
+                            age: patientData['age'] ?? 'N/A',
+                            roomNo: ipAdmission['roomNo'],
+                            roomType: ipAdmission['roomType'],
+                            ipAdmitDate: data['ipAdmitDate'],
+                            sex: patientData['sex'] ?? 'N/A',
+                            place: patientData['state'] ?? 'N/A',
+                            dob: patientData['dob'] ?? 'N/A',
+                            medication: tests,
+                            address: patientData['address1'] ?? 'N/A',
+                            pincode: patientData['pincode'] ?? 'N/A',
+                            primaryInfo:
+                                investigation?['diagnosisSigns'] ?? 'N/A',
+                            temperature: data['temperature'] ?? 'N/A',
+                            bloodPressure: data['bloodPressure'] ?? 'N/A',
+                            sugarLevel: data['bloodSugarLevel'] ?? 'N/A',
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const CustomText(text: 'Open'),
-                ),
-                'Sample Data': sampleDate != null
-                    ? const CustomText(text: 'Sample Date Entered',color: Colors.green,)
-                    :
-                TextButton(
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                          contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          title: Row(
-                            children: const [
-                              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
-                              SizedBox(width: 10),
-                              Text(
-                                'Confirmation',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          content: const Text(
-                            'Are you sure you want to enter this sample data?\nThis action cannot be undone.',
-                            style: TextStyle(fontSize: 15),
-                          ),
-                          actions: [
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.grey[700],
-                              ),
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text(
-                                'Confirm',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-
-                    if (confirm == true) {
-                      final now = DateTime.now();
-                      final time = DateFormat('HH:mm:ss').format(now);
-                      try {
-                        await FirebaseFirestore.instance
-                            .collection('patients')
-                            .doc(patientDoc.id)
-                            .collection('ipTickets')
-                            .doc(ticketDoc.id)
-                            .collection('Examination')
-                            .doc(examDoc.id)
-                            .collection('sampleData')
-                            .doc('data')
-                            .set({
-                          'sampleDate': todayDate,
-                          'sampleTime': "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
-                        }, SetOptions(merge: true));
-
-                        CustomSnackBar(
-                          context,
-                          message: "Sample Date Entered at $time",
-                          backgroundColor: Colors.green,
-                        );
-                      } catch (e) {
-                        CustomSnackBar(
-                          context,
-                          message: 'Failed to save: $e',
-                          backgroundColor: Colors.red,
-                        );
-                      }
-                    }
-                  },
-                  child: const CustomText(
-                    text: 'Enter Sample Data',
-                    maxLines: 2,
+                      );
+                    },
+                    child: const CustomText(text: 'Open'),
                   ),
-                )
+                  'Sample Data': sampleDate != null
+                      ? const CustomText(
+                          text: 'Sample Date Entered',
+                          color: Colors.green,
+                          maxLines: 2,
+                        )
+                      : TextButton(
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  titlePadding:
+                                      const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                                  contentPadding:
+                                      const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                                  actionsPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
+                                  title: Row(
+                                    children: const [
+                                      Icon(Icons.warning_amber_rounded,
+                                          color: Colors.orange, size: 28),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Confirmation',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                  content: const Text(
+                                    'Are you sure you want to enter this sample data?\nThis action cannot be undone.',
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.grey[700],
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text(
+                                        'Confirm',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
 
-              });
+                            if (confirm == true) {
+                              final now = DateTime.now();
+                              final time = DateFormat('HH:mm:ss').format(now);
+                              try {
+                                await FirebaseFirestore.instance
+                                    .collection('patients')
+                                    .doc(patientDoc.id)
+                                    .collection('ipTickets')
+                                    .doc(ticketDoc.id)
+                                    .collection('Examination')
+                                    .doc(examDoc.id)
+                                    .collection('sampleData')
+                                    .doc('data')
+                                    .set({
+                                  'sampleDate': todayDate,
+                                  'sampleTime':
+                                      "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
+                                }, SetOptions(merge: true));
+
+                                CustomSnackBar(
+                                  context,
+                                  message: "Sample Date Entered at $time",
+                                  backgroundColor: Colors.green,
+                                );
+                                await fetchData();
+                              } catch (e) {
+                                CustomSnackBar(
+                                  context,
+                                  message: 'Failed to save: $e',
+                                  backgroundColor: Colors.red,
+                                );
+                              }
+                            }
+                          },
+                          child: const CustomText(
+                            text: 'Enter Sample Data',
+                            maxLines: 2,
+                          ),
+                        ),
+                },
+              );
             }
           }
         }
@@ -490,8 +504,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomText(text: 'OP Number'),
-
+                      CustomText(text: 'IP Number'),
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: ipNumberSearch,
@@ -504,7 +517,6 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'Mobile Number'),
-
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: phoneNumberSearch,
@@ -562,7 +574,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                 headers: headers1,
                 columnWidths: {
                   6: FixedColumnWidth(screenWidth * 0.15),
-                  8: FixedColumnWidth(screenWidth * 0.1),
+                  7: FixedColumnWidth(screenWidth * 0.1),
                 },
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'

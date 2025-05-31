@@ -121,8 +121,10 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
           // Filter by phone number (case-insensitive)
           if (phoneNumber != null && phoneNumber.isNotEmpty) {
             final inputPhone = phoneNumber.toLowerCase();
-            final phone1 = (patientData['phone1'] ?? '').toString().toLowerCase();
-            final phone2 = (patientData['phone2'] ?? '').toString().toLowerCase();
+            final phone1 =
+                (patientData['phone1'] ?? '').toString().toLowerCase();
+            final phone2 =
+                (patientData['phone2'] ?? '').toString().toLowerCase();
 
             if (phone1 != inputPhone && phone2 != inputPhone) {
               continue;
@@ -132,13 +134,13 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
 // Filter by patientID (case-insensitive)
           if (patientID != null && patientID.isNotEmpty) {
             final inputPatientID = patientID.toLowerCase();
-            final opNumber = (patientData['opNumber'] ?? '').toString().toLowerCase();
+            final opNumber =
+                (patientData['opNumber'] ?? '').toString().toLowerCase();
 
             if (opNumber != inputPatientID) {
               continue;
             }
           }
-
 
           final opTicketsSnapshot = await FirebaseFirestore.instance
               .collection('patients')
@@ -256,88 +258,102 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   },
                   child: const CustomText(text: 'Open')),
               'Sample Data': sampleDate != null
-                  ? const CustomText(text: 'Sample Date Entered',color: Colors.green,)
+                  ? const CustomText(
+                      text: 'Sample Date Entered',
+                      color: Colors.green,
+                      maxLines: 2,
+                    )
                   : TextButton(
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                        contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        title: Row(
-                          children: const [
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
-                            SizedBox(width: 10),
-                            Text(
-                              'Confirmation',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        content: const Text(
-                          'Are you sure you want to enter this sample data?\nThis action cannot be undo.',
-                          style: TextStyle(fontSize: 15),
-                        ),
-                        actions: [
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.grey[700],
-                            ),
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                            ),
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Confirm',style: TextStyle(color: Colors.white),),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                              titlePadding:
+                                  const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                              contentPadding:
+                                  const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                              actionsPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              title: Row(
+                                children: const [
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.orange, size: 28),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Confirmation',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              content: const Text(
+                                'Are you sure you want to enter this sample data?\nThis action cannot be undo.',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              actions: [
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.grey[700],
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  child: const Text(
+                                    'Confirm',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
 
-                  if (confirm == true) {
-                    try {
-                      await FirebaseFirestore.instance
-                          .collection('patients')
-                          .doc(patientDoc.id)
-                          .collection('opTickets')
-                          .doc(ticketDoc.id)
-                          .collection('sampleData')
-                          .doc('data')
-                          .set({
-                        'sampleDate': todayDate,
-                        'sampleTime': "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
-                      }, SetOptions(merge: true));
+                        if (confirm == true) {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('patients')
+                                .doc(patientDoc.id)
+                                .collection('opTickets')
+                                .doc(ticketDoc.id)
+                                .collection('sampleData')
+                                .doc('data')
+                                .set({
+                              'sampleDate': todayDate,
+                              'sampleTime':
+                                  "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
+                            }, SetOptions(merge: true));
 
-                      await fetchData();
-                      CustomSnackBar(
-                        context,
-                        message: "Sample Date Entered",
-                        backgroundColor: Colors.green,
-                      );
-                    } catch (e) {
-                      CustomSnackBar(
-                        context,
-                        message: 'Failed to save: $e',
-                        backgroundColor: Colors.red,
-                      );
-                    }
-                  }
-                },
-                child: const CustomText(text: 'Enter Sample Data'),
-              )
-              ,
+                            await fetchData();
+                            CustomSnackBar(
+                              context,
+                              message: "Sample Date Entered",
+                              backgroundColor: Colors.green,
+                            );
+                          } catch (e) {
+                            CustomSnackBar(
+                              context,
+                              message: 'Failed to save: $e',
+                              backgroundColor: Colors.red,
+                            );
+                          }
+                        }
+                      },
+                      child: const CustomText(text: 'Enter Sample Data'),
+                    ),
             });
           }
         }
@@ -454,7 +470,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                 ],
               ),
               Row(
-crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SizedBox(width: screenHeight * 0.1),
@@ -478,7 +494,6 @@ crossAxisAlignment: CrossAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'Mobile Number'),
-
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: phoneNumberSearch,
