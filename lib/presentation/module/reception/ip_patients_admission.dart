@@ -6,6 +6,7 @@ import 'package:foxcare_lite/presentation/module/reception/patient_registration.
 import 'package:foxcare_lite/presentation/module/reception/reception_ip_patient.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/primary_dropDown.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
@@ -432,6 +433,25 @@ class _IpPatientsAdmission extends State<IpPatientsAdmission> {
                                     width: buttonWidth,
                                     height: buttonHeight,
                                   ),
+
+                          ],
+                        ),
+                        Spacer(),
+                        Column(
+
+                          children: [
+                            SizedBox(height: 28,),
+                            CustomButton(
+                              label: 'Refresh',
+                              onPressed: () async {
+                                RefreshLoading(
+                                  context: context,
+                                  task: () async => await fetchData(),
+                                );
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
+                            ),
                           ],
                         ),
                       ],
