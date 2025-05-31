@@ -34,7 +34,7 @@ class _AdmissionStatus extends State<AdmissionStatus> {
   List<String> viproomStatus = [];
   List<String> ICUStatus = [];
   int selectedIndex1 = 4;
-
+  bool isLoading = false;
   //String selectedSex = 'Male'; // Default value for Sex
   String selectedBloodGroup = 'A+'; // Default value for Blood Group
 
@@ -50,6 +50,9 @@ class _AdmissionStatus extends State<AdmissionStatus> {
   int? selectedIndex; // Store selected checkbox index
 
   Future<void> fetchRoomData() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('totalRoom')
@@ -62,6 +65,7 @@ class _AdmissionStatus extends State<AdmissionStatus> {
           wardStatus = List<String>.from(doc['wardStatus']);
           viproomStatus = List<String>.from(doc['viproomStatus']);
           ICUStatus = List<String>.from(doc['ICUStatus']);
+          isLoading = false;
         });
       } else {
         print("Document does not exist.");
@@ -206,341 +210,373 @@ class _AdmissionStatus extends State<AdmissionStatus> {
           const SizedBox(
             height: 15,
           ),
-          Scrollbar(
-            controller: _scrollController, // Attach the ScrollController
-            thumbVisibility: true,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              controller: _scrollController,
-              child: Row(
-                children: [
-                  const Text(
-                    'Rooms : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
+          isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.blue,
                   ),
-                  const SizedBox(
-                    width: 30,
-                  ),
-                  Wrap(
-                    spacing: 10, // Horizontal spacing between rooms
-                    runSpacing: 10, // Vertical spacing between rooms
-                    children: List.generate(roomStatus.length, (index) {
-                      return GestureDetector(
-                        onTap: (roomStatus[index] == "booked" ||
-                                roomStatus[index] == "available")
-                            ? null
-                            : () {
-                                // Handle booking or toggling logic
-                              },
-                        child: InkWell(
-                          child: Container(
-                            width: 50,
-                            // Set a fixed width for each room box
-                            height: 60,
-                            // Set a fixed height for each room box
-                            decoration: BoxDecoration(
-                              color: roomStatus[index] == 'booked'
-                                  ? AppColors.blue
-                                  : roomStatus[index] == 'available'
-                                      ? AppColors.lightBlue
-                                      : AppColors.roomDisabled,
+                )
+              : Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Scrollbar(
+                        controller:
+                            _scrollController, // Attach the ScrollController
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          controller: _scrollController,
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Rooms : ',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 30,
+                              ),
+                              Wrap(
+                                spacing: 10, // Horizontal spacing between rooms
+                                runSpacing:
+                                    10, // Vertical spacing between rooms
+                                children:
+                                    List.generate(roomStatus.length, (index) {
+                                  return GestureDetector(
+                                    onTap: (roomStatus[index] == "booked" ||
+                                            roomStatus[index] == "available")
+                                        ? null
+                                        : () {
+                                            // Handle booking or toggling logic
+                                          },
+                                    child: InkWell(
+                                      child: Container(
+                                        width: 50,
+                                        // Set a fixed width for each room box
+                                        height: 60,
+                                        // Set a fixed height for each room box
+                                        decoration: BoxDecoration(
+                                          color: roomStatus[index] == 'booked'
+                                              ? AppColors.blue
+                                              : roomStatus[index] == 'available'
+                                                  ? AppColors.lightBlue
+                                                  : AppColors.roomDisabled,
 
-                              borderRadius: BorderRadius.circular(2),
-                              //border: Border.all(color: Colors.black, width: 1),
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    fontFamily: 'SanFrancisco',
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.bed_sharp,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ],
-                            ),
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                          //border: Border.all(color: Colors.black, width: 1),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '${index + 1}',
+                                              style: const TextStyle(
+                                                fontFamily: 'SanFrancisco',
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.bed_sharp,
+                                              color: Colors.white,
+                                              size: 30,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        // setState(() {
+                                        //   roomStatus[index] =
+                                        //       true; // Correctly update the value
+                                        // });
+                                        print('${index + 1} pressed');
+                                      },
+                                      onDoubleTap: () {
+                                        // setState(() {
+                                        //   roomStatus[index] =
+                                        //       false; // Correctly update the value
+                                        // });
+                                      },
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
-                          onTap: () {
-                            // setState(() {
-                            //   roomStatus[index] =
-                            //       true; // Correctly update the value
-                            // });
-                            print('${index + 1} pressed');
-                          },
-                          onDoubleTap: () {
-                            // setState(() {
-                            //   roomStatus[index] =
-                            //       false; // Correctly update the value
-                            // });
-                          },
                         ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          Scrollbar(
-            thumbVisibility: true,
-            controller: _scrollController1,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              controller: _scrollController1,
-              child: Row(
-                children: [
-                  const Text(
-                    'Wards : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 30,
-                  ),
-                  Wrap(
-                    spacing: 10, // Horizontal spacing between rooms
-                    runSpacing: 10, // Vertical spacing between rooms
-                    children: List.generate(wardStatus.length, (index) {
-                      return GestureDetector(
-                        onTap: (wardStatus[index] == "booked" ||
-                                wardStatus[index] == "available")
-                            ? null
-                            : () {
-                                // Handle booking or toggling logic
-                              },
-                        child: InkWell(
-                          child: Container(
-                            width: 50,
-                            // Set a fixed width for each room box
-                            height: 60,
-                            // Set a fixed height for each room box
-                            decoration: BoxDecoration(
-                              color: wardStatus[index] == 'booked'
-                                  ? AppColors.blue
-                                  : wardStatus[index] == 'available'
-                                      ? AppColors.lightBlue
-                                      : AppColors.roomDisabled,
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Scrollbar(
+                        thumbVisibility: true,
+                        controller: _scrollController1,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          controller: _scrollController1,
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Wards : ',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 30,
+                              ),
+                              Wrap(
+                                spacing: 10, // Horizontal spacing between rooms
+                                runSpacing:
+                                    10, // Vertical spacing between rooms
+                                children:
+                                    List.generate(wardStatus.length, (index) {
+                                  return GestureDetector(
+                                    onTap: (wardStatus[index] == "booked" ||
+                                            wardStatus[index] == "available")
+                                        ? null
+                                        : () {
+                                            // Handle booking or toggling logic
+                                          },
+                                    child: InkWell(
+                                      child: Container(
+                                        width: 50,
+                                        // Set a fixed width for each room box
+                                        height: 60,
+                                        // Set a fixed height for each room box
+                                        decoration: BoxDecoration(
+                                          color: wardStatus[index] == 'booked'
+                                              ? AppColors.blue
+                                              : wardStatus[index] == 'available'
+                                                  ? AppColors.lightBlue
+                                                  : AppColors.roomDisabled,
 
-                              // Red for booked, green for available
-                              borderRadius: BorderRadius.circular(2),
-                              //border: Border.all(color: Colors.black, width: 1),
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    fontFamily: 'SanFrancisco',
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.bed_sharp,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ],
-                            ),
+                                          // Red for booked, green for available
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                          //border: Border.all(color: Colors.black, width: 1),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '${index + 1}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontFamily: 'SanFrancisco',
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.bed_sharp,
+                                              color: Colors.white,
+                                              size: 30,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        // setState(() {
+                                        //   wardStatus[index] =
+                                        //       true; // Correctly update the value
+                                        // });
+                                        print('${index + 1} pressed');
+                                      },
+                                      onDoubleTap: () {
+                                        // setState(() {
+                                        //   wardStatus[index] =
+                                        //       false; // Correctly update the value
+                                        // });
+                                      },
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
-                          onTap: () {
-                            // setState(() {
-                            //   wardStatus[index] =
-                            //       true; // Correctly update the value
-                            // });
-                            print('${index + 1} pressed');
-                          },
-                          onDoubleTap: () {
-                            // setState(() {
-                            //   wardStatus[index] =
-                            //       false; // Correctly update the value
-                            // });
-                          },
                         ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          Scrollbar(
-            thumbVisibility: true,
-            controller: _scrollController2,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              controller: _scrollController2,
-              child: Row(
-                children: [
-                  const Text(
-                    'VIP Rooms : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  ),
-                  Wrap(
-                    spacing: 10, // Horizontal spacing between rooms
-                    runSpacing: 10, // Vertical spacing between rooms
-                    children: List.generate(viproomStatus.length, (index) {
-                      return GestureDetector(
-                        onTap: (viproomStatus[index] == "booked" ||
-                                viproomStatus[index] == "available")
-                            ? null
-                            : () {
-                                // Handle booking or toggling logic
-                              },
-                        child: InkWell(
-                          child: Container(
-                            width: 50,
-                            // Set a fixed width for each room box
-                            height: 60,
-                            // Set a fixed height for each room box
-                            decoration: BoxDecoration(
-                              color: viproomStatus[index] == 'booked'
-                                  ? AppColors.blue
-                                  : viproomStatus[index] == 'available'
-                                      ? AppColors.lightBlue
-                                      : AppColors.roomDisabled,
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Scrollbar(
+                        thumbVisibility: true,
+                        controller: _scrollController2,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          controller: _scrollController2,
+                          child: Row(
+                            children: [
+                              const Text(
+                                'VIP Rooms : ',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              Wrap(
+                                spacing: 10, // Horizontal spacing between rooms
+                                runSpacing:
+                                    10, // Vertical spacing between rooms
+                                children: List.generate(viproomStatus.length,
+                                    (index) {
+                                  return GestureDetector(
+                                    onTap: (viproomStatus[index] == "booked" ||
+                                            viproomStatus[index] == "available")
+                                        ? null
+                                        : () {
+                                            // Handle booking or toggling logic
+                                          },
+                                    child: InkWell(
+                                      child: Container(
+                                        width: 50,
+                                        // Set a fixed width for each room box
+                                        height: 60,
+                                        // Set a fixed height for each room box
+                                        decoration: BoxDecoration(
+                                          color:
+                                              viproomStatus[index] == 'booked'
+                                                  ? AppColors.blue
+                                                  : viproomStatus[index] ==
+                                                          'available'
+                                                      ? AppColors.lightBlue
+                                                      : AppColors.roomDisabled,
 
-                              borderRadius: BorderRadius.circular(2),
-                              //border: Border.all(color: Colors.black, width: 1),
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    fontFamily: 'SanFrancisco',
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.bed_sharp,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ],
-                            ),
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                          //border: Border.all(color: Colors.black, width: 1),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '${index + 1}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontFamily: 'SanFrancisco',
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.bed_sharp,
+                                              color: Colors.white,
+                                              size: 30,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        // setState(() {
+                                        //   viproomStatus[index] =
+                                        //       true; // Correctly update the value
+                                        // });
+                                        print('${index + 1} pressed');
+                                      },
+                                      onDoubleTap: () {
+                                        // setState(() {
+                                        //   viproomStatus[index] =
+                                        //       false; // Correctly update the value
+                                        // });
+                                      },
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
-                          onTap: () {
-                            // setState(() {
-                            //   viproomStatus[index] =
-                            //       true; // Correctly update the value
-                            // });
-                            print('${index + 1} pressed');
-                          },
-                          onDoubleTap: () {
-                            // setState(() {
-                            //   viproomStatus[index] =
-                            //       false; // Correctly update the value
-                            // });
-                          },
                         ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          Scrollbar(
-            thumbVisibility: true,
-            controller: _scrollController3,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              controller: _scrollController3,
-              child: Row(
-                children: [
-                  const Text(
-                    'ICU : ',
-                    style: TextStyle(
-                      fontFamily: 'SanFrancisco',
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 45,
-                  ),
-                  Wrap(
-                    spacing: 10, // Horizontal spacing between rooms
-                    runSpacing: 10, // Vertical spacing between rooms
-                    children: List.generate(ICUStatus.length, (index) {
-                      return GestureDetector(
-                        onTap: (ICUStatus[index] == "booked" ||
-                                ICUStatus[index] == "available")
-                            ? null
-                            : () {
-                                // Handle booking or toggling logic
-                              },
-                        child: InkWell(
-                          child: Container(
-                            width: 50,
-                            // Set a fixed width for each room box
-                            height: 60,
-                            // Set a fixed height for each room box
-                            decoration: BoxDecoration(
-                              color: ICUStatus[index] == 'booked'
-                                  ? AppColors.blue
-                                  : ICUStatus[index] == 'available'
-                                      ? AppColors.lightBlue
-                                      : AppColors.roomDisabled,
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Scrollbar(
+                        thumbVisibility: true,
+                        controller: _scrollController3,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          controller: _scrollController3,
+                          child: Row(
+                            children: [
+                              const Text(
+                                'ICU : ',
+                                style: TextStyle(
+                                  fontFamily: 'SanFrancisco',
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 45,
+                              ),
+                              Wrap(
+                                spacing: 10, // Horizontal spacing between rooms
+                                runSpacing:
+                                    10, // Vertical spacing between rooms
+                                children:
+                                    List.generate(ICUStatus.length, (index) {
+                                  return GestureDetector(
+                                    onTap: (ICUStatus[index] == "booked" ||
+                                            ICUStatus[index] == "available")
+                                        ? null
+                                        : () {
+                                            // Handle booking or toggling logic
+                                          },
+                                    child: InkWell(
+                                      child: Container(
+                                        width: 50,
+                                        // Set a fixed width for each room box
+                                        height: 60,
+                                        // Set a fixed height for each room box
+                                        decoration: BoxDecoration(
+                                          color: ICUStatus[index] == 'booked'
+                                              ? AppColors.blue
+                                              : ICUStatus[index] == 'available'
+                                                  ? AppColors.lightBlue
+                                                  : AppColors.roomDisabled,
 
-                              borderRadius: BorderRadius.circular(2),
-                              //border: Border.all(color: Colors.black, width: 1),
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    fontFamily: 'SanFrancisco',
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.bed_sharp,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ],
-                            ),
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                          //border: Border.all(color: Colors.black, width: 1),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '${index + 1}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontFamily: 'SanFrancisco',
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.bed_sharp,
+                                              color: Colors.white,
+                                              size: 30,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        // setState(() {
+                                        //   ICUStatus[index] =
+                                        //       true; // Correctly update the value
+                                        // });
+                                        print('${index + 1} pressed');
+                                      },
+                                      onDoubleTap: () {
+                                        // setState(() {
+                                        //   ICUStatus[index] =
+                                        //       false; // Correctly update the value
+                                        // });
+                                      },
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
-                          onTap: () {
-                            // setState(() {
-                            //   ICUStatus[index] =
-                            //       true; // Correctly update the value
-                            // });
-                            print('${index + 1} pressed');
-                          },
-                          onDoubleTap: () {
-                            // setState(() {
-                            //   ICUStatus[index] =
-                            //       false; // Correctly update the value
-                            // });
-                          },
                         ),
-                      );
-                    }),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
           const SizedBox(
             height: 40,
           ),

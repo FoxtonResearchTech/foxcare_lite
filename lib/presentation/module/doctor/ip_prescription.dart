@@ -1242,13 +1242,13 @@ class _IpPrescription extends State<IpPrescription> {
                   ),
                 );
                 //
-                await Printing.layoutPdf(
-                  onLayout: (format) async => pdf.save(),
-                );
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
+                // );
                 //
-                // // await Printing.sharePdf(
-                // //     bytes: await pdf.save(),
-                // //     filename: '${widget.ipNumber}.pdf');
+                await Printing.sharePdf(
+                    bytes: await pdf.save(),
+                    filename: '${widget.ipNumber}.pdf');
               },
               child: const Text('Print'),
             ),
@@ -1501,8 +1501,8 @@ class _IpPrescription extends State<IpPrescription> {
                                             CircleAvatar(
                                               radius: 18,
                                               backgroundColor: Colors.white,
-                                              backgroundImage: AssetImage(
-                                                  'assets/AI2.png'),
+                                              backgroundImage:
+                                                  AssetImage('assets/AI2.png'),
                                             ),
                                           if (!isUser) SizedBox(width: 8),
 

@@ -755,12 +755,12 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                     ),
                   );
                   //
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
+                  // await Printing.layoutPdf(
+                  //   onLayout: (format) async => pdf.save(),
+                  // );
 
-                  // await Printing.sharePdf(
-                  //     bytes: await pdf.save(), filename: '${opTicketId}.pdf');
+                  await Printing.sharePdf(
+                      bytes: await pdf.save(), filename: '${opTicketId}.pdf');
                 },
                 child: const Text('Print'),
               ),

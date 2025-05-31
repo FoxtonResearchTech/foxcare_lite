@@ -3,6 +3,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/drawer/management/doctor/management_doctor_schedule.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
@@ -41,7 +42,7 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
     'Neurologist'
   ];
   String? selectedSpecialization;
-
+  bool isLoading = false;
   final List<String> counterValues =
       List.generate(5, (index) => (index + 1).toString());
 
@@ -515,43 +516,52 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
               ),
               const SizedBox(height: 30),
               Center(
-                child: InkWell(
-                  onTap: () async {
-                    await saveSchedule();
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 250,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF42A5F5), Color(0xFF1E88E5)],
-                        // Blue gradient
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueAccent.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                child: isLoading
+                    ? SizedBox(
+                        width: screenWidth * 0.2,
+                        height: screenHeight * 0.05,
+                        child: Lottie.asset(
+                          'assets/button_loading.json', // Ensure the file path is correct
+                          fit: BoxFit.contain,
                         ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Create Schedule',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
+                      )
+                    : InkWell(
+                        onTap: () async {
+                          await saveSchedule();
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: 250,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF42A5F5), Color(0xFF1E88E5)],
+                              // Blue gradient
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blueAccent.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Create Schedule',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
               ),
               SizedBox(height: screenHeight * 0.07)
             ],
@@ -562,51 +572,67 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
   }
 
   Future<void> saveSchedule() async {
+    setState(() {
+      isLoading = true;
+    });
+
     if (selectedDoctor == null || selectedCounter == null) {
       CustomSnackBar(context,
           message: 'Please Fill All The Fields',
           backgroundColor: Colors.orange);
+      setState(() => isLoading = false);
       return;
     }
 
     final now = DateTime.now();
-    final today = DateFormat('yyyy-MM-dd').format(now); // '2025-04-07'
+    final today = DateFormat('yyyy-MM-dd').format(now); // e.g., '2025-04-07'
 
-    final scheduleData = {
-      'doctor': selectedDoctor,
-      'specialization': selectedSpecialization ?? '',
-      'morningOpIn': opTime?.format(context),
-      'morningOpOut': outTime?.format(context),
-      'eveningOpIn': opTimeAfternoon?.format(context) ?? '',
-      'eveningOpOut': outTimeAfternoon?.format(context) ?? '',
-      'counter': selectedCounter,
-      'createdAt': FieldValue.serverTimestamp(),
-      'degree': selectedDegree,
-      'date': today,
-    };
+    final collection =
+        FirebaseFirestore.instance.collection('doctorSchedulesDaily');
 
     try {
-      final collection =
-          FirebaseFirestore.instance.collection('doctorSchedulesDaily');
+      final duplicateQuery = await collection
+          .where('counter', isEqualTo: selectedCounter)
+          .where('date', isEqualTo: today)
+          .get();
 
-      // Step 1: Check if all docs are from today
+      if (duplicateQuery.docs.isNotEmpty) {
+        CustomSnackBar(context,
+            message: 'Schedule for this counter already exists today',
+            backgroundColor: Colors.redAccent);
+        setState(() => isLoading = false);
+        return;
+      }
+
       final snapshot = await collection.get();
       bool hasOldData = snapshot.docs.any((doc) => doc['date'] != today);
 
-      // Step 2: If old data exists, delete all docs
       if (hasOldData) {
         for (var doc in snapshot.docs) {
           await doc.reference.delete();
         }
       }
 
-      // Step 3: Add new schedule
+      final scheduleData = {
+        'doctor': selectedDoctor,
+        'specialization': selectedSpecialization ?? '',
+        'morningOpIn': opTime?.format(context),
+        'morningOpOut': outTime?.format(context),
+        'eveningOpIn': opTimeAfternoon?.format(context) ?? '',
+        'eveningOpOut': outTimeAfternoon?.format(context) ?? '',
+        'counter': selectedCounter,
+        'createdAt': FieldValue.serverTimestamp(),
+        'degree': selectedDegree,
+        'date': today,
+      };
+
       await collection.add(scheduleData);
 
       CustomSnackBar(context,
           message: 'Schedule Added Successfully',
           backgroundColor: Colors.green);
 
+      // 🧹 Reset form state
       setState(() {
         selectedDoctor = null;
         selectedSpecialization = null;
@@ -615,10 +641,12 @@ class _AddDoctorScheduleState extends State<AddDoctorSchedule> {
         opTimeAfternoon = null;
         outTimeAfternoon = null;
         specializationController.clear();
+        isLoading = false;
       });
     } catch (e) {
       CustomSnackBar(context,
           message: 'Failed To Save', backgroundColor: Colors.red);
+      setState(() => isLoading = false);
     }
   }
 }

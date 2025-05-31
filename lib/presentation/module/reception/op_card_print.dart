@@ -249,14 +249,14 @@ class _OpCardPrint extends State<OpCardPrint> {
                     },
                   ),
                 );
-                await Printing.layoutPdf(
-                  onLayout: (format) async => pdf.save(),
-                );
-
-                // await Printing.sharePdf(
-                //   bytes: await pdf.save(),
-                //   filename: '${data['opNumber']}.pdf',
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
                 // );
+
+                await Printing.sharePdf(
+                  bytes: await pdf.save(),
+                  filename: '${data['opNumber']}.pdf',
+                );
               },
               child: const CustomText(text: 'Print'),
             )

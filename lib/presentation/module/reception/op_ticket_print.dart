@@ -629,12 +629,14 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                         ),
                       );
                       //
-                      await Printing.layoutPdf(
-                        onLayout: (format) async => pdf.save(),
-                      );
+                      // await Printing.layoutPdf(
+                      //   onLayout: (format) async => pdf.save(),
+                      // );
 
-                      // await Printing.sharePdf(
-                      //     bytes: await pdf.save(), filename: '${opTicketId}.pdf');
+                      await Printing.sharePdf(
+                          bytes: await pdf.save(),
+                          filename:
+                              '${opTicketData['opTicket'].toString()}.pdf');
                     },
                     child: CustomText(text: 'Print'),
                   ),

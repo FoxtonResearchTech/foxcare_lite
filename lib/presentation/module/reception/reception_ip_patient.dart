@@ -795,6 +795,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                     Text(
                                       '${index + 1}',
                                       style: TextStyle(
+                                        color: Colors.white,
                                         fontFamily: 'SanFrancisco',
                                       ),
                                     ),
@@ -879,6 +880,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                     Text(
                                       '${index + 1}',
                                       style: TextStyle(
+                                        color: Colors.white,
                                         fontFamily: 'SanFrancisco',
                                       ),
                                     ),
@@ -960,6 +962,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                     Text(
                                       '${index + 1}',
                                       style: TextStyle(
+                                        color: Colors.white,
                                         fontFamily: 'SanFrancisco',
                                       ),
                                     ),
@@ -1044,6 +1047,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                                     Text(
                                       '${index + 1}',
                                       style: TextStyle(
+                                        color: Colors.white,
                                         fontFamily: 'SanFrancisco',
                                       ),
                                     ),
@@ -1132,6 +1136,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                               Text(
                                 '${index + 1}',
                                 style: TextStyle(
+                                  color: Colors.white,
                                   fontFamily: 'SanFrancisco',
                                 ),
                               ),
@@ -1217,6 +1222,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                               Text(
                                 '${index + 1}',
                                 style: TextStyle(
+                                  color: Colors.white,
                                   fontFamily: 'SanFrancisco',
                                 ),
                               ),
@@ -1299,6 +1305,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                               Text(
                                 '${index + 1}',
                                 style: TextStyle(
+                                  color: Colors.white,
                                   fontFamily: 'SanFrancisco',
                                 ),
                               ),
@@ -1384,6 +1391,7 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
                               Text(
                                 '${index + 1}',
                                 style: TextStyle(
+                                  color: Colors.white,
                                   fontFamily: 'SanFrancisco',
                                 ),
                               ),

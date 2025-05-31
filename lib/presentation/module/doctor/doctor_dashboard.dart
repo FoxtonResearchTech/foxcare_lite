@@ -294,7 +294,7 @@ class _DoctorDashboard extends State<DoctorDashboard> {
       await Future.delayed(const Duration(milliseconds: 100)); // Add delay
     }
 
-    tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
+    tokenData.sort((a, b) => b['tokenNumber'].compareTo(a['tokenNumber']));
     for (var item in tokenData) {
       fetchedData.add(item['display']);
     }
@@ -400,6 +400,9 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     }
   }
 
+  List<StreamSubscription> refreshListeners = [];
+  Map<String, bool> hasFetchedOnce = {};
+
   @override
   void initState() {
     super.initState();
@@ -409,12 +412,34 @@ class _DoctorDashboard extends State<DoctorDashboard> {
     getLabOp();
     fetchCounterOneData();
     _showTablesWithDelay();
+    final refreshDocs = ['opTicketRefresh'];
+
+    for (var docId in refreshDocs) {
+      hasFetchedOnce[docId] = false;
+
+      var sub = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc(docId)
+          .snapshots()
+          .listen((event) {
+        if (hasFetchedOnce[docId] == true) {
+          fetchCounterOneData();
+        } else {
+          hasFetchedOnce[docId] = true;
+        }
+      });
+
+      refreshListeners.add(sub);
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
-    _timer?.cancel();
+    for (var sub in refreshListeners) {
+      sub.cancel();
+    }
+    refreshListeners.clear();
   }
 
   @override

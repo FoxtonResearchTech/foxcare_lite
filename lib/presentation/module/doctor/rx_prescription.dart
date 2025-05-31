@@ -1161,13 +1161,13 @@ class _RxPrescription extends State<RxPrescription> {
                   ),
                 );
                 //
-                await Printing.layoutPdf(
-                  onLayout: (format) async => pdf.save(),
-                );
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
+                // );
 
-                // await Printing.sharePdf(
-                //     bytes: await pdf.save(),
-                //     filename: '${widget.opTicket}.pdf');
+                await Printing.sharePdf(
+                    bytes: await pdf.save(),
+                    filename: '${widget.opTicket}.pdf');
               },
               child: const Text('Print'),
             ),
@@ -2642,8 +2642,8 @@ class _RxPrescription extends State<RxPrescription> {
                                             CircleAvatar(
                                               radius: 18,
                                               backgroundColor: Colors.white,
-                                              backgroundImage: AssetImage(
-                                                  'assets/AI2.png'),
+                                              backgroundImage:
+                                                  AssetImage('assets/AI2.png'),
                                             ),
                                           if (!isUser) SizedBox(width: 8),
 

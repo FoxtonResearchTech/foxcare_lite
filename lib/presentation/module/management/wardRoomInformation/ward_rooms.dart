@@ -4,6 +4,9 @@ import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/ward_room_information/ward_room_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 
+import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
+
 class WardRooms extends StatefulWidget {
   @override
   State<WardRooms> createState() => _WardRooms();
@@ -175,19 +178,35 @@ class _WardRooms extends State<WardRooms> {
               ),
             ],
           ),
-          const Row(
+          Row(
             children: [
-              Text(
+              const Text(
                 'Rooms / Ward Availability',
                 style: TextStyle(
                     fontFamily: 'SanFrancisco',
                     fontSize: 18,
                     fontWeight: FontWeight.normal),
               ),
+              const Spacer(),
+              Column(
+                children: [
+                  CustomButton(
+                    label: 'Refresh',
+                    onPressed: () async {
+                      RefreshLoading(
+                        context: context,
+                        task: () async => await fetchRoomData(),
+                      );
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenHeight * 0.06,
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(
-            height: 15,
+            height: 20,
           ),
           roomLoading
               ? Center(
