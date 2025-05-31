@@ -6,6 +6,7 @@ import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/doctor/doctor_module_drawer.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
+import '../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 
 class DoctorRoomAvailabilityCheck extends StatefulWidget {
   @override
@@ -174,7 +175,7 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
               ),
             ],
           ),
-          const Row(
+         Row(
             children: [
               Text(
                 'Rooms / Ward Availability',
@@ -183,10 +184,28 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
                     fontSize: 18,
                     fontWeight: FontWeight.normal),
               ),
+              Spacer(),
+              Column(
+
+                children: [
+
+                  CustomButton(
+                    label: 'Refresh',
+                    onPressed: () async {
+                      RefreshLoading(
+                        context: context,
+                        task: () async => await fetchRoomData(),
+                      );
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenHeight * 0.06,
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(
-            height: 15,
+            height: 30,
           ),
           Scrollbar(
             controller: _scrollController, // Attach the ScrollController

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/doctor/doctor_rx_list.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -310,6 +311,24 @@ class _PharmacyStocks extends State<PharmacyStocks> {
                     onPressed: filterProducts,
                     height: screenWidth * 0.03,
                     width: screenWidth * 0.1,
+                  ),
+                  Spacer(),
+                  Column(
+
+                    children: [
+
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: screenWidth * 0.03,
+                        width: screenWidth * 0.1,
+                      ),
+                    ],
                   ),
                 ],
               ),

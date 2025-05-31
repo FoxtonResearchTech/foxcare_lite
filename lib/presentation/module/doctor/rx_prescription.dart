@@ -2643,7 +2643,7 @@ class _RxPrescription extends State<RxPrescription> {
                                               radius: 18,
                                               backgroundColor: Colors.white,
                                               backgroundImage: AssetImage(
-                                                  'assets/fox_doc.png'),
+                                                  'assets/AI2.png'),
                                             ),
                                           if (!isUser) SizedBox(width: 8),
 
@@ -2890,7 +2890,7 @@ class _RxPrescription extends State<RxPrescription> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             image: DecorationImage(
-              image: AssetImage('assets/fox_doc.png'),
+              image: AssetImage('assets/AI2.png'),
               fit: BoxFit.cover,
             ),
           ),
