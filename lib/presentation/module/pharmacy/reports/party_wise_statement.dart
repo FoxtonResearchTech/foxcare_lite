@@ -33,6 +33,7 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
   final List<String> headers = [
     'Bill NO',
     'Bill Date',
+    'Distributor Name',
     'Bill Value',
     'Open Bill',
   ];
@@ -155,7 +156,7 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
             'Distributor Name': data['distributor']?.toString() ?? 'N/A',
             'Bill Value': data['netTotalAmount']?.toString() ?? 'N/A',
             'Open Bill': TextButton(
-              onPressed: () {
+              onPressed: () async {
                 for (var product in data['entryProducts']) {
                   tableData2.add({
                     'Product Name': product['Product Name'],
@@ -196,7 +197,6 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
                                   SingleChildScrollView(
                                       child: Container(
                                     width: 850,
-                                    height: 200,
                                     child: Column(children: [
                                       CustomDataTable(
                                           headers: headers2,
@@ -245,7 +245,7 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
 
         // Update table after each batch
         setState(() {
-          tableData.addAll(batchData);
+          tableData = List.from(batchData);
           calculateTotals();
         });
 
@@ -292,21 +292,32 @@ class _PartyWiseStatement extends State<PartyWiseStatement> {
               TimeDateWidget(text: 'Party Wise Statement'),
               Row(
                 children: [
-                  SizedBox(
-                    width: screenWidth * 0.15,
-                    child: PharmacyDropDown(
-                      label: 'Distributor',
-                      items: distributorsNames,
-                      selectedItem: selectedDistributor,
-                      onChanged: (value) {
-                        setState(
-                          () {
-                            selectedDistributor = value;
-                            fetchData(distributor: selectedDistributor);
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Distributor',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      SizedBox(
+                        width: screenWidth * 0.15,
+                        child: PharmacyDropDown(
+                          label: '',
+                          items: distributorsNames,
+                          selectedItem: selectedDistributor,
+                          onChanged: (value) {
+                            setState(
+                              () {
+                                selectedDistributor = value;
+                                fetchData(distributor: selectedDistributor);
+                                calculateTotals();
+                              },
+                            );
                           },
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

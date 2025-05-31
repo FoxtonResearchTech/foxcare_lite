@@ -9,6 +9,7 @@ import 'package:foxcare_lite/utilities/widgets/drawer/management/user_informatio
 
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
@@ -1078,14 +1079,31 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CustomButton(
-                        label: 'Create',
-                        onPressed: () async {
-                          await registerEmployee();
-                        },
-                        width: screenWidth * 0.08,
-                        height: screenHeight * 0.05,
-                      ),
+                      isLoading
+                          ? SizedBox(
+                              width: screenWidth * 0.2,
+                              height: screenHeight * 0.05,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure the file path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Create',
+                              onPressed: () async {
+                                if (emailController.text.isEmpty &&
+                                    passwordController.text.isEmpty) {
+                                  CustomSnackBar(context,
+                                      message:
+                                          'Make Sure You Have Entered Email & Password',
+                                      backgroundColor: Colors.orange);
+                                  return;
+                                }
+                                await registerEmployee();
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.05,
+                            ),
                     ],
                   ),
                 ],

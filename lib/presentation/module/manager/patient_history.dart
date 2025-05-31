@@ -166,9 +166,9 @@ class _PatientHistory extends State<PatientHistory> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
-                      : Colors.transparent;
+                  return row['Status'] == 'abscond'
+                      ? Colors.red.shade300
+                      : Colors.grey.shade200;
                 },
               ),
               SizedBox(height: screenHeight * 0.08),

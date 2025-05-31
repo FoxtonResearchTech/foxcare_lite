@@ -16,6 +16,7 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../tools/manage_pharmacy_info.dart';
 
 class DeleteProduct extends StatefulWidget {
@@ -141,7 +142,7 @@ class _DeleteProduct extends State<DeleteProduct> {
 
         // Update the UI incrementally after each batch
         setState(() {
-          allProducts.addAll(allFetchedData);
+          allProducts = List.from(allFetchedData);
           filteredProducts = List.from(allProducts);
         });
 
@@ -206,66 +207,123 @@ class _DeleteProduct extends State<DeleteProduct> {
               TimeDateWidget(text: 'Delete Product'),
               Row(
                 children: [
-                  PharmacyDropDown(
-                    label: 'Select Category',
-                    items: const [
-                      'Tablets',
-                      'Capsules',
-                      'Powders',
-                      'Solutions',
-                      'Suspensions',
-                      'Topical Medicines',
-                      'Suppository',
-                      'Injections',
-                      'Inhales',
-                      'Patches',
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Select Category',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      PharmacyDropDown(
+                        label: '',
+                        items: const [
+                          'Tablets',
+                          'Capsules',
+                          'Powders',
+                          'Solutions',
+                          'Suspensions',
+                          'Topical Medicines',
+                          'Suppository',
+                          'Injections',
+                          'Inhales',
+                          'Patches',
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCategory = value;
+                          });
+                          filterProducts();
+                        },
+                      ),
                     ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value;
-                      });
-                      filterProducts();
-                    },
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 children: [
-                  PharmacyTextField(
-                    hintText: 'Product Name',
-                    width: screenWidth * 0.20,
-                    onChanged: (value) {
-                      productName = value;
-                      filterProducts();
-                    },
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Product Name',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.20,
+                        onChanged: (value) {
+                          productName = value;
+                          filterProducts();
+                        },
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  PharmacyTextField(
-                    hintText: 'Company Name',
-                    width: screenWidth * 0.20,
-                    onChanged: (value) {
-                      companyName = value;
-                      filterProducts();
-                    },
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Company Name',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      PharmacyTextField(
+                        hintText: '',
+                        width: screenWidth * 0.20,
+                        onChanged: (value) {
+                          companyName = value;
+                          filterProducts();
+                        },
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  isFiltering
-                      ? SizedBox(
-                          width: screenWidth * 0.08,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.035),
+                      isFiltering
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              label: 'Search',
+                              onPressed: filterProducts,
+                              width: screenWidth * 0.1,
+                              height: screenHeight * 0.045,
                             ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.07),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.035),
+                      Row(
+                        children: [
+                          SizedBox(width: screenWidth * 0.11),
+                          PharmacyButton(
+                            label: 'Refresh',
+                            onPressed: () async {
+                              RefreshLoading(
+                                context: context,
+                                task: () async => await fetchData(),
+                              );
+                            },
+                            width: screenWidth * 0.08,
+                            height: screenHeight * 0.04,
                           ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: filterProducts,
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                        ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),

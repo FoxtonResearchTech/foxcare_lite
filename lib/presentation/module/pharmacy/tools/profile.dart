@@ -72,82 +72,104 @@ class _Profile extends State<Profile> {
                     child: TimeDateWidget(text: 'Profile'),
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Avatar Section
                       Container(
                         width: screenWidth * 0.25,
                         height: screenHeight * 0.25,
                         child: const CircleAvatar(
                           backgroundImage: AssetImage('assets/splash.png'),
+                          radius: 80,
                         ),
                       ),
-                      Column(
-                        children: [
-                          CustomText(
-                            text: 'Pharmacist Details',
-                            size: screenWidth * 0.013,
-                          ),
-                          SizedBox(height: screenHeight * 0.05),
-                          Row(
-                            children: [
-                              CustomTextField(
-                                readOnly: true,
-                                controller: TextEditingController(
-                                    text: user['firstName'].toString() +
-                                            user['lastName'].toString() ??
-                                        ''),
-                                hintText: 'Name',
-                                width: screenWidth * 0.25,
-                              ),
-                              SizedBox(width: screenHeight * 0.66),
-                            ],
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                          Row(
-                            children: [
-                              CustomTextField(
-                                readOnly: true,
-                                controller: TextEditingController(
-                                    text: user['qualification']?['ug']
-                                                ?['degree']
-                                            .toString() ??
-                                        ''),
-                                hintText: 'Qualification',
-                                width: screenWidth * 0.25,
-                              ),
-                              SizedBox(width: screenHeight * 0.2),
-                              CustomTextField(
-                                readOnly: true,
-                                controller: TextEditingController(
-                                    text: user['sex'] ?? ''),
-                                hintText: 'Gender',
-                                width: screenWidth * 0.25,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                          Row(
-                            children: [
-                              CustomTextField(
-                                readOnly: true,
-                                controller: TextEditingController(
-                                    text: user['address']?['permanent']
-                                            ?['city'] ??
-                                        ''),
-                                hintText: 'Place',
-                                width: screenWidth * 0.25,
-                              ),
-                              SizedBox(width: screenHeight * 0.2),
-                              CustomTextField(
-                                readOnly: true,
-                                controller: TextEditingController(
-                                    text: user['dob'] ?? ''),
-                                hintText: 'Date of Birth',
-                                width: screenWidth * 0.25,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                        ],
+                      SizedBox(width: screenWidth * 0.03),
+
+                      // Details Section
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomText(
+                              text: 'Pharmacist Details',
+                              size: screenWidth * 0.018,
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // Name Row
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Name : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text:
+                                      '${user['firstName'] ?? 'N/A'} ${user['lastName'] ?? 'N/A'}',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // Qualification and Gender Row
+                            Row(
+                              children: [
+                                // Qualification
+                                CustomText(
+                                  text: 'Qualification : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['qualification']?['ug']?['degree']
+                                          ?.toString() ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                                SizedBox(width: screenWidth * 0.1),
+
+                                // Gender
+                                CustomText(
+                                  text: 'Gender : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['gender']?.toString() ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // Address and DOB Row
+                            Row(
+                              children: [
+                                // Qualification
+                                CustomText(
+                                  text: 'Place : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['city'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                                SizedBox(width: screenWidth * 0.1),
+
+                                // Gender
+                                CustomText(
+                                  text: 'DOB : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['dob']?.toString() ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -155,138 +177,200 @@ class _Profile extends State<Profile> {
               ),
             ),
             Container(
-                padding: EdgeInsets.only(
-                  top: screenHeight * 0.05,
-                  left: screenWidth * 0.08,
-                  right: screenWidth * 0.08,
-                  bottom: screenWidth * 0.05,
-                ),
-                child: Column(
-                  children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CustomText(text: 'Communication Address'),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.04),
-                    Row(
-                      children: [
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['address']?['permanent']?['lane1'] ??
-                                  ''),
-                          hintText: 'Lane 1',
-                          width: screenWidth * 0.25,
+              padding: EdgeInsets.only(
+                top: screenHeight * 0.05,
+                left: screenWidth * 0.1,
+                right: screenWidth * 0.08,
+                bottom: screenHeight * 0.05,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CustomText(
+                    text: 'Communication Address',
+                    size: screenWidth * 0.018,
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Column
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Lane 1 : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['lane1'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Lane 2 : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['lane2'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Landmark : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['landmark'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'City : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['city'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'E-Mail ID : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['email'] ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Relation Type : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['relationType'] ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        SizedBox(width: screenHeight * 0.2),
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['address']?['permanent']?['lane2'] ??
-                                  ''),
-                          hintText: 'Lane 2',
-                          width: screenWidth * 0.25,
+                      ),
+
+                      SizedBox(width: screenWidth * 0.05),
+
+                      // Right Column
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'State : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['state'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Pincode : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['address']?['permanent']
+                                          ?['pincode'] ??
+                                      'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Phone Number 1 : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['phone1'] ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Phone Number 2 : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['phone2'] ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Row(
+                              children: [
+                                CustomText(
+                                  text: 'Guardian Name : ',
+                                  size: screenWidth * 0.012,
+                                ),
+                                CustomText(
+                                  text: user['relationName'] ?? 'N/A',
+                                  size: screenWidth * 0.012,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Row(
-                      children: [
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['address']?['permanent']
-                                      ?['landmark'] ??
-                                  ''),
-                          hintText: 'Landmark',
-                          width: screenWidth * 0.61,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Row(
-                      children: [
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text:
-                                  user['address']?['permanent']?['city'] ?? ''),
-                          hintText: 'City',
-                          width: screenWidth * 0.20,
-                        ),
-                        SizedBox(width: screenHeight * 0.1),
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['address']?['permanent']?['state'] ??
-                                  ''),
-                          hintText: 'State',
-                          width: screenWidth * 0.20,
-                        ),
-                        SizedBox(width: screenHeight * 0.1),
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['address']?['permanent']?['pincode'] ??
-                                  ''),
-                          hintText: 'Pin code',
-                          width: screenWidth * 0.20,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Row(
-                      children: [
-                        CustomTextField(
-                          readOnly: true,
-                          controller:
-                              TextEditingController(text: user['email'] ?? ''),
-                          hintText: 'E-Mail ID',
-                          width: screenWidth * 0.20,
-                        ),
-                        SizedBox(width: screenHeight * 0.1),
-                        CustomTextField(
-                          readOnly: true,
-                          controller:
-                              TextEditingController(text: user['phone1'] ?? ''),
-                          hintText: 'Phone Number 1',
-                          width: screenWidth * 0.20,
-                        ),
-                        SizedBox(width: screenHeight * 0.1),
-                        CustomTextField(
-                          readOnly: true,
-                          controller:
-                              TextEditingController(text: user['phone2'] ?? ''),
-                          hintText: 'Phone Number 2',
-                          width: screenWidth * 0.20,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.02),
-                    Row(
-                      children: [
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['relationName'] ?? ''),
-                          hintText: 'Parents/Guardian Name',
-                          width: screenWidth * 0.20,
-                        ),
-                        SizedBox(width: screenHeight * 0.1),
-                        CustomTextField(
-                          readOnly: true,
-                          controller: TextEditingController(
-                              text: user['relationType'] ?? ''),
-                          hintText: 'RelationType',
-                          width: screenWidth * 0.20,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: screenHeight * 0.05),
-                  ],
-                ))
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

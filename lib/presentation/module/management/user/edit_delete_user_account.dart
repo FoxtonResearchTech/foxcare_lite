@@ -10,6 +10,7 @@ import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/user_information/user_information_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
@@ -1185,58 +1186,58 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    showDialog(
+                    final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Deletion Confirmation'),
-                          content: Container(
-                            width: 100,
-                            height: 25,
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                CustomText(
-                                    text: 'Are you sure you want to delete ?'),
-                              ],
+                      builder: (context) => AlertDialog(
+                        title: Row(
+                          children: const [
+                            Icon(Icons.warning_amber_rounded,
+                                color: Colors.redAccent),
+                            SizedBox(width: 8),
+                            Text('Confirm Deletion'),
+                          ],
+                        ),
+                        content: const Text(
+                          'Are you sure you want to delete employee details?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                            ),
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text(
+                              'Confirm',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
-                          actions: <Widget>[
-                            TextButton(
-                                onPressed: () async {
-                                  try {
-                                    await FirebaseFirestore.instance
-                                        .collection('employees')
-                                        .doc(data['docId'])
-                                        .delete();
-
-                                    CustomSnackBar(context,
-                                        message: 'Employee Details Deleted',
-                                        backgroundColor: Colors.green);
-                                  } catch (e) {
-                                    print(
-                                        'Error updating status for patient ${data['patientID']}: $e');
-                                    CustomSnackBar(context,
-                                        message:
-                                            'Failed To Delete Employee Details',
-                                        backgroundColor: Colors.red);
-                                  }
-                                  Navigator.pop(context);
-                                },
-                                child: CustomText(
-                                  text: 'Delete',
-                                  color: Colors.red,
-                                )),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: CustomText(text: 'Close'),
-                            ),
-                          ],
-                        );
-                      },
+                        ],
+                      ),
                     );
+
+                    if (confirmed == true) {
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('employees')
+                            .doc(data['docId'])
+                            .delete();
+
+                        CustomSnackBar(context,
+                            message: 'Employee Details Deleted',
+                            backgroundColor: Colors.green);
+                        await fetchData();
+                      } catch (e) {
+                        print(
+                            'Error updating status for patient ${data['patientID']}: $e');
+                        CustomSnackBar(context,
+                            message: 'Failed To Delete Employee Details',
+                            backgroundColor: Colors.red);
+                      }
+                    }
                   },
                   child: const CustomText(text: 'Delete'),
                 ),
@@ -1443,6 +1444,23 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                               width: screenWidth * 0.08,
                               height: screenWidth * 0.02,
                             ),
+                    ],
+                  ),
+                  SizedBox(width: screenHeight * 0.25),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.03),
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        width: screenWidth * 0.08,
+                        height: screenWidth * 0.02,
+                      ),
                     ],
                   ),
                 ],

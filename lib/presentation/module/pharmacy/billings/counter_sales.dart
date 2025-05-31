@@ -595,12 +595,12 @@ class _CounterSales extends State<CounterSales> {
                   ),
                 );
 
-                await Printing.layoutPdf(
-                  onLayout: (format) async => pdf.save(),
-                );
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
+                // );
 
-                // await Printing.sharePdf(
-                //     bytes: await pdf.save(), filename: '${billNO}.pdf');
+                await Printing.sharePdf(
+                    bytes: await pdf.save(), filename: '${billNO}.pdf');
               },
               style: TextButton.styleFrom(
                 foregroundColor: Colors.teal,

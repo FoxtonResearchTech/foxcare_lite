@@ -13,6 +13,7 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
@@ -303,8 +304,8 @@ class _GeneralInformationIpAdmission
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            left: screenWidth * 0.04,
-            right: screenWidth * 0.04,
+            left: screenWidth * 0.02,
+            right: screenWidth * 0.02,
             bottom: screenWidth * 0.33,
           ),
           child: Column(
@@ -441,6 +442,23 @@ class _GeneralInformationIpAdmission
                             ),
                     ],
                   ),
+                  SizedBox(width: screenHeight * 0.15),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.0225),
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: buttonHeight,
+                        width: buttonWidth,
+                      ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
@@ -450,8 +468,8 @@ class _GeneralInformationIpAdmission
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
+                  return row['Status'] == 'abscond'
+                      ? Colors.red.shade300
                       : Colors.transparent;
                 },
               ),

@@ -441,7 +441,7 @@ class _IpBilling extends State<IpBilling> {
                     return Colors.red.shade300;
                   }
 
-                  return Colors.transparent;
+                  return Colors.grey.shade200;
                 },
               ),
               SizedBox(height: screenHeight * 0.05),

@@ -68,6 +68,7 @@ class _PatientInfoState extends State<PatientInfo> {
   String? selectedSex;
   String? selectedBloodGroup;
   bool isEditing = false;
+  bool isUpdating = false;
   final TextEditingController firstname = TextEditingController();
   final TextEditingController lastname = TextEditingController();
   final TextEditingController middlename = TextEditingController();
@@ -125,12 +126,26 @@ class _PatientInfoState extends State<PatientInfo> {
 
   Future<void> updatePatientDetails() async {
     if (widget.opNumberEdit == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error: Patient ID is missing")),
-      );
+      CustomSnackBar(context,
+          message: 'Patient ID is Missing', backgroundColor: Colors.red);
       return;
     }
-
+    if (firstname.text.isEmpty ||
+        lastname.text.isEmpty ||
+        selectedSex == null ||
+        age.text.isEmpty ||
+        dob.text.isEmpty ||
+        address1.text.isEmpty ||
+        landmark.text.isEmpty ||
+        city.text.isEmpty ||
+        state.text.isEmpty ||
+        pincode.text.isEmpty ||
+        phone1.text.isEmpty) {
+      CustomSnackBar(context,
+          message: 'Please Fill Required Fields',
+          backgroundColor: Colors.orange);
+      return;
+    }
     Map<String, dynamic> updatedData = {
       'firstName': firstname.text,
       'middleName': middlename.text,
@@ -370,14 +385,14 @@ class _PatientInfoState extends State<PatientInfo> {
                       },
                     ),
                   );
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
+                  // await Printing.layoutPdf(
+                  //   onLayout: (format) async => pdf.save(),
+                  // );
 
                   //
-                  // await Printing.sharePdf(
-                  //     bytes: await pdf.save(),
-                  //     filename: '${widget.opNumberEdit}.pdf');
+                  await Printing.sharePdf(
+                      bytes: await pdf.save(),
+                      filename: '${widget.opNumberEdit}.pdf');
                 },
                 child: CustomText(
                   text: 'Print',
