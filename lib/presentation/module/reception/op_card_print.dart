@@ -147,7 +147,7 @@ class _OpCardPrint extends State<OpCardPrint> {
                                   mainAxisAlignment: pw.MainAxisAlignment.end,
                                   children: [
                                     pw.Text(
-                                      'ABC Hospital',
+                                      Constants.hospitalName,
                                       style: pw.TextStyle(
                                         fontSize: 14,
                                         font: ttf,

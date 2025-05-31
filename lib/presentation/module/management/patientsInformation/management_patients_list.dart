@@ -89,16 +89,18 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
           final data = doc.data() as Map<String, dynamic>;
           final docRef = doc.reference;
 
+          // Manual case-insensitive opNumber check
+          if (opNumber != null &&
+              opNumber.isNotEmpty &&
+              (data['opNumber'] == null ||
+                  data['opNumber'].toString().toLowerCase() !=
+                      opNumber.toLowerCase())) {
+            continue;
+          }
+
+          // Fetch opTickets
           final opTicketsSnapshot = await docRef.collection('opTickets').get();
           for (var opDoc in opTicketsSnapshot.docs) {
-            if (opNumber != null && opNumber.isNotEmpty) {
-              if (opNumber.isNotEmpty &&
-                  (opDoc.data()['opTicket']?.toString().toLowerCase() !=
-                      opNumber.toLowerCase())) {
-                continue;
-              }
-            }
-
             allFetchedData.add({
               'Patient ID': data['opNumber'] ?? 'N/A',
               'OP / IP Ticket': opDoc.id,
@@ -112,16 +114,9 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
             });
           }
 
+          // Fetch ipTickets
           final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
           for (var ipDoc in ipTicketsSnapshot.docs) {
-            if (opNumber != null && opNumber.isNotEmpty) {
-              if (opNumber.isNotEmpty &&
-                  (ipDoc.data()['ipTicket']?.toString().toLowerCase() !=
-                      opNumber.toLowerCase())) {
-                continue;
-              }
-            }
-
             allFetchedData.add({
               'Patient ID': data['opNumber'] ?? 'N/A',
               'OP / IP Ticket': ipDoc.id,
@@ -140,7 +135,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
         setState(() {
           tableData1 = List.from(allFetchedData);
         });
-        // Optional throttle delay
+
         await Future.delayed(delayBetweenPages);
       }
 
@@ -246,13 +241,13 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(
-                        text: 'Ticket Number ',
+                        text: 'OP Number ',
                         size: screenWidth * 0.01,
                       ),
                       SizedBox(height: screenHeight * 0.01),
@@ -342,7 +337,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'
                       ? Colors.red.shade200
-                      : Colors.transparent;
+                      : Colors.grey.shade200;
                 },
               ),
               SizedBox(height: screenHeight * 0.08),

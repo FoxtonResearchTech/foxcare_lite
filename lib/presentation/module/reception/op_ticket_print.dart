@@ -97,7 +97,8 @@ class _OpTicketPrint extends State<OpTicketPrint> {
             if (patientData['isIP'] == false) {
               if (opNumber != null &&
                   opTicketData['opTicket'] != null &&
-                  opTicketData['opTicket'].toString().toLowerCase() == opNumber.toLowerCase()) {
+                  opTicketData['opTicket'].toString().toLowerCase() ==
+                      opNumber.toLowerCase()) {
                 matches = true;
               } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
                 if (patientData['phone1'] == phoneNumber ||
@@ -195,7 +196,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                                             pw.MainAxisAlignment.end,
                                         children: [
                                           pw.Text(
-                                            'ABC Hospital',
+                                            Constants.hospitalName,
                                             style: pw.TextStyle(
                                               fontSize: 30,
                                               font: ttf,
@@ -757,12 +758,13 @@ class _OpTicketPrint extends State<OpTicketPrint> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: 'OP Number'),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -774,29 +776,30 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isOpLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Ensure this path is correct
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure this path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isOpLoading = true);
-                          await fetchData(opNumber: _patientID.text);
-                          setState(() => isOpLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isOpLoading = true);
+                                await fetchData(opNumber: _patientID.text);
+                                setState(() => isOpLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
-
                   SizedBox(width: screenHeight * 0.05),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -812,29 +815,30 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isPhoneLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Update the path to your Lottie file
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Update the path to your Lottie file
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isPhoneLoading = true);
-                          await fetchData(phoneNumber: _phoneNumber.text);
-                          setState(() => isPhoneLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isPhoneLoading = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => isPhoneLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
-
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),

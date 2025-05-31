@@ -351,7 +351,7 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
       }
 
       // Step 3: Sort token data by token number
-      tokenData.sort((a, b) => a['tokenNumber'].compareTo(b['tokenNumber']));
+      tokenData.sort((a, b) => b['tokenNumber'].compareTo(a['tokenNumber']));
 
       for (var item in tokenData) {
         fetchedData.add(item['display']);
@@ -493,6 +493,9 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     }
   }
 
+  List<StreamSubscription> refreshListeners = [];
+  Map<String, bool> hasFetchedOnce = {};
+
   @override
   void initState() {
     super.initState();
@@ -506,12 +509,38 @@ class _ReceptionDashboardState extends State<ReceptionDashboard> {
     fetchCounterData(4);
     fetchCounterData(5);
     _showTablesWithDelay();
+    final refreshDocs = ['opTicketRefresh'];
+
+    for (var docId in refreshDocs) {
+      hasFetchedOnce[docId] = false;
+
+      var sub = FirebaseFirestore.instance
+          .collection('refresh')
+          .doc(docId)
+          .snapshots()
+          .listen((event) {
+        if (hasFetchedOnce[docId] == true) {
+          fetchCounterData(1);
+          fetchCounterData(2);
+          fetchCounterData(3);
+          fetchCounterData(4);
+          fetchCounterData(5);
+        } else {
+          hasFetchedOnce[docId] = true;
+        }
+      });
+
+      refreshListeners.add(sub);
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
-    _timer?.cancel();
+    for (var sub in refreshListeners) {
+      sub.cancel();
+    }
+    refreshListeners.clear();
   }
 
   @override

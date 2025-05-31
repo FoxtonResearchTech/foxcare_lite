@@ -200,7 +200,7 @@ class _CancelBill extends State<CancelBill> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.redAccent,
                               ),
-                              onPressed: () => true,
+                              onPressed: () => Navigator.of(context).pop(true),
                               child: const Text(
                                 'Confirm',
                                 style: TextStyle(color: Colors.white),
@@ -962,7 +962,7 @@ class _CancelBill extends State<CancelBill> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.redAccent,
                               ),
-                              onPressed: () => true,
+                              onPressed: () => Navigator.of(context).pop(true),
                               child: const Text(
                                 'Confirm',
                                 style: TextStyle(color: Colors.white),
