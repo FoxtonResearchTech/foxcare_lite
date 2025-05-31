@@ -34,6 +34,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
 
   String? selectedSex;
   bool isLoading = false;
+
   // Controllers for employee details
   final TextEditingController empCodeController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
@@ -99,6 +100,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
   }
 
   bool isDoc = false;
+
   void isDoctor(String value) {
     setState(() {
       isDoc = value == 'Doctor';
@@ -125,9 +127,14 @@ class _UserAccountCreation extends State<UserAccountCreation> {
       isLoading = true;
     });
     try {
+      String email = emailController.text.trim();
+      if (!email.endsWith('@gmail.com')) {
+        email += '@gmail.com';
+      }
+
       UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email, // ✅ Use the modified email here
         password: passwordController.text.trim(),
       );
 
@@ -141,12 +148,15 @@ class _UserAccountCreation extends State<UserAccountCreation> {
             .doc(docId)
             .set({
               'docId': docId, // Store the document ID
-              'empCode': empCodeController.text,
+              'empCode': emailController.text.endsWith('@gmail.com')
+                  ? emailController.text
+                  : '${emailController.text}@gmail.com',
+
               'firstName': firstNameController.text,
               'lastName': lastNameController.text,
               'relationName': relationNameController.text,
               'relationType': relationSelectedValue,
-              'email': emailController.text,
+              'email': empCodeController.text,
               'password': passwordController.text,
               'phone1': phone1Controller.text,
               'phone2': phone2Controller.text,
@@ -371,7 +381,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                           CustomTextField(
                             hintText: '',
                             width: screenWidth * 0.25,
-                            controller: empCodeController,
+                            controller: emailController,
                           ),
                         ],
                       ),
@@ -670,7 +680,7 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                           CustomTextField(
                             hintText: '',
                             width: screenWidth * 0.20,
-                            controller: emailController,
+                            controller: empCodeController,
                           ),
                         ],
                       ),
