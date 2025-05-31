@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/reception/reception_drawer.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
@@ -839,6 +840,25 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                               width: buttonWidth,
                               height: buttonHeight,
                             ),
+                    ],
+                  ),
+                  Spacer(),
+                  Column(
+                    children: [
+                      SizedBox(height: 28,),
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+
+                          );
+                        },
+                        width: screenWidth * 0.08,
+                        height: screenHeight * 0.04,
+
+                      ),
                     ],
                   ),
                 ],

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import '../../../utilities/widgets/drawer/reception/reception_drawer.dart';
@@ -314,8 +316,32 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                         color: Colors.white,
                       ),
                     ),
+
+
                   ],
                 ),
+              ),
+
+              Row(
+                children: [
+                  Spacer(),
+                  CustomButton(
+                    label: 'Refresh',
+                    onPressed: () async {
+                      RefreshLoading(
+                        context: context,
+                        task: () async{
+                       await   fetchDoctorSchedules();
+                       await   loadSchedule();
+                      await    fetchWeeklyDoctorSchedule();
+                        await  fetchSchedulesFromFirestore();
+                        },
+                      );
+                    },
+                    width: screenWidth * 0.08,
+                    //  height: screenHeight * 0.04,
+                  ),
+                ],
               ),
             ],
           ),

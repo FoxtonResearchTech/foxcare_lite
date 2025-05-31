@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/snackBar/snakbar.dart';
@@ -298,7 +299,7 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
               ),
               SizedBox(height: screenHeight * 0.02),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomButton(
                       label: 'Update',
@@ -313,7 +314,18 @@ class _TotalRoomUpdateState extends State<TotalRoomUpdate> {
 
                       },
                       width: screenWidth * 0.17),
-                  SizedBox(width: screenWidth * 0.23),
+              //    Spacer(),
+                  CustomButton(
+                    label: 'Refresh',
+                    onPressed: () async {
+                      RefreshLoading(
+                        context: context,
+                        task: () async => await fetchInitialRoomData(),
+                      );
+                    },
+                      width: screenWidth * 0.17
+                  ),
+
                 ],
               ),
             ],
