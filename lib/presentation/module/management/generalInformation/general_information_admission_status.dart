@@ -10,6 +10,7 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
@@ -343,6 +344,23 @@ class _GeneralInformationAdmissionStatus
                               width: buttonWidth,
                               height: buttonHeight,
                             ),
+                    ],
+                  ),
+                  SizedBox(width: screenHeight * 0.15),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.0225),
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: buttonHeight,
+                        width: buttonWidth,
+                      ),
                     ],
                   ),
                 ],

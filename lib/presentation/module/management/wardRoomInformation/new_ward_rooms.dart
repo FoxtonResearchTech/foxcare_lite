@@ -59,7 +59,7 @@ class _NewWardRooms extends State<NewWardRooms> {
 
     if (!docSnap.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Room status document not found.')),
+        const SnackBar(content: Text('Room status document not found.')),
       );
       return;
     }
@@ -91,7 +91,7 @@ class _NewWardRooms extends State<NewWardRooms> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Room data updated successfully!')),
+      const SnackBar(content: Text('Room data updated successfully!')),
     );
   }
 
@@ -372,16 +372,90 @@ class _NewWardRooms extends State<NewWardRooms> {
                       children: [
                         CustomButton(
                             label: 'Update',
-                            onPressed: () {
-                              updateRooms();
-                              clearController();
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.warning_amber_rounded,
+                                          color: Colors.redAccent),
+                                      SizedBox(width: 8),
+                                      Text('Confirmation'),
+                                    ],
+                                  ),
+                                  content: const Text(
+                                    'Are you sure you want to update room details?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text(
+                                        'Confirm',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true) {
+                                await updateRooms();
+                                clearController();
+                              }
                             },
                             width: screenWidth * 0.17),
                         CustomButton(
                             label: 'Set',
-                            onPressed: () {
-                              setRooms();
-                              clearController();
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.warning_amber_rounded,
+                                          color: Colors.redAccent),
+                                      SizedBox(width: 8),
+                                      Text('Confirmation'),
+                                    ],
+                                  ),
+                                  content: const Text(
+                                    'Are you sure you want to set room details (This will overwrite the existing room data)?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text(
+                                        'Confirm',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true) {
+                                await setRooms();
+                                clearController();
+                              }
                             },
                             width: screenWidth * 0.17),
                         SizedBox(width: screenWidth * 0.125),

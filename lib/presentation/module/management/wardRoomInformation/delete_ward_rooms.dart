@@ -267,18 +267,88 @@ class _DeleteWardRooms extends State<DeleteWardRooms> {
                         int.tryParse(_startIndexController.text) ?? 0;
                     int count = int.tryParse(_countController.text) ?? 1;
                     if (!isEnabled) {
-                      await disableRooms(
-                        roomType: roomTypeMap[selectedRoomType]!,
-                        startRoomNumber: startIndex,
-                        count: count,
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Confirmation'),
+                            ],
+                          ),
+                          content: const Text(
+                            'Are you sure you want to set this room(s) as disabled?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                       );
+
+                      if (confirmed == true) {
+                        await disableRooms(
+                          roomType: roomTypeMap[selectedRoomType]!,
+                          startRoomNumber: startIndex,
+                          count: count,
+                        );
+                      }
                     }
                     if (isEnabled) {
-                      await enableRooms(
-                        roomType: roomTypeMap[selectedRoomType]!,
-                        startRoomNumber: startIndex,
-                        count: count,
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Confirmation'),
+                            ],
+                          ),
+                          content: const Text(
+                            'Are you sure you want to set this room(s) as enabled?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                       );
+
+                      if (confirmed == true) {
+                        await enableRooms(
+                          roomType: roomTypeMap[selectedRoomType]!,
+                          startRoomNumber: startIndex,
+                          count: count,
+                        );
+                      }
                     }
                   },
                   width: screenWidth * 0.25)
