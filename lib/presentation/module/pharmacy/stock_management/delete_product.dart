@@ -12,6 +12,7 @@ import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
@@ -28,7 +29,7 @@ class _DeleteProduct extends State<DeleteProduct> {
   String? selectedCategory;
   String productName = '';
   String companyName = '';
-
+  bool isFiltering = false;
   final List<String> headers = [
     'Product Name',
     'Category',
@@ -85,11 +86,11 @@ class _DeleteProduct extends State<DeleteProduct> {
                         Icon(Icons.warning_amber_rounded,
                             color: Colors.redAccent),
                         SizedBox(width: 8),
-                        Text('Confirm Bill Submission'),
+                        Text('Confirm Delete Submission'),
                       ],
                     ),
                     content: const Text(
-                      'Are you sure you want to submit the bill?',
+                      'Are you sure you want to delete the product?',
                     ),
                     actions: [
                       TextButton(
@@ -164,6 +165,8 @@ class _DeleteProduct extends State<DeleteProduct> {
 
   void filterProducts() {
     setState(() {
+      isFiltering = true;
+
       filteredProducts = allProducts.where((product) {
         return (selectedCategory == null ||
                 selectedCategory == 'All' ||
@@ -177,6 +180,9 @@ class _DeleteProduct extends State<DeleteProduct> {
                     .toLowerCase()
                     .contains(companyName.toLowerCase()));
       }).toList();
+    });
+    setState(() {
+      isFiltering = false;
     });
   }
 
@@ -244,12 +250,22 @@ class _DeleteProduct extends State<DeleteProduct> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  PharmacyButton(
-                    label: 'Search',
-                    onPressed: filterProducts,
-                    width: screenWidth * 0.1,
-                    height: screenHeight * 0.045,
-                  ),
+                  isFiltering
+                      ? SizedBox(
+                          width: screenWidth * 0.08,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          label: 'Search',
+                          onPressed: filterProducts,
+                          width: screenWidth * 0.1,
+                          height: screenHeight * 0.045,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),

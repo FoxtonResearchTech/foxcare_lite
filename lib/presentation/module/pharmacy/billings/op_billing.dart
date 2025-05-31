@@ -10,6 +10,7 @@ import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dar
 
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'op_billing_entry.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -309,7 +310,7 @@ class _OpBilling extends State<OpBilling> {
             children: [
               TimeDateWidget(text: 'OP Billings'),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,7 +322,7 @@ class _OpBilling extends State<OpBilling> {
                       SizedBox(height: screenWidth * 0.007),
                       PharmacyTextField(
                         hintText: '',
-                        width: screenWidth * 0.15,
+                        width: screenWidth * 0.18,
                         controller: _opNumber,
                       ),
                     ],
@@ -364,8 +365,8 @@ class _OpBilling extends State<OpBilling> {
                       ),
                       SizedBox(height: screenWidth * 0.007),
                       PharmacyTextField(
-                        hintText: 'Phone Number',
-                        width: screenWidth * 0.15,
+                        hintText: '',
+                        width: screenWidth * 0.18,
                         controller: _phoneNumber,
                       ),
                     ],
@@ -396,6 +397,23 @@ class _OpBilling extends State<OpBilling> {
                               width: screenWidth * 0.08,
                               height: screenWidth * 0.025,
                             ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.18),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      PharmacyButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: screenWidth * 0.025,
+                        width: screenWidth * 0.08,
+                      ),
                     ],
                   ),
                 ],

@@ -11,6 +11,7 @@ import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/pharmacy_text_field.dart';
 import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
@@ -30,6 +31,7 @@ class _AddProduct extends State<AddProduct> {
   final dateTime = DateTime.timestamp();
   List<String> doctors = [];
   String? selectedDoctor;
+  bool isFiltering = false;
   final List<String> headers = [
     'Product Name',
     'Composition',
@@ -209,6 +211,8 @@ class _AddProduct extends State<AddProduct> {
 
   void filterProducts() {
     setState(() {
+      isFiltering = true;
+
       filteredProducts = allProducts.where((product) {
         return (selectedCategoryFilter == null ||
                 selectedCategoryFilter == 'All' ||
@@ -220,12 +224,11 @@ class _AddProduct extends State<AddProduct> {
             (companyName.isEmpty ||
                 product['Company']!
                     .toLowerCase()
-                    .contains(companyName.toLowerCase())) &&
-            (hsnCode.isEmpty ||
-                product['HSN Code']!
-                    .toLowerCase()
-                    .contains(hsnCode.toLowerCase()));
+                    .contains(companyName.toLowerCase()));
       }).toList();
+    });
+    setState(() {
+      isFiltering = false;
     });
   }
 
@@ -542,12 +545,22 @@ class _AddProduct extends State<AddProduct> {
                     },
                   ),
                   SizedBox(width: screenHeight * 0.045),
-                  PharmacyButton(
-                    height: screenHeight * 0.045,
-                    label: 'Search',
-                    onPressed: filterProducts,
-                    width: screenWidth * 0.1,
-                  ),
+                  isFiltering
+                      ? SizedBox(
+                          width: screenWidth * 0.08,
+                          height: screenHeight * 0.045,
+                          child: Center(
+                            child: Lottie.asset(
+                              'assets/button_loading.json',
+                            ),
+                          ),
+                        )
+                      : PharmacyButton(
+                          height: screenHeight * 0.045,
+                          label: 'Search',
+                          onPressed: filterProducts,
+                          width: screenWidth * 0.1,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.06),

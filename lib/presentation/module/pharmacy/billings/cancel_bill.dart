@@ -19,6 +19,7 @@ import 'package:printing/printing.dart';
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
 import '../../../../utilities/widgets/date_time.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/table/lazy_data_table.dart';
 import '../tools/manage_pharmacy_info.dart';
 
@@ -188,7 +189,7 @@ class _CancelBill extends State<CancelBill> {
                             ],
                           ),
                           content: const Text(
-                            'Are you sure you want to submit the bill?',
+                            'Are you sure you want to cancel the bill?',
                           ),
                           actions: [
                             TextButton(
@@ -199,7 +200,7 @@ class _CancelBill extends State<CancelBill> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.redAccent,
                               ),
-                              onPressed: () => Navigator.of(context).pop(true),
+                              onPressed: () => true,
                               child: const Text(
                                 'Confirm',
                                 style: TextStyle(color: Colors.white),
@@ -854,8 +855,7 @@ class _CancelBill extends State<CancelBill> {
       );
 
       print('Bill canceled, and product quantities updated successfully');
-      Navigator.of(context).pop();
-      fetchOpBills(); // Refresh the bill list if needed
+      await fetchOpBills(); // Refresh the bill list if needed
     } catch (e) {
       CustomSnackBar(
         context,
@@ -951,7 +951,7 @@ class _CancelBill extends State<CancelBill> {
                             ],
                           ),
                           content: const Text(
-                            'Are you sure you want to submit the bill?',
+                            'Are you sure you want to cancel the bill?',
                           ),
                           actions: [
                             TextButton(
@@ -962,7 +962,7 @@ class _CancelBill extends State<CancelBill> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.redAccent,
                               ),
-                              onPressed: () => Navigator.of(context).pop(true),
+                              onPressed: () => true,
                               child: const Text(
                                 'Confirm',
                                 style: TextStyle(color: Colors.white),
@@ -1621,9 +1621,8 @@ class _CancelBill extends State<CancelBill> {
       );
 
       print('Bill canceled, and product quantities updated successfully');
-      Navigator.of(context).pop();
 
-      fetchIpBills(); // Refresh the bill list if needed
+      await fetchIpBills(); // Refresh the bill list if needed
     } catch (e) {
       CustomSnackBar(
         context,
@@ -1715,8 +1714,7 @@ class _CancelBill extends State<CancelBill> {
                             ],
                           ),
                           content: const Text(
-                            'Are you sure you want to submit the bill?',
-                          ),
+                              'Are you sure you want to cancel the bill?'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(false),
@@ -1724,9 +1722,9 @@ class _CancelBill extends State<CancelBill> {
                             ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                              ),
-                              onPressed: () => Navigator.of(context).pop(true),
+                                  backgroundColor: Colors.redAccent),
+                              onPressed: () async => Navigator.of(context)
+                                  .pop(true), // Close dialog, return true
                               child: const Text(
                                 'Confirm',
                                 style: TextStyle(color: Colors.white),
@@ -2372,9 +2370,8 @@ class _CancelBill extends State<CancelBill> {
       );
 
       print('Bill canceled, and product quantities updated successfully');
-      Navigator.of(context).pop();
 
-      fetchCounterSalesBills(); // Refresh the bill list if needed
+      await fetchCounterSalesBills(); // Refresh the bill list if needed
     } catch (e) {
       CustomSnackBar(
         context,
@@ -2450,7 +2447,7 @@ class _CancelBill extends State<CancelBill> {
                     PharmacyTextField(
                       controller: _opBillNo,
                       hintText: '',
-                      width: screenWidth * 0.2,
+                      width: screenWidth * 0.18,
                     ),
                     SizedBox(width: screenWidth * 0.03),
                     opBillSearch
@@ -2472,7 +2469,19 @@ class _CancelBill extends State<CancelBill> {
                             },
                             width: screenWidth * 0.1,
                             height: screenHeight * 0.042,
-                          )
+                          ),
+                    SizedBox(width: screenWidth * 0.35),
+                    PharmacyButton(
+                      label: 'Refresh',
+                      onPressed: () async {
+                        RefreshLoading(
+                          context: context,
+                          task: () async => await fetchOpBills(),
+                        );
+                      },
+                      height: screenWidth * 0.023,
+                      width: screenWidth * 0.08,
+                    ),
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
@@ -2501,7 +2510,7 @@ class _CancelBill extends State<CancelBill> {
                     PharmacyTextField(
                       controller: _ipBillNo,
                       hintText: '',
-                      width: screenWidth * 0.2,
+                      width: screenWidth * 0.18,
                     ),
                     SizedBox(width: screenWidth * 0.03),
                     ipBillSearch
@@ -2523,7 +2532,19 @@ class _CancelBill extends State<CancelBill> {
                             },
                             width: screenWidth * 0.1,
                             height: screenHeight * 0.042,
-                          )
+                          ),
+                    SizedBox(width: screenWidth * 0.35),
+                    PharmacyButton(
+                      label: 'Refresh',
+                      onPressed: () async {
+                        RefreshLoading(
+                          context: context,
+                          task: () async => await fetchIpBills(),
+                        );
+                      },
+                      height: screenWidth * 0.023,
+                      width: screenWidth * 0.08,
+                    ),
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),
@@ -2552,7 +2573,7 @@ class _CancelBill extends State<CancelBill> {
                     PharmacyTextField(
                       controller: _csBillNo,
                       hintText: '',
-                      width: screenWidth * 0.2,
+                      width: screenWidth * 0.18,
                     ),
                     SizedBox(width: screenWidth * 0.03),
                     csBillSearch
@@ -2575,7 +2596,19 @@ class _CancelBill extends State<CancelBill> {
                             },
                             width: screenWidth * 0.1,
                             height: screenHeight * 0.042,
-                          )
+                          ),
+                    SizedBox(width: screenWidth * 0.35),
+                    PharmacyButton(
+                      label: 'Refresh',
+                      onPressed: () async {
+                        RefreshLoading(
+                          context: context,
+                          task: () async => await fetchCounterSalesBills(),
+                        );
+                      },
+                      height: screenWidth * 0.023,
+                      width: screenWidth * 0.08,
+                    ),
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.04),

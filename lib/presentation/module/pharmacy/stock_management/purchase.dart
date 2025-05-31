@@ -8,6 +8,7 @@ import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
 import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
 import 'package:foxcare_lite/utilities/widgets/date_time.dart';
 import 'package:foxcare_lite/utilities/widgets/dropDown/pharmacy_drop_down.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
@@ -79,7 +80,7 @@ class _Purchase extends State<Purchase> {
       CustomSnackBar(
         context,
         message: "Please fill all the required fields",
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.orange,
       );
       return;
     }
@@ -597,68 +598,124 @@ class _Purchase extends State<Purchase> {
                   SizedBox(width: screenWidth * 0.02),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.01),
               Row(
                 children: [
-                  PharmacyTextField(
-                    controller: _billNo,
-                    hintText: 'Bill No',
-                    width: screenWidth * 0.25,
-                    verticalSize: screenHeight * 0.02,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Bill No  ',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.015),
+                      PharmacyTextField(
+                        controller: _billNo,
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  billNoSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.045),
+                      billNoSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => billNoSearch = true);
+                                await fetchData(billNo: _billNo.text);
+                                setState(() => billNoSearch = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
                             ),
-                          ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => billNoSearch = true);
-                            await fetchData(billNo: _billNo.text);
-                            setState(() => billNoSearch = false);
-                          },
-                          width: screenWidth * 0.08),
+                    ],
+                  ),
                   SizedBox(width: screenHeight * 0.2),
-                  SizedBox(
-                    width: screenWidth * 0.15,
-                    child: PharmacyDropDown(
-                      label: '',
-                      items: distributorsNames,
-                      selectedItem: selectedDistributor,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedDistributor = value;
-                        });
-                      },
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Distributor ',
+                        size: screenWidth * 0.013,
+                      ),
+                      SizedBox(height: screenHeight * 0.015),
+                      SizedBox(
+                        height: screenHeight * 0.04,
+                        width: screenWidth * 0.15,
+                        child: PharmacyDropDown(
+                          label: '',
+                          items: distributorsNames,
+                          selectedItem: selectedDistributor,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedDistributor = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  distributorSearch
-                      ? SizedBox(
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.045,
-                          child: Center(
-                            child: Lottie.asset(
-                              'assets/button_loading.json',
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.045),
+                      distributorSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.045,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : PharmacyButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => distributorSearch = true);
+                                await fetchData(
+                                    distributor: selectedDistributor);
+                                setState(() => distributorSearch = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
                             ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.07),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      Row(
+                        children: [
+                          SizedBox(width: screenWidth * 0.11),
+                          PharmacyButton(
+                            label: 'Refresh',
+                            onPressed: () async {
+                              RefreshLoading(
+                                context: context,
+                                task: () async => await fetchData(),
+                              );
+                            },
+                            width: screenWidth * 0.08,
+                            height: screenHeight * 0.04,
                           ),
-                        )
-                      : PharmacyButton(
-                          label: 'Search',
-                          onPressed: () async {
-                            setState(() => distributorSearch = true);
-                            await fetchData(distributor: selectedDistributor);
-                            setState(() => distributorSearch = false);
-                          },
-                          width: screenWidth * 0.08,
-                        ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
