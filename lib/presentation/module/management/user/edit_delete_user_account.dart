@@ -157,7 +157,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
           final data = doc.data() as Map<String, dynamic>;
 
           // Manual case-insensitive filtering for empCode
-          final fetchedEmpCode = (data['empCode'] ?? '').toString();
+          final fetchedEmpCode =
+              (data['empCode'].toString().split('@')[0] ?? '').toString();
           if (empCode != null && fetchedEmpCode.toLowerCase() != lowerEmpCode) {
             continue; // Skip if not matching
           }
@@ -165,7 +166,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
           allFetchedData.add({
             'Name':
                 '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}'.trim(),
-            'EMP Code': fetchedEmpCode,
+            'EMP Code': fetchedEmpCode.toString().split('@')[0],
             'Role': data['roles'] ?? 'N/A',
             'Email': data['email'] ?? 'N/A',
             'Phone Number': data['phone1'] ?? 'N/A',
@@ -191,7 +192,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                     emailController.text = data['email'];
                     phone1Controller.text = data['phone1'];
                     phone2Controller.text = data['phone2'];
-                    empCodeController.text = data['empCode'];
+                    empCodeController.text =
+                        data['empCode'].toString().split('@')[0];
                     selectedSex = data['gender'];
                     relationSelectedValue = data['relationType'];
                     dobController.text = data['dob'];
@@ -315,6 +317,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                   ),
                                                   SizedBox(height: 7),
                                                   CustomTextField(
+                                                    readOnly: true,
                                                     hintText: '',
                                                     width: 300,
                                                     controller:

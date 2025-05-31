@@ -122,87 +122,178 @@ class _UserAccountCreation extends State<UserAccountCreation> {
     }
   }
 
+  Future<String?> askAdminPassword(BuildContext context) async {
+    final TextEditingController adminPasswordController =
+        TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const CustomText(
+            text: 'Confirm Management Password',
+            size: 20,
+          ),
+          content: Container(
+              width: 350,
+              height: 200,
+              child: Column(
+                children: [
+                  SizedBox(height: 10),
+                  SizedBox(
+                    width: 75,
+                    height: 100,
+                    child: Center(
+                      child: Lottie.asset(
+                        'assets/button_loading.json',
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Management Password',
+                        size: 15,
+                      ),
+                      SizedBox(height: 10),
+                      CustomTextField(
+                          controller: adminPasswordController,
+                          hintText: '',
+                          width: 250),
+                    ],
+                  ),
+                ],
+              )),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Cancel
+              child: CustomText(
+                text: 'Cancel',
+                color: AppColors.blue,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final password = adminPasswordController.text.trim();
+                if (password.isNotEmpty) {
+                  Navigator.pop(context, password); // Return password
+                }
+              },
+              child: CustomText(
+                text: 'Confirm',
+                color: AppColors.blue,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> registerEmployee() async {
     setState(() {
       isLoading = true;
     });
+
+    // Step 1: Save current admin credentials
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final adminEmail = currentUser?.email;
+    final adminPassword = await askAdminPassword(context);
+    if (adminPassword == null || adminPassword.isEmpty) {
+      CustomSnackBar(context,
+          message: 'Registration cancelled', backgroundColor: Colors.red);
+      setState(() => isLoading = false);
+      return;
+    }
+
     try {
       String email = emailController.text.trim();
       if (!email.endsWith('@gmail.com')) {
         email += '@gmail.com';
       }
 
+      // Step 2: Create new employee (this signs you in as them)
       UserCredential userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email, // ✅ Use the modified email here
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
         password: passwordController.text.trim(),
       );
 
+      // Step 3: Write employee data to Firestore
       final firestore = FirebaseFirestore.instance;
-
       if (positionSelectedValue != null) {
         String docId = userCredential.user!.uid;
 
-        await firestore
-            .collection('employees')
-            .doc(docId)
-            .set({
-              'docId': docId, // Store the document ID
-              'empCode': emailController.text.endsWith('@gmail.com')
-                  ? emailController.text
-                  : '${emailController.text}@gmail.com',
+        await firestore.collection('employees').doc(docId).set({
+          'docId': docId,
+          'empCode': emailController.text.endsWith('@gmail.com')
+              ? emailController.text
+              : '${emailController.text}@gmail.com',
+          'firstName': firstNameController.text,
+          'lastName': lastNameController.text,
+          'relationName': relationNameController.text,
+          'relationType': relationSelectedValue,
+          'email': empCodeController.text,
+          'password': passwordController.text,
+          'phone1': phone1Controller.text,
+          'phone2': phone2Controller.text,
+          'gender': selectedSex,
+          'dob': dobController.text,
+          'roles': positionSelectedValue,
+          'specialization': selectedSpecialization,
+          'address': {
+            'permanent': {
+              'lane1': lane1Controller.text,
+              'lane2': lane2Controller.text,
+              'landmark': landmarkController.text,
+              'city': cityController.text,
+              'state': stateController.text,
+              'pincode': pinCodeController.text,
+            },
+            'temporary': {
+              'lane1': tempLane1Controller.text,
+              'lane2': tempLane2Controller.text,
+              'landmark': tempLandmarkController.text,
+              'city': tempCityController.text,
+              'state': tempStateController.text,
+              'pincode': tempPinCodeController.text,
+            },
+          },
+          'qualification': {
+            'ug': {
+              'degree': qualificationController.text,
+              'registerNo': registerNoController.text,
+              'university': universityController.text,
+              'college': collegeController.text,
+            },
+            if (isPostgraduate) ...{
+              'pg': {
+                'degree': pgQualificationController.text,
+                'registerNo': pgRegisterNoController.text,
+                'university': pgUniversityController.text,
+                'college': pgCollegeController.text,
+              }
+            }
+          },
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
 
-              'firstName': firstNameController.text,
-              'lastName': lastNameController.text,
-              'relationName': relationNameController.text,
-              'relationType': relationSelectedValue,
-              'email': empCodeController.text,
-              'password': passwordController.text,
-              'phone1': phone1Controller.text,
-              'phone2': phone2Controller.text,
-              'gender': selectedSex,
-              'dob': dobController.text,
-              'roles': positionSelectedValue,
-              'specialization': selectedSpecialization,
-              'address': {
-                'permanent': {
-                  'lane1': lane1Controller.text,
-                  'lane2': lane2Controller.text,
-                  'landmark': landmarkController.text,
-                  'city': cityController.text,
-                  'state': stateController.text,
-                  'pincode': pinCodeController.text,
-                },
-                'temporary': {
-                  'lane1': tempLane1Controller.text,
-                  'lane2': tempLane2Controller.text,
-                  'landmark': tempLandmarkController.text,
-                  'city': tempCityController.text,
-                  'state': tempStateController.text,
-                  'pincode': tempPinCodeController.text,
-                },
-              },
-              'qualification': {
-                'ug': {
-                  'degree': qualificationController.text,
-                  'registerNo': registerNoController.text,
-                  'university': universityController.text,
-                  'college': collegeController.text,
-                },
-                if (isPostgraduate) ...{
-                  'pg': {
-                    'degree': pgQualificationController.text,
-                    'registerNo': pgRegisterNoController.text,
-                    'university': pgUniversityController.text,
-                    'college': pgCollegeController.text,
-                  }
-                }
-              },
-              'createdAt': FieldValue.serverTimestamp(),
-            })
-            .then((value) => debugPrint('Employee added successfully'))
-            .catchError(
-                (error) => debugPrint('Failed to add employee: $error'));
+      // Step 4: Sign out the employee
+      await FirebaseAuth.instance.signOut();
+
+      // Step 5: Re-login the admin
+      if (adminEmail != null && adminPassword.isNotEmpty) {
+        await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+          email: adminEmail,
+          password: adminPassword,
+        )
+            .then((_) {
+          debugPrint('Admin re-logged in successfully');
+        });
       }
 
       CustomSnackBar(context,
@@ -220,22 +311,17 @@ class _UserAccountCreation extends State<UserAccountCreation> {
         CustomSnackBar(context,
             message: 'Registration failed', backgroundColor: Colors.red);
       }
-      setState(() {
-        isLoading = false;
-      });
     } catch (e) {
       CustomSnackBar(
         context,
         message: 'An error occurred: $e',
         backgroundColor: Colors.red,
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
-  }
-
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
