@@ -603,535 +603,552 @@ class _PatientReport extends State<PatientReport> {
 
   void printData() {
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Print'),
-            content: Container(
-              width: 125,
-              height: 50,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  CustomText(text: 'Do you want to print ?'),
-                  const SizedBox(height: 8),
-                ],
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          title: Row(
+            children: const [
+              Icon(Icons.print, color: Colors.blue, size: 28),
+              SizedBox(width: 10),
+              Text(
+                'Print Confirmation',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+            ],
+          ),
+          content: const Text(
+            'Do you want to print this document?',
+            style: TextStyle(fontSize: 15),
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+              onPressed: () {
+                Navigator.of(context).pop(); // Just close
+              },
+              child: const Text('Cancel'),
             ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () async {
-                  final pdf = pw.Document();
-                  const blue = PdfColor.fromInt(0xFF106ac2);
-                  const lightBlue = PdfColor.fromInt(0xFF21b0d1);
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                final pdf = pw.Document();
+                const blue = PdfColor.fromInt(0xFF106ac2);
+                const lightBlue = PdfColor.fromInt(0xFF21b0d1);
 
-                  final font = await rootBundle
-                      .load('Fonts/Poppins/Poppins-Regular.ttf');
-                  final ttf = pw.Font.ttf(font);
+                final font = await rootBundle
+                    .load('Fonts/Poppins/Poppins-Regular.ttf');
+                final ttf = pw.Font.ttf(font);
 
-                  final topImage = pw.MemoryImage(
-                    (await rootBundle.load('assets/opAssets/OP_Bill_Top.png'))
-                        .buffer
-                        .asUint8List(),
-                  );
+                final topImage = pw.MemoryImage(
+                  (await rootBundle.load('assets/opAssets/OP_Bill_Top.png'))
+                      .buffer
+                      .asUint8List(),
+                );
 
-                  final bottomImage = pw.MemoryImage(
-                    (await rootBundle
-                            .load('assets/opAssets/OP_Card_back_original.png'))
-                        .buffer
-                        .asUint8List(),
-                  );
-                  List<pw.Widget> buildPaginatedTable({
-                    required List<String> headers,
-                    required List<Map<String, dynamic>> data,
-                    required pw.Font ttf,
-                    required PdfColor headerColor,
-                    required double rowHeight,
-                  }) {
-                    final List<List<String>> tableData = [
-                      headers,
-                      ...data.map((row) => headers
+                final bottomImage = pw.MemoryImage(
+                  (await rootBundle
+                      .load('assets/opAssets/OP_Card_back_original.png'))
+                      .buffer
+                      .asUint8List(),
+                );
+                List<pw.Widget> buildPaginatedTable({
+                  required List<String> headers,
+                  required List<Map<String, dynamic>> data,
+                  required pw.Font ttf,
+                  required PdfColor headerColor,
+                  required double rowHeight,
+                }) {
+                  final List<List<String>> tableData = [
+                    headers,
+                    ...data.map((row) => headers
+                        .map((h) => row[h]?.toString() ?? '')
+                        .toList()),
+                  ];
+
+                  return [
+                    pw.TableHelper.fromTextArray(
+                      headers: headers,
+                      data: data
+                          .map((row) => headers
                           .map((h) => row[h]?.toString() ?? '')
-                          .toList()),
-                    ];
-
-                    return [
-                      pw.TableHelper.fromTextArray(
-                        headers: headers,
-                        data: data
-                            .map((row) => headers
-                                .map((h) => row[h]?.toString() ?? '')
-                                .toList())
-                            .toList(),
-                        headerStyle: pw.TextStyle(
-                          font: ttf,
-                          fontSize: 7,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.white,
-                        ),
-                        headerDecoration: pw.BoxDecoration(color: headerColor),
-                        cellStyle: pw.TextStyle(font: ttf, fontSize: 7),
-                        cellHeight: rowHeight > 12 ? rowHeight - 10 : rowHeight,
-                        border: pw.TableBorder.all(color: headerColor),
+                          .toList())
+                          .toList(),
+                      headerStyle: pw.TextStyle(
+                        font: ttf,
+                        fontSize: 7,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white,
                       ),
-                      pw.SizedBox(height: 6),
-                    ];
-                  }
+                      headerDecoration: pw.BoxDecoration(color: headerColor),
+                      cellStyle: pw.TextStyle(font: ttf, fontSize: 7),
+                      cellHeight: rowHeight > 12 ? rowHeight - 10 : rowHeight,
+                      border: pw.TableBorder.all(color: headerColor),
+                    ),
+                    pw.SizedBox(height: 6),
+                  ];
+                }
 
-                  final List<List<String>> dataRows = tableData1.map((data) {
-                    return headers1
-                        .map((header) => data[header]?.toString() ?? '')
-                        .toList();
-                  }).toList();
+                final List<List<String>> dataRows = tableData1.map((data) {
+                  return headers1
+                      .map((header) => data[header]?.toString() ?? '')
+                      .toList();
+                }).toList();
 
-                  pdf.addPage(
-                    pw.MultiPage(
-                      pageFormat: PdfPageFormat.a4,
-                      header: (context) => pw.Stack(
-                        children: [
-                          pw.Image(
-                            topImage,
-                            fit: pw.BoxFit.cover,
-                          ),
-                        ],
-                      ),
-                      footer: (context) => pw.Stack(
-                        children: [
-                          // Background Image
-                          pw.Positioned.fill(
-                            child: pw.Image(bottomImage,
-                                fit: pw.BoxFit.cover, height: 225, width: 500),
-                          ),
-                          // Footer Content
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.only(
-                                left: 8, right: 8, bottom: 8, top: 20),
-                            child: pw.Column(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  children: [
-                                    // Left Column
-                                    pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          'Emergency No: ${Constants.emergencyNo}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            color: PdfColors.white,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Appointments: ${Constants.appointmentNo}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            color: PdfColors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.Padding(
-                                      padding: pw.EdgeInsets.only(top: 20),
-                                      child: pw.Row(
-                                        crossAxisAlignment:
-                                            pw.CrossAxisAlignment.end,
-                                        children: [
-                                          pw.Text(
-                                            'Mail: ${Constants.mail}',
-                                            style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white,
-                                            ),
-                                          ),
-                                          pw.SizedBox(width: 15),
-                                          pw.Text(
-                                            'For more info visit: ${Constants.website}',
-                                            style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      build: (context) => [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 0),
-                          child: pw.Container(
-                            child: pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Text(
-                                  '${Constants.labName}',
-                                  style: pw.TextStyle(
-                                    fontSize: 30,
-                                    font: ttf,
-                                    fontWeight: pw.FontWeight.bold,
-                                    color: lightBlue,
-                                  ),
-                                ),
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          '${Constants.hospitalName}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          '${Constants.hospitalAddress}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          '${Constants.state + ' - ' + Constants.pincode}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Mail : ${Constants.mail}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Web : ${Constants.website}',
-                                          style: pw.TextStyle(
-                                            fontSize: 8,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 8, right: 8),
-                          child: pw.Container(
-                            child: pw.Column(
-                              children: [
-                                pw.Divider(color: blue, thickness: 1),
-                                pw.SizedBox(height: 10),
-                                pw.Column(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'OP Ticket No : ${widget.opTicket}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Doctor : ${widget.doctorName}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Specialization : ${widget.specialization}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Name : ${widget.name}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'OP Number : ${widget.patientID}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Age : ${widget.age}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Blood Group : ${widget.bloodGroup}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Place : ${widget.city}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Phone : ${widget.phoneNo}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          'Address : ${widget.address}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Sample Collected Date : ${_sampleCollectedDateController.text}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Sample Date : ${widget.sampleDate}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                    pw.SizedBox(height: 6),
-                                    pw.Row(
-                                      mainAxisAlignment:
-                                          pw.MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        pw.Text(
-                                          'Report Date : ${_dateController.text}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                        pw.Text(
-                                          'Report No : ${reportNO.toString()}',
-                                          style: pw.TextStyle(
-                                            fontSize: 10,
-                                            font: ttf,
-                                            fontWeight: pw.FontWeight.bold,
-                                            color: PdfColors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.SizedBox(height: 6),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        pw.SizedBox(height: 10),
-                        ...buildPaginatedTable(
-                          headers: headers1,
-                          data: tableData1,
-                          ttf: ttf,
-                          headerColor: lightBlue,
-                          rowHeight: 15,
-                        ),
-                        pw.SizedBox(height: 10),
-                        pw.Row(
-                          mainAxisAlignment: pw.MainAxisAlignment.center,
-                          children: [
-                            pw.Text(
-                              '***** END OF THE REPORT *****',
-                              style: pw.TextStyle(
-                                fontSize: 10,
-                                font: ttf,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        pw.SizedBox(height: 20),
-                        pw.Column(
-                          mainAxisAlignment: pw.MainAxisAlignment.start,
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text(
-                              '${currentUser!.name}',
-                              style: pw.TextStyle(
-                                fontSize: 12,
-                                font: ttf,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.black,
-                              ),
-                            ),
-                            pw.Text(
-                              '[${currentUser!.degree}]',
-                              style: pw.TextStyle(
-                                fontSize: 8,
-                                font: ttf,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.black,
-                              ),
-                            ),
-                          ],
+                pdf.addPage(
+                  pw.MultiPage(
+                    pageFormat: PdfPageFormat.a4,
+                    header: (context) => pw.Stack(
+                      children: [
+                        pw.Image(
+                          topImage,
+                          fit: pw.BoxFit.cover,
                         ),
                       ],
                     ),
-                  );
-                  //
-                  // await Printing.layoutPdf(
-                  //   onLayout: (format) async => pdf.save(),
-                  // );
+                    footer: (context) => pw.Stack(
+                      children: [
+                        // Background Image
+                        pw.Positioned.fill(
+                          child: pw.Image(bottomImage,
+                              fit: pw.BoxFit.cover, height: 225, width: 500),
+                        ),
+                        // Footer Content
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(
+                              left: 8, right: 8, bottom: 8, top: 20),
+                          child: pw.Column(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Row(
+                                mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment:
+                                pw.CrossAxisAlignment.start,
+                                children: [
+                                  // Left Column
+                                  pw.Column(
+                                    crossAxisAlignment:
+                                    pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        'Emergency No: ${Constants.emergencyNo}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          color: PdfColors.white,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Appointments: ${Constants.appointmentNo}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          color: PdfColors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.Padding(
+                                    padding: pw.EdgeInsets.only(top: 20),
+                                    child: pw.Row(
+                                      crossAxisAlignment:
+                                      pw.CrossAxisAlignment.end,
+                                      children: [
+                                        pw.Text(
+                                          'Mail: ${Constants.mail}',
+                                          style: pw.TextStyle(
+                                            fontSize: 8,
+                                            font: ttf,
+                                            color: PdfColors.white,
+                                          ),
+                                        ),
+                                        pw.SizedBox(width: 15),
+                                        pw.Text(
+                                          'For more info visit: ${Constants.website}',
+                                          style: pw.TextStyle(
+                                            fontSize: 8,
+                                            font: ttf,
+                                            color: PdfColors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    build: (context) => [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 0),
+                        child: pw.Container(
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                '${Constants.labName}',
+                                style: pw.TextStyle(
+                                  fontSize: 30,
+                                  font: ttf,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: lightBlue,
+                                ),
+                              ),
+                              pw.Row(
+                                mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Column(
+                                    crossAxisAlignment:
+                                    pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        '${Constants.hospitalName}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        '${Constants.hospitalAddress}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        '${Constants.state + ' - ' + Constants.pincode}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.Column(
+                                    crossAxisAlignment:
+                                    pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Mail : ${Constants.mail}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Web : ${Constants.website}',
+                                        style: pw.TextStyle(
+                                          fontSize: 8,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 8, right: 8),
+                        child: pw.Container(
+                          child: pw.Column(
+                            children: [
+                              pw.Divider(color: blue, thickness: 1),
+                              pw.SizedBox(height: 10),
+                              pw.Column(
+                                mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'OP Ticket No : ${widget.opTicket}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Doctor : ${widget.doctorName}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Specialization : ${widget.specialization}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Name : ${widget.name}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'OP Number : ${widget.patientID}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Age : ${widget.age}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Blood Group : ${widget.bloodGroup}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Place : ${widget.city}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Phone : ${widget.phoneNo}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                    pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        'Address : ${widget.address}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Sample Collected Date : ${_sampleCollectedDateController.text}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Sample Date : ${widget.sampleDate}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                  pw.SizedBox(height: 6),
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        'Report Date : ${_dateController.text}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        'Report No : ${reportNO.toString()}',
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          font: ttf,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 6),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.SizedBox(height: 10),
+                      ...buildPaginatedTable(
+                        headers: headers1,
+                        data: tableData1,
+                        ttf: ttf,
+                        headerColor: lightBlue,
+                        rowHeight: 15,
+                      ),
+                      pw.SizedBox(height: 10),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text(
+                            '***** END OF THE REPORT *****',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                              font: ttf,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      pw.SizedBox(height: 20),
+                      pw.Column(
+                        mainAxisAlignment: pw.MainAxisAlignment.start,
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            '${currentUser!.name}',
+                            style: pw.TextStyle(
+                              fontSize: 12,
+                              font: ttf,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black,
+                            ),
+                          ),
+                          pw.Text(
+                            '[${currentUser!.degree}]',
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              font: ttf,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+                //
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
+                // );
 
-                  await Printing.sharePdf(
-                      bytes: await pdf.save(),
-                      filename: '${widget.opTicket}.pdf');
-                },
-                child: const Text('Print'),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {});
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        });
+                await Printing.sharePdf(
+                    bytes: await pdf.save(),
+                    filename: '${widget.opTicket}.pdf');
+              },
+              icon: const Icon(Icons.print,color: Colors.white,),
+              label: const Text('Print',style: TextStyle(color: Colors.white),),
+            ),
+          ],
+        );
+      },
+    );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1425,19 +1442,46 @@ class _PatientReport extends State<PatientReport> {
                               ),
                             )
                           : CustomButton(
-                              label: 'Submit',
-                              onPressed: () {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                submitData().then((_) {
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-                                });
-                              },
-                              width: screenWidth * 0.1,
-                            ),
+          label: 'Submit',
+          onPressed: () {
+            final paidText = paidController.text.trim();
+            final totalText = totalAmountController.text.trim();
+
+            // Validate inputs
+            if (paidText.isEmpty || totalText.isEmpty) {
+              CustomSnackBar(
+                context,
+                message: 'Please fill in both Paid and Total Amount.',
+                backgroundColor: Colors.orange,
+              );
+              return;
+            }
+
+            // Optional: Validate numeric values
+            final paid = double.tryParse(paidText);
+            final total = double.tryParse(totalText);
+            if (paid == null || total == null) {
+              CustomSnackBar(
+                context,
+                message: 'Enter valid numbers for Collected and Total Amount.',
+                backgroundColor: Colors.orange,
+              );
+              return;
+            }
+
+            // Continue submission
+            setState(() {
+              isLoading = true;
+            });
+            submitData().then((_) {
+              setState(() {
+                isLoading = false;
+              });
+            });
+          },
+          width: screenWidth * 0.1,
+        ),
+
                     ],
                   )
                 ],

@@ -256,33 +256,88 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   },
                   child: const CustomText(text: 'Open')),
               'Sample Data': sampleDate != null
-                  ? const CustomText(text: 'Sample Date Entered')
+                  ? const CustomText(text: 'Sample Date Entered',color: Colors.green,)
                   : TextButton(
-                      onPressed: () async {
-                        try {
-                          await FirebaseFirestore.instance
-                              .collection('patients')
-                              .doc(patientDoc.id)
-                              .collection('opTickets')
-                              .doc(ticketDoc.id)
-                              .collection('sampleData')
-                              .doc('data')
-                              .set({
-                            'sampleDate': todayDate,
-                            'sampleTime':
-                                "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
-                          }, SetOptions(merge: true));
-                          await fetchData();
-                          CustomSnackBar(context,
-                              message: "Sample Date Entered ",
-                              backgroundColor: Colors.green);
-                        } catch (e) {
-                          CustomSnackBar(context,
-                              message: 'Failed to save: $e',
-                              backgroundColor: Colors.red);
-                        }
-                      },
-                      child: const CustomText(text: 'Enter Sample Data')),
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                        contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        title: Row(
+                          children: const [
+                            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                            SizedBox(width: 10),
+                            Text(
+                              'Confirmation',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        content: const Text(
+                          'Are you sure you want to enter this sample data?\nThis action cannot be undo.',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                        actions: [
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.grey[700],
+                            ),
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Confirm',style: TextStyle(color: Colors.white),),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('patients')
+                          .doc(patientDoc.id)
+                          .collection('opTickets')
+                          .doc(ticketDoc.id)
+                          .collection('sampleData')
+                          .doc('data')
+                          .set({
+                        'sampleDate': todayDate,
+                        'sampleTime': "${now.hour}:${now.minute.toString().padLeft(2, '0')}",
+                      }, SetOptions(merge: true));
+
+                      await fetchData();
+                      CustomSnackBar(
+                        context,
+                        message: "Sample Date Entered",
+                        backgroundColor: Colors.green,
+                      );
+                    } catch (e) {
+                      CustomSnackBar(
+                        context,
+                        message: 'Failed to save: $e',
+                        backgroundColor: Colors.red,
+                      );
+                    }
+                  }
+                },
+                child: const CustomText(text: 'Enter Sample Data'),
+              )
+              ,
             });
           }
         }
@@ -408,13 +463,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "OP Number",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                            color: Colors.black87),
-                      ),
+                      CustomText(text: 'OP Number'),
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: opNumberSearch,
@@ -428,13 +477,8 @@ crossAxisAlignment: CrossAxisAlignment.start,
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Mobile Number",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                            color: Colors.black87),
-                      ),
+                      CustomText(text: 'Mobile Number'),
+
                       SizedBox(height: 5),
                       CustomTextField(
                         controller: phoneNumberSearch,
