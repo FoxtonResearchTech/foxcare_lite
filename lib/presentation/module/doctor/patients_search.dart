@@ -25,9 +25,9 @@ class PatientsSearch extends StatefulWidget {
   State<PatientsSearch> createState() => _PatientsSearch();
 }
 
-int selectedIndex = 5;
-
 class _PatientsSearch extends State<PatientsSearch> {
+  int selectedIndex = 5;
+
   TextEditingController _opNumber = TextEditingController();
   TextEditingController _phoneNumber = TextEditingController();
   bool isPhoneLoading = false;
@@ -99,16 +99,18 @@ class _PatientsSearch extends State<PatientsSearch> {
           final data = doc.data() as Map<String, dynamic>;
           final docRef = doc.reference;
 
+          // Manual case-insensitive opNumber check
+          if (opNumber != null &&
+              opNumber.isNotEmpty &&
+              (data['opNumber'] == null ||
+                  data['opNumber'].toString().toLowerCase() !=
+                      opNumber.toLowerCase())) {
+            continue;
+          }
+
+          // Fetch opTickets
           final opTicketsSnapshot = await docRef.collection('opTickets').get();
           for (var opDoc in opTicketsSnapshot.docs) {
-            if (opNumber != null && opNumber.isNotEmpty) {
-              if (opNumber.isNotEmpty &&
-                  (opDoc.data()['opTicket']?.toString().toLowerCase() !=
-                      opNumber.toLowerCase())) {
-                continue;
-              }
-            }
-
             allFetchedData.add({
               'Patient ID': data['opNumber'] ?? 'N/A',
               'OP / IP Ticket': opDoc.id,
@@ -122,16 +124,9 @@ class _PatientsSearch extends State<PatientsSearch> {
             });
           }
 
+          // Fetch ipTickets
           final ipTicketsSnapshot = await docRef.collection('ipTickets').get();
           for (var ipDoc in ipTicketsSnapshot.docs) {
-            if (opNumber != null && opNumber.isNotEmpty) {
-              if (opNumber.isNotEmpty &&
-                  (ipDoc.data()['ipTicket']?.toString().toLowerCase() !=
-                      opNumber.toLowerCase())) {
-                continue;
-              }
-            }
-
             allFetchedData.add({
               'Patient ID': data['opNumber'] ?? 'N/A',
               'OP / IP Ticket': ipDoc.id,
@@ -150,7 +145,7 @@ class _PatientsSearch extends State<PatientsSearch> {
         setState(() {
           tableData1 = List.from(allFetchedData);
         });
-        // Optional throttle delay
+
         await Future.delayed(delayBetweenPages);
       }
 
@@ -246,13 +241,14 @@ class _PatientsSearch extends State<PatientsSearch> {
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
-
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: "OP Number"),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -264,26 +260,28 @@ class _PatientsSearch extends State<PatientsSearch> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isOpLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Ensure this path is correct
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Ensure this path is correct
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isOpLoading = true);
-                          await fetchData(opNumber:_opNumber.text);
-                          setState(() => isOpLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isOpLoading = true);
+                                await fetchData(opNumber: _opNumber.text);
+                                setState(() => isOpLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
                   SizedBox(width: screenHeight * 0.05),
@@ -291,7 +289,9 @@ class _PatientsSearch extends State<PatientsSearch> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CustomText(text: "Phone Number"),
-                      SizedBox(height: 5,),
+                      SizedBox(
+                        height: 5,
+                      ),
                       CustomTextField(
                         hintText: '',
                         width: screenWidth * 0.18,
@@ -302,44 +302,47 @@ class _PatientsSearch extends State<PatientsSearch> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       isPhoneLoading
                           ? SizedBox(
-                        width: buttonWidth,
-                        height: buttonHeight,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Update the path to your Lottie file
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: buttonWidth,
+                              height: buttonHeight,
+                              child: Lottie.asset(
+                                'assets/button_loading.json', // Update the path to your Lottie file
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isPhoneLoading = true);
-                          await fetchData(phoneNumber: _phoneNumber.text);
-                          setState(() => isPhoneLoading = false);
-                        },
-                        width: buttonWidth,
-                        height: buttonHeight,
-                      ),
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => isPhoneLoading = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => isPhoneLoading = false);
+                              },
+                              width: buttonWidth,
+                              height: buttonHeight,
+                            ),
                     ],
                   ),
                   Spacer(),
                   Column(
-
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       CustomButton(
-                          label: 'Refresh',
-                          onPressed: () async {
-                            RefreshLoading(
-                              context: context,
-                              task: () async => await fetchData(),
-                            );
-                          },
-                          width: screenWidth * 0.08,
-                          height: screenHeight * 0.04,
-                         ),
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        width: screenWidth * 0.08,
+                        height: screenHeight * 0.04,
+                      ),
                     ],
                   ),
                 ],

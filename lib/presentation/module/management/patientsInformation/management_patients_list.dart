@@ -337,7 +337,7 @@ class _ManagementRegisterPatient extends State<ManagementPatientsList> {
                 rowColorResolver: (row) {
                   return row['Status'] == 'aborted'
                       ? Colors.red.shade200
-                      : Colors.transparent;
+                      : Colors.grey.shade200;
                 },
               ),
               SizedBox(height: screenHeight * 0.08),

@@ -7,8 +7,10 @@ import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
 
 class EditDeletePatientInformation extends StatefulWidget {
@@ -34,6 +36,8 @@ class _EditDeletePatientInformation
     'Delete',
   ];
   List<Map<String, dynamic>> tableData1 = [];
+  bool opSearch = false;
+  bool phoneSearch = false;
 
   @override
   void initState() {
@@ -191,7 +195,7 @@ class _EditDeletePatientInformation
                       CustomSnackBar(context,
                           message: 'Patient Deleted Successfully',
                           backgroundColor: Colors.green);
-                      fetchData();
+                      await fetchData();
                     } catch (e) {
                       print('Error deleting patient ${data['opNumber']}: $e');
                       CustomSnackBar(context,
@@ -257,36 +261,108 @@ class _EditDeletePatientInformation
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CustomTextField(
-                    hintText: 'OP Number',
-                    width: screenWidth * 0.15,
-                    controller: _opNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'OP Number ',
+                        size: screenWidth * 0.012,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _opNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(opNumber: _opNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      opSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => opSearch = true);
+
+                                await fetchData(opNumber: _opNumber.text);
+                                setState(() => opSearch = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.02,
+                            ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.05),
-                  CustomTextField(
-                    hintText: 'Phone Number',
-                    width: screenWidth * 0.15,
-                    controller: _phoneNumber,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Phone Number ',
+                        size: screenWidth * 0.012,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        width: screenWidth * 0.18,
+                        controller: _phoneNumber,
+                      ),
+                    ],
                   ),
                   SizedBox(width: screenHeight * 0.02),
-                  CustomButton(
-                    label: 'Search',
-                    onPressed: () {
-                      fetchData(phoneNumber: _phoneNumber.text);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.02,
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      phoneSearch
+                          ? SizedBox(
+                              width: screenWidth * 0.08,
+                              height: screenHeight * 0.04,
+                              child: Center(
+                                child: Lottie.asset(
+                                  'assets/button_loading.json',
+                                ),
+                              ),
+                            )
+                          : CustomButton(
+                              label: 'Search',
+                              onPressed: () async {
+                                setState(() => phoneSearch = true);
+                                await fetchData(phoneNumber: _phoneNumber.text);
+                                setState(() => phoneSearch = false);
+                              },
+                              width: screenWidth * 0.08,
+                              height: screenWidth * 0.02,
+                            ),
+                    ],
+                  ),
+                  SizedBox(width: screenWidth * 0.18),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: screenWidth * 0.02,
+                        width: screenWidth * 0.08,
+                      ),
+                    ],
                   ),
                 ],
               ),
