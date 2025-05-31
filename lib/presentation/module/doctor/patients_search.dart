@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
+import 'package:foxcare_lite/utilities/widgets/buttons/pharmacy_button.dart';
+import 'package:foxcare_lite/utilities/widgets/refreshLoading/refreshLoading.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 
 import 'package:iconsax/iconsax.dart';
@@ -320,6 +322,24 @@ class _PatientsSearch extends State<PatientsSearch> {
                         width: buttonWidth,
                         height: buttonHeight,
                       ),
+                    ],
+                  ),
+                  Spacer(),
+                  Column(
+
+                    children: [
+                      SizedBox(height: 28,),
+                      CustomButton(
+                          label: 'Refresh',
+                          onPressed: () async {
+                            RefreshLoading(
+                              context: context,
+                              task: () async => await fetchData(),
+                            );
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenHeight * 0.04,
+                         ),
                     ],
                   ),
                 ],
