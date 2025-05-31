@@ -107,156 +107,235 @@ class _OpCardPrint extends State<OpCardPrint> {
             'City': data['city']?.toString() ?? 'N/A',
             'Phone Number': data['phone1'] ?? 'N/A',
             'Action': TextButton(
-              onPressed: () async {
-                final pdf = pw.Document();
-                final myColor = PdfColor.fromInt(0xFF106ac2);
-                final font =
-                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
-                final ttf = pw.Font.ttf(font);
-                final topImage = pw.MemoryImage(
-                  (await rootBundle.load('assets/opAssets/OP_Card_top.png'))
-                      .buffer
-                      .asUint8List(),
-                );
-                final bottomImage = pw.MemoryImage(
-                  (await rootBundle.load('assets/opAssets/OP_Card_back.png'))
-                      .buffer
-                      .asUint8List(),
-                );
-                final loc = pw.MemoryImage(
-                  (await rootBundle.load('assets/location_Icon.png'))
-                      .buffer
-                      .asUint8List(),
-                );
-
-                pdf.addPage(
-                  pw.Page(
-                    pageFormat: const PdfPageFormat(
-                        8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
-                    margin: pw.EdgeInsets.zero,
-                    build: (pw.Context context) {
-                      return pw.Stack(
-                        children: [
-                          pw.Positioned.fill(
-                              child: pw.Image(topImage, fit: pw.BoxFit.cover)),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(8),
-                            child: pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Row(
-                                  mainAxisAlignment: pw.MainAxisAlignment.end,
-                                  children: [
-                                    pw.Text(
-                                      Constants.hospitalName,
-                                      style: pw.TextStyle(
-                                        fontSize: 14,
-                                        font: ttf,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: PdfColors.red,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                pw.SizedBox(height: 8),
-                                pw.Text(
-                                  'OP Number: ${data['opNumber']}',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, font: ttf, color: myColor),
-                                ),
-                                pw.Text(
-                                  'Name: ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, font: ttf, color: myColor),
-                                ),
-                                pw.Text(
-                                  'Phone Number: ${data['phone1']}',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, font: ttf, color: myColor),
-                                ),
-                              ],
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                      contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                      actionsPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      title: Row(
+                        children: const [
+                          Icon(Icons.print, color: Colors.blue, size: 28),
+                          SizedBox(width: 10),
+                          Text(
+                            'Print Confirmation',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      content: const Text(
+                        'Do you want to print this document?',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          style: TextButton.styleFrom(
+                              foregroundColor: Colors.grey[700]),
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Just close
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          pw.Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: pw.Image(bottomImage, fit: pw.BoxFit.cover),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.only(
-                                left: 8, right: 8, top: 6),
-                            child: pw.Column(
-                              mainAxisAlignment: pw.MainAxisAlignment.end,
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                pw.Row(
-                                  mainAxisAlignment:
-                                      pw.MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    pw.Column(
-                                      crossAxisAlignment:
-                                          pw.CrossAxisAlignment.start,
-                                      children: [
-                                        pw.Text(
-                                          'Emergency No: ${Constants.emergencyNo}',
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white),
-                                        ),
-                                        pw.Text(
-                                          'Appointments: ${Constants.appointmentNo}',
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              font: ttf,
-                                              color: PdfColors.white),
-                                        ),
-                                      ],
-                                    ),
-                                    pw.Row(
-                                      children: [
-                                        pw.Column(
+                          onPressed: () async {
+                            final pdf = pw.Document();
+                            final myColor = PdfColor.fromInt(0xFF106ac2);
+                            final font = await rootBundle
+                                .load('Fonts/Poppins/Poppins-Regular.ttf');
+                            final ttf = pw.Font.ttf(font);
+                            final topImage = pw.MemoryImage(
+                              (await rootBundle
+                                      .load('assets/opAssets/OP_Card_top.png'))
+                                  .buffer
+                                  .asUint8List(),
+                            );
+                            final bottomImage = pw.MemoryImage(
+                              (await rootBundle
+                                      .load('assets/opAssets/OP_Card_back.png'))
+                                  .buffer
+                                  .asUint8List(),
+                            );
+                            final loc = pw.MemoryImage(
+                              (await rootBundle
+                                      .load('assets/location_Icon.png'))
+                                  .buffer
+                                  .asUint8List(),
+                            );
+
+                            pdf.addPage(
+                              pw.Page(
+                                pageFormat: const PdfPageFormat(
+                                    8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
+                                margin: pw.EdgeInsets.zero,
+                                build: (pw.Context context) {
+                                  return pw.Stack(
+                                    children: [
+                                      pw.Positioned.fill(
+                                          child: pw.Image(topImage,
+                                              fit: pw.BoxFit.cover)),
+                                      pw.Padding(
+                                        padding: const pw.EdgeInsets.all(8),
+                                        child: pw.Column(
                                           crossAxisAlignment:
-                                              pw.CrossAxisAlignment.end,
+                                              pw.CrossAxisAlignment.start,
                                           children: [
+                                            pw.Row(
+                                              mainAxisAlignment:
+                                                  pw.MainAxisAlignment.end,
+                                              children: [
+                                                pw.Text(
+                                                  Constants.hospitalName,
+                                                  style: pw.TextStyle(
+                                                    fontSize: 14,
+                                                    font: ttf,
+                                                    fontWeight:
+                                                        pw.FontWeight.bold,
+                                                    color: PdfColors.red,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            pw.SizedBox(height: 8),
                                             pw.Text(
-                                              '${Constants.hospitalCity}',
+                                              'OP Number: ${data['opNumber']}',
                                               style: pw.TextStyle(
-                                                  fontSize: 8,
+                                                  fontSize: 10,
                                                   font: ttf,
-                                                  color: PdfColors.white),
+                                                  color: myColor),
                                             ),
                                             pw.Text(
-                                              '${Constants.hospitalDistrict}',
+                                              'Name: ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}',
                                               style: pw.TextStyle(
-                                                  fontSize: 8,
+                                                  fontSize: 10,
                                                   font: ttf,
-                                                  color: PdfColors.white),
+                                                  color: myColor),
+                                            ),
+                                            pw.Text(
+                                              'Phone Number: ${data['phone1']}',
+                                              style: pw.TextStyle(
+                                                  fontSize: 10,
+                                                  font: ttf,
+                                                  color: myColor),
                                             ),
                                           ],
                                         ),
-                                        pw.SizedBox(width: 4),
-                                        pw.Image(loc, height: 20, width: 10),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                );
-                // await Printing.layoutPdf(
-                //   onLayout: (format) async => pdf.save(),
-                // );
+                                      ),
+                                      pw.Positioned(
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: pw.Image(bottomImage,
+                                            fit: pw.BoxFit.cover),
+                                      ),
+                                      pw.Padding(
+                                        padding: const pw.EdgeInsets.only(
+                                            left: 8, right: 8, top: 6),
+                                        child: pw.Column(
+                                          mainAxisAlignment:
+                                              pw.MainAxisAlignment.end,
+                                          crossAxisAlignment:
+                                              pw.CrossAxisAlignment.start,
+                                          children: [
+                                            pw.Row(
+                                              mainAxisAlignment: pw
+                                                  .MainAxisAlignment
+                                                  .spaceBetween,
+                                              children: [
+                                                pw.Column(
+                                                  crossAxisAlignment: pw
+                                                      .CrossAxisAlignment.start,
+                                                  children: [
+                                                    pw.Text(
+                                                      'Emergency No: ${Constants.emergencyNo}',
+                                                      style: pw.TextStyle(
+                                                          fontSize: 8,
+                                                          font: ttf,
+                                                          color:
+                                                              PdfColors.white),
+                                                    ),
+                                                    pw.Text(
+                                                      'Appointments: ${Constants.appointmentNo}',
+                                                      style: pw.TextStyle(
+                                                          fontSize: 8,
+                                                          font: ttf,
+                                                          color:
+                                                              PdfColors.white),
+                                                    ),
+                                                  ],
+                                                ),
+                                                pw.Row(
+                                                  children: [
+                                                    pw.Column(
+                                                      crossAxisAlignment: pw
+                                                          .CrossAxisAlignment
+                                                          .end,
+                                                      children: [
+                                                        pw.Text(
+                                                          '${Constants.hospitalCity}',
+                                                          style: pw.TextStyle(
+                                                              fontSize: 8,
+                                                              font: ttf,
+                                                              color: PdfColors
+                                                                  .white),
+                                                        ),
+                                                        pw.Text(
+                                                          '${Constants.hospitalDistrict}',
+                                                          style: pw.TextStyle(
+                                                              fontSize: 8,
+                                                              font: ttf,
+                                                              color: PdfColors
+                                                                  .white),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    pw.SizedBox(width: 4),
+                                                    pw.Image(loc,
+                                                        height: 20, width: 10),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            );
+                            // await Printing.layoutPdf(
+                            //   onLayout: (format) async => pdf.save(),
+                            // );
 
-                await Printing.sharePdf(
-                  bytes: await pdf.save(),
-                  filename: '${data['opNumber']}.pdf',
+                            await Printing.sharePdf(
+                              bytes: await pdf.save(),
+                              filename: '${data['opNumber']}.pdf',
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.print,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Print',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
               child: const CustomText(text: 'Print'),
@@ -464,19 +543,19 @@ class _OpCardPrint extends State<OpCardPrint> {
                   Spacer(),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       CustomButton(
                         label: 'Refresh',
                         onPressed: () async {
                           RefreshLoading(
                             context: context,
                             task: () async => await fetchData(),
-
                           );
                         },
                         width: screenWidth * 0.08,
                         height: screenHeight * 0.04,
-
                       ),
                     ],
                   ),

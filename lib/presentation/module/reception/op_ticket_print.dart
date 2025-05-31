@@ -152,492 +152,649 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                   'Status': opTicketData['status'] ?? 'N/A',
                   'Primary Info': opTicketData['otherComments'] ?? 'N/A',
                   'Action': TextButton(
-                    onPressed: () async {
-                      final pdf = pw.Document();
-                      const blue = PdfColor.fromInt(0xFF106ac2);
-                      const lightBlue =
-                          PdfColor.fromInt(0xFF21b0d1); // 0xAARRGGBB
-
-                      final font = await rootBundle
-                          .load('Fonts/Poppins/Poppins-Regular.ttf');
-                      final ttf = pw.Font.ttf(font);
-
-                      final topImage = pw.MemoryImage(
-                        (await rootBundle.load(
-                                'assets/opAssets/OP_Ticket_Top_original.png'))
-                            .buffer
-                            .asUint8List(),
-                      );
-
-                      final bottomImage = pw.MemoryImage(
-                        (await rootBundle.load(
-                                'assets/opAssets/OP_Card_back_original.png'))
-                            .buffer
-                            .asUint8List(),
-                      );
-
-                      pdf.addPage(
-                        pw.Page(
-                          // pageFormat: PdfPageFormat.a4,
-                          build: (pw.Context context) {
-                            return pw.Stack(
-                              children: [
-                                pw.Positioned.fill(
-                                  child:
-                                      pw.Image(topImage, fit: pw.BoxFit.cover),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(8),
-                                  child: pw.Column(
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    children: [
-                                      pw.Row(
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.end,
-                                        children: [
-                                          pw.Text(
-                                            Constants.hospitalName,
-                                            style: pw.TextStyle(
-                                              fontSize: 30,
-                                              font: ttf,
-                                              fontWeight: pw.FontWeight.bold,
-                                              color: PdfColors.red,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      pw.SizedBox(height: 8),
-                                    ],
-                                  ),
-                                ),
-                                pw.SizedBox(height: 8),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.only(
-                                      top: 75, left: 8, right: 8),
-                                  child: pw.Container(
-                                    child: pw.Column(
-                                      children: [
-                                        pw.Row(
-                                          mainAxisAlignment:
-                                              pw.MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            pw.Column(
-                                              mainAxisAlignment:
-                                                  pw.MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  pw.CrossAxisAlignment.start,
-                                              children: [
-                                                pw.Text(
-                                                  'Dr. ${opTicketData['doctorName']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 28,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  '${opTicketData['degree']}[General Medicine]',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  '${opTicketData['specialization']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 12,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            pw.Row(
-                                              children: [
-                                                pw.Column(
-                                                  children: [
-                                                    pw.Text(
-                                                      '0${opTicketData['counter']}',
-                                                      style: pw.TextStyle(
-                                                        fontSize: 36,
-                                                        font: ttf,
-                                                        fontWeight:
-                                                            pw.FontWeight.bold,
-                                                        color: PdfColors.black,
-                                                      ),
-                                                    ),
-                                                    pw.Text(
-                                                      'Counter Number',
-                                                      style: pw.TextStyle(
-                                                        fontSize: 10,
-                                                        font: ttf,
-                                                        fontWeight:
-                                                            pw.FontWeight.bold,
-                                                        color: PdfColors.black,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                pw.SizedBox(width: 10),
-                                                pw.Column(
-                                                  children: [
-                                                    pw.Text(
-                                                      '${opTicketData['tokenNumber']}',
-                                                      style: pw.TextStyle(
-                                                        fontSize: 36,
-                                                        font: ttf,
-                                                        fontWeight:
-                                                            pw.FontWeight.bold,
-                                                        color: PdfColors.black,
-                                                      ),
-                                                    ),
-                                                    pw.Text(
-                                                      'Token Number',
-                                                      style: pw.TextStyle(
-                                                        fontSize: 10,
-                                                        font: ttf,
-                                                        fontWeight:
-                                                            pw.FontWeight.bold,
-                                                        color: PdfColors.black,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        pw.Divider(
-                                            thickness: 2, color: lightBlue),
-                                        pw.Column(
-                                          mainAxisAlignment:
-                                              pw.MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            pw.Row(
-                                              mainAxisAlignment:
-                                                  pw.MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  pw.CrossAxisAlignment.start,
-                                              children: [
-                                                pw.Text(
-                                                  'OP Ticket No : ${opTicketData['opTicket']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            pw.SizedBox(height: 6),
-                                            pw.Row(
-                                              mainAxisAlignment: pw
-                                                  .MainAxisAlignment
-                                                  .spaceBetween,
-                                              children: [
-                                                pw.Text(
-                                                  'Name : ${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'OP Number : ${patientData['opNumber']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            pw.SizedBox(height: 6),
-                                            pw.Row(
-                                              mainAxisAlignment: pw
-                                                  .MainAxisAlignment
-                                                  .spaceBetween,
-                                              children: [
-                                                pw.Text(
-                                                  'Age : ${patientData['age']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'Blood Group : ${patientData['bloodGroup']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'Place : ${patientData['city']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'Phone : ${patientData['phone1']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            pw.SizedBox(height: 6),
-                                            pw.Row(
-                                              mainAxisAlignment: pw
-                                                  .MainAxisAlignment
-                                                  .spaceBetween,
-                                              children: [
-                                                pw.Text(
-                                                  'Basic Diagnosis',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'BP : ${opTicketData['bloodPressure']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'Temp : ${opTicketData['temperature']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'Blood Sugar : ${opTicketData['bloodSugarLevel']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                pw.Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: pw.Image(
-                                    bottomImage,
-                                    fit: pw.BoxFit.cover,
-                                  ),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.only(
-                                      left: 8, right: 8, bottom: 10),
-                                  child: pw.Column(
-                                    mainAxisAlignment: pw.MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        pw.CrossAxisAlignment.start,
-                                    children: [
-                                      pw.Container(
-                                        child: pw.Row(
-                                          mainAxisAlignment:
-                                              pw.MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            pw.Column(
-                                              children: [
-                                                pw.Text(
-                                                  'Date : ${dateTime.year.toString() + '/' + dateTime.month.toString().padLeft(2, '0') + '/' + dateTime.day.toString().padLeft(2, '0')}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  'Place : ${Constants.hospitalCity}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            pw.Column(
-                                              children: [
-                                                pw.Text(
-                                                  'Dr. ${opTicketData['doctorName']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  '${opTicketData['degree']}[General Medicine]',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                                pw.Text(
-                                                  '${opTicketData['specialization']}',
-                                                  style: pw.TextStyle(
-                                                    fontSize: 10,
-                                                    font: ttf,
-                                                    fontWeight:
-                                                        pw.FontWeight.bold,
-                                                    color: PdfColors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      pw.SizedBox(height: 50),
-                                      pw.Row(
-                                        mainAxisAlignment:
-                                            pw.MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          pw.Column(
-                                            crossAxisAlignment:
-                                                pw.CrossAxisAlignment.start,
-                                            children: [
-                                              pw.Text(
-                                                'Emergency No: ${Constants.emergencyNo}',
-                                                style: pw.TextStyle(
-                                                    fontSize: 8,
-                                                    font: ttf,
-                                                    color: PdfColors.white),
-                                              ),
-                                              pw.Text(
-                                                'Appointments: ${Constants.appointmentNo}',
-                                                style: pw.TextStyle(
-                                                    fontSize: 8,
-                                                    font: ttf,
-                                                    color: PdfColors.white),
-                                              ),
-                                            ],
-                                          ),
-                                          pw.Row(
-                                            mainAxisAlignment:
-                                                pw.MainAxisAlignment.end,
-                                            crossAxisAlignment:
-                                                pw.CrossAxisAlignment.center,
-                                            children: [
-                                              pw.Column(
-                                                crossAxisAlignment:
-                                                    pw.CrossAxisAlignment.end,
-                                                children: [
-                                                  pw.Text(
-                                                    'Mail : ${Constants.mail}',
-                                                    style: pw.TextStyle(
-                                                        fontSize: 8,
-                                                        font: ttf,
-                                                        color: PdfColors.white),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                          pw.Row(
-                                            mainAxisAlignment:
-                                                pw.MainAxisAlignment.end,
-                                            crossAxisAlignment:
-                                                pw.CrossAxisAlignment.center,
-                                            children: [
-                                              pw.Column(
-                                                crossAxisAlignment:
-                                                    pw.CrossAxisAlignment.end,
-                                                children: [
-                                                  pw.Text(
-                                                    'For more info visit : ${Constants.website}',
-                                                    style: pw.TextStyle(
-                                                        fontSize: 8,
-                                                        font: ttf,
-                                                        color: PdfColors.white),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            titlePadding:
+                                const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                            contentPadding:
+                                const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                            actionsPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            title: Row(
+                              children: const [
+                                Icon(Icons.print, color: Colors.blue, size: 28),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Print Confirmation',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
-                            );
-                          },
-                        ),
-                      );
-                      //
-                      // await Printing.layoutPdf(
-                      //   onLayout: (format) async => pdf.save(),
-                      // );
+                            ),
+                            content: const Text(
+                              'Do you want to print this document?',
+                              style: TextStyle(fontSize: 15),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.grey[700]),
+                                onPressed: () {
+                                  Navigator.of(context).pop(); // Just close
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final pdf = pw.Document();
+                                  const blue = PdfColor.fromInt(0xFF106ac2);
+                                  const lightBlue = PdfColor.fromInt(
+                                      0xFF21b0d1); // 0xAARRGGBB
 
-                      await Printing.sharePdf(
-                          bytes: await pdf.save(),
-                          filename:
-                              '${opTicketData['opTicket'].toString()}.pdf');
+                                  final font = await rootBundle.load(
+                                      'Fonts/Poppins/Poppins-Regular.ttf');
+                                  final ttf = pw.Font.ttf(font);
+
+                                  final topImage = pw.MemoryImage(
+                                    (await rootBundle.load(
+                                            'assets/opAssets/OP_Ticket_Top_original.png'))
+                                        .buffer
+                                        .asUint8List(),
+                                  );
+
+                                  final bottomImage = pw.MemoryImage(
+                                    (await rootBundle.load(
+                                            'assets/opAssets/OP_Card_back_original.png'))
+                                        .buffer
+                                        .asUint8List(),
+                                  );
+
+                                  pdf.addPage(
+                                    pw.Page(
+                                      // pageFormat: PdfPageFormat.a4,
+                                      build: (pw.Context context) {
+                                        return pw.Stack(
+                                          children: [
+                                            pw.Positioned.fill(
+                                              child: pw.Image(topImage,
+                                                  fit: pw.BoxFit.cover),
+                                            ),
+                                            pw.Padding(
+                                              padding:
+                                                  const pw.EdgeInsets.all(8),
+                                              child: pw.Column(
+                                                crossAxisAlignment:
+                                                    pw.CrossAxisAlignment.start,
+                                                children: [
+                                                  pw.Row(
+                                                    mainAxisAlignment: pw
+                                                        .MainAxisAlignment.end,
+                                                    children: [
+                                                      pw.Text(
+                                                        Constants.hospitalName,
+                                                        style: pw.TextStyle(
+                                                          fontSize: 30,
+                                                          font: ttf,
+                                                          fontWeight: pw
+                                                              .FontWeight.bold,
+                                                          color: PdfColors.red,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  pw.SizedBox(height: 8),
+                                                ],
+                                              ),
+                                            ),
+                                            pw.SizedBox(height: 8),
+                                            pw.Padding(
+                                              padding: const pw.EdgeInsets.only(
+                                                  top: 75, left: 8, right: 8),
+                                              child: pw.Container(
+                                                child: pw.Column(
+                                                  children: [
+                                                    pw.Row(
+                                                      mainAxisAlignment: pw
+                                                          .MainAxisAlignment
+                                                          .spaceBetween,
+                                                      children: [
+                                                        pw.Column(
+                                                          mainAxisAlignment: pw
+                                                              .MainAxisAlignment
+                                                              .start,
+                                                          crossAxisAlignment: pw
+                                                              .CrossAxisAlignment
+                                                              .start,
+                                                          children: [
+                                                            pw.Text(
+                                                              'Dr. ${opTicketData['doctorName']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 28,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              '${opTicketData['degree']}[General Medicine]',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              '${opTicketData['specialization']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 12,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        pw.Row(
+                                                          children: [
+                                                            pw.Column(
+                                                              children: [
+                                                                pw.Text(
+                                                                  '0${opTicketData['counter']}',
+                                                                  style: pw
+                                                                      .TextStyle(
+                                                                    fontSize:
+                                                                        36,
+                                                                    font: ttf,
+                                                                    fontWeight: pw
+                                                                        .FontWeight
+                                                                        .bold,
+                                                                    color: PdfColors
+                                                                        .black,
+                                                                  ),
+                                                                ),
+                                                                pw.Text(
+                                                                  'Counter Number',
+                                                                  style: pw
+                                                                      .TextStyle(
+                                                                    fontSize:
+                                                                        10,
+                                                                    font: ttf,
+                                                                    fontWeight: pw
+                                                                        .FontWeight
+                                                                        .bold,
+                                                                    color: PdfColors
+                                                                        .black,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            pw.SizedBox(
+                                                                width: 10),
+                                                            pw.Column(
+                                                              children: [
+                                                                pw.Text(
+                                                                  '${opTicketData['tokenNumber']}',
+                                                                  style: pw
+                                                                      .TextStyle(
+                                                                    fontSize:
+                                                                        36,
+                                                                    font: ttf,
+                                                                    fontWeight: pw
+                                                                        .FontWeight
+                                                                        .bold,
+                                                                    color: PdfColors
+                                                                        .black,
+                                                                  ),
+                                                                ),
+                                                                pw.Text(
+                                                                  'Token Number',
+                                                                  style: pw
+                                                                      .TextStyle(
+                                                                    fontSize:
+                                                                        10,
+                                                                    font: ttf,
+                                                                    fontWeight: pw
+                                                                        .FontWeight
+                                                                        .bold,
+                                                                    color: PdfColors
+                                                                        .black,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    pw.Divider(
+                                                        thickness: 2,
+                                                        color: lightBlue),
+                                                    pw.Column(
+                                                      mainAxisAlignment: pw
+                                                          .MainAxisAlignment
+                                                          .spaceBetween,
+                                                      children: [
+                                                        pw.Row(
+                                                          mainAxisAlignment: pw
+                                                              .MainAxisAlignment
+                                                              .start,
+                                                          crossAxisAlignment: pw
+                                                              .CrossAxisAlignment
+                                                              .start,
+                                                          children: [
+                                                            pw.Text(
+                                                              'OP Ticket No : ${opTicketData['opTicket']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        pw.SizedBox(height: 6),
+                                                        pw.Row(
+                                                          mainAxisAlignment: pw
+                                                              .MainAxisAlignment
+                                                              .spaceBetween,
+                                                          children: [
+                                                            pw.Text(
+                                                              'Name : ${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'OP Number : ${patientData['opNumber']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        pw.SizedBox(height: 6),
+                                                        pw.Row(
+                                                          mainAxisAlignment: pw
+                                                              .MainAxisAlignment
+                                                              .spaceBetween,
+                                                          children: [
+                                                            pw.Text(
+                                                              'Age : ${patientData['age']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'Blood Group : ${patientData['bloodGroup']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'Place : ${patientData['city']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'Phone : ${patientData['phone1']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        pw.SizedBox(height: 6),
+                                                        pw.Row(
+                                                          mainAxisAlignment: pw
+                                                              .MainAxisAlignment
+                                                              .spaceBetween,
+                                                          children: [
+                                                            pw.Text(
+                                                              'Basic Diagnosis',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'BP : ${opTicketData['bloodPressure']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'Temp : ${opTicketData['temperature']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'Blood Sugar : ${opTicketData['bloodSugarLevel']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            pw.Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: pw.Image(
+                                                bottomImage,
+                                                fit: pw.BoxFit.cover,
+                                              ),
+                                            ),
+                                            pw.Padding(
+                                              padding: const pw.EdgeInsets.only(
+                                                  left: 8,
+                                                  right: 8,
+                                                  bottom: 10),
+                                              child: pw.Column(
+                                                mainAxisAlignment:
+                                                    pw.MainAxisAlignment.end,
+                                                crossAxisAlignment:
+                                                    pw.CrossAxisAlignment.start,
+                                                children: [
+                                                  pw.Container(
+                                                    child: pw.Row(
+                                                      mainAxisAlignment: pw
+                                                          .MainAxisAlignment
+                                                          .spaceBetween,
+                                                      children: [
+                                                        pw.Column(
+                                                          children: [
+                                                            pw.Text(
+                                                              'Date : ${dateTime.year.toString() + '/' + dateTime.month.toString().padLeft(2, '0') + '/' + dateTime.day.toString().padLeft(2, '0')}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              'Place : ${Constants.hospitalCity}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        pw.Column(
+                                                          children: [
+                                                            pw.Text(
+                                                              'Dr. ${opTicketData['doctorName']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              '${opTicketData['degree']}[General Medicine]',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            pw.Text(
+                                                              '${opTicketData['specialization']}',
+                                                              style:
+                                                                  pw.TextStyle(
+                                                                fontSize: 10,
+                                                                font: ttf,
+                                                                fontWeight: pw
+                                                                    .FontWeight
+                                                                    .bold,
+                                                                color: PdfColors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  pw.SizedBox(height: 50),
+                                                  pw.Row(
+                                                    mainAxisAlignment: pw
+                                                        .MainAxisAlignment
+                                                        .spaceBetween,
+                                                    children: [
+                                                      pw.Column(
+                                                        crossAxisAlignment: pw
+                                                            .CrossAxisAlignment
+                                                            .start,
+                                                        children: [
+                                                          pw.Text(
+                                                            'Emergency No: ${Constants.emergencyNo}',
+                                                            style: pw.TextStyle(
+                                                                fontSize: 8,
+                                                                font: ttf,
+                                                                color: PdfColors
+                                                                    .white),
+                                                          ),
+                                                          pw.Text(
+                                                            'Appointments: ${Constants.appointmentNo}',
+                                                            style: pw.TextStyle(
+                                                                fontSize: 8,
+                                                                font: ttf,
+                                                                color: PdfColors
+                                                                    .white),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      pw.Row(
+                                                        mainAxisAlignment: pw
+                                                            .MainAxisAlignment
+                                                            .end,
+                                                        crossAxisAlignment: pw
+                                                            .CrossAxisAlignment
+                                                            .center,
+                                                        children: [
+                                                          pw.Column(
+                                                            crossAxisAlignment: pw
+                                                                .CrossAxisAlignment
+                                                                .end,
+                                                            children: [
+                                                              pw.Text(
+                                                                'Mail : ${Constants.mail}',
+                                                                style: pw.TextStyle(
+                                                                    fontSize: 8,
+                                                                    font: ttf,
+                                                                    color: PdfColors
+                                                                        .white),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      pw.Row(
+                                                        mainAxisAlignment: pw
+                                                            .MainAxisAlignment
+                                                            .end,
+                                                        crossAxisAlignment: pw
+                                                            .CrossAxisAlignment
+                                                            .center,
+                                                        children: [
+                                                          pw.Column(
+                                                            crossAxisAlignment: pw
+                                                                .CrossAxisAlignment
+                                                                .end,
+                                                            children: [
+                                                              pw.Text(
+                                                                'For more info visit : ${Constants.website}',
+                                                                style: pw.TextStyle(
+                                                                    fontSize: 8,
+                                                                    font: ttf,
+                                                                    color: PdfColors
+                                                                        .white),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  );
+                                  //
+                                  // await Printing.layoutPdf(
+                                  //   onLayout: (format) async => pdf.save(),
+                                  // );
+
+                                  await Printing.sharePdf(
+                                      bytes: await pdf.save(),
+                                      filename:
+                                          '${opTicketData['opTicket'].toString()}.pdf');
+                                },
+                                icon: const Icon(
+                                  Icons.print,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Print',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                     child: CustomText(text: 'Print'),
                   ),
@@ -845,19 +1002,19 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                   Spacer(),
                   Column(
                     children: [
-                      SizedBox(height: 28,),
+                      SizedBox(
+                        height: 28,
+                      ),
                       CustomButton(
                         label: 'Refresh',
                         onPressed: () async {
                           RefreshLoading(
                             context: context,
                             task: () async => await fetchData(),
-
                           );
                         },
                         width: screenWidth * 0.08,
                         height: screenHeight * 0.04,
-
                       ),
                     ],
                   ),

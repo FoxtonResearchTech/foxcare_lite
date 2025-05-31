@@ -141,11 +141,11 @@ class _UserAccountCreation extends State<UserAccountCreation> {
                 children: [
                   SizedBox(height: 10),
                   SizedBox(
-                    width: 75,
-                    height: 100,
+                    width: 85,
+                    height: 110,
                     child: Center(
                       child: Lottie.asset(
-                        'assets/button_loading.json',
+                        'assets/secure.json',
                       ),
                     ),
                   ),
@@ -168,22 +168,32 @@ class _UserAccountCreation extends State<UserAccountCreation> {
               )),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // Cancel
-              child: CustomText(
-                text: 'Cancel',
-                color: AppColors.blue,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+              onPressed: () {
+                Navigator.of(context).pop(); // Just close
+              },
+              child: const Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               onPressed: () {
                 final password = adminPasswordController.text.trim();
                 if (password.isNotEmpty) {
                   Navigator.pop(context, password); // Return password
                 }
               },
-              child: CustomText(
-                text: 'Confirm',
-                color: AppColors.blue,
+              icon: const Icon(
+                Icons.lock_open_rounded,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Confirm',
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],
@@ -207,7 +217,22 @@ class _UserAccountCreation extends State<UserAccountCreation> {
       setState(() => isLoading = false);
       return;
     }
+    try {
+      // Try signing in with admin email and entered password
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: adminEmail!,
+        password: adminPassword,
+      );
 
+      // If sign-in successful, sign out immediately so currentUser session is restored later
+      await FirebaseAuth.instance.signOut();
+    } on FirebaseAuthException catch (e) {
+      // If password is incorrect or other error
+      CustomSnackBar(context,
+          message: 'Incorrect admin password', backgroundColor: Colors.red);
+      setState(() => isLoading = false);
+      return;
+    }
     try {
       String email = emailController.text.trim();
       if (!email.endsWith('@gmail.com')) {

@@ -282,7 +282,7 @@ class _OpTicketPageState extends State<OpTicketPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Token Detail'),
+            title: const CustomText(text: 'Token Detail', size: 22),
             content: Container(
               width: 125,
               height: 50,
@@ -298,6 +298,23 @@ class _OpTicketPageState extends State<OpTicketPage> {
             ),
             actions: <Widget>[
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                onPressed: () {
+                  setState(() {
+                    clearFields();
+                  });
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => OpTicketPage()));
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 onPressed: () async {
                   final pdf = pw.Document();
                   const blue = PdfColor.fromInt(0xFF106ac2);
@@ -755,17 +772,14 @@ class _OpTicketPageState extends State<OpTicketPage> {
                   await Printing.sharePdf(
                       bytes: await pdf.save(), filename: '${opTicketId}.pdf');
                 },
-                child: const Text('Print'),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    clearFields();
-                  });
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => OpTicketPage()));
-                },
-                child: const Text('Close'),
+                icon: const Icon(
+                  Icons.print,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Print',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           );

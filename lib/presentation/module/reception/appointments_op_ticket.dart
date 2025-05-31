@@ -305,6 +305,23 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
             ),
             actions: <Widget>[
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                onPressed: () {
+                  setState(() {
+                    clearFields();
+                  });
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => BookAppointments()));
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 onPressed: () async {
                   final pdf = pw.Document();
                   const blue = PdfColor.fromInt(0xFF106ac2);
@@ -754,25 +771,18 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                       },
                     ),
                   );
-                  //
-                  // await Printing.layoutPdf(
-                  //   onLayout: (format) async => pdf.save(),
-                  // );
 
                   await Printing.sharePdf(
                       bytes: await pdf.save(), filename: '${opTicketId}.pdf');
                 },
-                child: const Text('Print'),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    clearFields();
-                  });
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      builder: (context) => BookAppointments()));
-                },
-                child: const Text('Close'),
+                icon: const Icon(
+                  Icons.print,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Print',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           );

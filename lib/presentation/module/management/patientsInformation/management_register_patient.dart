@@ -250,6 +250,26 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
             ),
             actions: <Widget>[
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  clearForm();
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ManagementRegisterPatient()),
+                  );
+                },
+                child: const Text('Close'),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 onPressed: () async {
                   final pdf = pw.Document();
                   final myColor = PdfColor.fromInt(0xFF106ac2); // 0xAARRGGBB
@@ -424,32 +444,20 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                   //   format: const PdfPageFormat(
                   //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
                   // );
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
+                  // await Printing.layoutPdf(
+                  //   onLayout: (format) async => pdf.save(),
+                  // );
 
-                  // await Printing.sharePdf(
-                  //     bytes: await pdf.save(), filename: '${uid}.pdf');
+                  await Printing.sharePdf(
+                      bytes: await pdf.save(), filename: '${uid}.pdf');
                 },
-                child: CustomText(
-                  text: 'Print',
-                  color: AppColors.secondaryColor,
+                icon: const Icon(
+                  Icons.print,
+                  color: Colors.white,
                 ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  clearForm();
-
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ManagementRegisterPatient()),
-                  );
-                },
-                child: CustomText(
-                  text: 'Close',
-                  color: AppColors.secondaryColor,
+                label: const Text(
+                  'Print',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],

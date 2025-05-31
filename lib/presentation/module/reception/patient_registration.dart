@@ -231,6 +231,26 @@ class _PatientRegistrationState extends State<PatientRegistration> {
             ),
             actions: <Widget>[
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  clearForm();
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PatientRegistration()),
+                  );
+                },
+                child: const Text('Close'),
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 onPressed: () async {
                   final pdf = pw.Document();
                   final myColor = PdfColor.fromInt(0xFF106ac2); // 0xAARRGGBB
@@ -412,25 +432,13 @@ class _PatientRegistrationState extends State<PatientRegistration> {
                   await Printing.sharePdf(
                       bytes: await pdf.save(), filename: '${uid}.pdf');
                 },
-                child: CustomText(
-                  text: 'Print',
-                  color: AppColors.secondaryColor,
+                icon: const Icon(
+                  Icons.print,
+                  color: Colors.white,
                 ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  clearForm();
-
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => PatientRegistration()),
-                  );
-                },
-                child: CustomText(
-                  text: 'Close',
-                  color: AppColors.secondaryColor,
+                label: const Text(
+                  'Print',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],
