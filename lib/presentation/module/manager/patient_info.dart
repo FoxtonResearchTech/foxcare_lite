@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:foxcare_lite/presentation/module/manager/edit_delete_patient_information.dart';
 import 'package:foxcare_lite/utilities/constants.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -83,176 +84,44 @@ class _PatientInfoState extends State<PatientInfo> {
   final TextEditingController opAmount = TextEditingController();
   final TextEditingController opAmountCollected = TextEditingController();
 
-  String generateNumericUid() {
-    var random = Random();
-    return 'Fox' +
-        List.generate(6, (_) => random.nextInt(10).toString()).join();
+  String? phone1Error;
+  String? phone2Error;
+
+  void _validatePhone1() {
+    final text = phone1.text;
+    final phoneRegex = RegExp(r'^[0-9]{0,10}$');
+
+    setState(() {
+      if (text.isEmpty) {
+        phone1Error = '';
+      } else if (!phoneRegex.hasMatch(text)) {
+        phone1Error = 'Only digits are allowed';
+      } else if (text.length != 10) {
+        phone1Error = 'Phone number must be 10 digits';
+      } else {
+        phone1Error = null;
+      }
+    });
+  }
+
+  void _validatePhone2() {
+    final text = phone2.text;
+    final phoneRegex = RegExp(r'^[0-9]{0,10}$');
+
+    setState(() {
+      if (text.isEmpty) {
+        phone2Error = '';
+      } else if (!phoneRegex.hasMatch(text)) {
+        phone2Error = 'Only digits are allowed';
+      } else if (text.length != 10) {
+        phone2Error = 'Phone number must be 10 digits';
+      } else {
+        phone2Error = null;
+      }
+    });
   }
 
   String uid = '';
-
-  Future<void> savePatientDetails() async {
-    final patientID = generateNumericUid();
-
-    // Validate input
-    if (firstname.text.isEmpty ||
-        lastname.text.isEmpty ||
-        selectedSex == null ||
-        selectedBloodGroup == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all required fields")),
-      );
-      return;
-    }
-
-    // Create patient data object
-    Map<String, dynamic> patientData = {
-      'opNumber': patientID,
-      'firstName': firstname.text,
-      'middleName': middlename.text,
-      'lastName': lastname.text,
-      'sex': selectedSex,
-      'age': age.text,
-      'dob': dob.text,
-      'address1': address1.text,
-      'address2': address2.text,
-      'landmark': landmark.text,
-      'city': city.text,
-      'state': state.text,
-      'pincode': pincode.text,
-      'phone1': phone1.text,
-      'phone2': phone2.text,
-      'bloodGroup': selectedBloodGroup,
-      'opAmount': opAmount.text,
-      'opAmountCollected': opAmountCollected.text,
-    };
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(patientID)
-          .set(patientData);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Patient registered successfully")),
-      );
-
-      // Show a dialog with the entered details
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Patient Details'),
-            content: Container(
-              width: 350,
-              height: 350,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  CustomText(text: 'Patient ID: $patientID'),
-                  CustomText(text: 'First Name: ${firstname.text}'),
-                  CustomText(text: 'Middle Name: ${middlename.text}'),
-                  CustomText(text: 'Last Name: ${lastname.text}'),
-                  CustomText(text: 'Sex: ${selectedSex}'),
-                  CustomText(text: 'Age: ${age.text}'),
-                  CustomText(text: 'DOB: ${dob.text}'),
-                  CustomText(
-                      text: 'Address: ${address1.text}, ${address2.text}'),
-                  CustomText(text: 'Landmark: ${landmark.text}'),
-                  CustomText(text: 'City: ${city.text}'),
-                  CustomText(text: 'State: ${state.text}'),
-                  CustomText(text: 'Pincode: ${pincode.text}'),
-                  CustomText(text: 'Phone 1: ${phone1.text}'),
-                  CustomText(text: 'Phone 2: ${phone2.text}'),
-                  CustomText(text: 'Blood Group: ${selectedBloodGroup}'),
-                  CustomText(text: 'Amount: ${opAmount.text}'),
-                  CustomText(text: 'Collected: ${opAmountCollected.text}'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () async {
-                  final pdf = pw.Document();
-                  pdf.addPage(
-                    pw.Page(
-                      pageFormat: const PdfPageFormat(
-                          10 * PdfPageFormat.cm, 7 * PdfPageFormat.cm),
-                      build: (pw.Context context) => pw.Center(
-                        child: pw.Container(
-                          width: 300,
-                          height: 200,
-                          padding: const pw.EdgeInsets.all(16), // Inner padding
-                          decoration: pw.BoxDecoration(
-                            border: pw.Border.all(
-                                color: PdfColors.grey), // Border color
-                            borderRadius:
-                                pw.BorderRadius.circular(8), // Rounded corners
-                          ),
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Text(
-                                'ABC Hospital ',
-                                style: pw.TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: pw.FontWeight.bold,
-                                ),
-                              ),
-                              pw.SizedBox(height: 2),
-                              pw.Center(
-                                child: pw.Text('Care through excelling'),
-                              ),
-                              pw.SizedBox(height: 2),
-                              pw.Divider(),
-                              pw.SizedBox(height: 5),
-                              pw.Text('Patient ID: $patientID'),
-                              pw.Text(
-                                  'Name: ${firstname.text + ' ' + middlename.text + ' ' + lastname.text}'),
-                              pw.Text('DOB: ${dob.text}'),
-                              pw.Text(
-                                  'Address: ${address1.text},${city.text},${pincode.text}'),
-                              pw.Divider(),
-                              pw.Text(
-                                  'Please bring your card for every check up'),
-                              pw.SizedBox(height: 2),
-                              pw.Text('Contact : '),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-
-                  await Printing.layoutPdf(
-                    onLayout: (format) async => pdf.save(),
-                  );
-                },
-                child: CustomText(
-                  text: 'Print',
-                  color: AppColors.secondaryColor,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  clearForm();
-                },
-                child: CustomText(
-                  text: 'Close',
-                  color: AppColors.secondaryColor,
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to register patient: $e")),
-      );
-    }
-  }
 
   Future<void> updatePatientDetails() async {
     if (widget.opNumberEdit == null) {
@@ -278,8 +147,6 @@ class _PatientInfoState extends State<PatientInfo> {
       'phone1': phone1.text,
       'phone2': phone2.text,
       'bloodGroup': selectedBloodGroup,
-      'opAmount': opAmount.text,
-      'opAmountCollected': opAmountCollected.text,
     };
 
     try {
@@ -328,9 +195,6 @@ class _PatientInfoState extends State<PatientInfo> {
                         _infoRow('Phone 1', phone1.text),
                         _infoRow('Phone 2', phone2.text),
                         _infoRow('Blood Group', selectedBloodGroup!),
-                        const Divider(),
-                        _infoRow('Amount', opAmount.text),
-                        _infoRow('Collected', opAmountCollected.text),
                       ],
                     ),
                   ),
@@ -384,7 +248,7 @@ class _PatientInfoState extends State<PatientInfo> {
                                     mainAxisAlignment: pw.MainAxisAlignment.end,
                                     children: [
                                       pw.Text(
-                                        'ABC Hospital',
+                                        Constants.hospitalName,
                                         style: pw.TextStyle(
                                           fontSize: 14,
                                           font: ttf,
@@ -506,17 +370,14 @@ class _PatientInfoState extends State<PatientInfo> {
                       },
                     ),
                   );
-                  // await Printing.layoutPdf(
-                  //   onLayout: (PdfPageFormat format) async {
-                  //     return pdf.save();
-                  //   },
-                  //   format: const PdfPageFormat(
-                  //       8 * PdfPageFormat.cm, 5 * PdfPageFormat.cm),
-                  // );
+                  await Printing.layoutPdf(
+                    onLayout: (format) async => pdf.save(),
+                  );
 
-                  await Printing.sharePdf(
-                      bytes: await pdf.save(),
-                      filename: '${widget.opNumberEdit}.pdf');
+                  //
+                  // await Printing.sharePdf(
+                  //     bytes: await pdf.save(),
+                  //     filename: '${widget.opNumberEdit}.pdf');
                 },
                 child: CustomText(
                   text: 'Print',
@@ -537,10 +398,37 @@ class _PatientInfoState extends State<PatientInfo> {
         },
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to update patient: $e")),
-      );
+      CustomSnackBar(context,
+          message: 'Failed to update patient', backgroundColor: Colors.red);
     }
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+      setState(() {
+        controller.text = formattedDate;
+      });
+    }
+  }
+
+  int _calculateAge(DateTime birthDate) {
+    final today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+
+    return age;
   }
 
   void clearForm() {
@@ -567,7 +455,6 @@ class _PatientInfoState extends State<PatientInfo> {
 
   @override
   void initState() {
-    uid = generateNumericUid();
     if (widget.opNumberEdit != null) {
       isEditing = true;
       firstname.text = widget.firstNameEdit ?? '';
@@ -588,6 +475,8 @@ class _PatientInfoState extends State<PatientInfo> {
       opAmount.text = widget.opAmountEdit ?? '';
       opAmountCollected.text = widget.opAmountCollectedEdit ?? '';
     }
+    phone1.addListener(_validatePhone1);
+    phone2.addListener(_validatePhone2);
     super.initState();
   }
 
@@ -619,7 +508,6 @@ class _PatientInfoState extends State<PatientInfo> {
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            top: screenHeight * 0.05,
             left: screenWidth * 0.08,
             right: screenWidth * 0.08,
             bottom: screenWidth * 0.05,
@@ -628,168 +516,345 @@ class _PatientInfoState extends State<PatientInfo> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomText(
-                    text: isEditing
-                        ? 'Edit Patient Information'
-                        : 'Patient Registration : ',
-                    size: screenWidth * 0.02,
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "Edit Patient Information ",
+                          size: screenWidth * .03,
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(width: screenWidth * 0.52),
-                  isEditing
-                      ? const SizedBox()
-                      : CustomButton(
-                          label: 'Edit/Delete Patients',
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const EditDeletePatientInformation()));
-                          },
-                          width: screenWidth * 0.1,
-                          height: screenHeight * 0.05,
-                        )
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.11,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                        image: const DecorationImage(
+                            image: AssetImage('assets/foxcare_lite_logo.png'))),
+                  ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomTextField(
-                    hintText: 'First Name',
-                    controller: firstname,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'First Name',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: firstname,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'Middle Name',
-                    controller: middlename,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Middle Name',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: middlename,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'Last Name',
-                    controller: lastname,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Last Name',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: lastname,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomDropdown(
-                      label: 'Sex',
-                      items: ['Male', 'Female', 'Other'],
-                      selectedItem: selectedSex,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedSex = value!;
-                        });
-                      }),
-                  CustomTextField(
-                    hintText: 'Age',
-                    controller: age,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Sex',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomDropdown(
+                          label: '',
+                          items: ['Male', 'Female', 'Other'],
+                          selectedItem: selectedSex,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedSex = value!;
+                            });
+                          }),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'DOB (YYYY-MM-DD)',
-                    controller: dob,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Age',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: age,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'DOB',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: dob,
+                        width: screenWidth * 0.25,
+                        icon: Icon(Icons.date_range_outlined),
+                        onTap: () async {
+                          await _selectDate(context, dob);
+                          if (dob.text.isNotEmpty) {
+                            try {
+                              DateTime pickedDate =
+                                  DateFormat('yyyy-MM-dd').parse(dob.text);
+                              int calculatedAge = _calculateAge(pickedDate);
+                              age.text = calculatedAge.toString();
+                            } catch (e) {
+                              age.text = '';
+                            }
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Column(
                 children: [
-                  CustomTextField(
-                    hintText: 'Address Line 1',
-                    controller: address1,
-                    width: screenWidth * 0.9,
-                    verticalSize: screenHeight * 0.05,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Address Lane 1',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: address1,
+                        width: screenWidth * 0.9,
+                        verticalSize: screenHeight * 0.05,
+                      ),
+                    ],
                   ),
-                  SizedBox(height: screenHeight * 0.04),
-                  CustomTextField(
-                    hintText: 'Address Line 2',
-                    controller: address2,
-                    width: screenWidth * 0.9,
-                    verticalSize: screenHeight * 0.05,
+                  SizedBox(height: screenHeight * 0.02),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Address Lane 2',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: address2,
+                        width: screenWidth * 0.9,
+                        verticalSize: screenHeight * 0.05,
+                      ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomTextField(
-                    hintText: 'Land Mark',
-                    controller: landmark,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Land Mark',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: landmark,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'City',
-                    controller: city,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'City',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: city,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'State',
-                    controller: state,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'State',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: state,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomTextField(
-                    hintText: 'Pincode',
-                    controller: pincode,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Pincode',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: pincode,
+                        width: screenWidth * 0.25,
+                      ),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'Mobile 1',
-                    controller: phone1,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Phone 1',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: '',
+                        controller: phone1,
+                        width: screenWidth * 0.25,
+                      ),
+                      if (phone1Error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0, left: 8.0),
+                          child: CustomText(
+                            text: phone1Error!,
+                            color: Colors.red, // optional: show it in red
+                          ),
+                        ),
+                    ],
                   ),
-                  CustomTextField(
-                    hintText: 'Mobile 2',
-                    controller: phone2,
-                    width: screenWidth * 0.25,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Phone 2',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomTextField(
+                        hintText: 'Mobile 2',
+                        controller: phone2,
+                        width: screenWidth * 0.25,
+                      ),
+                      if (phone2Error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0, left: 8.0),
+                          child: CustomText(
+                            text: phone2Error!,
+                            color: Colors.red, // optional: show it in red
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.02),
               Row(
                 children: [
-                  CustomDropdown(
-                      label: 'Blood Group',
-                      items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
-                      selectedItem: selectedBloodGroup,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedBloodGroup = value!;
-                        });
-                      }),
-                  SizedBox(width: screenWidth * 0.12),
-                  CustomTextField(
-                    hintText: 'OP Amount',
-                    width: screenWidth * 0.1,
-                    controller: opAmount,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomText(
+                        text: 'Blood Group',
+                        size: screenWidth * 0.0125,
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      CustomDropdown(
+                          label: '',
+                          items: [
+                            'A+',
+                            'A-',
+                            'B+',
+                            'B-',
+                            'O+',
+                            'O-',
+                            'AB+',
+                            'AB-'
+                          ],
+                          selectedItem: selectedBloodGroup,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedBloodGroup = value!;
+                            });
+                          }),
+                    ],
                   ),
-                  SizedBox(width: screenWidth * 0.12),
-                  CustomTextField(
-                    hintText: 'Collected',
-                    width: screenWidth * 0.1,
-                    controller: opAmountCollected,
-                  )
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
               Center(
                   child: CustomButton(
-                label: isEditing ? 'Update' : 'Register',
-                onPressed: () {
-                  isEditing ? updatePatientDetails() : savePatientDetails();
+                label: 'Update',
+                onPressed: () async {
+                  await updatePatientDetails();
                 },
                 width: screenWidth * 0.1,
               )),

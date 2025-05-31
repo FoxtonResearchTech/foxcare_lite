@@ -12,7 +12,6 @@ class RefreshLoading {
   void _run(BuildContext context, Future<void> Function() task) async {
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (context) {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;

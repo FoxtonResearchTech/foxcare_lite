@@ -5,6 +5,7 @@ import 'package:foxcare_lite/presentation/module/manager/patient_info.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
+import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
@@ -45,148 +46,177 @@ class _EditDeletePatientInformation
     super.dispose();
   }
 
-  Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
+  Future<void> fetchData({
+    String? opNumber,
+    String? phoneNumber,
+    int pageSize = 20,
+  }) async {
     try {
-      Query query = FirebaseFirestore.instance.collection('patients');
-
-      if (opNumber != null) {
-        query = query.where('opNumber', isEqualTo: opNumber);
-      } else if (phoneNumber != null) {
-        query = query.where(Filter.or(
-          Filter('phone1', isEqualTo: phoneNumber),
-          Filter('phone2', isEqualTo: phoneNumber),
-        ));
-      }
-      final QuerySnapshot snapshot = await query.get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No records found");
-        setState(() {
-          tableData1 = [];
-        });
-        return;
-      }
-
+      Query baseQuery = FirebaseFirestore.instance.collection('patients');
+      DocumentSnapshot? lastDocument;
       List<Map<String, dynamic>> fetchedData = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (!data.containsKey('opNumber')) continue;
-        fetchedData.add({
-          'OP NO': data['opNumber'] ?? 'N/A',
-          'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
-              .trim(),
-          'Place': data['city'] ?? 'N/A',
-          'Phone No': data['phone1'] ?? 'N/A',
-          'DOB': data['dob'] ?? 'N/A',
-          'Edit': TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PatientInfo(
-                      opNumberEdit: data['opNumber'] ?? 'N/A',
-                      firstNameEdit: data['firstName'] ?? 'N/A',
-                      middleNameEdit: data['middleName'] ?? 'N/A',
-                      lastNameEdit: data['lastName'] ?? 'N/A',
-                      sexEdit: data['sex'] ?? 'N/A',
-                      ageEdit: data['age'] ?? 'N/A',
-                      dobEdit: data['dob'] ?? 'N/A',
-                      landmarkEdit: data['landmark'] ?? 'N/A',
-                      address1Edit: data['address1'] ?? 'N/A',
-                      address2Edit: data['address2'] ?? 'N/A',
-                      cityEdit: data['city'] ?? 'N/A',
-                      stateEdit: data['state'] ?? 'N/A',
-                      pincodeEdit: data['pincode'] ?? 'N/A',
-                      phone1Edit: data['phone1'] ?? 'N/A',
-                      phone2Edit: data['phone2'] ?? 'N/A',
-                      bloodGroupEdit: data['bloodGroup'] ?? 'N/A',
-                      opAmountEdit: data['opAmount'] ?? 'N/A',
-                      opAmountCollectedEdit: data['opAmountCollected'] ?? 'N/A',
-                    ),
-                  ),
-                );
-              },
-              child: const CustomText(text: 'Edit')),
-          'Delete': TextButton(
-              onPressed: () async {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text('Deletion Conformation'),
-                      content: Container(
-                        width: 100,
-                        height: 25,
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            CustomText(
-                                text: 'Are you sure you want to delete ?'),
-                          ],
-                        ),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                            onPressed: () async {
-                              try {
-                                await FirebaseFirestore.instance
-                                    .collection('patients')
-                                    .doc(data['opNumber'])
-                                    .collection('ipPrescription')
-                                    .doc()
-                                    .delete();
-                                await FirebaseFirestore.instance
-                                    .collection('patients')
-                                    .doc(data['opNumber'])
-                                    .collection('sampleData')
-                                    .doc()
-                                    .delete();
-                                await FirebaseFirestore.instance
-                                    .collection('patients')
-                                    .doc(data['opNumber'])
-                                    .collection('tokens')
-                                    .doc()
-                                    .delete();
-                                await FirebaseFirestore.instance
-                                    .collection('patients')
-                                    .doc(data['opNumber'])
-                                    .delete();
+      bool filterByPhone = phoneNumber != null && phoneNumber.isNotEmpty;
+      bool filterByOpNumber = opNumber != null && opNumber.isNotEmpty;
 
-                                CustomSnackBar(context,
-                                    message: 'Patient Deleted');
-                                fetchData();
-                              } catch (e) {
-                                print(
-                                    'Error updating status for patient ${data['patientID']}: $e');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Failed to update status')),
-                                );
-                              }
-                              Navigator.pop(context);
-                            },
-                            child: CustomText(
-                              text: 'Delete',
-                              color: Colors.red,
-                            )),
+      while (true) {
+        Query query = baseQuery;
+
+        if (filterByPhone) {
+          query = query.where(Filter.or(
+            Filter('phone1', isEqualTo: phoneNumber),
+            Filter('phone2', isEqualTo: phoneNumber),
+          ));
+        }
+
+        if (lastDocument != null) {
+          query = query.startAfterDocument(lastDocument);
+        }
+
+        query = query.limit(pageSize);
+        final snapshot = await query.get();
+
+        if (snapshot.docs.isEmpty) {
+          break;
+        }
+
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final docRef = doc.reference;
+
+          // Case-insensitive OP number filter in Dart
+          if (filterByOpNumber) {
+            final patientOp = data['opNumber']?.toString().toLowerCase() ?? '';
+            if (patientOp != opNumber.toLowerCase()) continue;
+          }
+
+          fetchedData.add({
+            'OP NO': data['opNumber'] ?? 'N/A',
+            'Name': '${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}'
+                .trim(),
+            'Place': data['city'] ?? 'N/A',
+            'Phone No': data['phone1'] ?? 'N/A',
+            'DOB': data['dob'] ?? 'N/A',
+            'Status': data['status'],
+            'Edit': TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PatientInfo(
+                        opNumberEdit: data['opNumber'] ?? 'N/A',
+                        firstNameEdit: data['firstName'] ?? 'N/A',
+                        middleNameEdit: data['middleName'] ?? 'N/A',
+                        lastNameEdit: data['lastName'] ?? 'N/A',
+                        sexEdit: data['sex'] ?? 'N/A',
+                        ageEdit: data['age'] ?? 'N/A',
+                        dobEdit: data['dob'] ?? 'N/A',
+                        landmarkEdit: data['landmark'] ?? 'N/A',
+                        address1Edit: data['address1'] ?? 'N/A',
+                        address2Edit: data['address2'] ?? 'N/A',
+                        cityEdit: data['city'] ?? 'N/A',
+                        stateEdit: data['state'] ?? 'N/A',
+                        pincodeEdit: data['pincode'] ?? 'N/A',
+                        phone1Edit: data['phone1'] ?? 'N/A',
+                        phone2Edit: data['phone2'] ?? 'N/A',
+                        bloodGroupEdit: data['bloodGroup'] ?? 'N/A',
+                        opAmountEdit: data['opAmount'] ?? 'N/A',
+                        opAmountCollectedEdit:
+                            data['opAmountCollected'] ?? 'N/A',
+                      ),
+                    ),
+                  );
+                },
+                child: const CustomText(text: 'Edit')),
+            'Delete': TextButton(
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Row(
+                        children: const [
+                          Icon(Icons.warning_amber_rounded,
+                              color: Colors.redAccent),
+                          SizedBox(width: 8),
+                          Text('Confirm Delete'),
+                        ],
+                      ),
+                      content: Text(
+                        'Are you sure you want to delete the patient ${data['firstName'] ?? 'N/A'} ${data['lastName'] ?? 'N/A'}?',
+                      ),
+                      actions: [
                         TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: CustomText(text: 'Close'),
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text(
+                            'Confirm',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ],
-                    );
-                  },
-                );
-              },
-              child: const CustomText(text: 'Delete'))
-        });
+                    ),
+                  );
+
+                  if (confirmed == true) {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('patients')
+                          .doc(data['opNumber'])
+                          .collection('ipPrescription')
+                          .doc()
+                          .delete();
+                      await FirebaseFirestore.instance
+                          .collection('patients')
+                          .doc(data['opNumber'])
+                          .collection('sampleData')
+                          .doc()
+                          .delete();
+                      await FirebaseFirestore.instance
+                          .collection('patients')
+                          .doc(data['opNumber'])
+                          .collection('tokens')
+                          .doc()
+                          .delete();
+                      await FirebaseFirestore.instance
+                          .collection('patients')
+                          .doc(data['opNumber'])
+                          .delete();
+
+                      CustomSnackBar(context,
+                          message: 'Patient Deleted Successfully',
+                          backgroundColor: Colors.green);
+                      fetchData();
+                    } catch (e) {
+                      print('Error deleting patient ${data['opNumber']}: $e');
+                      CustomSnackBar(context,
+                          message: 'Failed To Delete Patient',
+                          backgroundColor: Colors.red);
+                    }
+                  }
+                },
+                child: const CustomText(text: 'Delete'))
+          });
+        }
+
+        lastDocument = snapshot.docs.last;
+
+        // Optional delay if you want to slow down batch loading
+        await Future.delayed(const Duration(milliseconds: 100));
       }
+
       setState(() {
         tableData1 = fetchedData;
       });
+
+      if (fetchedData.isEmpty) {
+        print("No records found");
+      }
     } catch (e) {
       print('Error fetching data from Firestore: $e');
     }
@@ -261,14 +291,14 @@ class _EditDeletePatientInformation
                 ],
               ),
               SizedBox(height: screenHeight * 0.08),
-              CustomDataTable(
+              LazyDataTable(
                 tableData: tableData1,
                 headers: headers1,
                 headerColor: Colors.white,
                 headerBackgroundColor: AppColors.blue,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
+                  return row['Status'] == 'abscond'
+                      ? Colors.red.shade300
                       : Colors.transparent;
                 },
               ),

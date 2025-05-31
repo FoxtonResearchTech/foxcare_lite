@@ -295,7 +295,7 @@ class _ManagementRegisterPatient extends State<ManagementRegisterPatient> {
                                     mainAxisAlignment: pw.MainAxisAlignment.end,
                                     children: [
                                       pw.Text(
-                                        'ABC Hospital',
+                                        Constants.hospitalName,
                                         style: pw.TextStyle(
                                           fontSize: 14,
                                           font: ttf,
