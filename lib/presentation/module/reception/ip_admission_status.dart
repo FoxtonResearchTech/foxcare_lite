@@ -346,7 +346,7 @@ class _IpAdmissionStatus extends State<IpAdmissionStatus> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
+                  return row['Status'] == 'abscond'
                       ? Colors.red.shade300
                       : Colors.transparent;
                 },

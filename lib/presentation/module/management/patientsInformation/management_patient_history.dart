@@ -10,6 +10,7 @@ import 'package:lottie/lottie.dart';
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/patient_information/management_patient_information.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
@@ -246,7 +247,7 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +300,7 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                       ),
                       SizedBox(height: screenHeight * 0.01),
                       CustomTextField(
-                        hintText: 'P',
+                        hintText: '',
                         width: screenWidth * 0.18,
                         controller: _phoneNumber,
                       ),
@@ -331,6 +332,23 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                             ),
                     ],
                   ),
+                  SizedBox(width: screenHeight * 0.2),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      CustomButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: screenWidth * 0.025,
+                        width: screenWidth * 0.08,
+                      ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
@@ -340,7 +358,7 @@ class _ManagementPatientHistory extends State<ManagementPatientHistory> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
+                  return row['Status'] == 'abscond'
                       ? Colors.red.shade300
                       : Colors.transparent;
                 },

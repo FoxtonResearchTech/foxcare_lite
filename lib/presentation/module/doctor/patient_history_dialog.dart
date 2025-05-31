@@ -135,11 +135,23 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return AlertDialog(
-      title: Text('Patient History'),
+      title: CustomText(
+        text: 'Patient History',
+        size: screenWidth * 0.014,
+      ),
       content: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? SizedBox(
+              width: screenWidth * 0.3,
+              height: screenHeight * 0.6,
+              child: Center(
+                  child: CircularProgressIndicator(
+                color: AppColors.blue,
+              )))
           : (opHistory.isEmpty && ipHistory.isEmpty)
-              ? Center(child: CustomText(text: "No history found"))
+              ? SizedBox(
+                  width: screenWidth * 0.3,
+                  height: screenHeight * 0.6,
+                  child: Center(child: CustomText(text: "No history found")))
               : SingleChildScrollView(
                   child: SizedBox(
                     width: screenWidth * 0.3,

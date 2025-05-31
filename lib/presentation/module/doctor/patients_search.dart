@@ -354,7 +354,7 @@ class _PatientsSearch extends State<PatientsSearch> {
                 tableData: tableData1,
                 headers: headers1,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
+                  return row['Status'] == 'abscond'
                       ? Colors.red.shade300
                       : Colors.grey.shade200;
                 },

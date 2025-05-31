@@ -848,7 +848,7 @@ class _OpTicketPrint extends State<OpTicketPrint> {
                 tableData: tableData,
                 headers: headers,
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
+                  return row['Status'] == 'abscond'
                       ? Colors.red.shade200
                       : Colors.transparent;
                 },

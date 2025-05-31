@@ -577,8 +577,8 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                   7: FixedColumnWidth(screenWidth * 0.1),
                 },
                 rowColorResolver: (row) {
-                  return row['Status'] == 'aborted'
-                      ? Colors.red.shade200
+                  return row['Status'] == 'abscond'
+                      ? Colors.red.shade300
                       : Colors.transparent;
                 },
               ),
