@@ -923,13 +923,13 @@ class _IpBillingEntry extends State<IpBillingEntry> {
                     ],
                   ),
                 );
-                //
-                await Printing.layoutPdf(
-                  onLayout: (format) async => pdf.save(),
-                );
-                //
-                // await Printing.sharePdf(
-                //     bytes: await pdf.save(), filename: '${billNO}.pdf');
+
+                // await Printing.layoutPdf(
+                //   onLayout: (format) async => pdf.save(),
+                // );
+
+                await Printing.sharePdf(
+                    bytes: await pdf.save(), filename: '${billNO}.pdf');
               },
               style: TextButton.styleFrom(
                 foregroundColor: Colors.teal,

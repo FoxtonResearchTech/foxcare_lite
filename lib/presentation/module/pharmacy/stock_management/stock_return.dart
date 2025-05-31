@@ -44,7 +44,21 @@ class _StockReturn extends State<StockReturn> {
   final TextEditingController paymentDetails = TextEditingController();
   String? selectedPaymentMode;
   double _originalCollected = 0.0;
-
+  final List<String> headers2 = [
+    'Product Name',
+    'Batch',
+    'Expiry',
+    'Return Quantity',
+    'Return Free',
+    'MRP',
+    'Rate',
+    'Tax',
+    'CGST',
+    'SGST',
+    'Total Tax',
+    'Product Total',
+  ];
+  List<Map<String, dynamic>> tableData2 = [];
   final List<String> headers = [
     'Ref No',
     'Return Date',
@@ -479,17 +493,90 @@ class _StockReturn extends State<StockReturn> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    for (var product in data['entryProducts']) {
+                      tableData2.add({
+                        'Product Name': product['Product Name'],
+                        'Batch': product['Batch'],
+                        'Expiry': product['Expiry'],
+                        'Return Free': product['Free'],
+                        'MRP': product['MRP'],
+                        'Rate': product['Rate'],
+                        'Tax': product['Tax'],
+                        'CGST': product['CGST'],
+                        'SGST': product['SGST'],
+                        'Total Tax': product['Tax Total'],
+                        'Return Quantity': product['Quantity'],
+                        'Product Total': product['Product Total'],
+                        'HSN Code': product['HSN Code'],
+                        'Category': product['Category'],
+                        'Company': product['Company'],
+                        'Distributor': product['Distributor'],
+                      });
+                    }
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: CustomText(
+                            text: 'View Bill',
+                            size: 25,
+                          ),
+                          content: Container(
+                            width: 900,
+                            height: 350,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SingleChildScrollView(
+                                          child: Container(
+                                        width: 900,
+                                        child: Column(children: [
+                                          CustomDataTable(
+                                              headers: headers2,
+                                              tableData: tableData2),
+                                          SizedBox(height: 10),
+                                        ]),
+                                      ))
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: CustomText(
+                                text: 'Ok ',
+                                color: AppColors.secondaryColor,
+                                size: 14,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: CustomText(
+                                text: 'Cancel',
+                                color: AppColors.secondaryColor,
+                                size: 14,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ).then((_) {
+                      tableData2.clear();
+                    });
+                  },
                   child: CustomText(
                     text: 'Open',
-                    color: AppColors.blue,
-                    size: 14,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: CustomText(
-                    text: 'Abscond',
                     color: AppColors.blue,
                     size: 14,
                   ),
@@ -605,7 +692,7 @@ class _StockReturn extends State<StockReturn> {
                         text: 'Ref No  ',
                         size: screenWidth * 0.013,
                       ),
-                      SizedBox(height: screenHeight * 0.015),
+                      SizedBox(height: screenHeight * 0.01),
                       PharmacyTextField(
                         controller: _refNo,
                         hintText: '',
@@ -620,7 +707,7 @@ class _StockReturn extends State<StockReturn> {
                       refNoSearch
                           ? SizedBox(
                               width: screenWidth * 0.08,
-                              height: screenHeight * 0.045,
+                              height: screenHeight * 0.04,
                               child: Center(
                                 child: Lottie.asset(
                                   'assets/button_loading.json',
@@ -647,7 +734,7 @@ class _StockReturn extends State<StockReturn> {
                         text: 'Distributor ',
                         size: screenWidth * 0.013,
                       ),
-                      SizedBox(height: screenHeight * 0.015),
+                      SizedBox(height: screenHeight * 0.01),
                       SizedBox(
                         height: screenHeight * 0.04,
                         width: screenWidth * 0.15,
@@ -671,7 +758,7 @@ class _StockReturn extends State<StockReturn> {
                       distributorSearch
                           ? SizedBox(
                               width: screenWidth * 0.08,
-                              height: screenHeight * 0.045,
+                              height: screenHeight * 0.04,
                               child: Center(
                                 child: Lottie.asset(
                                   'assets/button_loading.json',
@@ -694,7 +781,7 @@ class _StockReturn extends State<StockReturn> {
                   SizedBox(width: screenWidth * 0.07),
                   Column(
                     children: [
-                      SizedBox(height: screenHeight * 0.04),
+                      SizedBox(height: screenHeight * 0.035),
                       Row(
                         children: [
                           SizedBox(width: screenWidth * 0.11),

@@ -13,6 +13,7 @@ import 'package:foxcare_lite/utilities/widgets/textField/primary_textField.dart'
 import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/appBar/foxcare_lite_app_bar.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import 'manage_pharmacy_info.dart';
 
@@ -986,7 +987,7 @@ class _DistributorList extends State<DistributorList> {
                       SizedBox(height: screenHeight * 0.038),
                       searching
                           ? SizedBox(
-                              width: screenWidth * 0.1,
+                              width: screenWidth * 0.08,
                               height: screenHeight * 0.045,
                               child: Center(
                                 child: Lottie.asset(
@@ -1006,7 +1007,24 @@ class _DistributorList extends State<DistributorList> {
                               },
                               width: screenWidth * 0.08),
                     ],
-                  )
+                  ),
+                  SizedBox(width: screenHeight * 0.7),
+                  Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      PharmacyButton(
+                        label: 'Refresh',
+                        onPressed: () async {
+                          RefreshLoading(
+                            context: context,
+                            task: () async => await fetchData(),
+                          );
+                        },
+                        height: screenWidth * 0.023,
+                        width: screenWidth * 0.08,
+                      ),
+                    ],
+                  ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.05),

@@ -354,7 +354,7 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
 
         // Update table data in UI incrementally
         setState(() {
-          tableData.addAll(batchData);
+          tableData = List.from(batchData);
           calculateTotals();
         });
 
@@ -492,16 +492,16 @@ class _BrokenOrDamagedStatement extends State<BrokenOrDamagedStatement> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.05),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  PharmacyButton(
-                      label: 'Print',
-                      onPressed: () {},
-                      width: screenWidth * 0.1)
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.05),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     PharmacyButton(
+              //         label: 'Print',
+              //         onPressed: () {},
+              //         width: screenWidth * 0.1)
+              //   ],
+              // ),
+              // SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),
