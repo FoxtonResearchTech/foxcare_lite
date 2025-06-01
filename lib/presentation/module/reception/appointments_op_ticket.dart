@@ -1010,6 +1010,15 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
           size: screenWidth * 0.015,
           color: Colors.white,
         )),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+            )),
         backgroundColor: AppColors.blue,
       ),
       body: SingleChildScrollView(

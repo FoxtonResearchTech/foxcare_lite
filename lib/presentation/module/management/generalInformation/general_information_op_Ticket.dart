@@ -1225,32 +1225,45 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                 size: screenWidth * 0.025,
               ),
               Center(
-                child: DataTable(
-                  columnSpacing: 180,
-                  columns: [
-                    const DataColumn(label: CustomText(text: 'OP Number')),
-                    const DataColumn(label: CustomText(text: 'Name')),
-                    const DataColumn(label: CustomText(text: 'Age')),
-                    const DataColumn(label: CustomText(text: 'Phone')),
-                    const DataColumn(label: CustomText(text: 'Address')),
-                  ],
-                  rows: searchResults.map((result) {
-                    return DataRow(
-                      selected: selectedPatient == result,
-                      onSelectChanged: (isSelected) {
-                        setState(() {
-                          selectedPatient = result;
-                        });
-                      },
-                      cells: [
-                        DataCell(Text(result['opNumber']!)),
-                        DataCell(Text(result['name']!)),
-                        DataCell(Text(result['age']!)),
-                        DataCell(Text(result['phone']!)),
-                        DataCell(Text(result['address']!)),
-                      ],
-                    );
-                  }).toList(),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    checkboxTheme: CheckboxThemeData(
+                      fillColor:
+                          MaterialStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Colors.green; // Your desired checked color
+                        }
+                        return Colors.grey; // Unchecked color
+                      }),
+                    ),
+                  ),
+                  child: DataTable(
+                    columnSpacing: 180,
+                    columns: const [
+                      DataColumn(label: CustomText(text: 'OP Number')),
+                      DataColumn(label: CustomText(text: 'Name')),
+                      DataColumn(label: CustomText(text: 'Age')),
+                      DataColumn(label: CustomText(text: 'Phone')),
+                      DataColumn(label: CustomText(text: 'Address')),
+                    ],
+                    rows: searchResults.map((result) {
+                      return DataRow(
+                        selected: selectedPatient == result,
+                        onSelectChanged: (isSelected) {
+                          setState(() {
+                            selectedPatient = result;
+                          });
+                        },
+                        cells: [
+                          DataCell(Text(result['opNumber']!)),
+                          DataCell(Text(result['name']!)),
+                          DataCell(Text(result['age']!)),
+                          DataCell(Text(result['phone']!)),
+                          DataCell(Text(result['address']!)),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
