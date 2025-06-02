@@ -68,6 +68,9 @@ class _AdmissionStatus extends State<AdmissionStatus> {
           isLoading = false;
         });
       } else {
+        setState(() {
+          isLoading = false;
+        });
         print("Document does not exist.");
       }
     } catch (e) {

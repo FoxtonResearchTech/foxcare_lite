@@ -59,6 +59,9 @@ class _WardRooms extends State<WardRooms> {
           roomLoading = false;
         });
       } else {
+        setState(() {
+          roomLoading = false;
+        });
         print("Document does not exist.");
       }
     } catch (e) {

@@ -60,6 +60,9 @@ class _DoctorRoomAvailabilityCheck extends State<DoctorRoomAvailabilityCheck> {
           roomLoading = false;
         });
       } else {
+        setState(() {
+          roomLoading = false;
+        });
         print("Document does not exist.");
       }
     } catch (e) {
