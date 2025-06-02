@@ -1004,7 +1004,7 @@ class _OtherExpense extends State<OtherExpense> {
                                                             0.01),
                                                     CustomTextField(
                                                       controller: city,
-                                                      hintText: 'City',
+                                                      hintText: '',
                                                       width: screenWidth * 0.2,
                                                     ),
                                                   ],
@@ -1024,7 +1024,7 @@ class _OtherExpense extends State<OtherExpense> {
                                                             0.01),
                                                     CustomTextField(
                                                       controller: phone,
-                                                      hintText: 'Phone Number',
+                                                      hintText: '',
                                                       width: screenWidth * 0.2,
                                                     ),
                                                   ],
@@ -1051,7 +1051,7 @@ class _OtherExpense extends State<OtherExpense> {
                                                             0.01),
                                                     CustomTextField(
                                                       controller: address,
-                                                      hintText: 'Address',
+                                                      hintText: '',
                                                       width: screenWidth * 0.25,
                                                       verticalSize:
                                                           screenHeight * 0.035,
@@ -1077,7 +1077,7 @@ class _OtherExpense extends State<OtherExpense> {
                                                             0.01),
                                                     CustomTextField(
                                                       controller: particular,
-                                                      hintText: 'Particular',
+                                                      hintText: '',
                                                       width: screenWidth * 0.5,
                                                       verticalSize:
                                                           screenHeight * 0.035,

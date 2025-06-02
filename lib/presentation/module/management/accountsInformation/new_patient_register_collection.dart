@@ -209,13 +209,14 @@ class _NewPatientRegisterCollection
     try {
       DocumentSnapshot? lastDoc;
       List<Map<String, dynamic>> allFetchedData = [];
-
+      setState(() {
+        tableData = [];
+      });
       while (true) {
         Query query = FirebaseFirestore.instance.collection('patients');
 
         if (singleDate != null) {
           query = query.where('opAdmissionDate', isEqualTo: singleDate);
-          query = query.orderBy('opAdmissionDate');
         } else if (fromDate != null && toDate != null) {
           query = query
               .where('opAdmissionDate', isGreaterThanOrEqualTo: fromDate)
@@ -492,6 +493,9 @@ class _NewPatientRegisterCollection
 
         setState(() {
           tableData = List.from(allFetchedData);
+          _totalAmountCollected();
+          _totalCollected();
+          _totalBalance();
         });
 
         // If fewer docs than pageSize, we reached the last page

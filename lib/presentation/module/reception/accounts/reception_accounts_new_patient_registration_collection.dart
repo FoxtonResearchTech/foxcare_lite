@@ -50,7 +50,9 @@ class _ReceptionAccountsNewPatientRegistrationCollection
     try {
       DocumentSnapshot? lastDoc;
       List<Map<String, dynamic>> allFetchedData = [];
-
+      setState(() {
+        tableData = [];
+      });
       while (true) {
         Query query = FirebaseFirestore.instance.collection('patients');
 
