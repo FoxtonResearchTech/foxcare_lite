@@ -267,9 +267,6 @@ class _ManagementDashboard extends State<ManagementDashboard> {
       print("Pharmacy Total Expense (after returns): $pharmacyTotalExpense");
     } catch (e) {
       print("Error calculating pharmacy expense: $e");
-      setState(() {
-        isPharmacyTotalExpenseLoading = false;
-      });
     }
   }
 
