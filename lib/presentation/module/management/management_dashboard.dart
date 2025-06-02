@@ -1165,8 +1165,8 @@ class _ManagementDashboard extends State<ManagementDashboard> {
                             child: TextButton(
                               onPressed: () async {
                                 // Launch the URL when the button is pressed
-                                final Uri url =
-                                    Uri.parse('https://foxtonresearch.com/');
+                                final Uri url = Uri.parse(
+                                    'https://presentation.foxtonresearch.com/');
                                 if (await canLaunch(url.toString())) {
                                   await launch(url.toString());
                                 } else {
