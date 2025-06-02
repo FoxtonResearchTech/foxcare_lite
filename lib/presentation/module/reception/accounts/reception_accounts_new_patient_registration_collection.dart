@@ -272,7 +272,7 @@ class _ReceptionAccountsNewPatientRegistrationCollection
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
-            left: screenWidth * 0.01,
+            left: screenWidth * 0.02,
             right: screenWidth * 0.02,
             bottom: screenWidth * 0.02,
           ),
