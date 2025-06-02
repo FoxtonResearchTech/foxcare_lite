@@ -268,176 +268,178 @@ class _ReceptionAccountsNewPatientRegistrationCollection
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return SingleChildScrollView(
-      child: Container(
-        padding: EdgeInsets.only(
-          left: screenWidth * 0.01,
-          right: screenWidth * 0.02,
-          bottom: screenWidth * 0.02,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: screenWidth * 0.03),
-                  child: Column(
-                    children: [
-                      CustomText(
-                        text: "New Patient Registration Collection",
-                        size: screenWidth * 0.03,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: screenWidth * 0.15,
-                  height: screenWidth * 0.1,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/foxcare_lite_logo.png'),
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(
+            left: screenWidth * 0.01,
+            right: screenWidth * 0.02,
+            bottom: screenWidth * 0.02,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: screenWidth * 0.03),
+                    child: Column(
+                      children: [
+                        CustomText(
+                          text: "New Patient Registration Collection",
+                          size: screenWidth * 0.03,
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                /*
-                CustomTextField(
-                  onTap: () {
-                    _selectDate(context, _dateController);
-                    _fromDateController.clear();
-                    _toDateController.clear();
-                  },
-                  icon: Icon(Icons.date_range),
-                  controller: _dateController,
-                  hintText: 'Date',
-                  width: screenWidth * 0.15,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomButton(
-                  label: 'Search',
-                  onPressed: () {
-                    fetchData(singleDate: _dateController.text);
-                  },
-                  width: screenWidth * 0.08,
-                  height: screenWidth * 0.02,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomText(text: 'OR'),
-                SizedBox(width: screenHeight * 0.02),
-                 */
-                CustomTextField(
-                  onTap: () {
-                    _selectDate(context, _fromDateController);
-                    _dateController.clear();
-                  },
-                  icon: Icon(Icons.date_range),
-                  controller: _fromDateController,
-                  hintText: 'From Date',
-                  width: screenWidth * 0.15,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                CustomTextField(
-                  onTap: () {
-                    _selectDate(context, _toDateController);
-                    _dateController.clear();
-                  },
-                  icon: Icon(Icons.date_range),
-                  controller: _toDateController,
-                  hintText: 'To Date',
-                  width: screenWidth * 0.15,
-                ),
-                SizedBox(width: screenHeight * 0.02),
-                isLoading
-                    ? SizedBox(
-                        width: screenWidth * 0.09,
-                        height: screenWidth * 0.03,
-                        child: Lottie.asset(
-                          'assets/button_loading.json', // Ensure the file path is correct
-                          fit: BoxFit.contain,
-                        ),
-                      )
-                    : CustomButton(
-                        label: 'Search',
-                        onPressed: () async {
-                          setState(() => isLoading = true);
-
-                          await fetchData(
-                            fromDate: _fromDateController.text,
-                            toDate: _toDateController.text,
-                          );
-
-                          setState(() => isLoading = false);
-                        },
-                        width: screenWidth * 0.09,
-                        height: screenWidth * 0.03,
+                  Container(
+                    width: screenWidth * 0.15,
+                    height: screenWidth * 0.1,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/foxcare_lite_logo.png'),
                       ),
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.05),
-            Row(
-              children: [
-                if (_dateController.text.isEmpty &&
-                    _fromDateController.text.isEmpty &&
-                    _toDateController.text.isEmpty)
-                  const CustomText(text: 'Collection Report Of Date ')
-                else if (_dateController.text.isNotEmpty)
-                  CustomText(
-                      text:
-                          'Collection Report Of Date : ${_dateController.text} ')
-                else if (_fromDateController.text.isNotEmpty &&
-                    _toDateController.text.isNotEmpty)
-                  CustomText(
-                      text:
-                          'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.04),
-            LazyDataTable(
-              headerBackgroundColor: AppColors.blue,
-              headerColor: Colors.white,
-              tableData: tableData,
-              headers: headers,
-            ),
-            Container(
-              width: screenWidth,
-              height: screenHeight * 0.030,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 0.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(width: screenWidth * 0.38),
-                  CustomText(
-                    text: 'Total : ',
-                  ),
-                  SizedBox(width: screenWidth * 0.086),
-                  CustomText(
-                    text: '${_totalAmountCollected()}',
-                  ),
-                  SizedBox(width: screenWidth * 0.08),
-                  CustomText(
-                    text: '${_totalCollected()}',
-                  ),
-                  SizedBox(width: screenWidth * 0.083),
-                  CustomText(
-                    text: '${_totalBalance()}',
+                    ),
                   ),
                 ],
               ),
-            ),
-            SizedBox(height: screenHeight * 0.05),
-          ],
+              Row(
+                children: [
+                  /*
+                  CustomTextField(
+                    onTap: () {
+                      _selectDate(context, _dateController);
+                      _fromDateController.clear();
+                      _toDateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
+                    controller: _dateController,
+                    hintText: 'Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomButton(
+                    label: 'Search',
+                    onPressed: () {
+                      fetchData(singleDate: _dateController.text);
+                    },
+                    width: screenWidth * 0.08,
+                    height: screenWidth * 0.02,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomText(text: 'OR'),
+                  SizedBox(width: screenHeight * 0.02),
+                   */
+                  CustomTextField(
+                    onTap: () {
+                      _selectDate(context, _fromDateController);
+                      _dateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
+                    controller: _fromDateController,
+                    hintText: 'From Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  CustomTextField(
+                    onTap: () {
+                      _selectDate(context, _toDateController);
+                      _dateController.clear();
+                    },
+                    icon: Icon(Icons.date_range),
+                    controller: _toDateController,
+                    hintText: 'To Date',
+                    width: screenWidth * 0.15,
+                  ),
+                  SizedBox(width: screenHeight * 0.02),
+                  isLoading
+                      ? SizedBox(
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure the file path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : CustomButton(
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isLoading = true);
+
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
+
+                            setState(() => isLoading = false);
+                          },
+                          width: screenWidth * 0.09,
+                          height: screenWidth * 0.03,
+                        ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.05),
+              Row(
+                children: [
+                  if (_dateController.text.isEmpty &&
+                      _fromDateController.text.isEmpty &&
+                      _toDateController.text.isEmpty)
+                    const CustomText(text: 'Collection Report Of Date ')
+                  else if (_dateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_dateController.text} ')
+                  else if (_fromDateController.text.isNotEmpty &&
+                      _toDateController.text.isNotEmpty)
+                    CustomText(
+                        text:
+                            'Collection Report Of Date : ${_fromDateController.text} To ${_toDateController.text}')
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              LazyDataTable(
+                headerBackgroundColor: AppColors.blue,
+                headerColor: Colors.white,
+                tableData: tableData,
+                headers: headers,
+              ),
+              Container(
+                width: screenWidth,
+                height: screenHeight * 0.030,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: screenWidth * 0.38),
+                    CustomText(
+                      text: 'Total : ',
+                    ),
+                    SizedBox(width: screenWidth * 0.086),
+                    CustomText(
+                      text: '${_totalAmountCollected()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.08),
+                    CustomText(
+                      text: '${_totalCollected()}',
+                    ),
+                    SizedBox(width: screenWidth * 0.083),
+                    CustomText(
+                      text: '${_totalBalance()}',
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.05),
+            ],
+          ),
         ),
       ),
     );
