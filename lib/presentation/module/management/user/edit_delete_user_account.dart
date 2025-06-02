@@ -1469,7 +1469,13 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),
-              LazyDataTable(headers: headers, tableData: employeeData),
+              LazyDataTable(
+                headers: headers,
+                tableData: employeeData,
+                columnWidths: {
+                  3: FixedColumnWidth(screenWidth * 0.15),
+                },
+              ),
               SizedBox(height: screenHeight * 0.05),
             ],
           ),
