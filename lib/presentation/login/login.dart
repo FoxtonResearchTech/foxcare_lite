@@ -327,7 +327,7 @@ class SecondaryTextField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hintText,
 
-         // suffixText: suffixText,
+          // suffixText: suffixText,
           filled: true,
           fillColor: AppColors.blue,
           border: OutlineInputBorder(
@@ -339,5 +339,4 @@ class SecondaryTextField extends StatelessWidget {
     );
   }
 }
-
 

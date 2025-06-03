@@ -187,7 +187,6 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                               ),
                               content: Container(
                                 width: 725,
-                                height: 550,
                                 child: SingleChildScrollView(
                                   child: Column(
                                     children: [
@@ -198,7 +197,6 @@ class _ManagePharmacyInfo extends State<ManagePharmacyInfo> {
                                           SingleChildScrollView(
                                             child: Container(
                                               width: 725,
-                                              height: 1000,
                                               child: Column(
                                                 children: [
                                                   const SizedBox(height: 10),

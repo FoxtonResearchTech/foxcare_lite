@@ -172,7 +172,6 @@ class _DistributorList extends State<DistributorList> {
                       bankAccountName.text = data['bankAccountName'];
                       ifsc.text = data['ifsc'];
                       surfCode.text = data['surfCode'];
-                      representativeNumber.text = data['representativeNumber'];
                       bankName.text = data['bankName'];
                       branchName.text = data['branchName'];
                       bankPhoneNo.text = data['bankPhoneNo'];
@@ -189,7 +188,6 @@ class _DistributorList extends State<DistributorList> {
                             ),
                             content: Container(
                               width: 725,
-                              height: 550,
                               child: SingleChildScrollView(
                                 child: Column(
                                   children: [
@@ -200,7 +198,6 @@ class _DistributorList extends State<DistributorList> {
                                         SingleChildScrollView(
                                           child: Container(
                                             width: 725,
-                                            height: 1050,
                                             child: Column(
                                               children: [
                                                 const SizedBox(height: 10),
