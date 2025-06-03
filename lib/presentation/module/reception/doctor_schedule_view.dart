@@ -316,12 +316,9 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                         color: Colors.white,
                       ),
                     ),
-
-
                   ],
                 ),
               ),
-
               Row(
                 children: [
                   Spacer(),
@@ -330,11 +327,11 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                     onPressed: () async {
                       RefreshLoading(
                         context: context,
-                        task: () async{
-                       await   fetchDoctorSchedules();
-                       await   loadSchedule();
-                      await    fetchWeeklyDoctorSchedule();
-                        await  fetchSchedulesFromFirestore();
+                        task: () async {
+                          await fetchDoctorSchedules();
+                          await loadSchedule();
+                          await fetchWeeklyDoctorSchedule();
+                          await fetchSchedulesFromFirestore();
                         },
                       );
                     },
@@ -373,67 +370,78 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
               );
             }
             return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: Dailydoctors.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 16.0,
-                  mainAxisSpacing: 16.0,
-                  childAspectRatio: 0.6,
-                ),
-                itemBuilder: (context, index) {
-                  final doctor = Dailydoctors[index];
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: Dailydoctors.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                childAspectRatio: 0.6,
+              ),
+              itemBuilder: (context, index) {
+                final doctor = Dailydoctors[index];
 
-                  return Card(
-                    elevation: 12,
-                    shape: RoundedRectangleBorder(
+                return Card(
+                  elevation: 12,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16.0),
-                        gradient: const LinearGradient(
-                          colors: [Colors.blueAccent, Colors.lightBlueAccent],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                      gradient: const LinearGradient(
+                        colors: [Colors.blueAccent, Colors.lightBlueAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundColor: Colors.white,
-                              child: Text(
-                                doctor['counter'],
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 25),
-                              ),
-                            ),
-                            const SizedBox(height: 24.0),
-                            Text(
-                              doctor['doctor'],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 30.0, right: 30.0, top: 12, bottom: 12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              doctor['counter'],
                               style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                              textAlign: TextAlign.center,
+                                  fontWeight: FontWeight.bold, fontSize: 25),
                             ),
-                            const SizedBox(height: 12.0),
-                            Text(
-                              doctor['specialization'],
-                              style: const TextStyle(
-                                  fontSize: 18, color: Colors.white70),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12.0),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
+                          ),
+                          const SizedBox(height: 24.0),
+                          Text(
+                            doctor['doctor'],
+                            style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12.0),
+                          Text(
+                            doctor['specialization'],
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12.0),
+                          Row(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Morning In',
+                                    style: const TextStyle(
+                                        fontSize: 15, color: Colors.white),
+                                  ),
+                                  SizedBox(
+                                    height: screenWidth * 0.006,
+                                  ),
+                                  Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 8),
                                     decoration: BoxDecoration(
@@ -446,10 +454,21 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                                           fontSize: 16, color: Colors.white),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12.0),
-                                Expanded(
-                                  child: Container(
+                                ],
+                              ),
+                              SizedBox(width: screenWidth * 0.03),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Morning Out',
+                                    style: const TextStyle(
+                                        fontSize: 15, color: Colors.white),
+                                  ),
+                                  SizedBox(
+                                    height: screenWidth * 0.006,
+                                  ),
+                                  Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 8),
                                     decoration: BoxDecoration(
@@ -462,14 +481,25 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                                           fontSize: 16, color: Colors.white),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Evening In',
+                                    style: const TextStyle(
+                                        fontSize: 15, color: Colors.white),
+                                  ),
+                                  SizedBox(
+                                    height: screenWidth * 0.006,
+                                  ),
+                                  Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 8),
                                     decoration: BoxDecoration(
@@ -482,10 +512,21 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                                           fontSize: 16, color: Colors.white),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12.0),
-                                Expanded(
-                                  child: Container(
+                                ],
+                              ),
+                              SizedBox(width: screenWidth * 0.03),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Evening Out',
+                                    style: const TextStyle(
+                                        fontSize: 15, color: Colors.white),
+                                  ),
+                                  SizedBox(
+                                    height: screenWidth * 0.006,
+                                  ),
+                                  Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 8),
                                     decoration: BoxDecoration(
@@ -498,15 +539,17 @@ class _DoctorScheduleViewState extends State<DoctorScheduleView> {
                                           fontSize: 16, color: Colors.white),
                                     ),
                                   ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
+                                ],
+                              ),
+                            ],
+                          )
+                        ],
                       ),
                     ),
-                  );
-                });
+                  ),
+                );
+              },
+            );
           },
         ),
         const SizedBox(height: 16.0),

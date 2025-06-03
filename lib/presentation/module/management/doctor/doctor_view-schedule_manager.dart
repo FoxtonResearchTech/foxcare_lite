@@ -246,7 +246,8 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                               ),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(24.0),
+                              padding: const EdgeInsets.only(
+                                  left: 30.0, right: 30.0, top: 12, bottom: 12),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -279,84 +280,136 @@ class _DoctorScheduleViewManagerState extends State<DoctorScheduleViewManager> {
                                   const SizedBox(height: 12.0),
                                   Row(
                                     children: [
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                          child: Text(
-                                            doctor['morningOpIn'],
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Morning In',
                                             style: const TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 15,
                                                 color: Colors.white),
                                           ),
-                                        ),
+                                          SizedBox(
+                                            height: screenWidth * 0.006,
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              doctor['morningOpIn'],
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 12.0),
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                          child: Text(
-                                            doctor['morningOpOut'],
+                                      SizedBox(width: screenWidth * 0.0275),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Morning Out',
                                             style: const TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 15,
                                                 color: Colors.white),
                                           ),
-                                        ),
+                                          SizedBox(
+                                            height: screenWidth * 0.006,
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              doctor['morningOpOut'],
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 20),
                                   Row(
                                     children: [
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                          child: Text(
-                                            doctor['eveningOpIn'],
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Evening In',
                                             style: const TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 15,
                                                 color: Colors.white),
                                           ),
-                                        ),
+                                          SizedBox(
+                                            height: screenWidth * 0.006,
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              doctor['eveningOpIn'],
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 12.0),
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                          child: Text(
-                                            doctor['eveningOpOut'],
+                                      SizedBox(width: screenWidth * 0.0275),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Evening Out',
                                             style: const TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 15,
                                                 color: Colors.white),
                                           ),
-                                        ),
+                                          SizedBox(
+                                            height: screenWidth * 0.006,
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              doctor['eveningOpOut'],
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   )
