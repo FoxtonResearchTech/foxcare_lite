@@ -1213,7 +1213,7 @@ class _OtherExpense extends State<OtherExpense> {
                               TextButton(
                                 onPressed: () async {
                                   final collectedAmountText =
-                                      collectedAmountController.text.trim();
+                                      collected.text.trim();
 
                                   // Validate collected amount is not empty
                                   if (collectedAmountText.isEmpty) {
