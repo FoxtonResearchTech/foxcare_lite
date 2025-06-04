@@ -629,10 +629,11 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                         builder: (BuildContext context) {
                           return AlertDialog(
                             title: CustomText(
-                                text: 'Add Bill', size: screenWidth * 0.017),
+                              text: 'Add Bill',
+                              size: screenWidth * 0.017,
+                            ),
                             content: Container(
                               width: screenWidth * 0.5,
-                              height: screenHeight * 0.5,
                               child: SingleChildScrollView(
                                 child: Column(
                                   children: [
@@ -642,7 +643,6 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                                       children: [
                                         Container(
                                           width: screenWidth * 0.5,
-                                          height: screenHeight * 0.5,
                                           child: Column(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -818,6 +818,36 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                                                             .start,
                                                     children: [
                                                       CustomText(
+                                                        text: 'Description',
+                                                        size:
+                                                            screenWidth * 0.012,
+                                                      ),
+                                                      SizedBox(
+                                                          height: screenHeight *
+                                                              0.01),
+                                                      CustomTextField(
+                                                        controller: description,
+                                                        hintText: '',
+                                                        width:
+                                                            screenWidth * 0.5,
+                                                        verticalSize:
+                                                            screenHeight * 0.03,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CustomText(
                                                         text: 'Total Amount',
                                                         size:
                                                             screenWidth * 0.012,
@@ -956,7 +986,72 @@ class _HospitalDirectPurchase extends State<HospitalDirectPurchase> {
                             ),
                             actions: <Widget>[
                               TextButton(
-                                onPressed: () => addBill(),
+                                onPressed: () async {
+                                  final collectedAmountText =
+                                      collectedAmountController.text.trim();
+
+                                  // Validate collected amount is not empty
+                                  if (collectedAmountText.isEmpty) {
+                                    CustomSnackBar(context,
+                                        message:
+                                            'Please enter the collected amount',
+                                        backgroundColor: Colors.orange);
+
+                                    return;
+                                  }
+
+                                  // Parse and validate amount
+                                  final collectedAmount =
+                                      double.tryParse(collectedAmountText);
+                                  if (collectedAmount == null ||
+                                      collectedAmount < 0) {
+                                    CustomSnackBar(context,
+                                        message:
+                                            'Please enter a valid collected amount',
+                                        backgroundColor: Colors.orange);
+
+                                    return;
+                                  }
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Row(
+                                        children: [
+                                          Icon(Icons.warning_amber_rounded,
+                                              color: Colors.redAccent),
+                                          SizedBox(width: 8),
+                                          Text('Confirm Bill Submission'),
+                                        ],
+                                      ),
+                                      content: const Text(
+                                        'Are you sure you want to submit the bill?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent,
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
+                                          child: const Text(
+                                            'Confirm',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmed == true) {
+                                    await addBill();
+                                  }
+                                },
                                 child: CustomText(
                                   text: 'Submit ',
                                   color: AppColors.secondaryColor,
