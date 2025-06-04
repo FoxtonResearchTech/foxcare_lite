@@ -379,7 +379,7 @@ class _IpBilling extends State<IpBilling> {
                       ),
                       SizedBox(height: screenWidth * 0.007),
                       PharmacyTextField(
-                        hintText: 'Phone Number',
+                        hintText: '',
                         width: screenWidth * 0.18,
                         controller: _phoneNumber,
                       ),
