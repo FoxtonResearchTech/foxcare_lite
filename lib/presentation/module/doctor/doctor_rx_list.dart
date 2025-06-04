@@ -165,7 +165,6 @@ class _DoctorRxList extends State<DoctorRxList> {
                   final tokenData = tokenSnapshot.data();
                   if (tokenData != null) {
                     tokenNo = tokenData['tokenNumber']?.toString() ?? '';
-                    tokenDate = tokenData['date'] ?? '';
                   }
                 }
               } catch (e) {
@@ -177,6 +176,7 @@ class _DoctorRxList extends State<DoctorRxList> {
                   opTicketData.containsKey('labExaminationPrescribedDate');
               isMedPrescribed =
                   opTicketData.containsKey('medicinePrescribedDate');
+              tokenDate = opTicketData['tokenDate'] ?? '';
 
               try {
                 final testSnapshot = await FirebaseFirestore.instance
