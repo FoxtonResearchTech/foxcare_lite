@@ -270,16 +270,20 @@ class _PatientHistoryDialogState extends State<PatientHistoryDialog> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           CustomText(
-                                              text:
-                                                  'Symptoms: ${ipHistory[ipIndex]['symptoms']}'),
+                                            text:
+                                                'Symptoms: ${ipHistory[ipIndex]['symptoms']}',
+                                            maxLines: 20,
+                                          ),
                                           CustomText(text: 'Findings'),
                                           SizedBox(height: screenHeight * 0.01),
                                           Padding(
                                             padding:
                                                 EdgeInsets.only(left: 50.0),
                                             child: CustomText(
-                                                text:
-                                                    'Prescription: \n ${ipHistory[ipIndex]['rxPrescription']}'),
+                                              text:
+                                                  'Prescription: \n ${ipHistory[ipIndex]['rxPrescription']}',
+                                              maxLines: 50,
+                                            ),
                                           ),
                                         ],
                                       ),
