@@ -209,7 +209,11 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
         lastResetDate.month == now.month &&
         lastResetDate.day == now.day;
 
-    return isSameDay ? value : 0;
+    if (!isSameDay) {
+      return 0;
+    } else {
+      return value == 0 ? 1 : value;
+    }
   }
 
   Future<void> _generateToken(String selectedPatientId) async {
@@ -1144,7 +1148,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                                       final token = await fetchCounterValue();
 
                                       setState(() {
-                                        lastToken = token + 1;
+                                        lastToken = token;
                                         searchResults = searchResultsFetched;
                                         isSearchPerformed = true;
                                         isSearching = false;
@@ -1199,7 +1203,7 @@ class _GeneralInformationOpTicket extends State<GeneralInformationOpTicket> {
                                       final token = await fetchCounterValue();
 
                                       setState(() {
-                                        lastToken = token + 1;
+                                        lastToken = token;
                                         searchResults = searchResultsFetched;
                                         isSearchPerformed = true;
                                         isSearching2 = false;

@@ -168,7 +168,11 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
         lastResetDate.month == now.month &&
         lastResetDate.day == now.day;
 
-    return isSameDay ? value : 0;
+    if (!isSameDay) {
+      return 0;
+    } else {
+      return value == 0 ? 1 : value;
+    }
   }
 
   Future<void> initializeOpTicketID(String selectedPatientId) async {
@@ -1134,7 +1138,7 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                                       final token = await fetchCounterValue();
 
                                       setState(() {
-                                        lastToken = token + 1;
+                                        lastToken = token;
                                         searchResults = searchResultsFetched;
                                         isSearchPerformed = true;
                                         isSearching = false;
@@ -1189,7 +1193,7 @@ class _AppointmentsOpTicket extends State<AppointmentsOpTicket> {
                                       final token = await fetchCounterValue();
 
                                       setState(() {
-                                        lastToken = token + 1;
+                                        lastToken = token;
                                         searchResults = searchResultsFetched;
                                         isSearchPerformed = true;
                                         isSearching2 = false;
