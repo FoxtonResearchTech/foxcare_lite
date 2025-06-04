@@ -43,13 +43,15 @@ class _IpLabAccounts extends State<IpLabAccounts> {
     String? toDate,
   }) async {
     try {
-      List<Map<String, dynamic>> fetchedData = [];
+      List<Map<String, dynamic>> fetchedData = []; // Accumulates all results
       DocumentSnapshot? lastPatientDoc;
-      const int batchSize = 15; // Adjust as needed
+      const int batchSize = 15;
+      bool hasMore = true;
 
-      while (true) {
+      while (hasMore) {
         Query query =
             FirebaseFirestore.instance.collection('patients').limit(batchSize);
+
         if (lastPatientDoc != null) {
           query = query.startAfterDocument(lastPatientDoc);
         }
@@ -57,9 +59,11 @@ class _IpLabAccounts extends State<IpLabAccounts> {
         final QuerySnapshot patientsSnapshot = await query.get();
 
         if (patientsSnapshot.docs.isEmpty) {
-          // No more patients to fetch, break the loop
+          hasMore = false; // No more data
           break;
         }
+
+        List<Map<String, dynamic>> batchData = []; // Temp for this batch
 
         for (var patientDoc in patientsSnapshot.docs) {
           final patientData = patientDoc.data() as Map<String, dynamic>;
@@ -85,7 +89,6 @@ class _IpLabAccounts extends State<IpLabAccounts> {
 
               final String reportDate = examData['reportDate'].toString();
 
-              // Filter by date range if provided
               if (fromDate != null &&
                   toDate != null &&
                   (reportDate.compareTo(fromDate) < 0 ||
@@ -93,7 +96,7 @@ class _IpLabAccounts extends State<IpLabAccounts> {
                 continue;
               }
 
-              fetchedData.add({
+              batchData.add({
                 'Report Date': reportDate,
                 'Report No': examData['reportNo']?.toString() ?? 'N/A',
                 'Name':
@@ -109,19 +112,28 @@ class _IpLabAccounts extends State<IpLabAccounts> {
           }
         }
 
-        // Update last document to paginate in next loop iteration
-        lastPatientDoc = patientsSnapshot.docs.last;
-        // Sort by report number ascending
+        // Add batch data to total fetched data
+        fetchedData.addAll(batchData);
+
+        // Sort the combined data
         fetchedData.sort((a, b) {
           int aNo = int.tryParse(a['Report No'].toString()) ?? 0;
           int bNo = int.tryParse(b['Report No'].toString()) ?? 0;
           return aNo.compareTo(bNo);
         });
 
+        // Update UI after each batch
         setState(() {
           tableData = List.from(fetchedData);
         });
-        // Small delay to avoid Firestore rate limits and keep UI responsive
+
+        // If fewer docs than batchSize => no more pages
+        if (patientsSnapshot.docs.length < batchSize) {
+          hasMore = false;
+        } else {
+          lastPatientDoc = patientsSnapshot.docs.last;
+        }
+
         await Future.delayed(const Duration(milliseconds: 100));
       }
     } catch (e) {

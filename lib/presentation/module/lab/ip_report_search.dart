@@ -737,7 +737,7 @@ class _IpReportSearch extends State<IpReportSearch> {
                             .toList();
                       });
                       await printData(
-                        roomNo: ipAdmission['roomNo'] ?? 'N/A',
+                        roomNo: ipAdmission['roomNumber'] ?? 'N/A',
                         roomType: ipAdmission['roomType'] ?? 'N/A',
                         ipAdmitDate: ticketData['ipAdmitDate'] ?? 'N/A',
                         labTechName: examData['labTechnician'] ?? 'N/A',

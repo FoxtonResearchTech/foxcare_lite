@@ -82,7 +82,6 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
   Future<void> fetchData({String? opNumber, String? phoneNumber}) async {
     try {
-      print('fecthing');
       final DateTime now = DateTime.now();
       final String todayDate =
           "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
@@ -91,17 +90,25 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
       DocumentSnapshot? lastPatientDoc;
       const int pageSize = 20;
 
-      List<Map<String, dynamic>> fetchedData = [];
+      tableData1 = []; // reset your main data list before loading
+      bool hasMore = true;
 
-      while (true) {
+      while (hasMore) {
         Query patientQuery =
             FirebaseFirestore.instance.collection('patients').limit(pageSize);
+
         if (lastPatientDoc != null) {
           patientQuery = patientQuery.startAfterDocument(lastPatientDoc);
         }
 
         final QuerySnapshot patientSnapshot = await patientQuery.get();
-        if (patientSnapshot.docs.isEmpty) break;
+
+        if (patientSnapshot.docs.isEmpty) {
+          hasMore = false; // no more documents, stop the loop
+          break;
+        }
+
+        List<Map<String, dynamic>> fetchedData = [];
 
         for (var patientDoc in patientSnapshot.docs) {
           final patientData = patientDoc.data() as Map<String, dynamic>;
@@ -158,12 +165,17 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
 
             for (var examDoc in examSnapshot.docs) {
               final examData = examDoc.data();
+              print('reportNo: ${examData['reportNo']}');
+              print('reportDate: ${examData['reportDate']}');
 
-              if (examData.containsKey('reportNo') &&
-                  examData.containsKey('reportDate')) continue;
+              if ((examData['reportNo'] ?? '').toString().isNotEmpty &&
+                  (examData['reportDate'] ?? '').toString().isNotEmpty)
+                continue;
 
               final examDate = examData['date'];
               final examItems = examData['items'];
+              print('ExamDate in DB: "$examDate"');
+              print('Today String: "$todayString"');
 
               if ((opNumber == null || opNumber.isEmpty) &&
                   (phoneNumber == null || phoneNumber.isEmpty) &&
@@ -174,6 +186,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
               final List<String> tests = (examItems is List)
                   ? examItems.whereType<String>().toList()
                   : [];
+              print('Exam Items: $examItems');
 
               if (tests.isEmpty) continue;
 
@@ -251,7 +264,7 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
                                 '${patientData['firstName'] ?? ''} ${patientData['lastName'] ?? 'N/A'}'
                                     .trim(),
                             age: patientData['age'] ?? 'N/A',
-                            roomNo: ipAdmission['roomNo'],
+                            roomNo: ipAdmission['roomNumber'],
                             roomType: ipAdmission['roomType'],
                             ipAdmitDate: data['ipAdmitDate'],
                             sex: patientData['sex'] ?? 'N/A',
@@ -382,14 +395,19 @@ class _IpPatientsLabDetails extends State<IpPatientsLabDetails> {
           }
         }
 
-        // Check if fewer docs returned than limit => last page
-        if (patientSnapshot.docs.length < pageSize) break;
-
-        lastPatientDoc = patientSnapshot.docs.last;
         setState(() {
-          tableData1 = List.from(fetchedData);
+          tableData1.addAll(fetchedData);
         });
-        await Future.delayed(Duration(milliseconds: 100)); // throttle loop
+
+        if (patientSnapshot.docs.length < pageSize) {
+          // Fewer docs than pageSize means last page
+          hasMore = false;
+        } else {
+          lastPatientDoc = patientSnapshot.docs.last;
+        }
+
+        await Future.delayed(
+            const Duration(milliseconds: 100)); // optional throttle
       }
     } catch (e) {
       print('Error fetching data with pagination: $e');
