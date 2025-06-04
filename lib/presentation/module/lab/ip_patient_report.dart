@@ -623,7 +623,8 @@ class _IpPatientReport extends State<IpPatientReport> {
           ),
           titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
           contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           title: Row(
             children: const [
               Icon(Icons.print, color: Colors.blue, size: 28),
@@ -658,8 +659,8 @@ class _IpPatientReport extends State<IpPatientReport> {
                 const blue = PdfColor.fromInt(0xFF106ac2);
                 const lightBlue = PdfColor.fromInt(0xFF21b0d1);
 
-                final font = await rootBundle
-                    .load('Fonts/Poppins/Poppins-Regular.ttf');
+                final font =
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
 
                 final topImage = pw.MemoryImage(
@@ -670,7 +671,7 @@ class _IpPatientReport extends State<IpPatientReport> {
 
                 final bottomImage = pw.MemoryImage(
                   (await rootBundle
-                      .load('assets/opAssets/OP_Card_back_original.png'))
+                          .load('assets/opAssets/OP_Card_back_original.png'))
                       .buffer
                       .asUint8List(),
                 );
@@ -683,9 +684,8 @@ class _IpPatientReport extends State<IpPatientReport> {
                 }) {
                   final List<List<String>> tableData = [
                     headers,
-                    ...data.map((row) => headers
-                        .map((h) => row[h]?.toString() ?? '')
-                        .toList()),
+                    ...data.map((row) =>
+                        headers.map((h) => row[h]?.toString() ?? '').toList()),
                   ];
 
                   return [
@@ -693,8 +693,8 @@ class _IpPatientReport extends State<IpPatientReport> {
                       headers: headers,
                       data: data
                           .map((row) => headers
-                          .map((h) => row[h]?.toString() ?? '')
-                          .toList())
+                              .map((h) => row[h]?.toString() ?? '')
+                              .toList())
                           .toList(),
                       headerStyle: pw.TextStyle(
                         font: ttf,
@@ -745,14 +745,13 @@ class _IpPatientReport extends State<IpPatientReport> {
                             children: [
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment:
-                                pw.CrossAxisAlignment.start,
+                                    pw.MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   // Left Column
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Emergency No: ${Constants.emergencyNo}',
@@ -776,7 +775,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                     padding: pw.EdgeInsets.only(top: 20),
                                     child: pw.Row(
                                       crossAxisAlignment:
-                                      pw.CrossAxisAlignment.end,
+                                          pw.CrossAxisAlignment.end,
                                       children: [
                                         pw.Text(
                                           'Mail: ${Constants.mail}',
@@ -823,11 +822,11 @@ class _IpPatientReport extends State<IpPatientReport> {
                               ),
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         '${Constants.hospitalName}',
@@ -860,7 +859,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   ),
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
@@ -906,11 +905,11 @@ class _IpPatientReport extends State<IpPatientReport> {
                               pw.SizedBox(height: 10),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'IP Ticket No : ${widget.ipTicket}',
@@ -922,7 +921,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                         ),
                                       ),
                                       pw.Text(
-                                        'Room / Ward No : ${widget.roomNo} ${widget.roomType}',
+                                        'Room / Ward No : ${widget.roomType} ${widget.roomNo}',
                                         style: pw.TextStyle(
                                           fontSize: 10,
                                           font: ttf,
@@ -944,7 +943,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Doctor : ${widget.doctorName}',
@@ -969,7 +968,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Name : ${widget.name}',
@@ -994,7 +993,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Age : ${widget.age}',
@@ -1037,9 +1036,9 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.start,
+                                        pw.MainAxisAlignment.start,
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Address : ${widget.address}',
@@ -1055,7 +1054,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Sample Collected Date : ${_sampleCollectedDateController.text}',
@@ -1081,7 +1080,7 @@ class _IpPatientReport extends State<IpPatientReport> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Report Date : ${_dateController.text}',
@@ -1170,8 +1169,14 @@ class _IpPatientReport extends State<IpPatientReport> {
                     bytes: await pdf.save(),
                     filename: '${widget.ipTicket}.pdf');
               },
-              icon: const Icon(Icons.print,color: Colors.white,),
-              label: const Text('Print',style: TextStyle(color: Colors.white),),
+              icon: const Icon(
+                Icons.print,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Print',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -1459,59 +1464,60 @@ class _IpPatientReport extends State<IpPatientReport> {
                   SizedBox(
                     width: screenWidth * 0.05,
                   ),
-
                   Column(
                     children: [
                       isLoading
                           ? SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: Lottie.asset(
-                          'assets/button_loading.json',
-                          fit: BoxFit.contain,
-                        ),
-                      )
+                              width: 60,
+                              height: 60,
+                              child: Lottie.asset(
+                                'assets/button_loading.json',
+                                fit: BoxFit.contain,
+                              ),
+                            )
                           : CustomButton(
-                        label: 'Submit',
-                        onPressed: () {
-                          final paidText = paidController.text.trim();
-                          final totalText = totalAmountController.text.trim();
+                              label: 'Submit',
+                              onPressed: () {
+                                final paidText = paidController.text.trim();
+                                final totalText =
+                                    totalAmountController.text.trim();
 
-                          // Validate inputs
-                          if (paidText.isEmpty || totalText.isEmpty) {
-                            CustomSnackBar(
-                              context,
-                              message: 'Please fill in both Paid and Total Amount.',
-                              backgroundColor: Colors.orange,
-                            );
-                            return;
-                          }
+                                // Validate inputs
+                                if (paidText.isEmpty || totalText.isEmpty) {
+                                  CustomSnackBar(
+                                    context,
+                                    message:
+                                        'Please fill in both Paid and Total Amount.',
+                                    backgroundColor: Colors.orange,
+                                  );
+                                  return;
+                                }
 
-                          // Optional: Validate numeric values
-                          final paid = double.tryParse(paidText);
-                          final total = double.tryParse(totalText);
-                          if (paid == null || total == null) {
-                            CustomSnackBar(
-                              context,
-                              message: 'Enter valid numbers for Collected and Total Amount.',
-                              backgroundColor: Colors.orange,
-                            );
-                            return;
-                          }
+                                // Optional: Validate numeric values
+                                final paid = double.tryParse(paidText);
+                                final total = double.tryParse(totalText);
+                                if (paid == null || total == null) {
+                                  CustomSnackBar(
+                                    context,
+                                    message:
+                                        'Enter valid numbers for Collected and Total Amount.',
+                                    backgroundColor: Colors.orange,
+                                  );
+                                  return;
+                                }
 
-                          // Continue submission
-                          setState(() {
-                            isLoading = true;
-                          });
-                          submitData().then((_) {
-                            setState(() {
-                              isLoading = false;
-                            });
-                          });
-                        },
-                        width: screenWidth * 0.1,
-                      ),
-
+                                // Continue submission
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                submitData().then((_) {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                });
+                              },
+                              width: screenWidth * 0.1,
+                            ),
                     ],
                   )
                 ],

@@ -189,7 +189,7 @@ class _IpAdmit extends State<IpAdmit> {
                       age: data['age'],
                       phoneNo: data['phone1'],
                       city: data['city'],
-                      roomNo: ipAdmission['roomNo'],
+                      roomNo: ipAdmission['roomNumber'],
                       roomType: ipAdmission['roomType'],
                       ipAdmitDate: ipData['ipAdmitDate'],
                       docId: doc.id,

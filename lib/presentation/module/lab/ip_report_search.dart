@@ -376,7 +376,7 @@ class _IpReportSearch extends State<IpReportSearch> {
                                         ),
                                       ),
                                       pw.Text(
-                                        'Room / Ward No : ${roomNo} ${roomType}',
+                                        'Room / Ward No : ${roomType} ${roomNo}',
                                         style: pw.TextStyle(
                                           fontSize: 10,
                                           font: ttf,

@@ -872,7 +872,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                                                 ),
                                               ),
                                               pw.Text(
-                                                'Room / Ward No : ${widget.roomNo} ${widget.roomType}',
+                                                'Room / Ward No : ${widget.roomType} ${widget.roomNo}',
                                                 style: pw.TextStyle(
                                                   fontSize: 10,
                                                   font: ttf,
@@ -1123,7 +1123,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
         TextButton(
           onPressed: () async {
             if (widget.timeLine == true) {
-              if (balance.text.isNotEmpty || balance.text == '') {
+              if (balance.text.isEmpty || balance.text == '') {
                 CustomSnackBar(context,
                     message: 'Enter Payment Amount',
                     backgroundColor: Colors.orange);
