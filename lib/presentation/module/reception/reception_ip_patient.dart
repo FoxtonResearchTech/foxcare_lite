@@ -127,10 +127,9 @@ class _ReceptionIpPatient extends State<ReceptionIpPatient> {
         "viproomStatus": viproomStatus,
         "wardStatus": wardStatus,
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Room data updated successfully!')),
-      );
+      CustomSnackBar(context,
+          message: 'Room data updated successfully!',
+          backgroundColor: Colors.green);
     } catch (e) {
       print("Error updating Firestore: $e");
     }
