@@ -1,30 +1,20 @@
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
-import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
-
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import 'general_information_admission_status.dart';
-import 'general_information_doctor_visit_schedule.dart';
-import 'general_information_edit_doctor_visit_schedule.dart';
 
 class GeneralInformationOpTicket extends StatefulWidget {
   @override

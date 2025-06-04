@@ -326,7 +326,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SizedBox(height: 25),
+                                    const SizedBox(height: 25),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -383,7 +383,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: 50),
+                                    const SizedBox(height: 50),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -392,11 +392,11 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            CustomText(
+                                            const CustomText(
                                               text: 'Paying Amount ',
                                               size: 20,
                                             ),
-                                            SizedBox(height: 7),
+                                            const SizedBox(height: 7),
                                             CustomTextField(
                                               hintText: '',
                                               controller: currentlyPayingAmount,
@@ -408,11 +408,11 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            CustomText(
+                                            const CustomText(
                                               text: 'Payment Mode ',
                                               size: 20,
                                             ),
-                                            SizedBox(height: 7),
+                                            const SizedBox(height: 7),
                                             SizedBox(
                                               width: 175,
                                               child: CustomDropdown(
@@ -434,11 +434,11 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            CustomText(
+                                            const CustomText(
                                               text: 'Payment Details ',
                                               size: 20,
                                             ),
-                                            SizedBox(height: 7),
+                                            const SizedBox(height: 7),
                                             CustomTextField(
                                               hintText: '',
                                               controller: paymentDetails,
@@ -448,19 +448,19 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: 15),
-                                    CustomText(
+                                    const SizedBox(height: 15),
+                                    const CustomText(
                                       text: 'History Of Payments',
                                       size: 20,
                                     ),
-                                    SizedBox(height: 10),
+                                    const SizedBox(height: 10),
                                     if (historyTableData.isNotEmpty) ...[
                                       CustomDataTable(
                                           headers: historyHeaders,
                                           tableData: historyTableData),
                                     ],
                                     if (historyTableData.isEmpty) ...[
-                                      Center(
+                                      const Center(
                                         child: Column(
                                           children: [
                                             SizedBox(height: 20),
@@ -530,7 +530,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
           lastDoc = snapshot.docs.last;
 
           // Delay after updating UI
-          await Future.delayed(Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 100));
         }
       }
 
@@ -701,7 +701,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   CustomTextField(
                     onTap: () => _selectDate(context, fromDate),
                     controller: fromDate,
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
                   ),
@@ -709,7 +709,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                   CustomTextField(
                     onTap: () => _selectDate(context, toDate),
                     controller: toDate,
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
                   ),
@@ -765,7 +765,7 @@ class _PharmacyTotalSales extends State<PharmacyTotalSales> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    CustomText(
+                    const CustomText(
                       text: 'Total : ',
                     ),
                     SizedBox(width: screenWidth * 0.05),

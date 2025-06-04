@@ -1,37 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
-import 'package:foxcare_lite/presentation/module/management/patientsInformation/management_register_patient.dart';
-import 'package:foxcare_lite/presentation/module/management/user/user_account_creation.dart';
-import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
 import 'package:foxcare_lite/utilities/constants.dart';
-import 'package:foxcare_lite/utilities/widgets/image/custom_image.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
-import '../../../../utilities/widgets/payment/payment_dialog.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import '../management_dashboard.dart';
-import 'hospital_direct_purchase.dart';
-import 'hospital_direct_purchase_still_pending.dart';
-import 'ip_admission_collection.dart';
-import 'ip_admit.dart';
-import 'ip_admit_list.dart';
-import 'lab_collection.dart';
-import 'new_patient_register_collection.dart';
-import 'op_ticket_collection.dart';
-import 'other_expense.dart';
 
 class IpAdmissionCollection extends StatefulWidget {
   @override
@@ -206,7 +186,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(height: 25),
+                                const SizedBox(height: 25),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -262,7 +242,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 50),
+                                const SizedBox(height: 50),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -271,11 +251,11 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        CustomText(
+                                        const CustomText(
                                           text: 'Paying Amount ',
                                           size: 20,
                                         ),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         CustomTextField(
                                           hintText: '',
                                           controller: currentlyPayingAmount,
@@ -287,11 +267,11 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        CustomText(
+                                        const CustomText(
                                           text: 'Payment Mode ',
                                           size: 20,
                                         ),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         SizedBox(
                                           width: 175,
                                           child: CustomDropdown(
@@ -312,11 +292,11 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        CustomText(
+                                        const CustomText(
                                           text: 'Payment Details ',
                                           size: 20,
                                         ),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         CustomTextField(
                                           hintText: '',
                                           controller: paymentDetails,
@@ -326,19 +306,19 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 15),
-                                CustomText(
+                                const SizedBox(height: 15),
+                                const CustomText(
                                   text: 'History Of Payments',
                                   size: 20,
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 if (historyTableData.isNotEmpty) ...[
                                   CustomDataTable(
                                       headers: historyHeaders,
                                       tableData: historyTableData),
                                 ],
                                 if (historyTableData.isEmpty) ...[
-                                  Center(
+                                  const Center(
                                     child: Column(
                                       children: [
                                         SizedBox(height: 20),
@@ -645,7 +625,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'Accounts Information',
               ),
             )
@@ -761,7 +741,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                       _selectDate(context, _fromDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
@@ -772,7 +752,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                       _selectDate(context, _toDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -808,7 +788,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                   if (_dateController.text.isEmpty &&
                       _fromDateController.text.isEmpty &&
                       _toDateController.text.isEmpty)
-                    CustomText(text: 'Collection Report Of Date ')
+                    const CustomText(text: 'Collection Report Of Date ')
                   else if (_dateController.text.isNotEmpty)
                     CustomText(
                         text:
@@ -843,7 +823,7 @@ class _IpAdmissionCollection extends State<IpAdmissionCollection> {
                 child: Row(
                   children: [
                     SizedBox(width: screenWidth * 0.38),
-                    CustomText(
+                    const CustomText(
                       text: 'Total : ',
                     ),
                     SizedBox(width: screenWidth * 0.086),

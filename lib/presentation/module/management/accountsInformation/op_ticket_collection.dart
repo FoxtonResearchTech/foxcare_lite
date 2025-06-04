@@ -1,16 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/constants.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
-import '../../../../utilities/widgets/payment/payment_dialog.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
@@ -186,7 +183,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(height: 25),
+                                const SizedBox(height: 25),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -242,7 +239,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 50),
+                                const SizedBox(height: 50),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -251,11 +248,11 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        CustomText(
+                                        const CustomText(
                                           text: 'Paying Amount ',
                                           size: 20,
                                         ),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         CustomTextField(
                                           hintText: '',
                                           controller: currentlyPayingAmount,
@@ -267,11 +264,11 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        CustomText(
+                                        const CustomText(
                                           text: 'Payment Mode ',
                                           size: 20,
                                         ),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         SizedBox(
                                           width: 175,
                                           child: CustomDropdown(
@@ -292,11 +289,11 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        CustomText(
+                                        const CustomText(
                                           text: 'Payment Details ',
                                           size: 20,
                                         ),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         CustomTextField(
                                           hintText: '',
                                           controller: paymentDetails,
@@ -306,19 +303,19 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 15),
-                                CustomText(
+                                const SizedBox(height: 15),
+                                const CustomText(
                                   text: 'History Of Payments',
                                   size: 20,
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 if (historyTableData.isNotEmpty) ...[
                                   CustomDataTable(
                                       headers: historyHeaders,
                                       tableData: historyTableData),
                                 ],
                                 if (historyTableData.isEmpty) ...[
-                                  Center(
+                                  const Center(
                                     child: Column(
                                       children: [
                                         SizedBox(height: 20),
@@ -617,7 +614,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'Accounts Information',
               ),
             )
@@ -732,7 +729,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                       _selectDate(context, _fromDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
@@ -743,7 +740,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                       _selectDate(context, _toDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -810,7 +807,7 @@ class _OpTicketCollection extends State<OpTicketCollection> {
                 child: Row(
                   children: [
                     SizedBox(width: screenWidth * 0.38),
-                    CustomText(
+                    const CustomText(
                       text: 'Total : ',
                     ),
                     SizedBox(width: screenWidth * 0.086),

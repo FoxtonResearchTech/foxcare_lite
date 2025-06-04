@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:foxcare_lite/presentation/module/manager/edit_delete_patient_information.dart';
+import 'package:foxcare_lite/presentation/module/management/patientsInformation/edit_delete_patient_information.dart';
 import 'package:foxcare_lite/utilities/constants.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:intl/intl.dart';
@@ -12,11 +12,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import '../../../utilities/colors.dart';
-import '../../../utilities/widgets/buttons/primary_button.dart';
-import '../../../utilities/widgets/dropDown/primary_dropDown.dart';
-import '../../../utilities/widgets/text/primary_text.dart';
-import '../../../utilities/widgets/textField/primary_textField.dart';
+import '../../../../utilities/colors.dart';
+import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
+import '../../../../utilities/widgets/text/primary_text.dart';
+import '../../../../utilities/widgets/textField/primary_textField.dart';
 
 class PatientInfo extends StatefulWidget {
   final String? opNumberEdit;

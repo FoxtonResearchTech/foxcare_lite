@@ -8,7 +8,7 @@ import '../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
-import '../manager/edit_delete_patient_information.dart';
+import '../management/patientsInformation/edit_delete_patient_information.dart';
 import 'dental_appointment.dart';
 import 'dental_billing.dart';
 import 'dental_dashboard.dart';

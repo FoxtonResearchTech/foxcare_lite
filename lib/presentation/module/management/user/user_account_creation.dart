@@ -1,24 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/management/user/doctor_and_counter_setup.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/user_information/user_information_drawer.dart';
-
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import '../../../login/login.dart';
-import '../generalInformation/general_information_admission_status.dart';
-import 'edit_delete_user_account.dart';
 
 class UserAccountCreation extends StatefulWidget {
   @override

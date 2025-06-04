@@ -1,19 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase_still_pending.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admission_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit_list.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
-import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../utilities/colors.dart';
@@ -25,8 +12,6 @@ import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import '../management_dashboard.dart';
-import 'new_patient_register_collection.dart';
 
 class IpLabCollection extends StatefulWidget {
   @override
@@ -352,7 +337,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  SizedBox(height: 25),
+                                  const SizedBox(height: 25),
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -402,7 +387,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 50),
+                                  const SizedBox(height: 50),
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -411,9 +396,9 @@ class _IpLabCollection extends State<IpLabCollection> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          CustomText(
+                                          const CustomText(
                                               text: 'Paying Amount ', size: 20),
-                                          SizedBox(height: 7),
+                                          const SizedBox(height: 7),
                                           CustomTextField(
                                             hintText: '',
                                             controller: currentlyPayingAmount,
@@ -425,9 +410,9 @@ class _IpLabCollection extends State<IpLabCollection> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          CustomText(
+                                          const CustomText(
                                               text: 'Payment Mode ', size: 20),
-                                          SizedBox(height: 7),
+                                          const SizedBox(height: 7),
                                           SizedBox(
                                             width: 175,
                                             child: CustomDropdown(
@@ -446,10 +431,10 @@ class _IpLabCollection extends State<IpLabCollection> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          CustomText(
+                                          const CustomText(
                                               text: 'Payment Details ',
                                               size: 20),
-                                          SizedBox(height: 7),
+                                          const SizedBox(height: 7),
                                           CustomTextField(
                                             hintText: '',
                                             controller: paymentDetails,
@@ -459,17 +444,17 @@ class _IpLabCollection extends State<IpLabCollection> {
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 15),
-                                  CustomText(
+                                  const SizedBox(height: 15),
+                                  const CustomText(
                                       text: 'History Of Payments', size: 20),
-                                  SizedBox(height: 10),
+                                  const SizedBox(height: 10),
                                   if (historyTableData.isNotEmpty) ...[
                                     CustomDataTable(
                                         headers: historyHeaders,
                                         tableData: historyTableData),
                                   ],
                                   if (historyTableData.isEmpty) ...[
-                                    Center(
+                                    const Center(
                                       child: Column(
                                         children: [
                                           SizedBox(height: 20),
@@ -656,7 +641,7 @@ class _IpLabCollection extends State<IpLabCollection> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'Accounts Information',
               ),
             )
@@ -771,7 +756,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                       _selectDate(context, _fromDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
@@ -782,7 +767,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                       _selectDate(context, _toDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -850,7 +835,7 @@ class _IpLabCollection extends State<IpLabCollection> {
                 child: Row(
                   children: [
                     SizedBox(width: screenWidth * 0.38),
-                    CustomText(
+                    const CustomText(
                       text: 'Total : ',
                     ),
                     SizedBox(width: screenWidth * 0.086),

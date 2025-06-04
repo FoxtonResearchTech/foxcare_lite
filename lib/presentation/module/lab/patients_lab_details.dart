@@ -3,23 +3,17 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/patient_report.dart';
-import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
-import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:intl/intl.dart';
+
 import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
-import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
-import 'dashboard.dart';
-import 'lab_accounts.dart';
-import 'lab_testqueue.dart';
 
 class PatientsLabDetails extends StatefulWidget {
   const PatientsLabDetails({super.key});
@@ -278,8 +272,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                                   const EdgeInsets.fromLTRB(24, 8, 24, 0),
                               actionsPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
-                              title: Row(
-                                children: const [
+                              title: const Row(
+                                children: [
                                   Icon(Icons.warning_amber_rounded,
                                       color: Colors.orange, size: 28),
                                   SizedBox(width: 10),
@@ -363,7 +357,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
         setState(() {
           tableData1 = List.from(fetchedData);
         });
-        await Future.delayed(Duration(milliseconds: 100)); // throttle loop
+        await Future.delayed(
+            const Duration(milliseconds: 100)); // throttle loop
       }
 
       // Sort by token number once after collecting all batches
@@ -386,7 +381,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: Text('Laboratory Dashboard'),
+              title: const Text('Laboratory Dashboard'),
             )
           : null, // No AppBar for web view
       drawer: isMobile
@@ -479,8 +474,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomText(text: 'OP Number'),
-                      SizedBox(height: 5),
+                      const CustomText(text: 'OP Number'),
+                      const SizedBox(height: 5),
                       CustomTextField(
                         controller: opNumberSearch,
                         hintText: '',
@@ -493,8 +488,8 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomText(text: 'Mobile Number'),
-                      SizedBox(height: 5),
+                      const CustomText(text: 'Mobile Number'),
+                      const SizedBox(height: 5),
                       CustomTextField(
                         controller: phoneNumberSearch,
                         hintText: '',
@@ -507,7 +502,7 @@ class _PatientsLabDetails extends State<PatientsLabDetails> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
+                      const SizedBox(
                           height:
                               21), // Adjust as needed to align with TextFields
                       _isSearching

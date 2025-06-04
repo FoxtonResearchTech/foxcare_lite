@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/manager/patient_info.dart';
+import 'package:foxcare_lite/presentation/module/management/patientsInformation/patient_info.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../../utilities/widgets/buttons/primary_button.dart';
-import '../../../utilities/widgets/refreshLoading/refreshLoading.dart';
-import '../../../utilities/widgets/textField/primary_textField.dart';
+import '../../../../utilities/widgets/buttons/primary_button.dart';
+import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
+import '../../../../utilities/widgets/textField/primary_textField.dart';
 
 class EditDeletePatientInformation extends StatefulWidget {
   const EditDeletePatientInformation({super.key});
@@ -124,9 +123,6 @@ class _EditDeletePatientInformation
                         phone1Edit: data['phone1'] ?? 'N/A',
                         phone2Edit: data['phone2'] ?? 'N/A',
                         bloodGroupEdit: data['bloodGroup'] ?? 'N/A',
-                        opAmountEdit: data['opAmount'] ?? 'N/A',
-                        opAmountCollectedEdit:
-                            data['opAmountCollected'] ?? 'N/A',
                       ),
                     ),
                   );

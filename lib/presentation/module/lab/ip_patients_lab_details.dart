@@ -1,26 +1,18 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foxcare_lite/presentation/module/lab/ip_patient_report.dart';
-import 'package:foxcare_lite/presentation/module/lab/patient_report.dart';
-import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
-import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
+
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
 import '../../../utilities/widgets/snackBar/snakbar.dart';
-import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
-import 'dashboard.dart';
-import 'lab_accounts.dart';
-import 'lab_testqueue.dart';
 
 class IpPatientsLabDetails extends StatefulWidget {
   const IpPatientsLabDetails({super.key});

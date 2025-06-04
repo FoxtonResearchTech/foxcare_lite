@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
@@ -11,7 +10,6 @@ import 'package:lottie/lottie.dart';
 import '../../utilities/images.dart';
 import '../../utilities/widgets/buttons/primary_button.dart';
 
-import '../../utilities/widgets/textField/secondary_text_field.dart';
 import '../module/doctor/doctor_dashboard.dart';
 import '../module/lab/dashboard.dart';
 import '../module/pharmacy/dashboard/pharmecy_dashboard.dart';
@@ -55,7 +53,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: screenHeight * 0.25,
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.14),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.14),
                               child: Row(
                                 children: [
                                   Image.asset(
@@ -63,7 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     width: screenWidth * 0.1,
                                     height: screenHeight * 0.1,
                                   ),
-                                  Container(width: 2.5, height: 50, color: Colors.grey),
+                                  Container(
+                                      width: 2.5,
+                                      height: 50,
+                                      color: Colors.grey),
                                   Image.asset(
                                     'assets/NIH_Logo.png',
                                     width: screenWidth * 0.1,
@@ -168,13 +170,14 @@ class _LoginFormState extends State<LoginForm> {
           children: [
             SizedBox(width: screenWidth * 0.09),
             isLoading
-                ? Lottie.asset('assets/login_lottie.json',height: 150,width: 150)
+                ? Lottie.asset('assets/login_lottie.json',
+                    height: 150, width: 150)
                 : CustomButton(
-              label: 'Login',
-              onPressed: _login,
-              width: screenWidth * 0.09,
-              height: screenHeight * 0.05,
-            ),
+                    label: 'Login',
+                    onPressed: _login,
+                    width: screenWidth * 0.09,
+                    height: screenHeight * 0.05,
+                  ),
           ],
         )
       ],
@@ -202,7 +205,7 @@ class _LoginFormState extends State<LoginForm> {
 
     try {
       UserCredential userCredential =
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -220,7 +223,7 @@ class _LoginFormState extends State<LoginForm> {
       }
 
       Map<String, dynamic> employeeData =
-      employeeDoc.data() as Map<String, dynamic>;
+          employeeDoc.data() as Map<String, dynamic>;
       String? position = employeeData['roles'];
 
       if (position == null || position.isEmpty) {
@@ -246,8 +249,8 @@ class _LoginFormState extends State<LoginForm> {
               MaterialPageRoute(builder: (context) => ReceptionDashboard()));
           break;
         case 'Lab Assistance':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => LabDashboard()));
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => LabDashboard()));
           break;
         case 'X-Ray Technician':
           Navigator.push(context,
@@ -257,10 +260,7 @@ class _LoginFormState extends State<LoginForm> {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => DoctorDashboard()));
           break;
-        case 'Manager':
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManagerDashboard()));
-          break;
+
         default:
           CustomSnackBar(context,
               message: 'Invalid position information.',
@@ -299,6 +299,7 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 }
+
 class SecondaryTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
@@ -313,7 +314,8 @@ class SecondaryTextField extends StatelessWidget {
     required this.width,
     this.obscureText = false,
     this.suffixText,
-    this.fillColor = const Color(0xFFF5F5F5), // Default light gray if not provided
+    this.fillColor =
+        const Color(0xFFF5F5F5), // Default light gray if not provided
   });
 
   @override
@@ -339,4 +341,3 @@ class SecondaryTextField extends StatelessWidget {
     );
   }
 }
-

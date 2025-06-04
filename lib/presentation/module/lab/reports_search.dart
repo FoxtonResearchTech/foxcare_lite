@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
@@ -14,12 +12,8 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
-import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
-import 'dashboard.dart';
-import 'lab_accounts.dart';
-import 'lab_testqueue.dart';
 
 class ReportsSearch extends StatefulWidget {
   const ReportsSearch({super.key});
@@ -102,9 +96,10 @@ class _ReportsSearch extends State<ReportsSearch> {
           ),
           titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
           contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          title: Row(
-            children: const [
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          title: const Row(
+            children: [
               Icon(Icons.print, color: Colors.blue, size: 28),
               SizedBox(width: 10),
               Text(
@@ -137,8 +132,8 @@ class _ReportsSearch extends State<ReportsSearch> {
                 const blue = PdfColor.fromInt(0xFF106ac2);
                 const lightBlue = PdfColor.fromInt(0xFF21b0d1);
 
-                final font = await rootBundle
-                    .load('Fonts/Poppins/Poppins-Regular.ttf');
+                final font =
+                    await rootBundle.load('Fonts/Poppins/Poppins-Regular.ttf');
                 final ttf = pw.Font.ttf(font);
 
                 final topImage = pw.MemoryImage(
@@ -149,7 +144,7 @@ class _ReportsSearch extends State<ReportsSearch> {
 
                 final bottomImage = pw.MemoryImage(
                   (await rootBundle
-                      .load('assets/opAssets/OP_Card_back_original.png'))
+                          .load('assets/opAssets/OP_Card_back_original.png'))
                       .buffer
                       .asUint8List(),
                 );
@@ -162,9 +157,8 @@ class _ReportsSearch extends State<ReportsSearch> {
                 }) {
                   final List<List<String>> tableData = [
                     headers,
-                    ...data.map((row) => headers
-                        .map((h) => row[h]?.toString() ?? '')
-                        .toList()),
+                    ...data.map((row) =>
+                        headers.map((h) => row[h]?.toString() ?? '').toList()),
                   ];
 
                   return [
@@ -172,8 +166,8 @@ class _ReportsSearch extends State<ReportsSearch> {
                       headers: headers,
                       data: data
                           .map((row) => headers
-                          .map((h) => row[h]?.toString() ?? '')
-                          .toList())
+                              .map((h) => row[h]?.toString() ?? '')
+                              .toList())
                           .toList(),
                       headerStyle: pw.TextStyle(
                         font: ttf,
@@ -224,14 +218,13 @@ class _ReportsSearch extends State<ReportsSearch> {
                             children: [
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment:
-                                pw.CrossAxisAlignment.start,
+                                    pw.MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
                                   // Left Column
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Emergency No: ${Constants.emergencyNo}',
@@ -252,10 +245,10 @@ class _ReportsSearch extends State<ReportsSearch> {
                                     ],
                                   ),
                                   pw.Padding(
-                                    padding: pw.EdgeInsets.only(top: 20),
+                                    padding: const pw.EdgeInsets.only(top: 20),
                                     child: pw.Row(
                                       crossAxisAlignment:
-                                      pw.CrossAxisAlignment.end,
+                                          pw.CrossAxisAlignment.end,
                                       children: [
                                         pw.Text(
                                           'Mail: ${Constants.mail}',
@@ -302,11 +295,11 @@ class _ReportsSearch extends State<ReportsSearch> {
                               ),
                               pw.Row(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         '${Constants.hospitalName}',
@@ -339,7 +332,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   ),
                                   pw.Column(
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Phone - ${Constants.landLine + ', ' + Constants.billNo}',
@@ -385,11 +378,11 @@ class _ReportsSearch extends State<ReportsSearch> {
                               pw.SizedBox(height: 10),
                               pw.Column(
                                 mainAxisAlignment:
-                                pw.MainAxisAlignment.spaceBetween,
+                                    pw.MainAxisAlignment.spaceBetween,
                                 children: [
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'OP Ticket No : ${opTicket}',
@@ -405,7 +398,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Doctor : ${doctorName}',
@@ -430,7 +423,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Name : ${name}',
@@ -455,7 +448,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Age : ${age}',
@@ -498,9 +491,9 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.start,
+                                        pw.MainAxisAlignment.start,
                                     crossAxisAlignment:
-                                    pw.CrossAxisAlignment.start,
+                                        pw.CrossAxisAlignment.start,
                                     children: [
                                       pw.Text(
                                         'Address : ${address}',
@@ -516,7 +509,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Sample Collected Date : ${sampleCollectedDate}',
@@ -542,7 +535,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                                   pw.SizedBox(height: 6),
                                   pw.Row(
                                     mainAxisAlignment:
-                                    pw.MainAxisAlignment.spaceBetween,
+                                        pw.MainAxisAlignment.spaceBetween,
                                     children: [
                                       pw.Text(
                                         'Report Date : ${reportDate}',
@@ -630,8 +623,14 @@ class _ReportsSearch extends State<ReportsSearch> {
                 await Printing.sharePdf(
                     bytes: await pdf.save(), filename: '${opTicket}.pdf');
               },
-              icon: const Icon(Icons.print,color: Colors.white,),
-              label: const Text('Print',style: TextStyle(color: Colors.white),),
+              icon: const Icon(
+                Icons.print,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Print',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -737,7 +736,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                       reportDate: ticketData['reportDate']?.toString() ?? 'N/A',
                     );
                   },
-                  child: CustomText(text: 'Print'),
+                  child: const CustomText(text: 'Print'),
                 ),
               });
             }
@@ -760,7 +759,8 @@ class _ReportsSearch extends State<ReportsSearch> {
           hasMore = false;
         } else {
           lastPatientDoc = patientSnapshot.docs.last;
-          await Future.delayed(Duration(milliseconds: 100)); // throttle loop
+          await Future.delayed(
+              const Duration(milliseconds: 100)); // throttle loop
         }
       }
     } catch (e) {
@@ -905,35 +905,32 @@ class _ReportsSearch extends State<ReportsSearch> {
                   SizedBox(width: screenHeight * 0.02),
                   isPhoneLoading
                       ? SizedBox(
-                    width: buttonWidth,
-                    height: buttonHeight,
-                    child: Lottie.asset(
-                      'assets/button_loading.json',
-                      fit: BoxFit.contain,
-                    ),
-                  )
+                          width: buttonWidth,
+                          height: buttonHeight,
+                          child: Lottie.asset(
+                            'assets/button_loading.json',
+                            fit: BoxFit.contain,
+                          ),
+                        )
                       : CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      setState(() => isPhoneLoading = true);
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isPhoneLoading = true);
 
-                      await fetchData(reportNo: _reportNumber.text); // <- await here
+                            await fetchData(
+                                reportNo: _reportNumber.text); // <- await here
 
-                      setState(() => isPhoneLoading = false);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.03,
-                  ),
-
-
-
+                            setState(() => isPhoneLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.03,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.025),
               Row(
                 children: [
-
-            /*  CustomTextField(
+                  /*  CustomTextField(
                     hintText: 'Date',
                     width: screenWidth * 0.15,
                     icon: Icon(Icons.date_range),
@@ -957,7 +954,7 @@ class _ReportsSearch extends State<ReportsSearch> {
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     onTap: () => _selectDate(context, _fromDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
@@ -965,33 +962,32 @@ class _ReportsSearch extends State<ReportsSearch> {
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     onTap: () => _selectDate(context, _toDateController),
                   ),
                   SizedBox(width: screenHeight * 0.02),
                   isOpLoading
                       ? SizedBox(
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.03,
-                    child: Lottie.asset(
-                      'assets/button_loading.json', // Ensure this path is correct
-                      fit: BoxFit.contain,
-                    ),
-                  )
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.03,
+                          child: Lottie.asset(
+                            'assets/button_loading.json', // Ensure this path is correct
+                            fit: BoxFit.contain,
+                          ),
+                        )
                       : CustomButton(
-                    label: 'Search',
-                    onPressed: () async {
-                      setState(() => isOpLoading = true);
-                     await fetchData(
-                        fromDate: _fromDateController.text,
-                        toDate: _toDateController.text,
-                      );
-                      setState(() => isOpLoading = false);
-                    },
-                    width: screenWidth * 0.08,
-                    height: screenWidth * 0.03,
-                  ),
-
+                          label: 'Search',
+                          onPressed: () async {
+                            setState(() => isOpLoading = true);
+                            await fetchData(
+                              fromDate: _fromDateController.text,
+                              toDate: _toDateController.text,
+                            );
+                            setState(() => isOpLoading = false);
+                          },
+                          width: screenWidth * 0.08,
+                          height: screenWidth * 0.03,
+                        ),
                 ],
               ),
               SizedBox(height: screenHeight * 0.04),

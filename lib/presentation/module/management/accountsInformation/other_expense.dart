@@ -1,20 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/hospital_direct_purchase_still_pending.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admission_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/ip_admit_list.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/lab_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/op_ticket_collection.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/other_expense.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
-import 'package:foxcare_lite/utilities/widgets/payment/payment_dialog.dart';
 import 'package:foxcare_lite/utilities/widgets/snackBar/snakbar.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../utilities/colors.dart';
@@ -25,8 +12,6 @@ import '../../../../utilities/widgets/dropDown/primary_dropDown.dart';
 import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import '../management_dashboard.dart';
-import 'new_patient_register_collection.dart';
 
 class OtherExpense extends StatefulWidget {
   @override

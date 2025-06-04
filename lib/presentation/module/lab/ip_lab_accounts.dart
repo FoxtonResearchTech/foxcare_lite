@@ -2,21 +2,15 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/lab/patients_lab_details.dart';
-import 'package:foxcare_lite/presentation/module/lab/reports_search.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../utilities/colors.dart';
 import '../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../utilities/widgets/drawer/lab/lab_module_drawer.dart';
-import '../../../utilities/widgets/table/data_table.dart';
 import '../../../utilities/widgets/text/primary_text.dart';
 import '../../../utilities/widgets/textField/primary_textField.dart';
-import 'dashboard.dart';
-import 'lab_testqueue.dart';
 
 class IpLabAccounts extends StatefulWidget {
   const IpLabAccounts({super.key});
@@ -28,8 +22,8 @@ class IpLabAccounts extends StatefulWidget {
 class _IpLabAccounts extends State<IpLabAccounts> {
   int selectedIndex = 5;
 
-  TextEditingController _fromDateController = TextEditingController();
-  TextEditingController _toDateController = TextEditingController();
+  final TextEditingController _fromDateController = TextEditingController();
+  final TextEditingController _toDateController = TextEditingController();
 
   final List<String> headers = [
     'Report Date',
@@ -318,7 +312,7 @@ class _IpLabAccounts extends State<IpLabAccounts> {
                 children: [
                   CustomTextField(
                     onTap: () => _selectDate(context, _fromDateController),
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
@@ -326,7 +320,7 @@ class _IpLabAccounts extends State<IpLabAccounts> {
                   SizedBox(width: screenHeight * 0.02),
                   CustomTextField(
                     onTap: () => _selectDate(context, _toDateController),
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -402,7 +396,7 @@ class _IpLabAccounts extends State<IpLabAccounts> {
                 child: Row(
                   children: [
                     SizedBox(width: screenWidth * 0.35),
-                    CustomText(
+                    const CustomText(
                       text: 'Total : ',
                     ),
                     SizedBox(width: screenWidth * 0.06),

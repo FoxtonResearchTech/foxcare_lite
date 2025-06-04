@@ -1,26 +1,17 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_admission_status.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_op_Ticket.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/utilities/colors.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-
-import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/general_information/management_general_information_drawer.dart';
 import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
 import '../../../../utilities/widgets/snackBar/snakbar.dart';
-import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../../reception/reception_ip_patient.dart';
-import 'general_information_doctor_visit_schedule.dart';
-import 'general_information_edit_doctor_visit_schedule.dart';
 
 class GeneralInformationIpAdmission extends StatefulWidget {
   @override

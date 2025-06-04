@@ -25,7 +25,7 @@ import '../../../../utilities/widgets/snackBar/snakbar.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/form_text_field.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import '../../manager/edit_delete_patient_information.dart';
+import 'edit_delete_patient_information.dart';
 import '../generalInformation/general_information_admission_status.dart';
 import 'management_patient_history.dart';
 import 'management_patients_list.dart';

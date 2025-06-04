@@ -1,22 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:foxcare_lite/presentation/login/fetch_user.dart';
 import 'package:foxcare_lite/presentation/login/login.dart';
-import 'package:foxcare_lite/presentation/module/doctor/doctor_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/lab/dashboard.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
 
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/manager/manager_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/pharmacy/dashboard/pharmecy_dashboard.dart';
-import 'package:foxcare_lite/presentation/module/reception/patient_registration.dart';
-import 'package:foxcare_lite/presentation/module/reception/reception_dashboard.dart';
-import 'package:foxcare_lite/presentation/signup/employee_registration.dart';
-import 'package:foxcare_lite/utilities/widgets/buttons/primary_button.dart';
-import 'package:foxcare_lite/utilities/widgets/text/primary_text.dart';
-import 'package:lottie/lottie.dart';
 import 'firebase_options.dart';
 
 void main() async {

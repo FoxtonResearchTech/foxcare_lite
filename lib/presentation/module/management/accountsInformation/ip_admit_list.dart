@@ -1,33 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/pharmacyInformation/pharmacy_total_sales.dart';
-import 'package:foxcare_lite/presentation/module/management/accountsInformation/surgery_ot_icu_collection.dart';
 import 'package:foxcare_lite/utilities/widgets/drawer/management/accounts/management_accounts_drawer.dart';
-import 'package:foxcare_lite/utilities/widgets/payment/ip_admit_payment_dialog.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
-import '../../../../utilities/widgets/payment/ip_admit_additional_amount.dart';
-import '../../../../utilities/widgets/payment/payment_dialog.dart';
-import '../../../../utilities/widgets/snackBar/snakbar.dart';
-import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
-import '../management_dashboard.dart';
-import 'hospital_direct_purchase.dart';
-import 'hospital_direct_purchase_still_pending.dart';
-
-import 'ip_admission_collection.dart';
-import 'ip_admit_list.dart';
-import 'lab_collection.dart';
-import 'new_patient_register_collection.dart';
-import 'op_ticket_collection.dart';
-import 'other_expense.dart';
 
 class IpAdmitList extends StatefulWidget {
   @override
@@ -303,7 +284,7 @@ class _IpAdmitList extends State<IpAdmitList> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'Accounts Information',
               ),
             )
@@ -409,7 +390,7 @@ class _IpAdmitList extends State<IpAdmitList> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
                       isIPLoading
                           ? SizedBox(
                               width: screenWidth * 0.09,
@@ -464,7 +445,7 @@ class _IpAdmitList extends State<IpAdmitList> {
                       _selectDate(context, _fromDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _fromDateController,
                     hintText: 'From Date',
                     width: screenWidth * 0.15,
@@ -475,7 +456,7 @@ class _IpAdmitList extends State<IpAdmitList> {
                       _selectDate(context, _toDateController);
                       _dateController.clear();
                     },
-                    icon: Icon(Icons.date_range),
+                    icon: const Icon(Icons.date_range),
                     controller: _toDateController,
                     hintText: 'To Date',
                     width: screenWidth * 0.15,
@@ -549,7 +530,7 @@ class _IpAdmitList extends State<IpAdmitList> {
                 child: Row(
                   children: [
                     SizedBox(width: screenWidth * 0.38),
-                    CustomText(
+                    const CustomText(
                       text: 'Total : ',
                     ),
                     SizedBox(width: screenWidth * 0.086),

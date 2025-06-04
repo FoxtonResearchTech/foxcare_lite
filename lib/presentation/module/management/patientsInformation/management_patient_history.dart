@@ -1,23 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/presentation/module/management/generalInformation/general_information_ip_admission.dart';
-import 'package:foxcare_lite/presentation/module/management/management_dashboard.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
-
-import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
-
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/patient_information/management_patient_information.dart';
 import '../../../../utilities/widgets/refreshLoading/refreshLoading.dart';
-import '../../../../utilities/widgets/table/data_table.dart';
 import '../../../../utilities/widgets/text/primary_text.dart';
 import '../../../../utilities/widgets/textField/primary_textField.dart';
 import '../../doctor/patient_history_dialog.dart';
-import '../generalInformation/general_information_admission_status.dart';
-import 'management_patients_list.dart';
-import 'management_register_patient.dart';
 
 class ManagementPatientHistory extends StatefulWidget {
   @override

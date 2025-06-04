@@ -1,11 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foxcare_lite/utilities/widgets/table/data_table.dart';
 import 'package:foxcare_lite/utilities/widgets/table/lazy_data_table.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-
 import '../../../../utilities/colors.dart';
 import '../../../../utilities/widgets/buttons/primary_button.dart';
 import '../../../../utilities/widgets/drawer/management/user_information/user_information_drawer.dart';
@@ -250,7 +247,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: CustomText(
+                          title: const CustomText(
                             text: 'Edit Employee Details',
                             size: 25,
                           ),
@@ -278,11 +275,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Position',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomDropdown(
                                                     label: '',
                                                     items: const [
@@ -311,11 +308,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Emp Code',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     readOnly: true,
                                                     hintText: '',
@@ -327,7 +324,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           if (isDoc)
                                             Row(
                                               children: [
@@ -335,11 +332,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    CustomText(
+                                                    const CustomText(
                                                       text: 'Specialization',
                                                       size: 15,
                                                     ),
-                                                    SizedBox(height: 7),
+                                                    const SizedBox(height: 7),
                                                     CustomDropdown(
                                                       label: '',
                                                       items: const [
@@ -367,7 +364,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 ),
                                               ],
                                             ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -376,11 +373,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'First Name',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -393,11 +390,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Last Name',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -408,7 +405,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -417,12 +414,12 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text:
                                                         "Father's / Mother's / Guardian's Name",
                                                     size: 17,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -435,11 +432,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Relation',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   SizedBox(
                                                     width: 300,
                                                     height: 40,
@@ -464,7 +461,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -473,11 +470,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Sex',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   SizedBox(
                                                     width: 300,
                                                     height: 40,
@@ -501,11 +498,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Date Of Birth',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     controller: dobController,
                                                     hintText: '',
@@ -519,8 +516,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
-                                          Row(
+                                          const SizedBox(height: 30),
+                                          const Row(
                                             children: [
                                               CustomText(
                                                 text: 'Permanent Address',
@@ -528,7 +525,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
+                                          const SizedBox(height: 30),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -537,11 +534,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Lane 1',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -553,11 +550,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Lane 2',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -567,16 +564,16 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              CustomText(
+                                              const CustomText(
                                                 text: 'Landmark',
                                                 size: 18,
                                               ),
-                                              SizedBox(height: 7),
+                                              const SizedBox(height: 7),
                                               CustomTextField(
                                                 verticalSize: 15,
                                                 hintText: '',
@@ -585,7 +582,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -594,11 +591,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'City',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -610,11 +607,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'State',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -626,11 +623,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Pin code',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -640,7 +637,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -649,11 +646,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'E-Mail ID',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -665,11 +662,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Phone No 1',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -681,11 +678,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Phone No 2',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -695,7 +692,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
+                                          const SizedBox(height: 20),
                                           Row(
                                             children: [
                                               Radio<bool>(
@@ -711,7 +708,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                               const CustomText(
                                                   text: 'Same as Above'),
-                                              SizedBox(width: 100),
+                                              const SizedBox(width: 100),
                                               Radio<bool>(
                                                 activeColor: AppColors.blue,
                                                 value: true,
@@ -727,8 +724,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                   text: 'Different'),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
-                                          Row(
+                                          const SizedBox(height: 30),
+                                          const Row(
                                             children: [
                                               CustomText(
                                                 text: 'Temporary Address',
@@ -736,7 +733,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
+                                          const SizedBox(height: 30),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -745,11 +742,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Lane 1',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -762,11 +759,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Lane 2',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -777,16 +774,16 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              CustomText(
+                                              const CustomText(
                                                 text: 'Landmark',
                                                 size: 18,
                                               ),
-                                              SizedBox(height: 7),
+                                              const SizedBox(height: 7),
                                               CustomTextField(
                                                 verticalSize: 15,
                                                 hintText: '',
@@ -796,7 +793,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -805,11 +802,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'City',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -821,11 +818,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'State',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -837,11 +834,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'Pin code',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                       hintText: '',
                                                       width: 200,
@@ -851,8 +848,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
-                                          Row(
+                                          const SizedBox(height: 30),
+                                          const Row(
                                             children: [
                                               CustomText(
                                                 text: 'Education Qualification',
@@ -860,16 +857,16 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
+                                          const SizedBox(height: 30),
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              CustomText(
+                                              const CustomText(
                                                 text: 'Qualification',
                                                 size: 18,
                                               ),
-                                              SizedBox(height: 7),
+                                              const SizedBox(height: 7),
                                               CustomTextField(
                                                 hintText: '',
                                                 width: 300,
@@ -878,16 +875,16 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              CustomText(
+                                              const CustomText(
                                                 text: 'Register No',
                                                 size: 18,
                                               ),
-                                              SizedBox(height: 7),
+                                              const SizedBox(height: 7),
                                               CustomTextField(
                                                 hintText: '',
                                                 width: 300,
@@ -896,7 +893,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 10),
+                                          const SizedBox(height: 10),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -905,11 +902,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'University',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -922,11 +919,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  CustomText(
+                                                  const CustomText(
                                                     text: 'College',
                                                     size: 18,
                                                   ),
-                                                  SizedBox(height: 7),
+                                                  const SizedBox(height: 7),
                                                   CustomTextField(
                                                     hintText: '',
                                                     width: 300,
@@ -937,7 +934,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 40),
+                                          const SizedBox(height: 40),
                                           Row(
                                             children: [
                                               Checkbox(
@@ -954,17 +951,17 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                       'Postgraduate Qualification'),
                                             ],
                                           ),
-                                          SizedBox(height: 20),
+                                          const SizedBox(height: 20),
                                           if (isPostgraduate) ...[
                                             Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                CustomText(
+                                                const CustomText(
                                                   text: 'Qualification',
                                                   size: 18,
                                                 ),
-                                                SizedBox(height: 7),
+                                                const SizedBox(height: 7),
                                                 CustomTextField(
                                                   hintText: '',
                                                   width: 300,
@@ -973,16 +970,16 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: 10),
+                                            const SizedBox(height: 10),
                                             Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                CustomText(
+                                                const CustomText(
                                                   text: 'Register No',
                                                   size: 18,
                                                 ),
-                                                SizedBox(height: 7),
+                                                const SizedBox(height: 7),
                                                 CustomTextField(
                                                   hintText: '',
                                                   width: 300,
@@ -991,7 +988,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: 10),
+                                            const SizedBox(height: 10),
                                             Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment
@@ -1001,11 +998,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    CustomText(
+                                                    const CustomText(
                                                       text: 'University',
                                                       size: 18,
                                                     ),
-                                                    SizedBox(height: 7),
+                                                    const SizedBox(height: 7),
                                                     CustomTextField(
                                                       hintText: '',
                                                       width: 300,
@@ -1018,11 +1015,11 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    CustomText(
+                                                    const CustomText(
                                                       text: 'College',
                                                       size: 18,
                                                     ),
-                                                    SizedBox(height: 7),
+                                                    const SizedBox(height: 7),
                                                     CustomTextField(
                                                       hintText: '',
                                                       width: 300,
@@ -1034,8 +1031,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ],
                                             ),
                                           ],
-                                          SizedBox(height: 30),
-                                          Row(
+                                          const SizedBox(height: 30),
+                                          const Row(
                                             children: [
                                               CustomText(
                                                 text: 'Password',
@@ -1043,16 +1040,16 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 30),
+                                          const SizedBox(height: 30),
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              CustomText(
+                                              const CustomText(
                                                 text: 'Password',
                                                 size: 18,
                                               ),
-                                              SizedBox(height: 7),
+                                              const SizedBox(height: 7),
                                               CustomTextField(
                                                 hintText: '',
                                                 width: 300,
@@ -1060,7 +1057,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 40),
+                                          const SizedBox(height: 40),
                                         ],
                                       ),
                                     ),
@@ -1192,8 +1189,8 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Row(
-                          children: const [
+                        title: const Row(
+                          children: [
                             Icon(Icons.warning_amber_rounded,
                                 color: Colors.redAccent),
                             SizedBox(width: 8),
@@ -1276,7 +1273,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
     return Scaffold(
       appBar: isMobile
           ? AppBar(
-              title: CustomText(
+              title: const CustomText(
                 text: 'User Information',
               ),
             )
@@ -1385,7 +1382,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28),
+                      const SizedBox(height: 28),
                       empLoading
                           ? SizedBox(
                               width: screenWidth * 0.09,
@@ -1426,7 +1423,7 @@ class _EditDeleteUserAccount extends State<EditDeleteUserAccount> {
                   SizedBox(width: screenHeight * 0.02),
                   Column(
                     children: [
-                      SizedBox(height: 28),
+                      const SizedBox(height: 28),
                       phoneNumberLoading
                           ? SizedBox(
                               width: screenWidth * 0.09,
