@@ -280,7 +280,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
-      title: Text('Add Payment Amount'),
+      title: const Text('Add Payment Amount'),
       content: Container(
         width: screenWidth * 0.6,
         height: screenHeight * 0.6,
@@ -342,7 +342,7 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
                               _totalAmount();
                               totalAmount.text = _totalAmount().toString();
                             },
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                             color: Colors.red,
                           );
                         });
@@ -402,10 +402,52 @@ class _IpAdmitAdditionalAmountState extends State<IpAdmitAdditionalAmount> {
       actions: <Widget>[
         TextButton(
           onPressed: () async {
-            handleIpPayment(
-                widget.docId.toString(), widget.ipTicket.toString());
+            if (currentIpAdditionalAmountData.isEmpty) {
+              CustomSnackBar(context,
+                  message: 'Please enter Details',
+                  backgroundColor: Colors.orange);
 
-            widget.fetchData!();
+              return;
+            }
+
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                    SizedBox(width: 8),
+                    Text('Confirm Submission'),
+                  ],
+                ),
+                content: const Text(
+                  'Are you sure you want to add additional amount?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text(
+                      'Confirm',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirmed == true) {
+              await handleIpPayment(
+                  widget.docId.toString(), widget.ipTicket.toString());
+
+              widget.fetchData!();
+            }
           },
           child: CustomText(
             text: 'Submit ',
