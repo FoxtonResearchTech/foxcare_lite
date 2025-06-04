@@ -244,8 +244,8 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
             'Expiry Return': expiryQty,
             'Sales': salesQty,
             'Closing': closingQty,
-            'Sales value': salesValue,
-            'Closing value': closingValue,
+            'Sales value': salesValue.toStringAsFixed(2),
+            'Closing value': closingValue.toStringAsFixed(2),
           });
         }
 
@@ -631,7 +631,7 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
                 headers: headers,
               ),
               Container(
-                padding: EdgeInsets.only(left: screenWidth * 0.5),
+                padding: EdgeInsets.only(left: screenWidth * 0.6),
                 width: screenWidth,
                 height: screenHeight * 0.030,
                 decoration: BoxDecoration(
