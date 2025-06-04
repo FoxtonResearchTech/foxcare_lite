@@ -213,6 +213,11 @@ class _LabDashboard extends State<LabDashboard> {
           for (var ticketDoc in opTicketsSnapshot.docs) {
             final data = ticketDoc.data();
 
+            if (data.containsKey('reportNo') &&
+                data.containsKey('reportDate')) {
+              continue;
+            }
+
             if (data['labExaminationPrescribedDate'] == today &&
                 data.containsKey('Examination') &&
                 data.containsKey('opTicket')) {
