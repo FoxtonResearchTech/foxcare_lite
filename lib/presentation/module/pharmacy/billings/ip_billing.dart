@@ -259,7 +259,6 @@ class _IpBilling extends State<IpBilling> {
               });
 
               found = true;
-              break;
             }
           }
         }

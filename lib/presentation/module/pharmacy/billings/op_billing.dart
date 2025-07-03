@@ -45,11 +45,9 @@ class _OpBilling extends State<OpBilling> {
     String? phoneNumber,
     int batchSize = 10,
   }) async {
-    print(
-        'Fetching data with OP Number: $opNumber, Phone Number: $phoneNumber');
-
     try {
       List<Map<String, dynamic>> fetchedData = [];
+      List<String> skippedPatients = [];
 
       final today = DateTime.now();
       final todayString =
@@ -58,8 +56,11 @@ class _OpBilling extends State<OpBilling> {
       DocumentSnapshot? lastPatientDoc;
 
       bool moreData = true;
+      int batchCount = 0;
 
       while (moreData) {
+        batchCount++;
+
         Query<Map<String, dynamic>> patientQuery =
             FirebaseFirestore.instance.collection('patients').limit(batchSize);
 
@@ -89,9 +90,12 @@ class _OpBilling extends State<OpBilling> {
 
           for (var opTicketDoc in opTicketsSnapshot.docs) {
             final opTicketData = opTicketDoc.data();
-            if (!opTicketData.containsKey('medicinePrescribedDate')) continue;
 
-            // Fix case insensitive matching for opNumber and phoneNumber
+            if (!opTicketData.containsKey('medicinePrescribedDate')) {
+              continue;
+            }
+
+            // Case-insensitive matching
             bool matches = false;
 
             String opTicketOpNumber =
@@ -114,158 +118,155 @@ class _OpBilling extends State<OpBilling> {
               }
             }
 
-            if (matches) {
-              String tokenNo = '';
-              String tokenDate = '';
-
-              try {
-                final tokenSnapshot = await FirebaseFirestore.instance
-                    .collection('patients')
-                    .doc(patientId)
-                    .collection('tokens')
-                    .doc('currentToken')
-                    .get();
-
-                if (tokenSnapshot.exists) {
-                  final tokenData = tokenSnapshot.data();
-                  if (tokenData != null && tokenData['tokenNumber'] != null) {
-                    tokenNo = tokenData['tokenNumber'].toString();
-                  }
-                  if (tokenData != null && tokenData['date'] != null) {
-                    tokenDate = tokenData['date'];
-                  }
-                }
-              } catch (e) {
-                print('Error fetching tokenNo for patient $patientId: $e');
-              }
-
-              bool isAbscond = opTicketData['status'] == 'abscond';
-              bool medicineGiven = opTicketData['medicineGiven'] ?? false;
-
-              // Find latest medicinePrescribedDate in tickets (optional)
-              DateTime? latestMedicineDate;
-
-              for (var opTicketDoc in opTicketsSnapshot.docs) {
-                final data = opTicketDoc.data();
-                if (data['medicinePrescribedDate'] != null) {
-                  try {
-                    final date = DateTime.parse(data['medicinePrescribedDate']);
-                    if (latestMedicineDate == null ||
-                        date.isAfter(latestMedicineDate)) {
-                      latestMedicineDate = date;
-                    }
-                  } catch (e) {
-                    print(
-                        'Invalid date format in medicinePrescribedDate: ${data['medicinePrescribedDate']}');
-                  }
-                }
-              }
-
-              if (opNumber != null ||
-                  (phoneNumber != null && phoneNumber.isNotEmpty) ||
-                  !medicineGiven) {
-                fetchedData.add({
-                  'Token No': tokenNo,
-                  'OP Number': patientData['opNumber'] ?? 'N/A',
-                  'OP Ticket': opTicketData['opTicket'] ?? 'N/A',
-                  'Name':
-                      '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                          .trim(),
-                  'Place': patientData['city'] ?? 'N/A',
-                  'Status': opTicketData['status'] ?? 'N/A',
-                  'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
-                  'Specialization': opTicketData['specialization'] ?? 'N/A',
-                  'Medication': opTicketData['Medications'] ?? [],
-                  'Actions': Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(
-                          onPressed: () {
-                            final List<Map<String, dynamic>> medications =
-                                List<Map<String, dynamic>>.from(
-                              opTicketData['prescribedMedicines'] ?? [],
-                            );
-
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (
-                              context,
-                            ) =>
-                                    OpBillingEntry(
-                                      patientName:
-                                          '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
-                                              .trim(),
-                                      opTicket:
-                                          opTicketData['opTicket'] ?? 'N/A',
-                                      opNumber:
-                                          patientData['opNumber'] ?? 'N/A',
-                                      place: patientData['city'] ?? 'N/A',
-                                      phone: patientData['phone1'] ?? 'N/A',
-                                      doctorName:
-                                          opTicketData['doctorName'] ?? 'N/A',
-                                      specialization:
-                                          opTicketData['specialization'] ??
-                                              'N/A',
-                                      medications: medications,
-                                    )));
-                          },
-                          child: const CustomText(text: 'Open')),
-                      TextButton(
-                          onPressed: () async {
-                            try {
-                              await FirebaseFirestore.instance
-                                  .collection('patients')
-                                  .doc(patientId)
-                                  .collection('opTickets')
-                                  .doc(opTicketData['opTicket'])
-                                  .update({'status': 'abscond'});
-
-                              CustomSnackBar(context,
-                                  message: 'Status updated to abscond');
-                              fetchData();
-                            } catch (e) {
-                              print('Error updating status: $e');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Failed to update status')),
-                              );
-                            }
-                          },
-                          child: const CustomText(text: 'Abort')),
-                    ],
-                  )
-                });
-              }
-              found = true;
-              break;
+            if (!matches) {
+              continue;
             }
+
+            String tokenNo = '';
+            String tokenDate = '';
+
+            try {
+              final tokenSnapshot = await FirebaseFirestore.instance
+                  .collection('patients')
+                  .doc(patientId)
+                  .collection('tokens')
+                  .doc('currentToken')
+                  .get();
+
+              if (tokenSnapshot.exists) {
+                final tokenData = tokenSnapshot.data();
+                if (tokenData != null && tokenData['tokenNumber'] != null) {
+                  tokenNo = tokenData['tokenNumber'].toString();
+                }
+                if (tokenData != null && tokenData['date'] != null) {
+                  tokenDate = tokenData['date'];
+                }
+              }
+            } catch (e) {
+              print('   ⚠️ Error fetching tokenNo for patient $patientId: $e');
+            }
+
+            bool isAbscond = opTicketData['status'] == 'abscond';
+            bool medicineGiven = opTicketData['medicineGiven'] ?? false;
+            print(
+                '   🧾 Ticket: ${opTicketData['opTicket']}, Normalized: $opTicketOpNumber');
+
+            // Optional: Get latest medicinePrescribedDate
+            DateTime? latestMedicineDate;
+            for (var doc in opTicketsSnapshot.docs) {
+              final data = doc.data();
+              if (data['medicinePrescribedDate'] != null) {
+                try {
+                  final date = DateTime.parse(data['medicinePrescribedDate']);
+                  if (latestMedicineDate == null ||
+                      date.isAfter(latestMedicineDate)) {
+                    latestMedicineDate = date;
+                  }
+                } catch (e) {
+                  print(
+                      '   ⚠️ Invalid date format in medicinePrescribedDate: ${data['medicinePrescribedDate']}');
+                }
+              }
+            }
+
+            if (opNumber != null ||
+                (phoneNumber != null && phoneNumber.isNotEmpty) ||
+                !medicineGiven) {
+              fetchedData.add({
+                'Token No': tokenNo,
+                'OP Number': patientData['opNumber'] ?? 'N/A',
+                'OP Ticket': opTicketData['opTicket'] ?? 'N/A',
+                'Name':
+                    '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                        .trim(),
+                'Place': patientData['city'] ?? 'N/A',
+                'Status': opTicketData['status'] ?? 'N/A',
+                'Doctor Name': opTicketData['doctorName'] ?? 'N/A',
+                'Specialization': opTicketData['specialization'] ?? 'N/A',
+                'Medication': opTicketData['Medications'] ?? [],
+                'Actions': Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          final List<Map<String, dynamic>> medications =
+                              List<Map<String, dynamic>>.from(
+                            opTicketData['prescribedMedicines'] ?? [],
+                          );
+
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => OpBillingEntry(
+                                    patientName:
+                                        '${patientData['firstName'] ?? 'N/A'} ${patientData['lastName'] ?? 'N/A'}'
+                                            .trim(),
+                                    opTicket: opTicketData['opTicket'] ?? 'N/A',
+                                    opNumber: patientData['opNumber'] ?? 'N/A',
+                                    place: patientData['city'] ?? 'N/A',
+                                    phone: patientData['phone1'] ?? 'N/A',
+                                    doctorName:
+                                        opTicketData['doctorName'] ?? 'N/A',
+                                    specialization:
+                                        opTicketData['specialization'] ?? 'N/A',
+                                    medications: medications,
+                                  )));
+                        },
+                        child: const CustomText(text: 'Open')),
+                    TextButton(
+                        onPressed: () async {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('patients')
+                                .doc(patientId)
+                                .collection('opTickets')
+                                .doc(opTicketData['opTicket'])
+                                .update({'status': 'abscond'});
+
+                            CustomSnackBar(context,
+                                message: 'Status updated to abscond');
+                            fetchData();
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Failed to update status')),
+                            );
+                          }
+                        },
+                        child: const CustomText(text: 'Abort')),
+                  ],
+                )
+              });
+            }
+
+            found = true;
           }
         }
 
-        // Update lastPatientDoc for next batch pagination
         lastPatientDoc = patientSnapshot.docs.last;
 
-        // Sort current fetched data by Token No
         fetchedData.sort((a, b) {
           int tokenA = int.tryParse(a['Token No']) ?? 0;
           int tokenB = int.tryParse(b['Token No']) ?? 0;
           return tokenB.compareTo(tokenA);
         });
 
-        // Update UI incrementally after each batch
+        print('🔄 Updating UI with ${fetchedData.length} total rows...');
         setState(() {
           tableData = List.from(fetchedData);
         });
 
-        // Add a small delay between batches to avoid rate limiting (optional)
         await Future.delayed(const Duration(milliseconds: 100));
 
-        // If less than batch size docs returned, no more data
         if (patientSnapshot.docs.length < batchSize) {
+          print('✅ Fetched last batch. Ending pagination.');
           moreData = false;
         }
       }
+
+      print('\n✔️ fetchData completed.');
+      print('Skipped patients count: ${skippedPatients.length}');
+      print('Skipped Patient IDs: $skippedPatients');
     } catch (e) {
-      print('Error fetching data paginated: $e');
+      print('❌ Error in fetchData: $e');
     }
   }
 
