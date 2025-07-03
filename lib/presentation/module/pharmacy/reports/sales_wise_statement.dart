@@ -59,7 +59,7 @@ class _SalesWiseStatement extends State<SalesWiseStatement> {
   Future<List<Map<String, dynamic>>> fetchProductsByDateRange({
     String? from,
     String? to,
-    int pageSize = 1,
+    int pageSize = 10,
   }) async {
     try {
       int i = 1;

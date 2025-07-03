@@ -22,16 +22,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final logicalSize = mediaQuery.size;
-    final pixelRatio = mediaQuery.devicePixelRatio;
-
-    final physicalWidth = logicalSize.width * pixelRatio;
-    final physicalHeight = logicalSize.height * pixelRatio;
-
-    print(
-        'Physical pixels: ${physicalWidth.toInt()} x ${physicalHeight.toInt()}');
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FoxCare Lite',
