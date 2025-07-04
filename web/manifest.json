@@ -1,6 +1,6 @@
 {
-    "name": "foxcare_lite",
-    "short_name": "foxcare_lite",
+    "name": "Foxcare Lite",
+    "short_name": "Foxcare Lite",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

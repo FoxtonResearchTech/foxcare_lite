@@ -1084,6 +1084,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                         await Printing.sharePdf(
                             bytes: await pdf.save(),
                             filename: '${widget.ipTicket}.pdf');
+
                         await updateIpAdmitBillNo(billNo);
                       },
                       style: TextButton.styleFrom(
