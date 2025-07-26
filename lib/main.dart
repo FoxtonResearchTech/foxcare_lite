@@ -11,7 +11,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await UserSession.initUser();
-
   runApp(
     const MyApp(),
   );
@@ -24,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'FoxCare Lite',
+      title: 'Foxcare Lite',
       home: LoginScreen(),
     );
   }
